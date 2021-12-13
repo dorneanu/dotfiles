@@ -1,0 +1,5 @@
+#exec cinnamon
+# blueman &
+# exec awesome
+xset r rate 220 50 &
+exec cinnamon-session

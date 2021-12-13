@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: zk
+# key:zk
+# --
+
+{{{zk($1,$2)}}}
