@@ -1,0 +1,16 @@
+[settings]
+debug = false
+api_key = {{ pass "wakatime/api-key" }}
+hide_file_names = true
+hide_project_names = false
+hide_branch_names =
+exclude =
+    ^COMMIT_EDITMSG$
+    ^TAG_EDITMSG$
+    ^/var/(?!www/).*
+    ^/etc/
+include_only_with_project_file = false
+no_ssl_verify = false
+ssl_certs_file =
+timeout = 30
+hostname = {{ .chezmoi.hostname }}

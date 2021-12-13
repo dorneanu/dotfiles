@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: zk
+# uuid:
+# type: snippet
+# key: trigger-key
+# condition: nil
+# --
+
+{{{zk($1, $2)}}}

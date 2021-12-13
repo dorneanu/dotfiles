@@ -1,0 +1,71 @@
+###############################################################################
+## General settings
+###############################################################################
+Create Both
+Expunge Both
+SyncState *
+
+{{- if eq .chezmoi.hostname "nusec" }}
+###############################################################################
+## variomedia
+###############################################################################
+
+IMAPAccount variomedia
+Host imap.variomedia.de
+User {{ pass "mail/personal/username" }}
+PassCmd "pass mail/personal/pass"
+Port 993
+SSLType IMAPS
+AuthMechs LOGIN
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+
+IMAPStore variomedia-remote
+Account variomedia
+
+MaildirStore variomedia-local
+Path ~/enc/mail/variomedia/
+Inbox ~/enc/mail/variomedia/inbox
+SubFolders Verbatim
+
+Channel variomedia-inbox
+Master :variomedia-remote:
+Slave :variomedia-local:
+Patterns "INBOX"
+
+
+Group variomedia
+Channel variomedia-inbox
+
+###############################################################################
+## gmail
+###############################################################################
+IMAPAccount gmail
+Host imap.gmail.com
+User {{ pass "mail/gmail/personal/username" }}
+PassCmd "pass mail/gmail/personal/pass"
+Port 993
+AuthMechs LOGIN
+SSLType IMAPS
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+
+IMAPStore gmail-remote
+Account gmail
+
+MaildirStore gmail-local
+Subfolders Verbatim
+Path ~/enc/mail/gmail/
+Inbox ~/enc/mail/gmail/inbox
+
+Channel gmail-inbox
+Master :gmail-remote:
+Slave :gmail-local:
+Patterns "INBOX"
+
+Channel gmail-sent
+Master :gmail-remote:"[Gmail]/Sent Mail"
+Slave :gmail-local:sent
+
+Group gmail
+Channel gmail-inbox
+Channel gmail-sent
+{{- end }}
