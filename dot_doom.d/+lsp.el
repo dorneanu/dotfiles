@@ -46,11 +46,19 @@
   (lsp-ui-doc-max-height 30)
   (lsp-ui-doc-use-childframe t)
   (lsp-ui-doc-use-webkit t)
+  ;; signature
+  (lsp-signature-auto-activate nil)
+  (lsp-signature-render-documentation nil)
+  (lsp-eldoc-hook nil)
   :bind
   (:map lsp-ui-mode-map
               ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
               ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c C-r" . lsp-ui-peek-find-references)
+              ("C-c C-j" . lsp-ui-peek-find-definitions)
+              ("C-c i"   . lsp-ui-peek-find-implementation)
               ("C-c u" . lsp-ui-imenu)
               ("C-c d" . lsp-ui-doc-glance)
+              ("C-c s"   . lsp-ui-sideline-mode)
               ("C-c x" . counsel-flycheck))
 )

@@ -48,10 +48,10 @@
 (package! flycheck-golangci-lint)
 (package! gotest)
 (package! lsp-mode)
-(package! dap-mode)
 (package! jupyter)
 (package! ox-pandoc)
 (package! ox-jira)
+(package! ox-slack)
 (package! org-autolist)
 (package! xclip)
 (package! eink-theme)
@@ -65,6 +65,7 @@
 (package! dank-mode
  :recipe (:host github :repo "john2x/dank-mode"))
 
+(package! lsp-treemacs)
 ;; (package! org-download)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
