@@ -29,11 +29,13 @@
 (package! org-web-tools)
 (package! pocket-reader)
 (package! impatient-mode)
-(package! org-reveal)
+(package! org-re-reveal)
 ;; (package! emacs-reveal)
+(package! ox-reveal)
 (package! epresent)
 (package! org-present)
 (package! company)
+(package! company-mode)
 (package! company-lsp)
 (package! company-go)
 (package! verb)
@@ -66,6 +68,11 @@
  :recipe (:host github :repo "john2x/dank-mode"))
 
 (package! lsp-treemacs)
+
+;; asciidoc related
+(package! adoc-mode)
+(package! org-asciidoc :recipe (:host github :repo "yashi/org-asciidoc" :branch "asciidoctor-diagram"))
+
 ;; (package! org-download)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
