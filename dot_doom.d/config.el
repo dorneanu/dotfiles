@@ -44,12 +44,32 @@
 
 ;; Set fonts
 ;; (set-face-font 'default "Source Code Pro Medium 15")
-(setq doom-font (font-spec :family "Source Code Pro" :size 17))
+(setq doom-font (font-spec :family "Fira Mono" :size 15))
+;; (setq doom-font (font-spec :family "Courier" :size 15))
+;;
+;; Font/Face customizations
+(custom-theme-set-faces
+ 'user
+'(variable-pitch ((t (:family "Fira Mono"))))
+'(fixed-pitch ((t ( :family "DejaVu Sans Mono"))))
+'(org-block ((t (:inherit fixed-pitch))))
+'(org-code ((t (:inherit (shadow fixed-pitch)))))
+'(org-document-info ((t (:foreground "dark orange"))))
+'(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+'(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+'(org-link ((t (:foreground "royal blue" :underline t))))
+'(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+'(org-property-value ((t (:inherit fixed-pitch))) t)
+'(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+'(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+'(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+'(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
+
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-gruvbox)
+(setq doom-theme 'doom-monokai-spectrum)
 
 
 ;; set clipboard settings
@@ -100,7 +120,7 @@
   (add-to-list 'org-modules 'org-habit)
 
   ;; right-align tags
-  (setq org-tags-column 80)
+  (setq org-tags-column 100)
   (setq org-use-tag-inheritance t)
 
   ;; set indentation
@@ -122,6 +142,28 @@
   ;; Use the special C-a, C-e and C-k definitions for Org, which enable some special behavior in headings.
   (setq org-special-ctrl-a/e t)
   (setq org-special-ctrl-k t)
+
+  ;; Clean look
+  (setq org-hide-emphasis-markers t
+        org-fontify-done-headline t
+        org-hide-leading-stars t
+        org-pretty-entities t)
+
+  ;; Change list bullets
+  (setq org-list-demote-modify-bullet
+        (quote (("+" . "-")
+                ("-" . "+")
+                ("*" . "-")
+                ("1." . "-")
+                ("1)" . "-")
+                ("A)" . "-")
+                ("B)" . "-")
+                ("a)" . "-")
+                ("b)" . "-")
+                ("A." . "-")
+                ("B." . "-")
+                ("a." . "-")
+                ("b." . "-"))))
 
   ;; Allow to create new nodes when refiling
   (setq org-refile-allow-creating-parent-nodes 'confirm)
@@ -285,6 +327,22 @@
 ;;               )
 ;;         )
 ;; )
+
+;; Use org-bullets
+;; (use-package org-bullets
+;;   :after org
+;;   :custom
+;;   (org-bullets-bullet-list '("◉" "☯" "○" "☯" "✸" "☯" "✿" "☯" "✜" "☯" "◆" "☯" "▶"))
+;;   (org-ellipsis "⤵")
+;;   :hook (org-mode . org-bullets-mode))
+
+;; from https://zzamboni.org/post/beautifying-org-mode-in-emacs/
+(font-lock-add-keywords 'org-mode
+ '(("^ *\\([-]\\) "
+ (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+(font-lock-add-keywords 'org-mode
+ '(("^ *\\([+]\\) "
+    (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
 
 ;; From https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
 (use-package! org-super-agenda

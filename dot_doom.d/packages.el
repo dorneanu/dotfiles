@@ -27,6 +27,7 @@
 (package! helm-org-rifle)
 (package! org-cliplink)
 (package! org-web-tools)
+(package! org-bullets)
 (package! pocket-reader)
 (package! impatient-mode)
 (package! org-re-reveal)
