@@ -25,6 +25,8 @@
 (package! ob-go)
 (package! ob-http)
 (package! helm-org-rifle)
+(package! helm-flx)
+(package! swiper-helm)
 (package! org-cliplink)
 (package! org-web-tools)
 (package! org-bullets)
@@ -39,6 +41,7 @@
 (package! company-mode)
 (package! company-lsp)
 (package! company-go)
+(package! company-postframe)
 (package! verb)
 (package! tiddlywiki-mode :recipe
   (:host github :repo "whacked/tiddlywiki-org"))
@@ -61,6 +64,7 @@
 (package! color-theme-sanityinc-tomorrow)
 (package! focus)
 (package! vterm)
+(package! autorevert)
 ;; (package! md4rd
 ;;   :recipe (:host github :repo "ahungry/md4rd"))
 ;;(package! emacs-w3m)
@@ -74,6 +78,13 @@
 (package! adoc-mode)
 (package! org-asciidoc :recipe (:host github :repo "yashi/org-asciidoc" :branch "asciidoctor-diagram"))
 
+(package! iedit)
+(package! paredit)
+(package! undo-tree)
+
+(package! wgrep)
+(package! ag)
+(package! wgrep-ag)
 ;; (package! org-download)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
