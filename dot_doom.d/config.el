@@ -67,7 +67,10 @@
 (use-package org
   :ensure t
   :bind
-  ("C-c C-o" . org-open-at-point-with-chrome)
+  (:map org-mode-map
+   ("C-c o c" . org-open-at-point-with-chrome)
+   ("C-c o e" . org-open-at-point-with-eww)
+   )
   :config
   (progn
     ;; set org-directory
@@ -197,16 +200,23 @@
    `(org-verbatim ((t (:inherit (shadow fixed-pitch)))))
    )
 
-  ;; Set browser function
+  ;; Set browser functions
   (defun org-open-at-point-with-chrome ()
     (interactive)
     (let ((browse-url-browser-function 'browse-url-chrome))
+      (org-open-at-point )))
+
+  (defun org-open-at-point-with-eww ()
+    (interactive)
+    (let ((browse-url-browser-function 'eww-browse-url))
       (org-open-at-point )))
   )
 
 ;; Define captures here
 (use-package! org-capture
   :after org
+  :bind
+  ("C-c c"  . org-capture)
   :custom
   (org-capture-templates
    '(
@@ -248,17 +258,20 @@
 
 ;; (setq org-agenda-files (directory-files-recursively org-directory "\\.org$"))
 ;; add gpg files as well
-(unless (string-match-p "\\.gpg" org-agenda-file-regexp)
-  (setq org-agenda-file-regexp
-        (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
-                                  org-agenda-file-regexp)))
+;; (unless (string-match-p "\\.gpg" org-agenda-file-regexp)
+  ;; )
 ;; setup org agenda
 (use-package org-agenda
   :ensure t
   :after org
+  :bind
+  ("C-c a"      . org-agenda)
   :config
   (setq
    org-agenda-files (list org-directory)
+   org-agenda-file-regexp
+   (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
+                             org-agenda-file-regexp)
 
    org-agenda-skip-scheduled-if-done t
    org-agenda-skip-deadline-if-done t
@@ -285,7 +298,7 @@
    org-agenda-start-with-clockreport-mode t
    org-clock-report-include-clocking-task t
    org-agenda-clockreport-parameter-plist
-   '(:link t :maxlevel 4 :fileskip0 t :compact t :narrow 100)
+   '(:link t :maxlevel 6 :fileskip0 t :compact nil :narrow 100)
 
    ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
    org-agenda-prefix-format
@@ -632,9 +645,9 @@
   (projectile-global-mode))
 
 
-(use-package flyspell
-  :defer 1
-  :diminish)
+;; (use-package flyspell
+;;   :defer 1
+;;   :diminish)
 
 ;; use paredit
 (use-package paredit
@@ -657,6 +670,9 @@
    ("C-x b"         . helm-multi-files)
    ("M-x"           . helm-M-x)
    ("C-c f r"       . helm-recentf)
+   :map helm-map
+   ("C-j"           . helm-next-line)
+   ("C-k"           . helm-previous-line)
    :map helm-find-files-map
    ("C-<backspace>" . helm-find-files-up-one-level)
    ("C-f"           . helm-execute-persistent-action)
@@ -812,8 +828,6 @@
   (ag-highligh-search t)
   (ag-reuse-buffers t)
   (ag-reuse-window t)
-  :bind
-  ("C-c ag" . ag-project)
   :config
   (use-package wgrep-ag))
 
