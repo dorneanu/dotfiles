@@ -404,7 +404,8 @@
                              :todo ("STARTED")
                              :order 1)
                             (:name "Quickies"
-                             :effort< "0:15")
+                             :and (:effort< "0:15" :not (:tag "recurring"))
+                             )
                             (:name "Overdue"
                              :deadline past
                              :scheduled past
