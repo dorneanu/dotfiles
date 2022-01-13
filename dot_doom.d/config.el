@@ -4,6 +4,8 @@
 ;; - https://github.com/zzamboni/dot-emacs/blob/master/init.org
 ;; - https://ladicle.com/post/config
 ;; - https://www.suenkler.info/notes/emacs-config/
+;; - https://www.gtrun.org/custom/config.html
+;; - https://hugocisneros.com/org-config/
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
@@ -78,6 +80,7 @@
 
     ;; right-align tags
     (setq org-tags-column 100)
+    (setq org-agenda-tags-column 100)
     (setq org-use-tag-inheritance t)
 
     ;; set indentation
@@ -85,6 +88,11 @@
     (setq org-indent-indentation-per-level 2)
     (setq org-edit-src-content-indentation 0)
     (setq org-src-preserve-indentation t)
+
+    ;; No blank lines before new entries
+    (setq org-blank-before-new-entry
+          '((heading . nil)
+            (plain-list-item . nil)))
 
     ;; do logging
     (setq org-log-into-drawer t)
@@ -152,6 +160,10 @@
     (setq org-columns-default-format "%50ITEM(Task) %10TODO %10CLOCKSUM %18CLOSED %18TIMESTAMP_IA")
     )
 
+  ;; Bug for https://github.com/hlissner/doom-emacs/issues/5714
+  ;; Solution: https://github.com/hlissner/doom-emacs/issues/4832#issuecomment-822845907
+  (defalias '+org--restart-mode-h #'ignore)
+
   ;; Enable variable and visual line mode in Org mode by default.
   (add-hook! org-mode :append
              #'visual-line-mode
@@ -195,7 +207,7 @@
    `(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
    `(org-property-value ((t (:inherit fixed-pitch))) t)
    `(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-   `(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+   `(org-table ((t (:inherit variable-pitch :foreground "#83a598"))))
    `(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
    `(org-verbatim ((t (:inherit (shadow fixed-pitch)))))
    )
@@ -213,8 +225,9 @@
   )
 
 ;; Define captures here
-(use-package! org-capture
+(use-package org-capture
   :after org
+  :defer 1
   :bind
   ("C-c c"  . org-capture)
   :custom
@@ -230,6 +243,9 @@
      ;;     Assets:Cash:Wallet"
      ;;     :empty-lines 1)
 
+     ;; Docs
+     ;; - Elements: https://orgmode.org/manual/Template-elements.html
+     ;; - Expansion: https://orgmode.org/manual/Template-expansion.html
      ("t" "Todo" entry (file+headline "~/work/repos/org/inbox.org" "Tasks")
       "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n %i\n")
 
@@ -246,8 +262,17 @@
       (file+headline "~/work/repos/org/inbox.org" "Snippets")
       "* %?\t%^g\n#+BEGIN_SRC %^{language}\n\n#+END_SRC")
 
-     ("j" "Journal" entry (file+olp+datetree "~/work/repos/org/journal.org")
-      "*  %?\n")
+     ;; How to use custom lambda for finding the right heading
+     ;; ("y" "Work Task" entry (file+function
+     ;;                         "~/org/journal/work.org"
+     ;;                         (lambda ()
+     ;;                           (org-datetree-find-date-create
+     ;;                            (org-date-to-gregorian (org-today)) t)
+     ;;                           (re-search-forward "^\\*.+ log" nil t)))
+     ;;  "* TODO %?\n%U" :empty-lines 1)
+
+     ("j" "Journal" entry (file+datetree "~/work/repos/org/journal.org")
+      "*  %?\n" :tree-type week :empty-lines 0)
      )
    )
 )
@@ -255,6 +280,7 @@
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type t)
+(display-time-mode t)
 
 ;; (setq org-agenda-files (directory-files-recursively org-directory "\\.org$"))
 ;; add gpg files as well
@@ -298,14 +324,14 @@
    org-agenda-start-with-clockreport-mode t
    org-clock-report-include-clocking-task t
    org-agenda-clockreport-parameter-plist
-   '(:link t :maxlevel 6 :fileskip0 t :compact nil :narrow 100)
+   '(:link t :maxlevel 6 :fileskip0 t :compact nil :narrow 90)
 
    ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
    org-agenda-prefix-format
-   '((agenda . " %5c %4e %?-12t% s")
-     (todo   . " %4e %-12:c")
-     (tags   . " %-12:c")
-     (search . " %-12:c"))
+   '((agenda . "%5c %4e %?-12t %s")
+     (todo   . " %4e %-12c")
+     (tags   . " %-22c")
+     (search . " %-12c"))
    )
   )
 
@@ -364,15 +390,25 @@
                             :order 1)
                            (:discard (:anything))))))
             (alltodo "" ((org-agenda-overriding-header "")
-                         (org-agenda-prefix-format '((todo . " %c %4e %?-12t %s")))
+                         (org-agenda-prefix-format '(
+                                                     (agenda . "%7c %4e %?-12t %s")
+                                                     (todo . " %-8c [%-4e] %?-12t %s")
+                                                     (tags   . " %-22c")
+                                                     (search . " %-12c")
+                                                     ))
                          (org-super-agenda-groups
                           '(
                             (:log t)
                             (:discard (:tag "inactive"))
+                            (:name "Started"
+                             :todo ("STARTED")
+                             :order 1)
+                            (:name "Quick Picks"
+                             :effort< "0:30")
                             (:name "Overdue"
                              :deadline past
                              :scheduled past
-                             :order 1)
+                             :order 2)
                             (:name "Soon"
                              :deadline feature
                              :scheduled feature
@@ -384,9 +420,6 @@
                             (:name "Next to do"
                              :todo "NEXT"
                              :order 20)
-                            (:name "Started"
-                             :todo ("STARTED")
-                             :order 30)
                             (:name "WIP"
                              :todo ("WIP")
                              :order 40)
@@ -396,13 +429,13 @@
                             (:discard (:anything))))))
             (alltodo "" ((org-agenda-overriding-header "")
                          (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
-                         (org-agenda-prefix-format '((todo . " %c %4e %?-12t %s")))
+                         (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
                          (org-super-agenda-groups
                           '(
                             (:log t)
                             (:discard (:tag "inactive"))
                             (:name "Projects"
-                             :auto-property "agenda-group"
+                             :auto-property "project"
                              :order 1)
                             (:discard (:anything))))))))
           ("w" "Work"

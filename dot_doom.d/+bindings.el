@@ -2,6 +2,8 @@
 
 
 (global-set-key (kbd "C-RET") 'org-insert-subheading)
+(global-set-key (kbd "C-c o c") 'org-open-at-point-with-chrome)
+(global-set-key (kbd "C-c o e") 'org-open-at-point-with-eww)
 
 ;; https://github.com/hlissner/doom-emacs/issues/906
 (map! (:when IS-MAC
