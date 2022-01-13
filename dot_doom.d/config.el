@@ -403,8 +403,8 @@
                             (:name "Started"
                              :todo ("STARTED")
                              :order 1)
-                            (:name "Quick Picks"
-                             :effort< "0:30")
+                            (:name "Quickies"
+                             :effort< "0:15")
                             (:name "Overdue"
                              :deadline past
                              :scheduled past
