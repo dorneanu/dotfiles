@@ -193,6 +193,9 @@
                           '(("^ *\\([+]\\) "
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
 
+  ;; Open GPG files in org mode
+  (add-to-list 'auto-mode-alist '("\\.gpg\\'" . org-mode))
+
   ;; Set custom theme faces
   (custom-theme-set-faces
    'user
@@ -700,6 +703,7 @@
   :diminish helm-mode
   :bind
   (("C-x C-f"       . helm-find-files)
+   ("C-x C-a"       . helm-do-grep-ag)
    ("C-x C-b"       . helm-buffers-list)
    ("C-x b"         . helm-multi-files)
    ("M-x"           . helm-M-x)
@@ -773,6 +777,12 @@
 ;; org-pomodoro
 (use-package org-pomodoro
   :after org-agenda
+  :commands (org-pomodoro)
+  :config
+  (setq
+   org-pomodoro-length 50
+   org-pomodoro-short-break-length 10
+   )
   ;; :config
   ;; (add-hook 'org-pomodoro-started-hook
   ;;           (lambda ()
@@ -801,7 +811,11 @@
 
 ;; Setup wakatime
 (use-package wakatime-mode
-  :ensure t)
+  :ensure t
+  :config
+  (setq
+   wakatime-python-bin "/home/victor/.pyenv/versions/emacs/bin/python"
+   wakatime-cli-path "/home/victor/.pyenv/versions/emacs/bin/wakatime"))
 (global-wakatime-mode)
 
 ;; Web development with web-mode

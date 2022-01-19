@@ -85,6 +85,7 @@
 (package! wgrep)
 (package! ag)
 (package! wgrep-ag)
+(package! gnuplot)
 ;; (package! org-download)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
