@@ -10,6 +10,8 @@
                    realgud
                    realgud-trepan-ni
                    anaconda-mode
+                   snipe
+                   evil-snipe
                    company-anaconda
                    lsp-python-ms
                    pyimport)
@@ -20,6 +22,10 @@
 (package! ox-hugo)
 ;; (package! go-autocomplete)
 (package! org-super-agenda)
+(package! org-transclusion)
+(package! org-bars :recipe (:host github :repo "tonyaldon/org-bars" ))
+(package! org-ql)
+(package! org-journal)
 (package! ranger)
 ;; (package! lsp-python-ms :disable t)
 (package! ob-go)
@@ -42,19 +48,20 @@
 (package! company-lsp)
 (package! company-go)
 (package! company-postframe)
+(package! company-box)
 (package! verb)
 (package! tiddlywiki-mode :recipe
   (:host github :repo "whacked/tiddlywiki-org"))
-(package! org8-wikiexporters :recipe
-  (:host github :repo "dfeich/org8-wikiexporters"))
-(package! elfeed-goodies)
+;; (package! org8-wikiexporters :recipe
+;;   (:host github :repo "dfeich/org8-wikiexporters"))
+;; (package! elfeed-goodies)
 (package! pinentry)
-(package! hnreader)
+;; (package! hnreader)
 (package! go-fill-struct)
 (package! flycheck-golangci-lint)
 (package! gotest)
 (package! lsp-mode)
-(package! jupyter)
+;; (package! jupyter)
 (package! ox-pandoc)
 (package! ox-jira)
 (package! ox-slack)
@@ -65,18 +72,30 @@
 (package! focus)
 (package! vterm)
 (package! autorevert)
+(package! doom-modeline)
+(package! diredfl)
+(package! dired-subtree)
+(package! dired-sidebar)
+(package! dired-narrow)
+(package! dired-open)
+(package! dired-git-info)
+(package! all-the-icons-dired)
+(package! dimmer)
+;; (package! ol-notmuch)
 ;; (package! md4rd
 ;;   :recipe (:host github :repo "ahungry/md4rd"))
 ;;(package! emacs-w3m)
 (package! wakatime-mode)
+(package! dap-mode)
 (package! dank-mode
  :recipe (:host github :repo "john2x/dank-mode"))
 
 (package! lsp-treemacs)
+(package! tldr)
 
 ;; asciidoc related
-(package! adoc-mode)
-(package! org-asciidoc :recipe (:host github :repo "yashi/org-asciidoc" :branch "asciidoctor-diagram"))
+;;(package! adoc-mode)
+;;(package! org-asciidoc :recipe (:host github :repo "yashi/org-asciidoc" :branch "asciidoctor-diagram"))
 
 (package! iedit)
 (package! paredit)
@@ -87,7 +106,15 @@
 (package! wgrep-ag)
 (package! gnuplot)
 (package! screenshot :recipe (:host github :repo "tecosaur/screenshot"))
+(package! evil-commentary)
+(package! evil-quickscope)
+(package! evil-numbers)
+(package! evil-lion)
+(package! evil-matchit)
+(package! evil-surround)
 ;; (package! org-download)
+(package! yasnippet-snippets)
+(package! ivy-prescient)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;(package! some-package)
