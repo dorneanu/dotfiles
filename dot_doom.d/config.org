@@ -7,6 +7,8 @@
 #+begin_src emacs-lisp
 (setq vd/is-termux
     (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
+
+(setq doom-user-directory "~/.doom.d/")
 #+end_src
 ** Startup performance
 #+begin_src emacs-lisp
@@ -532,9 +534,10 @@ I have to load by defining a ~load-path~.
 (use-package yasnippet-snippets)
 
 (use-package yasnippet
+  :bind (("M-o" . yas-insert-snippet))
   :config
   (setq yas-snippet-dirs
-	`(,(concat (expand-file-name user-emacs-directory) "snippets")
+	`(,(concat (expand-file-name doom-user-directory) "snippets")
 	  yasnippet-snippets-dir))
   (setq yas-triggers-in-field t)
   (yas-global-mode 1))
@@ -660,11 +663,12 @@ A package to select an ever-increasing (or ever-decreasing) region of text.
 (my-leader-def
   :infix "mp"
   ""   '(:ipgnore t :which-key "Projects")
-  "f"  'propjectile-find-file
-  "s"  'propjectile-switch-project
-  "F"  'conpsult-ripgrep
-  "p"  'propjectile-find-file
+  "f"  'projectile-find-file
+  "s"  'projectile-switch-project
+  "F"  'counsel-rg
+  "p"  'projectile--find-file
   "c"  'projectile-compile-project
+  "v"  'projectile-run-vterm
   "d"  'projectile-dired)
 
 
@@ -736,8 +740,133 @@ Highlight git diffs on the fly
   "a h"  'diff-hl-mark-hunk
   "g h"  'diff-hl-diff-goto-hunk)
 #+end_src
-* Languages
+* Programming
 ** LSP
+LSP-mode provides an IDE-like experience for Emacs - real-time diagnostic, code actions, intelligent autocompletion, etc.
+
+References:
+- [[https://emacs-lsp.github.io/lsp-mode/][lsp-mode homepage]]
+
+*** lsp-mode
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :config
+  (setq lsp-idle-delay 0.5
+        lsp-enable-symbol-highlighting t
+        lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
+        lsp-pyls-plugins-flake8-enabled t)
+  :hook (
+         (go-mode . lsp)
+         (typescript-mode . lsp)
+         (js-mode . lsp)
+         (vue-mode . lsp)
+         (svelte-mode . lsp)
+         (python-mode . lsp)
+         (json-mode . lsp)
+         ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
+         ;; (lsp-mode . lsb-enable-which-key-integration))
+         )
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-print-io nil)
+  (lsp-trace nil)
+  (lsp-print-performance nil)
+  (lsp-prefer-flymake t)
+)
+#+end_src
+*** lsp-ui
+#+begin_src emacs-lisp
+(use-package lsp-ui
+  :ensure t
+  :config
+  (setq
+        ;; lsp-ui-sideline-show-hover t
+        ;; lsp-ui-sideline-delay 0.5
+        ;; lsp-ui-sideline-ignore-duplicates t
+        lsp-ui-sideline-show-hover nil
+        lsp-ui-doc-delay 0.5
+        lsp-ui-doc-position 'bottom
+        lsp-ui-doc-alignment 'frame
+        lsp-ui-doc-header nil
+        lsp-ui-doc-include-signature t
+        lsp-ui-doc-use-childframe t)
+  :commands lsp-ui-mode
+  :custom
+  ;; lsp-ui-doc
+  (lsp-ui-doc-enable nil)
+  (lsp-ui-doc-header t)
+  (lsp-ui-doc-include-signature nil)
+  (lsp-ui-doc-position 'top) ;; top, bottom, or at-point
+  (lsp-ui-doc-max-width 120)
+  (lsp-ui-doc-max-height 30)
+  (lsp-ui-doc-use-childframe t)
+  (lsp-ui-doc-use-webkit t)
+  ;; signature
+  (lsp-signature-auto-activate nil)
+  (lsp-signature-render-documentation nil)
+  (lsp-eldoc-hook nil)
+  :bind
+  (:map lsp-ui-mode-map
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c C-r" . lsp-ui-peek-find-references)
+              ("C-c C-j" . lsp-ui-peek-find-definitions)
+              ("C-c i"   . lsp-ui-peek-find-implementation)
+              ("C-c u" . lsp-ui-imenu)
+              ("C-c d" . lsp-ui-doc-glance)
+              ("C-c s"   . lsp-ui-sideline-mode)
+              ("C-c x" . counsel-flycheck))
+)
+#+end_src
+*** Integrations
+The only integration left now is treemacs.
+**** lsp-treemacs
+#+begin_src emacs-lisp
+(use-package lsp-treemacs
+  :after (lsp)
+  :commands lsp-treemacs-errors-list)
+#+end_src
+*** Keybindings
+#+begin_src emacs-lisp
+(my-leader-def
+  :infix "l"
+  "" '(:which-key "lsp")
+  "d" 'lsp-ui-peek-find-definitions
+  "r" 'lsp-rename
+  "u" 'lsp-ui-peek-find-references
+  "s" 'lsp-ui-find-workspace-symbol
+  "l" 'lsp-execute-code-action
+  "t" 'lsp-treemacs-symbols
+  "e" 'list-flycheck-errors)
+#+end_src
+** Flycheck
+A syntax checking extension for Emacs. Integrates with LSP-mode, but can also use various standalone checkers.
+
+References:
+- [[https://www.flycheck.org/en/latest/][Flycheck homepage]]
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :defer t
+  :hook (lsp-mode . flycheck-mode))
+;; (use-package flycheck
+;;   :config
+;;   (global-flycheck-mode)
+;;   (setq flycheck-check-syntax-automatically '(save idle-buffer-switch mode-enabled))
+;;   ;; (add-hook 'evil-insert-state-exit-hook
+;;   ;;           (lambda ()
+;;   ;;             (if flycheck-checker
+;;   ;;                 (flycheck-buffer))
+;;   ;;             ))
+;;   (advice-add 'flycheck-eslint-config-exists-p :override (lambda() t))
+;;   (add-to-list 'display-buffer-alist
+;;                `(,(rx bos "*Flycheck errors*" eos)
+;;                  (display-buffer-reuse-window
+;;                   display-buffer-in-side-window)
+;;                  (side            . bottom)
+;;                  (reusable-frames . visible)
+;;                  (window-height   . 0.33))))
+#+end_src
 ** Golang
 #+begin_src emacs-lisp
 (use-package go-mode
@@ -759,6 +888,38 @@ Highlight git diffs on the fly
 #+end_src
 
 ** Python
+#+begin_src emacs-lisp
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp))))  ; or lsp-deferred
+(add-hook 'python-mode-hook #'smartparens-mode)
+#+end_src
+*** pyenv
+#+begin_src emacs-lisp
+(use-package pyenv-mode
+  :init
+  (add-to-list 'exec-path "~/.pyenv/shims")
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  :config
+  (pyenv-mode)
+  (my-leader-def "mpy" '(pyenv-mode-set :which-key "Activate pyenv")))
+#+end_src
+** TypeScript
+#+begin_src emacs-lisp
+(use-package typescript-mode
+  :mode "\\.ts\\'"
+  :config
+  (add-hook 'typescript-mode-hook #'smartparens-mode)
+  (add-hook 'typescript-mode-hook #'rainbow-delimiters-mode)
+  (add-hook 'typescript-mode-hook #'hs-minor-mode))
+#+end_src
+** JavaScript
+#+begin_src emacs-lisp
+(add-hook 'js-mode-hook #'smartparens-mode)
+(add-hook 'js-mode-hook #'hs-minor-mode)
+#+end_src
 ** Web
 #+begin_src emacs-lisp
 (use-package emmet-mode
@@ -786,7 +947,36 @@ Highlight git diffs on the fly
     "<backtab>" 'emmet-prev-edit-point))
 #+end_src
 
+** PlantUML
+#+begin_src emacs-lisp
+(use-package plantuml-mode
+  :mode "(\\.\\(plantuml?\\|uml\\|puml\\)\\'"
+  :config
+  (setq plantuml-default-exec-mode "jar")
+  (setq plantuml-indent-level 2)
+  (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+  (add-to-list 'auto-mode-alist '("\\.uml\\'" . plantuml-mode))
+  (add-hook 'plantuml-mode-hook #'smartparens-mode))
+#+end_src
 ** Lisp
+*** Meta Lisp
+#+begin_src emacs-lisp
+(use-package lispy
+  :hook ((emacs-lisp-mode . lispy-mode)
+         (scheme-mode . lispy-mode)))
+
+(use-package lispyville
+  :hook (lispy-mode . lispyville-mode))
+
+(sp-with-modes sp-lisp-modes
+  (sp-local-pair "'" nil :actions nil))
+#+end_src
+*** Emacs Lisp
+#+begin_src emacs-lisp
+;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
+;; (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
+(add-hook 'emacs-lisp-mode-hook #'lispy-mode)
+#+end_src
 ** Data serialization
 *** JSON
 #+begin_src emacs-lisp
@@ -1003,10 +1193,6 @@ References:
               (rainbow-delimiters-mode -1)))
 
 
-  <<org-crypt-setup>>
-  (unless vd/is-termux
-    <<org-lang-setup>>)
-  <<org-ui-setup>>
   <<org-keys-setup>>
   <<org-productivity-setup>>)
 #+end_src
@@ -1504,9 +1690,70 @@ A package to add more evil-mode keybindings to org-mode.
     (message (concat "copied url: " url))))
 
 (general-nmap :keymaps 'org-mode-map
-  "c-x C-l" 'vd/org-link-copy)
+  "C-x C-l" 'vd/org-link-copy)
 #+end_src
+*** auto clock-in when task is marked STARTED
+#+begin_src emacs-lisp :noweb-ref org-keys-setup
+;; From https://github.com/svetlyak40wt/dot-emacs/blob/master/.emacs.d/lib/org-auto-clock.el
+;; Auto clock-in when task is marked STARTED
+(eval-after-load 'org
+  '(progn
+     (defun wicked/org-clock-in-if-starting ()
+       "Clock in when the task is marked STARTED."
+       (when (and (string= org-state "STARTED")
+                  (not (string= org-last-state org-state)))
+         (org-clock-in)))
 
+     (add-hook 'org-after-todo-state-change-hook
+               'wicked/org-clock-in-if-starting)
+
+     (defadvice org-clock-in (after wicked activate)
+       "Set this task's status to 'STARTED'."
+       (org-todo "STARTED"))
+
+
+     (defun wicked/org-clock-out-if-waiting ()
+       "Clock out when the task is marked WAITING or WIP (Work in Progress)."
+       (when (and (or (string= org-state "WAITING")
+                      (string= org-state "WIP"))
+                  (equal (marker-buffer org-clock-marker) (current-buffer))
+                  (< (point) org-clock-marker)
+                  (> (save-excursion (outline-next-heading) (point))
+                     org-clock-marker)
+                  (not (string= org-last-state org-state)))
+         (org-clock-out)))
+
+     (add-hook 'org-after-todo-state-change-hook
+               'wicked/org-clock-out-if-waiting)))
+#+end_src
+** Export
+*** hugo
+#+begin_src emacs-lisp
+(use-package ox-hugo
+  :after ox)
+
+(defun vd/hugo-add-slug ()
+  "Adds a Hugo slug as EXPORT_FILE_NAME property"
+ (interactive)
+ (org-set-property "EXPORT_FILE_NAME"
+ (concat (format-time-string "%Y") "-" (org-hugo-slug (org-get-heading :no-tags :no-todo)))))
+
+ ;; see https://www.reddit.com/r/emacs/comments/q0nlgy/extract_link_from_org_header_and_insert_as/
+(defun dorneanu/hugo-org-replace-link-by-link-description ()
+  "Replace an org link by its description or if empty its address and adds hugo front matter as URL"
+  (interactive)
+  (if (org-in-regexp org-link-bracket-re 1)
+      (save-excursion
+        (let ((remove (list (match-beginning 0) (match-end 0)))
+              (description
+               (if (match-end 2)
+                   (org-match-string-no-properties 2)
+                 (org-match-string-no-properties 1)))
+              (url (org-match-string-no-properties 1)))
+          (apply 'delete-region remove)
+          (insert description)
+          (org-entry-put nil "EXPORT_HUGO_CUSTOM_FRONT_MATTER" (concat ":posturl " url))))))
+#+end_src
 * Applications
 ** RSS
 *** elfeed
@@ -1609,6 +1856,79 @@ Allows to configure ~elfeed~ with an ORG file.
 
 (advice-add #'Man-update-manpage :before #'my/man-fix-width)
 #+end_src
+*** help-map
+#+begin_src emacs-lisp
+(use-package helpful
+  :commands (helpful-callable
+             helpful-variable
+             helpful-key
+             helpful-macro
+             helpful-function
+             helpful-command))
+
+#+end_src
+
+As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code below.
+#+begin_src emacs-lisp
+(my-leader-def
+  "mH" '(:keymap help-map :which-key "help"))
+
+(general-define-key
+ :keymaps 'help-map
+ "f" 'helpful-function
+ "k" 'helpful-key
+ "v" 'helpful-variable
+ "o" 'helpful-symbol)
+#+end_src
+*** google-translate
+#+begin_src emacs-lisp
+;; (use-package google-translate
+;;   :ensure t
+;;   :config
+;;   (when (and (string-match "0.11.14"
+;;       (google-translate-version))
+;;       (>= (time-to-seconds)
+;;       (time-to-seconds
+;;       (encode-time 0 0 0 23 9 2018))))
+;;   (defun google-translate--get-b-d1 ()
+;;       ;; TKK='427110.1469889687'
+;;       (list 427110 1469889687)))
+;;   (require 'google-translate-smooth-ui)
+;;   (setq google-translate-translation-directions-alist
+;;         '(("en" . "de") ("de" . "en")))
+;;   (setq google-translate-output-destination nil)
+;;   (setq google-translate-pop-up-buffer-set-focus t)
+;;   (setq google-translate-default-source-language "en")
+;;   (setq google-translate-default-target-language "de"))
+
+;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
+(use-package google-translate
+  :ensure t
+  :custom
+  (google-translate-backend-method 'curl)
+  :config
+  (setq google-translate-translation-directions-alist
+        '(("en" . "de") ("de" . "en")))
+  (setq google-translate-pop-up-buffer-set-focus t)
+  (setq google-translate-default-source-language "en")
+  (setq google-translate-default-target-language "de")
+  (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130)))
+
+(my-leader-def
+  :infix "at"
+  "" '(:which-key "google translate")
+  "p" 'google-translate-at-point
+  "P" 'google-translate-at-point-reverse
+  "q" 'google-translate-query-translate
+  "Q" 'google-translate-query-translate-reverse
+  "t" 'google-translate-smooth-translate)
+#+end_src
+*** dict.cc
+#+begin_src emacs-lisp
+(use-package dictcc)
+(my-leader-def "ad" 'dictcc)
+
+#+end_src
 ** Productivity
 *** wakatime
 #+begin_src emacs-lisp
@@ -1701,3 +2021,4 @@ Allows to configure ~elfeed~ with an ORG file.
 - https://sqrtminusone.xyz/configs/readme/
 - https://config.daviwil.com/emacs
 - https://quinoa42.github.io/en/dot-emacs/
+- https://sriramkswamy.github.io/dotemacs/
