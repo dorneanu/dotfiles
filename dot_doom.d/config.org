@@ -320,7 +320,7 @@ Highlight the current line
 #+end_src
 ** Line numbers
 #+begin_src emacs-lisp
-(global-display-line-numbers-mode 1)
+(global-display-line-numbers-mode nil)
 (line-number-mode nil)
 (setq display-line-numbers-type 'visual)
 (column-number-mode)
@@ -509,7 +509,7 @@ I have to load by defining a ~load-path~.
 #+end_src
 *** Tabs
 #+begin_src emacs-lisp
-(setq tab-always-indent nil)
+(setq tab-always-indent t)
 
 (setq-default default-tab-width 4)
 (setq-default tab-width 4)
@@ -814,6 +814,7 @@ References:
               ("C-c i"   . lsp-ui-peek-find-implementation)
               ("C-c u" . lsp-ui-imenu)
               ("C-c d" . lsp-ui-doc-glance)
+              ("C-c D" . lsp-ui-doc-show)
               ("C-c s"   . lsp-ui-sideline-mode)
               ("C-c x" . counsel-flycheck))
 )
@@ -1178,6 +1179,10 @@ References:
         org-hide-leading-stars t
         org-pretty-entities t)
 
+  ;; Effort entries
+  (add-to-list 'org-global-properties
+               '("Effort_ALL". "0:05 0:15 0:30 1:00 2:00 3:00 4:00"))
+
   ;; Refiling
   ;; Allow to create new nodes when refiling
   (setq org-refile-targets '((nil :maxlevel . 9)
@@ -1192,6 +1197,8 @@ References:
             (lambda ()
               (rainbow-delimiters-mode -1)))
 
+  ;; Default column view headings
+  (setq org-columns-default-format "%50ITEM(Task) %10TODO %10CLOCKSUM %18CLOSED %18TIMESTAMP_IA")
 
   <<org-keys-setup>>
   <<org-productivity-setup>>)
@@ -1268,7 +1275,6 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
    ;; Use straight line as separator between agenda blocks
    ;; https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472&utf8=dec&unicodeinhtml=dec
    org-agenda-block-separator 9472
-   org-agenda-format-date "%Y-%m-%d ---------------------------------------------------------------------"
    org-agenda-compact-blocks t
    org-agenda-start-day nil ;; i.e. today
    org-agenda-span 1
@@ -1657,10 +1663,9 @@ A package to add more evil-mode keybindings to org-mode.
 *** epa-file
 #+begin_src emacs-lisp
 (use-package epa-file
-  :ensure nil ;; included with Emacs
   :config
   (setq
-   epa-file-encrypt-to '("")
+   epa-file-encrypt-to '("BF2828095372F24D ")
    epa-pinentry-mode 'ask)
   :custom
   (epa-file-select-keys 'silent))
@@ -1668,13 +1673,12 @@ A package to add more evil-mode keybindings to org-mode.
 *** org-crypt
 #+begin_src emacs-lisp
 (use-package org-crypt
-  :ensure nil  ;; included with org-mode
   :after org
   :config
   (org-crypt-use-before-save-magic)
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
   :custom
-  (org-crypt-key ""))
+  (org-crypt-key "BF2828095372F24D "))
 #+end_src
 ** Utils
 *** copy a link
@@ -1761,6 +1765,9 @@ A package to add more evil-mode keybindings to org-mode.
 (use-package elfeed
   :commands (elfeed)
   :config
+  (use-package pocket-lib)
+  (use-package org-web-tools)
+
   (setq elfeed-db-directory "~/.elfeed")
   (setq elfeed-enclosure-default-dir (expand-file-name "~/Downloads"))
 
@@ -1903,7 +1910,6 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
 
 ;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
 (use-package google-translate
-  :ensure t
   :custom
   (google-translate-backend-method 'curl)
   :config
@@ -1976,7 +1982,6 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   (pocket-reader-search "t:2read" :add nil))
 
 (use-package pocket-reader
-    :defer t
     :after (pocket-lib)
     :config
     ;; Check max column width for site field
