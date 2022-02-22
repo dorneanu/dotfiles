@@ -741,6 +741,11 @@ Highlight git diffs on the fly
   "g h"  'diff-hl-diff-goto-hunk)
 #+end_src
 * Programming
+** File templates
+#+begin_src emacs-lisp
+(set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
+#+end_src
+
 ** LSP
 LSP-mode provides an IDE-like experience for Emacs - real-time diagnostic, code actions, intelligent autocompletion, etc.
 
@@ -987,6 +992,13 @@ References:
   (add-hook 'json-mode #'smartparens-mode)
   (add-hook 'json-mode #'hs-minor-mode))
 #+end_src
+**** Snatch JSON
+Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Emacs]].
+  #+begin_src emacs-lisp
+  ( use-package  json-snatcher
+     :ensure t
+     :commands (jsons-print-path))
+  #+end_src
 *** CSV
 #+begin_src emacs-lisp
 (use-package csv-mode
@@ -1000,6 +1012,14 @@ References:
   (add-hook 'yaml-mode-hook 'smartparens-mode)
   (add-hook 'yaml-mode-hook 'highlight-indent-guides-mode)
   (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode)))
+#+end_src
+** Tiddlywiki
+#+begin_src emacs-lisp
+(use-package tiddlywiki-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.tid\\'" . tiddlywiki-org-mode))
+  (tiddlywiki-widen-file)
+)
 #+end_src
 * Completion
 ** ivy
@@ -1129,6 +1149,56 @@ References:
  "<C-return>" 'ivy-call
  "M-RET" 'ivy-immediate-done
  [escape] 'minibuffer-keyboard-quit)
+#+end_src
+* Searching
+** rg
+#+begin_src emacs-lisp
+;; from https://alexpeits.github.io/emacs.d/
+(use-package rg
+  :commands (rg my/rg-project-or-ask)
+  ;; :bind (("C-c g" . my/rg-project-or-ask)
+  ;;        :map rg-mode-map
+  ;;        ("m" . rg-menu)
+  ;;        ("s" . my/rg-save-search-as-name)
+  ;;        ("C-n" . next-line)
+  ;;        ("C-p" . previous-line)
+  ;;        ("j" . next-line)
+  ;;        ("k" . previous-line)
+  ;;        ("M-n" . rg-next-file)
+  ;;        ("M-p" . rg-prev-file))
+  :init
+  (setq rg-group-result t
+        rg-ignore-case 'smart)
+  (defalias 'rgp 'my/rg-project-or-ask)
+  :config
+  (rg-define-toggle "--multiline --multiline-dotall" "u")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L")
+  (rg-enable-default-bindings)
+  (rg-define-search my/rg-org-directory
+    :query ask
+    :format regexp
+    :files "org"
+    :dir org-directory
+    :confirm prefix)
+
+  ;; prot
+  ;; https://protesilaos.com/dotemacs/#h:31622bf2-526b-4426-9fda-c0fc59ac8f4b
+  (rg-define-search my/rg-project-or-ask
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir (or (projectile-project-root)
+             (read-directory-name "rg in: "))
+    :confirm prefix)
+
+  (defun my/rg-save-search-as-name ()
+    "Save `rg' buffer, naming it after the current search query."
+    (interactive)
+    (let ((pattern (rg-search-pattern rg-cur-search)))
+      (rg-save-search-as-name (concat "«" pattern "»"))))
+  )
+
 #+end_src
 * ORG Mode
 ** Basic
@@ -1533,10 +1603,19 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 #+end_src
 ** org-capture
 #+begin_src emacs-lisp
+(defun vd/tw5-journal-file-by-date ()
+"Create a new Tiddlywiki journal file with current time as name."
+  (interactive)
+  (let ((journal-file (format-time-string "/cs/priv/repos/brainfck.org/tw5/tiddlers/%Y-%m-%d.tid")))
+  (find-file journal-file))
+  )
+
+
 (use-package org-capture
   :after org
   :defer 1
   :custom
+
   (org-capture-templates
    '(
      ;; ("l" "Ledger")
@@ -1579,6 +1658,9 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 
      ("j" "Journal" entry (file+datetree "~/work/repos/org/journal.org")
       "*  %?\n" :tree-type week :empty-lines 0)
+
+     ;; ("x" "Journal" plain (function vd/tw5-journal-file-by-date)
+     ;;  "Capture template")
      )
    )
   :bind
