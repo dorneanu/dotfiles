@@ -44,6 +44,9 @@
 
 ;; Automatically revert buffers for changed files
 (global-auto-revert-mode 1)
+
+;; Revert dired and other buffers
+(setq global-auto-revert-non-file-buffers t)
 #+end_src
 * Keyboard Bindings
 ** Evil
@@ -551,6 +554,17 @@ I have to load by defining a ~load-path~.
 	  yasnippet-snippets-dir))
   (setq yas-triggers-in-field t)
   (yas-global-mode 1))
+
+;; turn off yasnippet for several modes
+(defun  my/force-yasnippet-off ()
+    (yas-minor-mode -1)
+    (setq yas-dont-activate t))
+
+(add-hook 'term-mode-hook 'my/force-yasnippet-off)
+(add-hook 'shell-mode-hook 'my/force-yasnippet-off)
+(add-hook 'eshell-mode-hook 'my/force-yasnippet-off)
+
+
 #+end_src
 ** smartparens
 #+begin_src emacs-lisp
@@ -673,7 +687,7 @@ A package to select an ever-increasing (or ever-decreasing) region of text.
 (my-leader-def
   :infix "mp"
   ""   '(:ipgnore t :which-key "Projects")
-  "e"  'project-shell
+  "e"  'project-eshell
   "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
   "s"  'projectile-switch-project
   "F"  'counsel-rg
@@ -1869,6 +1883,46 @@ A package to add more evil-mode keybindings to org-mode.
           (apply 'delete-region remove)
           (insert description)
           (org-entry-put nil "EXPORT_HUGO_CUSTOM_FRONT_MATTER" (concat ":posturl " url))))))
+#+end_src
+* Shell
+** eshell
+#+begin_src emacs-lisp
+;; from https://config.daviwil.com/emacs
+(defun my/configure-eshell ()
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+  (setq eshell-history-size 10000)
+  (setq eshell-hist-ingnoredups t)
+  (setq eshell-buffer-maximum-lines 10000)
+
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (general-define-key
+   :states '(normal)
+   :keymaps 'eshell-mode-map
+   (kbd "C-h") 'evil-window-left
+   (kbd "C-l") 'evil-window-right
+   (kbd "C-k") 'evil-window-up
+   (kbd "C-j") 'evil-window-down))
+
+(use-package eshell
+  :commands (eshell)
+  :bind (("C-c !" . eshell)
+         :map eshell-mode-map
+         ("C-c l" . my/eshell-clear))
+  :init
+  (defun my/eshell-clear ()
+    (interactive)
+    "Clear the eshell buffer."
+    (let  ((eshell-buffer-maximum-lines 0))
+      (eshell-truncate-buffer)))
+  :config
+  (add-hook 'eshell-first-time-mode-hook 'my/configure-eshell 90)
+  (setq eshell-banner-message "")
+  (setq eshell-prefer-lisp-functions t)
+  (setq password-cache t)               ; enable password caching
+  (setq password-cache-expiry 3600)     ; for one hour (time in secs)
+  )
 #+end_src
 * Applications
 ** RSS
