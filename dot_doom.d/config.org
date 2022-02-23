@@ -9,6 +9,7 @@
     (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
 
 (setq doom-user-directory "~/.doom.d/")
+(setq tiddlywiki-directory "/cs/priv/repos/brainfck.org/")
 #+end_src
 ** Startup performance
 #+begin_src emacs-lisp
@@ -22,9 +23,15 @@
                        (emacs-init-time "%.2f")
                        gcs-done)))
 #+end_src
+
 ** Server Mode
 #+begin_src emacs-lisp
 ;; (server-start)
+#+end_src
+
+** Diminish
+#+begin_src emacs-lisp
+(use-package diminish)
 #+end_src
 
 ** Defaults
@@ -34,6 +41,9 @@
 
 ;; Escape cancels everything
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Automatically revert buffers for changed files
+(global-auto-revert-mode 1)
 #+end_src
 * Keyboard Bindings
 ** Evil
@@ -663,7 +673,8 @@ A package to select an ever-increasing (or ever-decreasing) region of text.
 (my-leader-def
   :infix "mp"
   ""   '(:ipgnore t :which-key "Projects")
-  "f"  'projectile-find-file
+  "e"  'project-shell
+  "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
   "s"  'projectile-switch-project
   "F"  'counsel-rg
   "p"  'projectile--find-file
@@ -929,28 +940,29 @@ References:
 ** Web
 #+begin_src emacs-lisp
 (use-package emmet-mode
-  :hook ((vue-html-mode . emmet-mode)
-         (svelte-mode . emmet-mode)
-         (web-mode . emmet-mode)
-         (html-mode . emmet-mode)
-         (css-mode . emmet-mode)
-         (scss-mode . emmet-mode))
-  :config
-  ;; (setq emmet-indent-after-insert nil)
-  (setq my/emmet-mmm-submodes '(vue-html-mode css-mode))
-  (defun my/emmet-or-tab (&optional arg)
-    (interactive)
-    (if (and
-         (boundp 'mmm-current-submode)
-         mmm-current-submode
-         (not (member mmm-current-submode my/emmet-mmm-submodes)))
-        (indent-for-tab-command arg)
-      (or (emmet-expand-line arg)
-          (emmet-go-to-edit-point 1)
-          (indent-for-tab-command arg))))
-  (general-imap :keymaps 'emmet-mode-keymap
-    "TAB" 'my/emmet-or-tab
-    "<backtab>" 'emmet-prev-edit-point))
+ :ensure t
+ :diminish (emmet-mode .  "ε")
+ :bind* (("C-)" . emmet-next-edit-point)
+         ("C-(" . emmet-prev-edit-point))
+ :commands (emmet-mode
+            emmet-next-edit-point
+           emmet-prev-edit-point))
+
+(use-package web-mode
+ :mode  (("\\.html\\'" . web-html-mode )
+         ("\\.tsx\\'" . web-tsx-mode ) )
+ :init
+ (setq
+  web-mode-markup-indent-offset  2
+  web-mode-css-indent-offset  2
+  web-mode-code-indent-offset  2
+  web-mode-attr-indent-offset  2
+  web-mode-enable-auto-quoting nil )
+ (define-derived-mode  web-tsx-mode web-mode "web-tsx" )
+ (define-derived-mode  web-html-mode web-mode "web-html" )
+ ;; :config
+ ;;  web-tsx-mode
+)
 #+end_src
 
 ** PlantUML
@@ -1020,6 +1032,22 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
   (add-to-list 'auto-mode-alist '("\\.tid\\'" . tiddlywiki-org-mode))
   (tiddlywiki-widen-file)
 )
+
+;; create tw5 journal file
+(defun vd/tw5-journal-file-by-date ()
+"Create a new Tiddlywiki journal file with current time as name."
+  (interactive)
+  (let ((journal-file (format-time-string "/cs/priv/repos/brainfck.org/tw5/tiddlers/%Y-%m-%d.tid")))
+  (find-file journal-file))
+  )
+
+;; keybindings
+(my-leader-def
+  :infix "m w"
+  "j" '(vd/tw5-journal-file-by-date :which-key "Create/Open TW5 Journal file")
+  "s" '(my/rg-tiddlywiki-directory :which-key "Search in TW5 directory"))
+
+
 #+end_src
 * Completion
 ** ivy
@@ -1180,6 +1208,14 @@ References:
     :format regexp
     :files "org"
     :dir org-directory
+    :confirm prefix)
+
+  ;; search in tiddlywiki folder
+  (rg-define-search my/rg-tiddlywiki-directory
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir tiddlywiki-directory
     :confirm prefix)
 
   ;; prot
@@ -1603,12 +1639,6 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 #+end_src
 ** org-capture
 #+begin_src emacs-lisp
-(defun vd/tw5-journal-file-by-date ()
-"Create a new Tiddlywiki journal file with current time as name."
-  (interactive)
-  (let ((journal-file (format-time-string "/cs/priv/repos/brainfck.org/tw5/tiddlers/%Y-%m-%d.tid")))
-  (find-file journal-file))
-  )
 
 
 (use-package org-capture
@@ -2003,7 +2033,7 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130)))
 
 (my-leader-def
-  :infix "at"
+  :infix "m l g"
   "" '(:which-key "google translate")
   "p" 'google-translate-at-point
   "P" 'google-translate-at-point-reverse
@@ -2014,8 +2044,7 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
 *** dict.cc
 #+begin_src emacs-lisp
 (use-package dictcc)
-(my-leader-def "ad" 'dictcc)
-
+(my-leader-def "m l d" 'dictcc)
 #+end_src
 ** Productivity
 *** wakatime
