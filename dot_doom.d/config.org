@@ -766,11 +766,6 @@ Highlight git diffs on the fly
   "g h"  'diff-hl-diff-goto-hunk)
 #+end_src
 * Programming
-** File templates
-#+begin_src emacs-lisp
-(set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
-#+end_src
-
 ** LSP
 LSP-mode provides an IDE-like experience for Emacs - real-time diagnostic, code actions, intelligent autocompletion, etc.
 
@@ -1063,6 +1058,11 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
 
 
 #+end_src
+** File templates
+#+begin_src emacs-lisp
+(set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
+#+end_src
+
 * Completion
 ** ivy
 #+begin_src emacs-lisp
