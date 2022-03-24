@@ -64,7 +64,7 @@
   :config
   (evil-mode 1)
   ;; (setq evil-respect-visual-line-mode t)
-  (evil-set-undo-system 'undo-tree)
+  ;; (evil-set-undo-system 'undo-tree)
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
   (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join))
 #+end_src
@@ -541,9 +541,13 @@ I have to load by defining a ~load-path~.
 #+end_src
 ** Undo
 #+begin_src emacs-lisp
-(use-package undo-tree
+(use-package  undo-tree
+  :bind  ("C-x u" . undo-tree-visualize)
+  :diminish undo-tree-mode
+  :hook  (after-init . global-undo-tree-mode )
   :init
-  (global-undo-tree-mode 1))
+  (setq undo-tree-visualizer-relative-timestamps t
+        undo-tree-visualizer-diff t))
 #+end_src
 ** Snippets
 #+begin_src emacs-lisp
