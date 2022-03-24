@@ -312,7 +312,7 @@ Show pairs
 
 Highlight the current line
 #+begin_src emacs-lisp
-(global-hl-line-mode 1)
+(global-hl-line-mode t)
 #+end_src
 ** Scrolling
 #+begin_src emacs-lisp
@@ -333,10 +333,13 @@ Highlight the current line
 #+end_src
 ** Line numbers
 #+begin_src emacs-lisp
-(global-display-line-numbers-mode nil)
-(line-number-mode nil)
-(setq display-line-numbers-type 'visual)
-(column-number-mode)
+(global-display-line-numbers-mode 0)
+;; (line-number-mode nil)
+;; (setq display-line-numbers-type 'visual)
+;; (column-number-mode)
+
+;; allow line numbers only in buffer that have code
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
 #+end_src
 ** Word wrapping
 #+begin_src emacs-lisp
@@ -946,6 +949,15 @@ References:
 (add-hook 'js-mode-hook #'smartparens-mode)
 (add-hook 'js-mode-hook #'hs-minor-mode)
 #+end_src
+** prettier-js
+#+begin_src emacs-lisp
+(use-package prettier-js
+  :after js2-mode
+  :init
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-hook 'web-mode-hook 'prettier-js-mode)
+)
+#+end_src
 ** Web
 #+begin_src emacs-lisp
 (use-package emmet-mode
@@ -1418,6 +1430,16 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
               (visual-line-mode -1)
               (toggle-truncate-lines 1)
               (display-line-numbers-mode 0)))
+  )
+#+end_src
+** org-download
+#+begin_src emacs-lisp
+(use-package! org-download
+  :after org
+  :bind
+  (:map org-mode-map
+   (("s-Y" . org-download-screenshot)
+    ("s-y" . org-download-yank)))
   )
 #+end_src
 ** org-super-agenda
