@@ -402,13 +402,18 @@ Set theme
 Highlight indent guides.
 #+begin_src emacs-lisp
 (use-package highlight-indent-guides
-  :hook (
-         (prog-mode . highlight-indent-guides-mode)
-         (vue-mode . highlight-indent-guides-mode)
-         (LaTeX-mode . highlight-indent-guides-mode))
+  ;; :hook (
+         ;; (prog-mode . highlight-indent-guides-mode)
+         ;; (vue-mode . highlight-indent-guides-mode)
+         ;; (LaTeX-mode . highlight-indent-guides-mode))
   :config
+  ;; (highlight-indent-guides-auto-set-faces)
   (setq highlight-indent-guides-method 'bitmap)
-  (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line))
+  ;; (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line)
+)
+
+;; Disable
+(highlight-indent-guides-mode -1)
 #+end_src
 
 Highlight symbol
@@ -738,10 +743,10 @@ A package to select an ever-increasing (or ever-decreasing) region of text.
     (git-gutter:modified-sign "~")
     (git-gutter:added-sign    "+")
     (git-gutter:deleted-sign  "-")
-    :custom-face
-    (git-gutter:modified ((t (:foreground "#f1fa8c" :background "#f1fa8c"))))
-    (git-gutter:added    ((t (:foreground "#50fa7b" :background "#50fa7b"))))
-    (git-gutter:deleted  ((t (:foreground "#ff79c6" :background "#ff79c6"))))
+    ;; :custom-face
+    ;; (git-gutter:modified ((t (:foreground "#f1fa8c" :background "#f1fa8c"))))
+    ;; (git-gutter:added    ((t (:foreground "#50fa7b" :background "#50fa7b"))))
+    ;; (git-gutter:deleted  ((t (:foreground "#ff79c6" :background "#ff79c6"))))
     :config
     (global-git-gutter-mode +1))
 
@@ -751,26 +756,26 @@ A package to select an ever-increasing (or ever-decreasing) region of text.
 *** diff-hl
 Highlight git diffs on the fly
 #+begin_src emacs-lisp
-(use-package diff-hl
-  :commands (global-diff-hl-mode
-             diff-hl-mode
-             diff-hl-next-hunk
-             diff-hl-previous-hunk
-             diff-hl-mark-hunk
-             diff-hl-diff-goto-hunk
-             diff-hl-revert-hunk)
-  :config
-  (global-diff-hl-mode)
-  (diff-hl-flydiff-mode)
-  (diff-hl-margin-mode)
-  (diff-hl-dired-mode))
+;; (use-package diff-hl
+;;   :commands (global-diff-hl-mode
+;;              diff-hl-mode
+;;              diff-hl-next-hunk
+;;              diff-hl-previous-hunk
+;;              diff-hl-mark-hunk
+;;              diff-hl-diff-goto-hunk
+;;              diff-hl-revert-hunk)
+;;   :config
+;;   (global-diff-hl-mode)
+;;   (diff-hl-flydiff-mode)
+;;   (diff-hl-margin-mode)
+;;   (diff-hl-dired-mode))
 
-(my-leader-def
-  :infix "md"
-  "[ h"  'diff-hl-previous-hunk
-  "i h"  'diff-hl-mark-hunk
-  "a h"  'diff-hl-mark-hunk
-  "g h"  'diff-hl-diff-goto-hunk)
+;; (my-leader-def
+;;   :infix "md"
+;;   "[ h"  'diff-hl-previous-hunk
+;;   "i h"  'diff-hl-mark-hunk
+;;   "a h"  'diff-hl-mark-hunk
+;;   "g h"  'diff-hl-diff-goto-hunk)
 #+end_src
 * Programming
 ** LSP
@@ -1065,6 +1070,38 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
   (let ((journal-file (format-time-string "/cs/priv/repos/brainfck.org/tw5/tiddlers/%Y-%m-%d.tid")))
   (find-file journal-file))
   )
+
+;; adds a tiddlywiki bookmark from pocket-reader mode
+(defun dorneanu/tiddlywiki-add-bookmark ()
+  "Adds a new bookmark to tiddlywiki. The URL is fetched from clipboard or killring"
+    (require 'url-util)
+    (interactive)
+    (pocket-reader-copy-url)
+
+    (setq my-url (org-web-tools--get-first-url))
+    (setq url-html (org-web-tools--get-url my-url))
+    (setq url-title (org-web-tools--html-title url-html))
+    (setq url-title-mod (read-string "Title: " url-title))
+    (setq url-path (url-hexify-string url-title-mod))
+    (setq url-note (read-string (concat "Note for " my-url ":")))
+    (setq url-tags (concat "Bookmark "(read-string "Additional tags: ")))
+
+    (request (concat "http://127.0.0.1:8181/recipes/default/tiddlers/" url-path)
+    :type "PUT"
+    :data (json-encode `(("name" . ,url-title-mod) ("note" . ,url-note) ("url" . ,my-url) ("tags" . ,url-tags)))
+    :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
+    :parser 'json-read
+    :success
+    (cl-function
+            (lambda (&key data &allow-other-keys)
+                (message "I sent: %S" (assoc-default 'args data))))
+    :complete (lambda (&rest _) (message "Added %s" (symbol-value 'url-title-mod)))
+    :error (lambda (&rest _) (message "Some error"))
+    :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
+                    (418 . (lambda (&rest _) (message "Got 418.")))
+                    (204 . (lambda (&rest _) (message "Got 202."))))
+    )
+)
 
 ;; keybindings
 (my-leader-def
@@ -1754,7 +1791,7 @@ I've tried switching to Org Roam Dailies, but in the end decided that org-journa
 (use-package org-journal
   :after org
   :config
-  (setq org-journal-dir (concat org-directory "/journal"))
+  (setq org-journal-dir (concat org-directory "journal"))
   (setq org-journal-file-type 'weekly)
   (setq org-journal-file-format "%Y-%m-%d.org")
   (setq org-journal-date-format "%Y-%m-%d")
@@ -1817,7 +1854,9 @@ A package to add more evil-mode keybindings to org-mode.
 (use-package epa-file
   :config
   (setq
-   epa-file-encrypt-to '("BF2828095372F24D ")
+   epa-file-encrypt-to '("BF2828095372F24D")
+   password-cache nil
+   password-cache-expiry nil
    epa-pinentry-mode 'ask)
   :custom
   (epa-file-select-keys 'silent))
@@ -1830,12 +1869,12 @@ A package to add more evil-mode keybindings to org-mode.
   (org-crypt-use-before-save-magic)
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
   :custom
-  (org-crypt-key "BF2828095372F24D "))
+  (org-crypt-key "BF2828095372F24D"))
 #+end_src
 ** Utils
 *** copy a link
 #+begin_src emacs-lisp :noweb-ref org-keys-setup
-(defun vd/org-link-copy (&optional arg)
+(defun vdorg-link-copy (&optional arg)
   "extract url from org-mode link and add it to kill ring."
   (interactive "p")
   (let* ((link (org-element-lineage (org-element-context) '(link) t))
