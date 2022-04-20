@@ -411,9 +411,6 @@ Highlight indent guides.
   (setq highlight-indent-guides-method 'bitmap)
   ;; (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line)
 )
-
-;; Disable
-(highlight-indent-guides-mode -1)
 #+end_src
 
 Highlight symbol
