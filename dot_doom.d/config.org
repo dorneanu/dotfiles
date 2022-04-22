@@ -788,6 +788,7 @@ References:
   (setq lsp-idle-delay 0.5
         lsp-enable-symbol-highlighting t
         lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
+        ;; lsp-disabled-clients '(eslint)
         lsp-pyls-plugins-flake8-enabled t)
   :hook (
          (go-mode . lsp)
@@ -848,10 +849,16 @@ References:
               ("C-c i"   . lsp-ui-peek-find-implementation)
               ("C-c u" . lsp-ui-imenu)
               ("C-c d" . lsp-ui-doc-glance)
+              ("C-c e" . lsp-treemacs-errors-list)
               ("C-c D" . lsp-ui-doc-show)
               ("C-c s"   . lsp-ui-sideline-mode)
               ("C-c x" . counsel-flycheck))
 )
+#+end_src
+*** lsp-volar
+#+begin_src emacs-lisp
+(use-package lsp-volar
+   :after (lsp))
 #+end_src
 *** Integrations
 The only integration left now is treemacs.
@@ -966,30 +973,36 @@ References:
 #+end_src
 ** Web
 #+begin_src emacs-lisp
-(use-package emmet-mode
- :ensure t
- :diminish (emmet-mode .  "ε")
- :bind* (("C-)" . emmet-next-edit-point)
-         ("C-(" . emmet-prev-edit-point))
- :commands (emmet-mode
-            emmet-next-edit-point
-           emmet-prev-edit-point))
+;; (use-package emmet-mode
+;;  :ensure t
+;;  :diminish (emmet-mode .  "ε")
+;;  :bind* (("C-)" . emmet-next-edit-point)
+;;          ("C-(" . emmet-prev-edit-point))
+;;  :commands (emmet-mode
+;;             emmet-next-edit-point
+;;            emmet-prev-edit-point))
 
 (use-package web-mode
  :mode  (("\\.html\\'" . web-html-mode )
          ("\\.tsx\\'" . web-tsx-mode ) )
  :init
  (setq
-  web-mode-markup-indent-offset  2
+  web-mode-markup-indent-offset 2
   web-mode-css-indent-offset  2
   web-mode-code-indent-offset  2
   web-mode-attr-indent-offset  2
   web-mode-enable-auto-quoting nil )
- (define-derived-mode  web-tsx-mode web-mode "web-tsx" )
- (define-derived-mode  web-html-mode web-mode "web-html" )
  ;; :config
  ;;  web-tsx-mode
 )
+
+(use-package vue-mode
+  :mode "\\.vue\\'"
+  :hook (vue-mode . prettier-js-mode)
+  :config
+  (add-hook 'vue-mode-hook #'lsp)
+  (setq prettier-js-args '("--parser vue")))
+
 #+end_src
 
 ** PlantUML
