@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: revealjs-columns
+# key: revealjs-cols
+# --
+
+#+REVEAL_HTML: <div class="column" style="float:left; width: 50%;">
+#+CAPTION:
+#+begin_src text :exports code :noweb-ref $1
+#+end_src
+#+REVEAL_HTML: </div>
+
+#+REVEAL_HTML: <div class="column" style="float:right; width: 50%">
+#+begin_src plantuml :file $2  :exports results :noweb yes
+<<$1>>
+#+end_src

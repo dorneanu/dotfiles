@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: gbox
+# key: gbox
+# --
+
+{{< gbox src="$1" title="$2" caption="$3" pos="left" >}}

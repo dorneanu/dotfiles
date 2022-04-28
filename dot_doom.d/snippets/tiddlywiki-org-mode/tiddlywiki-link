@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tiddlywiki new link
+# key: link
+# --
+[[${1:desc}|${2:link}]] $0

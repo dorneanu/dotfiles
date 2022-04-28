@@ -1,0 +1,7 @@
+created: `(format-time-string "%Y%m%d%H%M%S%3N")`
+modified: `(format-time-string "%Y%m%d%H%M%S%3N")`
+tags: Journal
+title: `(format-time-string "%Y-%m-%d")`
+type: text/vnd.tiddlywiki
+
+$0

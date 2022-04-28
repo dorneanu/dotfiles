@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: link from clipboard
+# key: clink
+# --
+[[${1:desc}|${2:`(current-kill 0)`}]]
