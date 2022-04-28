@@ -553,10 +553,14 @@ I have to load by defining a ~load-path~.
 #+end_src
 ** Snippets
 #+begin_src emacs-lisp
-(use-package yasnippet-snippets)
+(use-package yasnippet-snippets
+  :after yasnippet
+  :config
+  (yas-reload-all))
 
 (use-package yasnippet
-  :bind (("M-o" . yas-insert-snippet))
+  :bind (("M-o" . yas-insert-snippet)
+          ("C-c y" . yas-expand))
   :config
   (setq yas-snippet-dirs
 	`(,(concat (expand-file-name doom-user-directory) "snippets")
@@ -568,6 +572,12 @@ I have to load by defining a ~load-path~.
 (defun  my/force-yasnippet-off ()
     (yas-minor-mode -1)
     (setq yas-dont-activate t))
+
+(map! :after yasnippet
+      :map yas-minor-mode-map
+      :i "C-c l" #'yas-expand
+      :i "C-c j" #'yas-next-field
+      :i "C-c k" #'yas-prev-field)
 
 (add-hook 'term-mode-hook 'my/force-yasnippet-off)
 (add-hook 'shell-mode-hook 'my/force-yasnippet-off)
@@ -2300,6 +2310,11 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
       :nm "U" #'pocket-reader-unmark-all
       :nm "y" #'pocket-reader-copy-url
       :nm "Y" #'dorneanu/pocket-reader-copy-to-scratch)
+#+end_src
+** Twitter
+#+begin_src emacs-lisp
+(use-package twittering-mode)
+(setq twittering-allow-insecure-server-cert t)
 #+end_src
 
 * Inspiration
