@@ -1060,6 +1060,7 @@ References:
 ;;             emmet-next-edit-point
 ;;            emmet-prev-edit-point))
 
+;; Inspiration: https://readingworldmagazine.com/emacs/2020-08-24-emacs-web-mode/
 (use-package web-mode
  :mode  (("\\.html\\'" . web-html-mode )
          ("\\.tsx\\'" . web-tsx-mode ) )
@@ -1069,9 +1070,43 @@ References:
   web-mode-css-indent-offset  2
   web-mode-code-indent-offset  2
   web-mode-attr-indent-offset  2
+  web-mode-enable-current-element-highlight t
+  web-mode-enable-current-column-highlight t
+  web-mode-enable-comment-keywords t
+  web-mode-comment-style 2
+  web-mode-enable-auto-indentation nil
+  web-mode-enable-block-face t
+  web-mode-enable-comment-keywords t
+  web-mode-enable-heredoc-fontification t
+  web-mode-enable-html-entities-fontification t
+  web-mode-auto-close-style 2
+  ;For <style> parts
+  web-mode-style-padding 1
+  ;For <script> parts
+  web-mode-script-padding 1
+  ;For multi-line blocks
+  web-mode-block-padding 0
+  ;; colorize colors in buffers
+  web-mode-enable-css-colorization t
   web-mode-enable-auto-quoting nil )
- ;; :config
- ;;  web-tsx-mode
+ :config
+ ;; web-tsx-mode
+ (yas-minor-mode)
+ 
+ ;; ;start use smartparens to complete tags not webmode
+ (defun +web-is-auto-close-style-3 (_id action _context)
+    (and (eq action 'insert)
+     (eq web-mode-auto-close-style 3)))
+
+ ;initialize smartparens mode to ensure sp-local-pair defined
+ (smartparens-mode t)
+ (sp-local-pair 'web-mode "<" nil :unless '(:add +web-is-auto-close-style-3))
+
+ ;; let smartparens handle these
+ (setq
+  web-mode-enable-auto-quoting nil
+  web-mode-enable-auto-pairing t)
+
 )
 
 (use-package vue-mode
@@ -2563,6 +2598,8 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
       :nm "d" #'pocket-reader-delete
       :nm "a" #'pocket-reader-toggle-archived
       :nm "B" #'pocket-reader-open-in-external-browser
+      :nm "e" #'pocket-reader-excerpt
+      :nm "G" #'pocket-reader-more
       :nm "TAB" #'pocket-reader-open-url
       :nm "tr" #'pocket-reader-remove-tags
       :nm "tN" #'dorneanu/pocket-reader-remove-next
