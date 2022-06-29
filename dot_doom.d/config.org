@@ -533,6 +533,16 @@ I have to load by defining a ~load-path~.
 #+begin_src emacs-lisp
 (use-package screenshot :load-path "~/.emacs.d/.local/straight/repos/screenshot")
 #+end_src
+** gif-screenshot
+#+begin_src emacs-lisp
+(use-package! gif-screencast
+  :commands gif-screencast-mode
+  :config
+  (map! :map gif-screencast-mode-map
+        :g "<f7>" #'gif-screencast-start-or-stop
+        :g "<f8>" #'gif-screencast-toggle-pause
+        :g "<f9>" #'gif-screencast-stop))
+#+end_src
 
 * Editing
 ** Indentation
@@ -1107,6 +1117,10 @@ References:
   web-mode-enable-auto-quoting nil
   web-mode-enable-auto-pairing t)
 
+ (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
+ (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
+ (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
+ (add-to-list 'web-mode-indentation-params '("lineup-ternary" . nil))
 )
 
 (use-package vue-mode
@@ -2062,6 +2076,14 @@ A package to add more evil-mode keybindings to org-mode.
   (add-to-list 'evil-emacs-state-modes 'org-agenda-mode)
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
+#+end_src
+** org-speed-commands
+#+begin_src emacs-lisp
+(after! org
+  (setq org-use-speed-commands
+        (lambda ()
+          (and (looking-at org-outline-regexp)
+               (looking-back "^\**")))))
 #+end_src
 
 ** Encryption
