@@ -541,7 +541,10 @@ I have to load by defining a ~load-path~.
   (map! :map gif-screencast-mode-map
         :g "<f7>" #'gif-screencast-start-or-stop
         :g "<f8>" #'gif-screencast-toggle-pause
-        :g "<f9>" #'gif-screencast-stop))
+        :g "<f9>" #'gif-screencast-stop)
+  :custom
+  (setq gif-screencast-args '("-x")) ;; To shut up the shutter sound of `screencapture' (see `gif-screencast-command').
+  (setq gif-screencast-capture-format "ppm")) ;; Optional: Required to crop captured images.)
 #+end_src
 
 * Editing
@@ -2414,6 +2417,54 @@ Add some goodies to elfeed
           (insert (propertize title 'face title-faces 'kbd-help title)))
       (insert (propertize title 'face title-faces 'kbd-help title)))))
 #+end_src
+*** elfeed-tube
+#+begin_src emacs-lisp
+;; https://www.reddit.com/r/emacs/comments/vo2szt/for_digital_minimalists_rssatom_emacs_and_elfeed/
+(defun dorneanu/elfeed-play-with-mpv ()
+  (interactive)
+  (start-process "elfeed-mpv" nil "mpv"
+                 (elfeed-entry-link
+                  (or elfeed-show-entry
+                      (elfeed-search-selected t)))))
+
+;; https://github.com/skeeto/elfeed/issues/267
+(defun elfeed-play-with-mpv ()
+  "Play entry link with mpv."
+  (interactive)
+  (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
+        (quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
+
+(use-package elfeed-tube
+  ;; :straight (:host github :repo "karthink/elfeed-tube")
+  :after elfeed
+  :demand t
+  :config
+  (setq elfeed-tube-auto-save-p t) ;; t is auto-save (not default)
+  (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
+  (elfeed-tube-setup)
+
+  :bind (:map elfeed-show-mode-map
+         ("M" . #'dorneanu/elfeed-play-with-mpv)
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)
+         :map elfeed-search-mode-map
+         ("M" . #'dorneanu/elfeed-play-with-mpv)
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)))
+
+(use-package elfeed-tube-mpv
+  ;; :straight (:host github :repo "karthink/elfeed-tube")
+  :bind (:map elfeed-show-mode-map
+              ("C-c C-f" . elfeed-tube-mpv-follow-mode)
+              ("C-c C-w" . elfeed-tube-mpv-where)))
+
+#+end_src
 ** Documentation
 *** man & info
 #+begin_src emacs-lisp
@@ -2567,6 +2618,19 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
       (newline))
      (message "Added: %s to scratch buffer" url)))
 
+;; Download current URL and send to Dropbox
+(defun dorneanu/pocket-reader-send-to-dropbox ()
+  "Downloads current URL as epub and sends it to Dropbox"
+  (interactive)
+  (when-let ((id (tabulated-list-get-id))
+             (item (ht-get pocket-reader-items id))
+             (url (pocket-reader--get-url item)))
+    ;; (pocket-reader--add-tags (list "1e"))
+    (message (concat "Adding: " url ))
+    (pocket-reader-add-tags "1e")
+    (async-shell-command (concat "adld " "" url))
+ ))
+
 ;; Remove 2read and next tags from current pocket reader item
 (defun dorneanu/pocket-reader-remove-next()
   (interactive)
@@ -2618,6 +2682,7 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
 (map! :map pocket-reader-mode-map
       :after pocket-reader
       :nm "d" #'pocket-reader-delete
+      :nm "SD" #'dorneanu/pocket-reader-send-to-dropbox
       :nm "a" #'pocket-reader-toggle-archived
       :nm "B" #'pocket-reader-open-in-external-browser
       :nm "e" #'pocket-reader-excerpt
