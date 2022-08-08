@@ -740,6 +740,23 @@ Current pattern: %`evil-mc-pattern
     (set-variable 'split-width-threshold 40) ; make this as low as needed
     (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))))
 #+end_src
+** ispell
+#+begin_src emacs-lisp
+;; from https://200ok.ch/posts/2020-08-22_setting_up_spell_checking_with_multiple_dictionaries.html
+(use-package ispell
+  :custom
+  (setenv "LANG" "en_US.UTF-8")
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "de_DE,en_US,ro")
+  ;; ispell-set-spellchecker-params has to be called
+  ;; before ispell-hunspell-add-multi-dic will work
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "de_DE,en_US,ro")
+  ;; For saving words to the personal dictionary, don't infer it from
+  ;; the locale, otherwise it would save to ~/.hunspell_de_DE.
+  (setq ispell-personal-dictionary "~/.hunspell_personal"))
+
+#+end_src
 * Navigation
 ** avy
 #+begin_src emacs-lisp
@@ -775,6 +792,12 @@ Current pattern: %`evil-mc-pattern
   ("q" nil :color blue))
 
 (my-leader-def "r\"" '(sk/hydra-registers/body :which-key "Hydra for registers"))
+#+end_src
+* Gnus
+** nnreddit
+#+begin_src emacs-lisp
+;; Applies to first-time Gnus users
+(custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
 #+end_src
 * Projects
 ** Projectile
@@ -1202,6 +1225,8 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
   (add-to-list 'auto-mode-alist '("\\.tid\\'" . tiddlywiki-org-mode))
   (tiddlywiki-widen-file)
 )
+
+(use-package ox-tiddly)
 
 ;; default tiddlywiki base path
 (setq tiddlywiki-base-path "http://127.0.0.1:8181/recipes/default/tiddlers/")
@@ -1950,6 +1975,11 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 ** org-capture
 #+begin_src emacs-lisp
 
+;; https://blog.lazkani.io/posts/text-editors/bookmark-with-org-capture/
+(defun org-web-tools-insert-link-for-clipboard-url ()
+  "Extend =org-web-tools-inster-link-for-url= to take URL from clipboard or kill-ring"
+  (interactive)
+  (org-web-tools--org-link-for-url (org-web-tools--get-first-url)))
 
 (use-package org-capture
   :after org
@@ -2065,6 +2095,19 @@ I've tried switching to Org Roam Dailies, but in the end decided that org-journa
   ;;             (shell-command "ssh mac say 'Pomodoro gekilled'")
   ;;             ))
   )
+#+end_src
+
+#+RESULTS:
+: t
+
+** pomm.el
+[[https://github.com/SqrtMinusOne/pomm.el][Yet another pomodoro timer for Emacs]]
+
+#+begin_src emacs-lisp
+(use-package pomm
+  :commands (pomm))
+
+(setq alert-default-style 'libnotify)
 #+end_src
 ** evil-org
 A package to add more evil-mode keybindings to org-mode.
@@ -2445,8 +2488,8 @@ Add some goodies to elfeed
   :after elfeed
   :demand t
   :config
-  (setq elfeed-tube-auto-save-p t) ;; t is auto-save (not default)
-  (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
+  ;; (setq elfeed-tube-auto-save-p t) ;; t is auto-save (not default)
+  ;; (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
   (elfeed-tube-setup)
 
   :bind (:map elfeed-show-mode-map
