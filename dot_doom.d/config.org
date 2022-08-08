@@ -1238,6 +1238,22 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
      tiddler-title ""
  )
 
+
+
+;; Insert Tiddlywiki link from clipboard
+(defun dorneanu/tw5-add-link (&optional pURL)
+  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+  (interactive)
+  (let*
+      (
+       (url (or pURL (org-web-tools--get-first-url)))
+       (html (org-web-tools--get-url url))
+       (title (org-web-tools--html-title html))
+       )
+    (format "[[%s ◦ %s|%s]]" (format-time-string "%Y-%m-%d") title url)
+    )
+  )
+
 ;; create tw5 journal file
 (defun vd/tw5-journal-file-by-date ()
 "Create a new Tiddlywiki journal file with current time as name."
@@ -1973,13 +1989,8 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
         ))
 #+end_src
 ** org-capture
-#+begin_src emacs-lisp
 
-;; https://blog.lazkani.io/posts/text-editors/bookmark-with-org-capture/
-(defun org-web-tools-insert-link-for-clipboard-url ()
-  "Extend =org-web-tools-inster-link-for-url= to take URL from clipboard or kill-ring"
-  (interactive)
-  (org-web-tools--org-link-for-url (org-web-tools--get-first-url)))
+#+begin_src emacs-lisp
 
 (use-package org-capture
   :after org
@@ -2010,8 +2021,11 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
      ("m" "Meeting" entry (file+headline "~/work/repos/org/inbox.org" "Meetings")
       "* MEETING %?\nSCHEDULED: %t\n:PROPERTIES:\n:CREATED: %U\n:END:\n %i\n")
 
-     ("b" "Bookmark (Clipboard)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
+     ("B" "Bookmark (Clipboard)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
       "** %(org-web-tools-insert-link-for-clipboard-url)\n:PROPERTIES:\n:TIMESTAMP: %t\n:END:\n%?"  :prepend t)
+
+     ("b" "Bookmark (Clipboard+Tiddlywiki)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
+      "* %(dorneanu/tw5-add-link)%?"  :prepend t)
 
      ("s" "Code Snippet" entry
       (file+headline "~/work/repos/org/inbox.org" "Snippets")
