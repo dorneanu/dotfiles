@@ -1389,6 +1389,52 @@ _q_ Add new quote
 #+begin_src emacs-lisp
 (set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
 #+end_src
+* PKMS
+** org-roam
+#+begin_src emacs-lisp
+(use-package! org-roam
+  :init
+  (setq org-roam-v2-ack t)
+  (setq org-roam-file-extensions '("org"))
+  :custom
+  (org-roam-directory "/cs/priv/repos/roam/org")
+  (org-roam-completion-everywhere t)
+  (org-roam-dailies-directory "journal")
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)
+     ("b" "book" plain "%?"
+      :if-new
+      (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
+      :immediate-finish t
+      :unnarrowed t)
+      ))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         :map org-mode-map
+         ("C-M-i"    . completion-at-point))
+  :config
+  (org-roam-setup))
+#+end_src
+** Functions
+#+begin_src emacs-lisp
+(defun dorneanu/org-roam-insert-link-clipboard (&optional pURL)
+  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+  (interactive)
+  (let*
+      (
+       (url (or pURL (org-web-tools--get-first-url)))
+       (html (org-web-tools--get-url url))
+       (title (org-web-tools--html-title html))
+       )
+    (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url title)
+    )
+  )
+(global-set-key (kbd "C-c i l") (lambda () (interactive) (dorneanu/org-roam-insert-link-clipboard)))
+#+end_src
 
 * Completion
 ** ivy
@@ -1707,6 +1753,9 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
    (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
                              org-agenda-file-regexp)
 
+   ;; Skip unavailable agenda files
+   org-agenda-skip-unavailable-files t
+
    ;; Skip done tasks
    org-agenda-skip-scheduled-if-done t
    org-agenda-skip-deadline-if-done t
@@ -2023,7 +2072,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
       "* MEETING %?\nSCHEDULED: %t\n:PROPERTIES:\n:CREATED: %U\n:END:\n %i\n")
 
      ("B" "Bookmark (Clipboard)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
-      "** %(org-web-tools-insert-link-for-clipboard-url)\n:PROPERTIES:\n:TIMESTAMP: %t\n:END:\n%?"  :prepend t)
+      "** %(dorneanu/org-roam-insert-link-clipboard)%?"  :prepend t)
 
      ("b" "Bookmark (Clipboard+Tiddlywiki)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
       "* %(dorneanu/tw5-add-link)%?"  :prepend t)
@@ -2224,6 +2273,10 @@ A package to add more evil-mode keybindings to org-mode.
 *** hugo
 #+begin_src emacs-lisp
 (use-package ox-hugo)
+
+;; Tell hugo how to deal with sidenotes
+(add-to-list 'org-hugo-special-block-type-properties '("sidenote" . (:trim-pre t :trim-post t)))
+(setq org-hugo-paired-shortcodes "%sidenote")
 
 (defun vd/hugo-add-slug ()
   "Adds a Hugo slug as EXPORT_FILE_NAME property"
