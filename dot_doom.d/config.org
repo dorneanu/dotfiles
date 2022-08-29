@@ -809,6 +809,7 @@ Current pattern: %`evil-mc-pattern
 (my-leader-def
   :infix "mp"
   ""   '(:ipgnore t :which-key "Projects")
+  "."  'counsel-fzf
   "e"  'project-eshell
   "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
   "s"  'projectile-switch-project
