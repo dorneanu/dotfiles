@@ -1251,7 +1251,7 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
        (html (org-web-tools--get-url url))
        (title (org-web-tools--html-title html))
        )
-    (format "[[%s ◦ %s|%s]]" (format-time-string "%Y-%m-%d") title url)
+    (format "%s ◦ [[%s|%s]]" (format-time-string "%Y-%m-%d") title url)
     )
   )
 
