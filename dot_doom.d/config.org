@@ -1419,6 +1419,43 @@ _q_ Add new quote
   :config
   (org-roam-setup))
 #+end_src
+*** pocket-reader-org-roam-capture
+#+begin_src emacs-lisp
+;; From https://github.com/christofdamian/pocket-reader-org-roam-capture/blob/main/pocket-reader-org-roam-capture.el
+(require 'pocket-reader)
+(require 'org-roam)
+
+;;;; Functions
+(defun pocket-reader-org-roam-capture ()
+  "Create an `org-roam' capture for all marked or current pocket reader items."
+  (interactive)
+  (pocket-reader--at-marked-or-current-items
+    (when-let (
+               (resolved_title (pocket-reader--get-property 'resolved_title))
+               (resolved_url (pocket-reader--get-property 'resolved_url))
+               (item_id (pocket-reader--get-property 'item_id))
+               (time_added (pocket-reader--get-property 'time_added))
+               (excerpt (pocket-reader--get-property 'excerpt))
+               (tags (combine-and-quote-strings (pocket-reader--get-property 'tags))))
+      (let (
+            (org-roam-capture-templates '(("d" "default" plain #'org-roam--capture-get-point "%?" :file-name "pocket/${item_id}-${slug}" :head "#+TITLE: ${title}
+,#+roamtags: ${tags}
+
+URL: ${url}
+Id: ${item_id}
+
+${excerpt}
+" :unnarrowed t)))
+            (org-roam-capture--info `((title . ,resolved_title)
+                                      (slug  . ,resolved_title)
+                                      (url . ,resolved_url)
+                                      (item_id . ,item_id)
+                                      (excerpt . ,excerpt)
+                                      (tags . ,tags)))
+            (org-roam-capture--context 'title))
+        (setq org-roam-capture-additional-template-props (list :finalize 'find-file))
+        (org-roam-capture-)))))
+#+end_src
 ** Functions
 #+begin_src emacs-lisp
 (defun dorneanu/org-roam-insert-link-clipboard (&optional pURL)
@@ -1543,12 +1580,33 @@ References:
 #+end_src
 ** company
 #+begin_src emacs-lisp
-(use-package company
+ (use-package company
+  :defer 2
+  :general
+  (:keymaps 'company-mode-map
+   :states 'insert
+   "C-n" #'company-complete-common-or-cycle
+   "C-p" #'company-select-previous)
+  ('company-active-map
+   "C-n" #'company-complete-common-or-cycle
+   "C-p" #'company-select-previous-or-abort
+   "C-e" #'company-complete
+   "TAB" #'company-complete-common-or-cycle)
+
+  :diminish company-mode
   :config
-  (global-company-mode)
-  (setq company-idle-delay 0.125)
-  (setq company-dabbrev-downcase nil)
-  (setq company-show-numbers t))
+  (setq-default company-dabbrev-downcase nil)
+  (setq-default company-search-filtering t)
+  ;; (setq-default company-global-modes '(not org-mode))
+  (global-company-mode))
+
+#+end_src
+** company-box
+#+begin_src emacs-lisp
+(use-package company-box
+  :disabled t
+  :diminish
+  :hook (company-mode . company-box-mode))
 #+end_src
 ** key bindings
 #+begin_src emacs-lisp
@@ -2352,6 +2410,7 @@ A package to add more evil-mode keybindings to org-mode.
 
   (setq elfeed-db-directory "~/.elfeed")
   (setq elfeed-enclosure-default-dir (expand-file-name "~/Downloads"))
+  (elfeed-set-timeout 36000)
 
   (defun elfeed-search-format-date (date)
     (format-time-string "%Y-%m-%d %H:%M" (seconds-to-time date)))
