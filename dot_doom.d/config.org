@@ -350,11 +350,11 @@ Highlight the current line
 ** Theme
 Set theme
 #+begin_src emacs-lisp
-(setq doom-theme 'doom-monokai-pro)
+(setq doom-theme 'doom-material)
 #+end_src
 *** Fonts
 #+begin_src emacs-lisp
-(setq doom-font (font-spec :family "Fira Mono" :size 15))
+(setq doom-font (font-spec :family "Source Code Pro" :size 15))
 #+end_src
 *** Icons
 #+begin_src emacs-lisp
@@ -546,7 +546,11 @@ I have to load by defining a ~load-path~.
   (setq gif-screencast-args '("-x")) ;; To shut up the shutter sound of `screencapture' (see `gif-screencast-command').
   (setq gif-screencast-capture-format "ppm")) ;; Optional: Required to crop captured images.)
 #+end_src
-
+* File manager
+** dirvish
+#+begin_src emacs-lisp
+(dirvish-override-dired-mode)
+#+end_src
 * Editing
 ** Indentation
 *** aggressive-indent-mode
@@ -572,13 +576,14 @@ I have to load by defining a ~load-path~.
 #+end_src
 ** Undo
 #+begin_src emacs-lisp
-(use-package  undo-tree
-  :bind  ("C-x u" . undo-tree-visualize)
-  :diminish undo-tree-mode
-  :hook  (after-init . global-undo-tree-mode )
-  :init
-  (setq undo-tree-visualizer-relative-timestamps t
-        undo-tree-visualizer-diff t))
+;; (use-package  undo-tree
+;;   :bind  ("C-x u" . undo-tree-visualize)
+;;   :diminish undo-tree-mode
+;;   :hook  (after-init . global-undo-tree-mode )
+;;   :init
+;;   (setq undo-tree-visualizer-relative-timestamps t
+;;         undo-tree-visualizer-diff t))
+(use-package vundo)
 #+end_src
 ** Snippets
 #+begin_src emacs-lisp
@@ -596,6 +601,14 @@ I have to load by defining a ~load-path~.
 	  yasnippet-snippets-dir))
   (setq yas-triggers-in-field t)
   (yas-global-mode 1))
+
+(use-package yankpad
+  :commands (yankpad-expand)
+  :config
+  (setq yankpad-file (concat org-directory "yankpad.org"))
+  (yankpad-reload)
+  (add-to-list 'company-backends #'company-yankpad)
+)
 
 ;; turn off yasnippet for several modes
 (defun  my/force-yasnippet-off ()
@@ -662,6 +675,7 @@ A package to select an ever-increasing (or ever-decreasing) region of text.
 
 ** Visual fill column mode
 #+begin_src emacs-lisp
+;; from https://github.com/rasendubi/dotfiles/blob/master/README.org
 (use-package visual-fill-column
   :commands (visual-fill-column-mode)
   :config
@@ -734,10 +748,10 @@ Current pattern: %`evil-mc-pattern
 ;; Activate olivetti mode in eww buffers
 (add-hook 'eww-after-render-hook '(lambda ()
     (eww-readable)
-    (olivetti-mode)
+    ;; (olivetti-mode)
     ;; Open new buffer in vertical split
     (set-variable 'split-height-threshold nil t)
-    (set-variable 'split-width-threshold 40) ; make this as low as needed
+    (set-variable 'split-width-threshold 90) ; make this as low as needed
     (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))))
 #+end_src
 ** ispell
@@ -823,6 +837,10 @@ Current pattern: %`evil-mc-pattern
 (use-package counsel-projectile
   :after (counsel projectile))
 #+end_src
+
+#+RESULTS:
+: counsel-projectile
+
 ** Git/Magit
 #+begin_src emacs-lisp
 (use-package magit
@@ -1047,7 +1065,6 @@ References:
 ** Python
 #+begin_src emacs-lisp
 (use-package lsp-pyright
-  :ensure t
   :hook (python-mode . (lambda ()
                          (require 'lsp-pyright)
                          (lsp))))  ; or lsp-deferred
@@ -1062,6 +1079,14 @@ References:
   :config
   (pyenv-mode)
   (my-leader-def "mpy" '(pyenv-mode-set :which-key "Activate pyenv")))
+#+end_src
+*** python-black
+#+begin_src emacs-lisp
+(use-package python-black
+    :after python)
+
+;; On save call black
+(python-black-on-save-mode)
 #+end_src
 ** TypeScript
 #+begin_src emacs-lisp
@@ -1389,6 +1414,14 @@ _q_ Add new quote
 #+begin_src emacs-lisp
 (set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
 #+end_src
+** Impatient Mode
+#+begin_src emacs-lisp
+(use-package impatient-mode)
+(defun markdown-html (buffer)
+  (princ (with-current-buffer buffer
+           (format "<!DOCTYPE html><html><title>Impatient Markdown</title><xmp theme=\"united\" style=\"display:none;\"> %s  </xmp><script src=\"http://ndossougbe.github.io/strapdown/dist/strapdown.js\"></script></html>" (buffer-substring-no-properties (point-min) (point-max))))
+         (current-buffer)))
+#+end_src
 * PKMS
 ** org-roam
 #+begin_src emacs-lisp
@@ -1405,6 +1438,11 @@ _q_ Add new quote
       "%?"
       :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
       :unnarrowed t)
+      ("j" "Journal" plain "%?"
+       :if-new (file+head "journal/%<%Y-%m-%d>.org"
+	  	  	    "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+       :immediate-finish t
+       :unnarrowed t)
      ("b" "book" plain "%?"
       :if-new
       (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
@@ -1412,7 +1450,8 @@ _q_ Add new quote
       :unnarrowed t)
       ))
   :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
+         ("C-c n f". org-roam-node-find)
+         ("C-c n s" . #'my/rg-org-roam-directory)
          ("C-c n i" . org-roam-node-insert)
          :map org-mode-map
          ("C-M-i"    . completion-at-point))
@@ -1467,7 +1506,7 @@ ${excerpt}
        (html (org-web-tools--get-url url))
        (title (org-web-tools--html-title html))
        )
-    (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url title)
+    (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url title))
     )
   )
 (global-set-key (kbd "C-c i l") (lambda () (interactive) (dorneanu/org-roam-insert-link-clipboard)))
@@ -1570,6 +1609,7 @@ References:
 #+begin_src emacs-lisp
 (use-package counsel
   :after ivy
+  :bind (("C-c g" . counsel-google))
   :config
   (counsel-mode))
 #+end_src
@@ -1629,7 +1669,7 @@ References:
 ;; from https://alexpeits.github.io/emacs.d/
 (use-package rg
   :commands (rg my/rg-project-or-ask)
-  ;; :bind (("C-c g" . my/rg-project-or-ask)
+  :bind (("C-c n s" . my/rg-org-roam-directory))
   ;;        :map rg-mode-map
   ;;        ("m" . rg-menu)
   ;;        ("s" . my/rg-save-search-as-name)
@@ -1655,12 +1695,12 @@ References:
     :dir org-directory
     :confirm prefix)
 
-  ;; search in tiddlywiki folder
-  (rg-define-search my/rg-tiddlywiki-directory
+  ;; search in org roam folder
+  (rg-define-search my/rg-org-roam-directory
     :query ask
     :format regexp
     :files "everything"
-    :dir tiddlywiki-directory
+    :dir org-roam-directory
     :confirm prefix)
 
   ;; prot
@@ -1787,6 +1827,18 @@ References:
 (my-leader-def
   "mtb" '(org-bars-mode :keymaps '(org-mode-map) :which-key "Activate org-bars mode"))
 #+end_src
+*** org-emphasis-alist
+#+begin_src emacs-lisp
+;; https://emacs.stackexchange.com/questions/44081/how-to-tweak-org-emphasis-alist-to-put-e-g-neon-yellow-over-bold-or-italic
+;; (setq org-emphasis-alist
+;;   '(("*" org-bold)
+;;     ("/" italic)
+;;     ("_" (:background "deep sky blue" :foreground "MidnightBlue"))
+;;     ("=" org-verbatim verbatim)
+;;     ("~" (:foreground "orange"))
+;;     ("+" (:strike-through t))))
+#+end_src
+
 ** org-contrib
 =org-contrib= is a package with various additions to Org. I use the following:
 - =ox-extra= - extensions for org export
@@ -1857,7 +1909,7 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
 #+end_src
 ** org-download
 #+begin_src emacs-lisp
-(use-package! org-download
+(use-package org-download
   :after org
   :bind
   (:map org-mode-map
@@ -1920,9 +1972,9 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:name "Next to do"
                              :todo "NEXT"
                              :order 20)
-                            (:name "WIP"
-                             :todo ("WIP")
-                             :order 40)
+                            ;; (:name "WIP"
+                            ;;  :todo ("WIP")
+                            ;;  :order 40)
                             (:discard (:anything))))))
             (alltodo "" ((org-agenda-overriding-header "")
                          (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
@@ -2462,7 +2514,8 @@ A package to add more evil-mode keybindings to org-mode.
         :nm "y" #'elfeed-show-yank)
 
   (add-hook! 'elfeed-show-mode-hook (hide-mode-line-mode 1))
-  (add-hook! 'elfeed-show-mode-hook (olivetti-mode))
+  ;; (add-hook! 'elfeed-show-mode-hook (olivetti-mode))
+  ;; (add-hook! 'elfeed-show-mode-hook (writerroom-mode))
   (add-hook! 'elfeed-show-mode-hook (lambda ()
     (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
     (setq fill-column 50)
@@ -2508,7 +2561,14 @@ A package to add more evil-mode keybindings to org-mode.
   (define-key elfeed-search-mode-map (kbd "B") 'my/elfeed-show-eww)
   (define-key elfeed-show-mode-map (kbd "B") 'my/elfeed-show-eww)
 )
+
+
+;; Update elfeed regularly
+;; https://www.reddit.com/r/emacs/comments/bvbp92/is_there_a_simple_way_to_get_elfeed_to_update/
+;; (add-hook 'emacs-startup-hook (lambda () (run-at-time 5 600 'elfeed-update)))
 #+end_src
+
+
 *** elfeed-org
 Allows to configure ~elfeed~ with an ORG file.
 #+begin_src emacs-lisp
@@ -3072,6 +3132,16 @@ T - tag prefix
   ("Z" dired-do-compress)
   ("q" nil)
   ("." nil :color blue))
+#+end_src
+* Learning
+** org-fc
+Used for spaced repetition
+#+begin_src emacs-lisp
+(use-package org-fc
+  :custom
+  (org-fc-directories '("/cs/priv/repos/roam/org"))
+  :config
+  (require 'org-fc-hydra))
 #+end_src
 
 * Inspiration
