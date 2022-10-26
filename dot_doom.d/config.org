@@ -62,6 +62,18 @@ Run garbage collection when Emacs is unfocused
 #+end_src
 
 * Keyboard Bindings
+** general.el
+#+begin_src emacs-lisp
+(use-package! general
+  :config
+  (general-evil-setup t))
+
+;; Create own leader key
+(general-create-definer my-leader-def
+  :keymaps '(normal insert visual emacs)
+  :prefix "SPC"
+  :non-normal-prefix "M-:")
+#+end_src
 ** Global
 #+begin_src emacs-lisp
 (my-leader-def "?" 'which-key-show-top-level)
@@ -89,18 +101,6 @@ Run garbage collection when Emacs is unfocused
   "C-j" 'evil-window-down
   "C-x h" 'previous-buffer
   "C-x l" 'next-buffer)
-#+end_src
-** general.el
-#+begin_src emacs-lisp
-(use-package! general
-  :config
-  (general-evil-setup t))
-
-;; Create own leader key
-(general-create-definer my-leader-def
-  :keymaps '(normal insert visual emacs)
-  :prefix "SPC"
-  :non-normal-prefix "M-:")
 #+end_src
 ** which-key
 #+begin_src emacs-lisp
@@ -238,13 +238,61 @@ Run garbage collection when Emacs is unfocused
 ;;      slime
 ;;      )))
 #+end_src
+** Custom
+*** projectile
+#+begin_src emacs-lisp
+(my-leader-def
+  :infix "mp"
+  ""   '(:ipgnore t :which-key "Projects")
+  "."  'counsel-fzf
+  "e"  'project-eshell
+  "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
+  "s"  'projectile-switch-project
+  "F"  'counsel-rg
+  "p"  'projectile--find-file
+  "c"  'projectile-compile-project
+  "v"  'projectile-run-vterm
+  "d"  'projectile-dired)
+#+end_src
+*** avy
+#+begin_src emacs-lisp
+(my-leader-def
+  "j"   '(:ignore t :which-key "jump")
+  "jj"  '(avy-goto-char :which-key "jump to char")
+  "jw"  '(avy-goto-word-0 :which-key "jump to word")
+  "jl"  '(avy-goto-line :which-key "jump to line"))
+#+end_src
+*** google-translate
+#+begin_src emacs-lisp
+(my-leader-def
+  :infix "m l g"
+  "" '(:which-key "google translate")
+  "p" 'google-translate-at-point
+  "P" 'google-translate-at-point-reverse
+  "q" 'google-translate-query-translate
+  "Q" 'google-translate-query-translate-reverse
+  "t" 'google-translate-smooth-translate)
+#+end_src
+*** dictcc
+#+begin_src emacs-lisp
+(my-leader-def "m l d" 'dictcc)
+#+end_src
+*** lsp
+#+begin_src emacs-lisp
+(my-leader-def
+  :infix "l"
+  "" '(:which-key "lsp")
+  "d" 'lsp-ui-peek-find-definitions
+  "r" 'lsp-rename
+  "u" 'lsp-ui-peek-find-references
+  "s" 'lsp-ui-find-workspace-symbol
+  "l" 'lsp-execute-code-action
+  "t" 'lsp-treemacs-symbols
+  "e" 'list-flycheck-errors)
+#+end_src
+
 * Editing
 ** Indentation
-*** aggressive-indent-mode
-#+begin_src emacs-lisp
-;; (use-package aggressive-indent
-;;   :commands (aggressive-indent-mode))
-#+end_src
 *** Tabs
 #+begin_src emacs-lisp
 (setq tab-always-indent t)
@@ -261,15 +309,8 @@ Run garbage collection when Emacs is unfocused
 (setq select-enable-clipboard t)
 (setq mouse-yank-at-point t)
 #+end_src
-** Undo
+** vundo
 #+begin_src emacs-lisp
-;; (use-package  undo-tree
-;;   :bind  ("C-x u" . undo-tree-visualize)
-;;   :diminish undo-tree-mode
-;;   :hook  (after-init . global-undo-tree-mode )
-;;   :init
-;;   (setq undo-tree-visualizer-relative-timestamps t
-;;         undo-tree-visualizer-diff t))
 (use-package vundo)
 #+end_src
 ** Snippets
@@ -317,81 +358,12 @@ Run garbage collection when Emacs is unfocused
   (yankpad-reload)
   (add-to-list 'company-backends #'company-yankpad))
 #+end_src
-** smartparens
-#+begin_src emacs-lisp
-;; (use-package smartparens)
-#+end_src
 ** iedit
 Quick, fast edits of every symbol selected.
 #+begin_src emacs-lisp
 (use-package iedit
   :commands (iedit-mode))
-
 (my-leader-def "s*" '(iedit-mode :which-key "Activate iedit-mode"))
-#+end_src
-
-** Expand region                                                               :disabled:
-A package to select an ever-increasing (or ever-decreasing) region of text.
-
-#+begin_src emacs-lisp
-;; (use-package expand-region
-;;   :bind* (("M-p a o" . er/mark-org-code-block)
-;;           ("M-p a w" . sk/mark-around-word)
-;;           ("M-p a p" . sk/mark-around-text-paragraph)
-;;           ("M-p a f" . er/mark-defun)
-;;           ("M-p a e" . sk/mark-around-LaTeX-environment)
-;;           ("M-p a t" . er/mark-LaTeX-math)
-;;           ("M-p a m" . er/mark-python-block)
-;;           ("M-p a j" . er/mark-ruby-block-up)
-;;           ("M-p a q" . er/mark-outside-quotes)
-;;           ("M-p a b" . er/mark-outside-pairs)
-;;           ("M-p a u" . er/mark-url)
-;;           ("M-p a c" . er/mark-comment)
-;;           ("M-p a v" . sk/mark-around-symbol)
-;;           ("M-p i p" . er/mark-text-paragraph)
-;;           ("M-p i f" . er/mark-defun)
-;;           ("M-p i w" . er/mark-word)
-;;           ("M-p i e" . er/mark-LaTeX-inside-environment)
-;;           ("M-p i t" . sk/mark-inside-LaTeX-math)
-;;           ("M-p i u" . er/mark-url)
-;;           ("M-p i c" . er/mark-comment)
-;;           ("M-p i b" . er/mark-inside-pairs)
-;;           ("M-p i q" . er/mark-inside-quotes)
-;;           ("M-p i o" . sk/mark-inside-org-code)
-;;           ("M-p i m" . sk/mark-inside-python-block)
-;;           ("M-p i j" . sk/mark-inside-ruby-block)
-;;           ("M-p i v" . er/mark-symbol)))
-#+end_src
-
-** Visual fill column mode                                                     :disabled:
-#+begin_src emacs-lisp
-;; from https://hieuphay.com/doom-emacs-config/
-;; (use-package! visual-fill-column
-;;   :hook (visual-line-mode . visual-fill-column-mode)
-;;   :init
-;;   (setq visual-fill-column-width 120
-;;   visual-fill-column-center-text t
-;;         visual-fill-column-fringes-outside-margins nil))
-#+end_src
-** parinfer for lispy languages                                                :disabled:
-#+begin_src emacs-lisp
-;; (use-package parinfer
-;;   :disabled
-;;   :hook ((clojure-mode . parinfer-mode)
-;;          (emacs-lisp-mode . parinfer-mode)
-;;          (common-lisp-mode . parinfer-mode)
-;;          (scheme-mode . parinfer-mode)
-;;          (lisp-mode . parinfer-mode))
-;;   :config
-;;   (setq parinfer-extensions
-;;       '(defaults       ; should be included.
-;;         pretty-parens  ; different paren styles for different modes.
-;;         evil           ; If you use Evil.
-;;         smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
-;;         smart-yank)))  ; Yank behavior depend on mode.
-
-;; (my-leader-def
-;;   "tp" 'parinfer-toggle-mode)
 #+end_src
 ** multiple cursors
 #+begin_src emacs-lisp
@@ -466,12 +438,6 @@ Current pattern: %`evil-mc-pattern
 #+begin_src emacs-lisp
 (use-package avy
   :commands (avy-goto-char avy-goto-word-0 avy-goto-line))
-
-(my-leader-def
-  "j"   '(:ignore t :which-key "jump")
-  "jj"  '(avy-goto-char :which-key "jump to char")
-  "jw"  '(avy-goto-word-0 :which-key "jump to word")
-  "jl"  '(avy-goto-line :which-key "jump to line"))
 #+end_src
 * UI
 ** Minimal interface
@@ -497,11 +463,6 @@ y or n instead of yes or no
 Hide mouse cursor while typing
 #+begin_src emacs-lisp
 (setq make-pointer-invisible t)
-#+end_src
-
-Show pairs
-#+begin_src emacs-lisp
-;; (show-paren-mode 1)
 #+end_src
 
 Highlight the current line
@@ -574,44 +535,23 @@ Set theme
 #+begin_src emacs-lisp
 (setq doom-themes-treemacs-theme "doom-colors")
 #+end_src
-** Mode line
-#+begin_src emacs-lisp
-;; (use-package doom-modeline
-;;   ;; :if (not (display-graphic-p))
-;;   :hook (after-init . doom-modeline-init)
-;;   :custom-face
-;;       (mode-line ((t (:height 0.85))))
-;;       (mode-line-inactive ((t (:height 0.85))))
-;;   :config
-;;   (setq doom-modeline-env-enable-python t)
-;;   (setq doom-modeline-env-enable-go t)
-;;   (setq doom-modeline-buffer-encoding 'nondefault)
-;;   (setq doom-modeline-lsp t)
-;;   (setq doom-modeline-hud t)
-;;   (setq doom-modeline-persp-icon nil)
-;;   (setq doom-modeline-persp-name nil)
-;;   (setq doom-modeline-minor-modes nil)
-;;   (setq doom-modeline-buffer-state-icon nil)
-;;   (doom-modeline-mode 1))
-#+end_src
-
 ** Dimmer
 #+begin_src emacs-lisp
-(use-package dimmer
-  :disabled
-  :custom
-  (dimmer-fraction 0.5)
-  (dimmer-exclusion-regexp-list
-       '(".*Minibuf.*"
-         ".*which-key.*"
-         ".*NeoTree.*"
-         ".*Messages.*"
-         ".*Async.*"
-         ".*Warnings.*"
-         ".*LV.*"
-         ".*Ilist.*"))
-  :config
-  (dimmer-mode t))
+;; (use-package dimmer
+;;   :disabled
+;;   :custom
+;;   (dimmer-fraction 0.5)
+;;   (dimmer-exclusion-regexp-list
+;;        '(".*Minibuf.*"
+;;          ".*which-key.*"
+;;          ".*NeoTree.*"
+;;          ".*Messages.*"
+;;          ".*Async.*"
+;;          ".*Warnings.*"
+;;          ".*LV.*"
+;;          ".*Ilist.*"))
+;;   :config
+;;   (dimmer-mode t))
 #+end_src
 ** Text highlight
 Highlight indent guides.
@@ -630,12 +570,7 @@ Highlight indent guides.
 
 Highlight symbol
 #+begin_src emacs-lisp
-(use-package highlight-symbol
-  :bind
-  (:map prog-mode-map
-  ("M-o h" . highlight-symbol)
-  ("M-p" . highlight-symbol-prev)
-  ("M-n" . highlight-symbol-next)))
+;; (use-package highlight-symbol)
 #+end_src
 
 Rainbow parentheses.
@@ -670,16 +605,16 @@ Highlight TODOs and stuff
 ** Window Management
 *** Window history with winner-mode
 #+begin_src emacs-lisp
-(use-package winner
-  :after evil
-  :config
-  (winner-mode))
+;; (use-package winner
+;;   :after evil
+;;   :config
+;;   (winner-mode))
 #+end_src
 *** Zoom window
 #+begin_src emacs-lisp
-(use-package zoom-window
-  :config
-  (my-leader-def "Z" 'zoom-window-zoom))
+;; (use-package zoom-window
+;;   :config
+;;   (my-leader-def "Z" 'zoom-window-zoom))
 #+end_src
 *** Hydra
 #+begin_src emacs-lisp
@@ -730,20 +665,6 @@ I have to load by defining a ~load-path~.
 #+begin_src emacs-lisp
 (use-package screenshot :load-path "~/.emacs.d/.local/straight/repos/screenshot")
 #+end_src
-** gif-screenshot                                                              :disabled:
-#+begin_src emacs-lisp
-;; (use-package! gif-screencast
-;;   :commands gif-screencast-mode
-;;   :config
-;;   (map! :map gif-screencast-mode-map
-;;         :g "<f7>" #'gif-screencast-start-or-stop
-;;         :g "<f8>" #'gif-screencast-toggle-pause
-;;         :g "<f9>" #'gif-screencast-stop)
-;;   :custom
-;;   (setq gif-screencast-args '("-x")) ;; To shut up the shutter sound of `screencapture' (see `gif-screencast-command').
-;;   (setq gif-screencast-capture-format "ppm")) ;; Optional: Required to crop captured images.)
-#+end_src
-
 * Gnus
 ** nnreddit
 #+begin_src emacs-lisp
@@ -1304,15 +1225,6 @@ I've tried switching to Org Roam Dailies, but in the end decided that org-journa
   ;;             ))
   )
 #+end_src
-** pomm.el                                                                     :disabled:
-[[https://github.com/SqrtMinusOne/pomm.el][Yet another pomodoro timer for Emacs]]
-
-#+begin_src emacs-lisp
-;; (use-package pomm
-;;   :commands (pomm))
-
-;; (setq alert-default-style 'libnotify)
-#+end_src
 ** evil-org
 A package to add more evil-mode keybindings to org-mode.
 
@@ -1451,20 +1363,6 @@ A package to add more evil-mode keybindings to org-mode.
   :config
   (projectile-mode))
 
-(my-leader-def
-  :infix "mp"
-  ""   '(:ipgnore t :which-key "Projects")
-  "."  'counsel-fzf
-  "e"  'project-eshell
-  "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
-  "s"  'projectile-switch-project
-  "F"  'counsel-rg
-  "p"  'projectile--find-file
-  "c"  'projectile-compile-project
-  "v"  'projectile-run-vterm
-  "d"  'projectile-dired)
-
-
 (use-package counsel-projectile
   :after (counsel projectile))
 #+end_src
@@ -1552,7 +1450,7 @@ Highlight git diffs on the fly
       :unnarrowed t)
       ("j" "Journal" plain "%?"
        :if-new (file+head "journal/%<%Y-%m-%d>.org"
-	  	  	    "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+                "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
        :immediate-finish t
        :unnarrowed t)
      ("b" "book" plain "%?"
@@ -1569,43 +1467,6 @@ Highlight git diffs on the fly
          ("C-M-i"    . completion-at-point))
   :config
   (org-roam-setup))
-#+end_src
-*** pocket-reader-org-roam-capture
-#+begin_src emacs-lisp
-;; From https://github.com/christofdamian/pocket-reader-org-roam-capture/blob/main/pocket-reader-org-roam-capture.el
-;; (require 'pocket-reader)
-;; (require 'org-roam)
-
-;; ;;;; Functions
-;; (defun pocket-reader-org-roam-capture ()
-;;   "Create an `org-roam' capture for all marked or current pocket reader items."
-;;   (interactive)
-;;   (pocket-reader--at-marked-or-current-items
-;;     (when-let (
-;;                (resolved_title (pocket-reader--get-property 'resolved_title))
-;;                (resolved_url (pocket-reader--get-property 'resolved_url))
-;;                (item_id (pocket-reader--get-property 'item_id))
-;;                (time_added (pocket-reader--get-property 'time_added))
-;;                (excerpt (pocket-reader--get-property 'excerpt))
-;;                (tags (combine-and-quote-strings (pocket-reader--get-property 'tags))))
-;;       (let (
-;;             (org-roam-capture-templates '(("d" "default" plain #'org-roam--capture-get-point "%?" :file-name "pocket/${item_id}-${slug}" :head "#+TITLE: ${title}
-;; ,#+roamtags: ${tags}
-
-;; URL: ${url}
-;; Id: ${item_id}
-
-;; ${excerpt}
-;; " :unnarrowed t)))
-;;             (org-roam-capture--info `((title . ,resolved_title)
-;;                                       (slug  . ,resolved_title)
-;;                                       (url . ,resolved_url)
-;;                                       (item_id . ,item_id)
-;;                                       (excerpt . ,excerpt)
-;;                                       (tags . ,tags)))
-;;             (org-roam-capture--context 'title))
-;;         (setq org-roam-capture-additional-template-props (list :finalize 'find-file))
-;;         (org-roam-capture-)))))
 #+end_src
 ** Functions
 #+begin_src emacs-lisp
@@ -1719,18 +1580,6 @@ The only integration left now is treemacs.
   :commands lsp-treemacs-errors-list)
 #+end_src
 *** Keybindings
-#+begin_src emacs-lisp
-(my-leader-def
-  :infix "l"
-  "" '(:which-key "lsp")
-  "d" 'lsp-ui-peek-find-definitions
-  "r" 'lsp-rename
-  "u" 'lsp-ui-peek-find-references
-  "s" 'lsp-ui-find-workspace-symbol
-  "l" 'lsp-execute-code-action
-  "t" 'lsp-treemacs-symbols
-  "e" 'list-flycheck-errors)
-#+end_src
 ** Flycheck
 A syntax checking extension for Emacs. Integrates with LSP-mode, but can also use various standalone checkers.
 
@@ -2143,8 +1992,7 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
 #+begin_src emacs-lisp
 (use-package counsel
   :after ivy
-  :bind (("C-c g" . counsel-google)
-         ("C-c j" . counsel-org-goto)))
+  :bind (("C-c g" . counsel-google)))
 
 ;; Make sure we don't have to ESC multiple times
 ;; (define-key ivy-minibuffer-map (kbd "<escape>") 'minibuffer-keyboard-quit))
@@ -2245,22 +2093,6 @@ Replace ~I-search~ by swiper
 
 #+end_src
 * Hydras
-** ag
-#+begin_src emacs-lisp
-;; (defhydra hydra-ag (:exit t :columns 2)
-;;   "Ag Search"
-;;   ("c" helm-ag "Current directory")
-;;   ("d" (lambda ()
-;;          (interactive)
-;;          (let ((current-prefix-arg '(4)))
-;;            (call-interactively 'helm-ag))) "Select directory")
-;;   ("D" helm-do-ag "Select directory (interactive)")
-;;   ("f" helm-ag-this-file "Current file")
-;;   ("F" helm-do-ag-this-file "Current file (interactive)")
-;;   ("p" helm-ag-project-root "Project")
-;;   ("b" helm-ag-buffers "Buffers")
-;;   ("B" helm-do-ag-buffers "Buffers (interactive)"))
-#+end_src
 ** multiple-cursors
 #+begin_src emacs-lisp
 (defhydra multiple-cursors-hydra (:columns 3 :idle 1.0)
@@ -2887,44 +2719,6 @@ Add some goodies to elfeed
 
 #+end_src
 ** Documentation
-*** man & info                                                                :disabled:
-#+begin_src emacs-lisp
-;; (setq Man-width-max 180)
-;; (my-leader-def "hM" 'man)
-;; (general-define-key
-;;  :states '(normal)
-;;  :keymaps 'Info-mode-map
-;;  (kbd "RET") 'Info-follow-nearest-node)
-
-;; (defun my/man-fix-width (&rest _)
-;;   (setq-local Man-width (- (window-width) 4)))
-
-;; (advice-add #'Man-update-manpage :before #'my/man-fix-width)
-#+end_src
-*** help-map                                                                  :disabled:
-#+begin_src emacs-lisp
-;; (use-package helpful
-;;   :commands (helpful-callable
-;;              helpful-variable
-;;              helpful-key
-;;              helpful-macro
-;;              helpful-function
-;;              helpful-command))
-
-#+end_src
-
-As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code below.
-#+begin_src emacs-lisp
-;; (my-leader-def
-;;   "mH" '(:keymap help-map :which-key "help"))
-
-;; (general-define-key
-;;  :keymaps 'help-map
-;;  "f" 'helpful-function
-;;  "k" 'helpful-key
-;;  "v" 'helpful-variable
-;;  "o" 'helpful-symbol)
-#+end_src
 *** google-translate
 #+begin_src emacs-lisp
 ;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
@@ -2938,16 +2732,6 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   (setq google-translate-default-source-language "en")
   (setq google-translate-default-target-language "de")
   (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130)))
-
-;; TODO: Change this
-(my-leader-def
-  :infix "m l g"
-  "" '(:which-key "google translate")
-  "p" 'google-translate-at-point
-  "P" 'google-translate-at-point-reverse
-  "q" 'google-translate-query-translate
-  "Q" 'google-translate-query-translate-reverse
-  "t" 'google-translate-smooth-translate)
 #+end_src
 *** TODO dict.cc                                                              :todo:todo:
 #+begin_src emacs-lisp
