@@ -1,59 +1,9 @@
 #+TITLE: Emacs Config
 #+PROPERTY: header-args :mkdirp yes
 #+PROPERTY: header-args:emacs-lisp :tangle ~/.doom.d/config.el :mkdirp yes :eval never-export :exports both
+#+AUTHOR: Victor Dorneanu
 
 * Bootstrap
-** Variables
-#+begin_src emacs-lisp
-(setq vd/is-termux
-    (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
-
-(setq doom-user-directory "~/.doom.d/")
-(setq tiddlywiki-directory "/cs/priv/repos/brainfck.org/")
-
-(setq auth-sources '("~/.authinfo.gpg"))
-#+end_src
-** Startup performance
-*** measure startup speed
-#+begin_src emacs-lisp
-;; (setq my/emacs-started nil)
-
-;; (add-hook 'emacs-startup-hook
-;;           (lambda ()
-;;             (message "*** Emacs loaded in %s with %d garbage collections."
-;;                      (format "%.2f seconds"
-;;                              (float-time
-;;                               (time-subtract after-init-time before-init-time)))
-;;                      gcs-done))
-;;           (setq my/emacs-started t))
-#+end_src
-*** garbage collection
-Setting variables
-#+begin_src emacs-lisp
-;; (setq gc-cons-threshold 80000000)
-;; (setq read-process-output-max (* 1024 1024))
-#+end_src
-
-Run garbage collection when Emacs is unfocused
-
-#+begin_src emacs-lisp
-;; (add-hook 'after-init-hook
-;;           #'(lambda ()
-;;               (setq gc-cons-threshold (* 100 1000 1000))))
-;; (add-hook 'focus-out-hook 'garbage-collect)
-;; (run-with-idle-timer 5 t 'garbage-collect)
-#+end_src
-
-** Server Mode
-#+begin_src emacs-lisp
-;; (server-start)
-#+end_src
-
-** Diminish
-#+begin_src emacs-lisp
-;; (use-package diminish)
-#+end_src
-
 ** Defaults
 #+begin_src emacs-lisp
 ;; UTF-8 everywhere
@@ -68,7 +18,101 @@ Run garbage collection when Emacs is unfocused
 ;; ;; Revert dired and other buffers
 ;; (setq global-auto-revert-non-file-buffers t)
 #+end_src
+** Variables
+#+begin_src emacs-lisp
+;; General stuff
+(setq vd/is-termux
+    (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
+(setq doom-user-directory "~/.doom.d/")
+
+;; Tiddlywiki folder
+(setq tiddlywiki-directory "/cs/priv/repos/brainfck.org/")
+
+(setq auth-sources '("~/.authinfo.gpg"))
+#+end_src
+** Startup performance
+*** measure startup speed                                                     :disabled:
+#+begin_src emacs-lisp
+;; (setq my/emacs-started nil)
+
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (message "*** Emacs loaded in %s with %d garbage collections."
+;;                      (format "%.2f seconds"
+;;                              (float-time
+;;                               (time-subtract after-init-time before-init-time)))
+;;                      gcs-done))
+;;           (setq my/emacs-started t))
+#+end_src
+*** garbage collection                                                        :disabled:
+Setting variables
+#+begin_src emacs-lisp
+(setq gc-cons-threshold 80000000)
+(setq read-process-output-max (* 1024 1024))
+#+end_src
+
+Run garbage collection when Emacs is unfocused
+
+#+begin_src emacs-lisp
+;; (add-hook 'after-init-hook
+;;           #'(lambda ()
+;;               (setq gc-cons-threshold (* 100 1000 1000))))
+;; (add-hook 'focus-out-hook 'garbage-collect)
+;; (run-with-idle-timer 5 t 'garbage-collect)
+#+end_src
+
 * Keyboard Bindings
+** Global
+#+begin_src emacs-lisp
+(my-leader-def "?" 'which-key-show-top-level)
+(my-leader-def "E" 'eval-expression)
+#+end_src
+*** Leaders
+#+begin_src emacs-lisp
+(setq doom-leader-key "SPC")
+(setq doom-leader-alt-key "M-m")
+
+(setq doom-localleader-key ",")
+(setq doom-localleader-alt-key "M-,")
+#+end_src
+*** Buffer switching
+#+begin_src emacs-lisp
+(general-define-key
+  :keymaps 'override
+  "C-<right>" 'evil-window-right
+  "C-<left>" 'evil-window-left
+  "C-<up>" 'evil-window-up
+  "C-<down>" 'evil-window-down
+  "C-h" 'evil-window-left
+  "C-l" 'evil-window-right
+  "C-k" 'evil-window-up
+  "C-j" 'evil-window-down
+  "C-x h" 'previous-buffer
+  "C-x l" 'next-buffer)
+#+end_src
+** general.el
+#+begin_src emacs-lisp
+(use-package! general
+  :config
+  (general-evil-setup t))
+
+;; Create own leader key
+(general-create-definer my-leader-def
+  :keymaps '(normal insert visual emacs)
+  :prefix "SPC"
+  :non-normal-prefix "M-:")
+#+end_src
+** which-key
+#+begin_src emacs-lisp
+(use-package which-key
+  :config
+  (setq which-key-idle-delay 0.3)
+  (setq which-key-popup-type 'frame)
+  (which-key-mode)
+  (which-key-setup-side-window-bottom)
+  (set-face-attribute 'which-key-local-map-description-face nil
+		      :weight 'bold))
+#+end_src
 ** Evil
 #+begin_src emacs-lisp
 (use-package evil
@@ -194,116 +238,6 @@ Run garbage collection when Emacs is unfocused
 ;;      slime
 ;;      )))
 #+end_src
-** which-key
-#+begin_src emacs-lisp
-(use-package which-key
-  :config
-  (setq which-key-idle-delay 0.3)
-  (setq which-key-popup-type 'frame)
-  (which-key-mode)
-  (which-key-setup-side-window-bottom)
-  (set-face-attribute 'which-key-local-map-description-face nil
-		      :weight 'bold))
-#+end_src
-** general.el
-#+begin_src emacs-lisp
-(use-package! general
-  :config
-  (general-evil-setup t))
-
-;; Create own leader key
-(general-create-definer my-leader-def
-  :keymaps '(normal insert visual emacs)
-  :prefix "SPC"
-  :non-normal-prefix "M-:")
-#+end_src
-** Global
-#+begin_src emacs-lisp
-(my-leader-def "?" 'which-key-show-top-level)
-(my-leader-def "E" 'eval-expression)
-#+end_src
-
-*** Leader
-#+begin_src emacs-lisp
-(setq doom-leader-key "SPC")
-(setq doom-leader-alt-key "M-m")
-#+end_src
-
-*** Local leader
-#+begin_src emacs-lisp
-(setq doom-localleader-key ",")
-(setq doom-localleader-alt-key "M-,")
-#+end_src
-*** Universal argument
-#+begin_src emacs-lisp
-;; (general-def
-;;   :keymaps 'universal-argument-map
-;;   "M-u" 'universal-argument-more)
-;; (general-def
-;;   :keymaps 'override
-;;   :states '(normal motion emacs insert visual)
-;;   "M-u" 'universal-argument)
-#+end_src
-*** Profiler
-The built-in profiler is a magnificent tool to troubleshoot performance issues.
-#+begin_src emacs-lisp
-;; (my-leader-def
-;;   :infix "P"
-;;   "" '(:which-key "profiler")
-;;   "s" 'profiler-start
-;;   "e" 'profiler-stop
-;;   "p" 'profiler-report)
-#+end_src
-*** Buffer switching
-#+begin_src emacs-lisp
-(general-define-key
-  :keymaps 'override
-  "C-<right>" 'evil-window-right
-  "C-<left>" 'evil-window-left
-  "C-<up>" 'evil-window-up
-  "C-<down>" 'evil-window-down
-  "C-h" 'evil-window-left
-  "C-l" 'evil-window-right
-  "C-k" 'evil-window-up
-  "C-j" 'evil-window-down
-  "C-x h" 'previous-buffer
-  "C-x l" 'next-buffer)
-#+end_src
-*** Buffer management
-#+begin_src emacs-lisp
-(my-leader-def
-  :infix "b"
-  "" '(:which-key "buffers")
-  "s" '((lambda () (interactive) (switch-to-buffer (persp-scratch-buffer)))
-       :which-key "*scratch*")
-  "m" '((lambda () (interactive) (persp-switch-to-buffer "*Messages*"))
-       :which-key "*Messages*")
-  "l" '(next-buffer :which-key "Next buffer")
-  "h" '(previous-buffer :which-key "Previous buffer")
-  "k" '(kill-buffer :which-key "Kill buffer")
-  "b" '(persp-ivy-switch-buffer :which-key "Switch buffer")
-  "r" '(revert-buffer :which-key "Revert buffer"))
-#+end_src
-*** Zooming
-#+begin_src emacs-lisp
-;; (defun my/zoom-in ()
-;;   "Increase font size by 10 points"
-;;   (interactive)
-;;   (set-face-attribute 'default nil
-;;                       :height
-;;                       (+ (face-attribute 'default :height) 10)))
-
-;; (defun my/zoom-out ()
-;;   "Decrease font size by 10 points"
-;;   (interactive)
-;;   (set-face-attribute 'default nil
-;;                       :height
-;;                       (- (face-attribute 'default :height) 10)))
-
-;; ;; change font size, interactively
-;; (global-set-key (kbd "C-+") 'my/zoom-in)
-;; (global-set-key (kbd "C-=") 'my/zoom-out)
-#+end_src
 * Editing
 ** Indentation
 *** aggressive-indent-mode
@@ -342,26 +276,15 @@ The built-in profiler is a magnificent tool to troubleshoot performance issues.
 *** yasnippet
 #+begin_src emacs-lisp
 (use-package yasnippet
-  :bind (
-         ("M-o" . yas-insert-snippet)
-         ("C-c y" . yas-expand))
+  ;; :bind (
+  ;;        ("M-o" . yas-insert-snippet)
+  ;;        ("C-c y" . yas-expand))
   :config
   (setq yas-snippet-dirs
-	`(,(concat (expand-file-name doom-user-directory) "snippets")
-	  yasnippet-snippets-dir))
+    `(,(concat (expand-file-name doom-user-directory) "snippets")
+      yasnippet-snippets-dir))
   (setq yas-triggers-in-field t)
   (yas-global-mode 1))
-
-(use-package yasnippet-snippets
-  :after yasnippet
-  :config
-  (yas-reload-all))
-
-
-;; turn off yasnippet for several modes
-(defun  my/force-yasnippet-off ()
-  (yas-minor-mode -1)
-  (setq yas-dont-activate t))
 
 (map! :after yasnippet
       :map yas-minor-mode-map
@@ -369,10 +292,21 @@ The built-in profiler is a magnificent tool to troubleshoot performance issues.
       :i "C-c j" #'yas-next-field
       :i "C-c k" #'yas-prev-field)
 
+;; turn off yasnippet for several modes
+(defun  my/force-yasnippet-off ()
+  (yas-minor-mode -1)
+  (setq yas-dont-activate t))
+
 (add-hook 'term-mode-hook 'my/force-yasnippet-off)
 (add-hook 'shell-mode-hook 'my/force-yasnippet-off)
 (add-hook 'eshell-mode-hook 'my/force-yasnippet-off)
-
+#+end_src
+*** yasnippet-snippets
+#+begin_src emacs-lisp
+(use-package yasnippet-snippets
+  :after yasnippet
+  :config
+  (yas-reload-all))
 #+end_src
 *** yankpad
 #+begin_src emacs-lisp
@@ -396,49 +330,50 @@ Quick, fast edits of every symbol selected.
 (my-leader-def "s*" '(iedit-mode :which-key "Activate iedit-mode"))
 #+end_src
 
-** Expand region
+** Expand region                                                               :disabled:
 A package to select an ever-increasing (or ever-decreasing) region of text.
 
 #+begin_src emacs-lisp
-(use-package expand-region
-  :bind* (("M-p a o" . er/mark-org-code-block)
-          ("M-p a w" . sk/mark-around-word)
-          ("M-p a p" . sk/mark-around-text-paragraph)
-          ("M-p a f" . er/mark-defun)
-          ("M-p a e" . sk/mark-around-LaTeX-environment)
-          ("M-p a t" . er/mark-LaTeX-math)
-          ("M-p a m" . er/mark-python-block)
-          ("M-p a j" . er/mark-ruby-block-up)
-          ("M-p a q" . er/mark-outside-quotes)
-          ("M-p a b" . er/mark-outside-pairs)
-          ("M-p a u" . er/mark-url)
-          ("M-p a c" . er/mark-comment)
-          ("M-p a v" . sk/mark-around-symbol)
-          ("M-p i p" . er/mark-text-paragraph)
-          ("M-p i f" . er/mark-defun)
-          ("M-p i w" . er/mark-word)
-          ("M-p i e" . er/mark-LaTeX-inside-environment)
-          ("M-p i t" . sk/mark-inside-LaTeX-math)
-          ("M-p i u" . er/mark-url)
-          ("M-p i c" . er/mark-comment)
-          ("M-p i b" . er/mark-inside-pairs)
-          ("M-p i q" . er/mark-inside-quotes)
-          ("M-p i o" . sk/mark-inside-org-code)
-          ("M-p i m" . sk/mark-inside-python-block)
-          ("M-p i j" . sk/mark-inside-ruby-block)
-          ("M-p i v" . er/mark-symbol)))
+;; (use-package expand-region
+;;   :bind* (("M-p a o" . er/mark-org-code-block)
+;;           ("M-p a w" . sk/mark-around-word)
+;;           ("M-p a p" . sk/mark-around-text-paragraph)
+;;           ("M-p a f" . er/mark-defun)
+;;           ("M-p a e" . sk/mark-around-LaTeX-environment)
+;;           ("M-p a t" . er/mark-LaTeX-math)
+;;           ("M-p a m" . er/mark-python-block)
+;;           ("M-p a j" . er/mark-ruby-block-up)
+;;           ("M-p a q" . er/mark-outside-quotes)
+;;           ("M-p a b" . er/mark-outside-pairs)
+;;           ("M-p a u" . er/mark-url)
+;;           ("M-p a c" . er/mark-comment)
+;;           ("M-p a v" . sk/mark-around-symbol)
+;;           ("M-p i p" . er/mark-text-paragraph)
+;;           ("M-p i f" . er/mark-defun)
+;;           ("M-p i w" . er/mark-word)
+;;           ("M-p i e" . er/mark-LaTeX-inside-environment)
+;;           ("M-p i t" . sk/mark-inside-LaTeX-math)
+;;           ("M-p i u" . er/mark-url)
+;;           ("M-p i c" . er/mark-comment)
+;;           ("M-p i b" . er/mark-inside-pairs)
+;;           ("M-p i q" . er/mark-inside-quotes)
+;;           ("M-p i o" . sk/mark-inside-org-code)
+;;           ("M-p i m" . sk/mark-inside-python-block)
+;;           ("M-p i j" . sk/mark-inside-ruby-block)
+;;           ("M-p i v" . er/mark-symbol)))
 #+end_src
 
-** Visual fill column mode
+** Visual fill column mode                                                     :disabled:
 #+begin_src emacs-lisp
-;; from https://github.com/rasendubi/dotfiles/blob/master/README.org
-(use-package visual-fill-column
-  :commands (visual-fill-column-mode)
-  :config
-  (add-hook 'visual-fill-column-mode-hook
-            (lambda () (setq visual-fill-column-center-text t))))
+;; from https://hieuphay.com/doom-emacs-config/
+;; (use-package! visual-fill-column
+;;   :hook (visual-line-mode . visual-fill-column-mode)
+;;   :init
+;;   (setq visual-fill-column-width 120
+;;   visual-fill-column-center-text t
+;;         visual-fill-column-fringes-outside-margins nil))
 #+end_src
-** parinfer for lispy languages
+** parinfer for lispy languages                                                :disabled:
 #+begin_src emacs-lisp
 ;; (use-package parinfer
 ;;   :disabled
@@ -738,9 +673,7 @@ Highlight TODOs and stuff
 (use-package winner
   :after evil
   :config
-  (winner-mode)
-  (define-key evil-window-map "u" 'winner-undo)
-  (define-key evil-window-map "U" 'winner-redo))
+  (winner-mode))
 #+end_src
 *** Zoom window
 #+begin_src emacs-lisp
@@ -797,7 +730,7 @@ I have to load by defining a ~load-path~.
 #+begin_src emacs-lisp
 (use-package screenshot :load-path "~/.emacs.d/.local/straight/repos/screenshot")
 #+end_src
-** gif-screenshot
+** gif-screenshot                                                              :disabled:
 #+begin_src emacs-lisp
 ;; (use-package! gif-screencast
 ;;   :commands gif-screencast-mode
@@ -918,14 +851,14 @@ I have to load by defining a ~load-path~.
   :if (display-graphic-p)
   :config
   (setq org-bars-color-options '(
-                                 :only-one-color t
-                                 :bar-color "#8c8c8c"
-                                 :desaturate-level-faces 10
-                                 :darken-level-faces 5))
+     :only-one-color t
+     :bar-color "#8c8c8c"
+     :desaturate-level-faces 10
+     :darken-level-faces 5))
   )
-
-(my-leader-def
-  "mtb" '(org-bars-mode :keymaps '(org-mode-map) :which-key "Activate org-bars mode"))
+(map! :leader
+      :desc "Activate org-bars"
+      "m o b" #'org-bars-mode)
 #+end_src
 *** org-emphasis-alist
 #+begin_src emacs-lisp
@@ -1016,7 +949,10 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
   (:map org-mode-map
    (("s-Y" . org-download-screenshot)
     ("s-y" . org-download-yank)))
-  )
+  :config
+  ;; Drag-and-drop to `dired`
+  (add-hook 'dired-mode-hook 'org-download-enable)
+)
 #+end_src
 ** org-super-agenda
 Define custom org agenda commands.
@@ -1314,32 +1250,30 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 
 ** org-ql
 [[https://github.com/alphapapa/org-ql][org-ql]] is a package to query the org files. I'm using it in my review workflow and for custom agenda views.
-
 #+begin_src emacs-lisp :tangle no :noweb-ref org-productivity-setup
 (use-package org-ql)
 #+end_src
-
-** org-journal
+** org-journal                                                                 :disabled:
 [[https://github.com/bastibe/org-journal][org-journal]] is a plugin for maintaining a journal in org mode. I want(ed) to have its entries separate from my knowledge base.
 
 I've tried switching to Org Roam Dailies, but in the end decided that org-journal fits my workflow better.
 
 #+begin_src emacs-lisp
-(use-package org-journal
-  :after org
-  :config
-  (setq org-journal-dir (concat org-directory "journal"))
-  (setq org-journal-file-type 'weekly)
-  (setq org-journal-file-format "%Y-%m-%d.org")
-  (setq org-journal-date-format "%Y-%m-%d")
-  (setq org-journal-enable-encryption t))
+;; (use-package org-journal
+;;   :after org
+;;   :config
+;;   (setq org-journal-dir (concat org-directory "journal"))
+;;   (setq org-journal-file-type 'weekly)
+;;   (setq org-journal-file-format "%Y-%m-%d.org")
+;;   (setq org-journal-date-format "%Y-%m-%d")
+;;   (setq org-journal-enable-encryption t))
 
-(my-leader-def
-  :infix "oj"
-  "" '(:which-key "org-journal")
-  "j" 'org-journal-new-entry
-  "o" 'org-journal-open-current-journal-file
-  "s" 'org-journal-tags-status)
+;; (my-leader-def
+;;   :infix "oj"
+;;   "" '(:which-key "org-journal")
+;;   "j" 'org-journal-new-entry
+;;   "o" 'org-journal-open-current-journal-file
+;;   "s" 'org-journal-tags-status)
 #+end_src
 ** org-pomodoro
 #+begin_src emacs-lisp
@@ -1370,18 +1304,14 @@ I've tried switching to Org Roam Dailies, but in the end decided that org-journa
   ;;             ))
   )
 #+end_src
-
-#+RESULTS:
-: t
-
-** pomm.el
+** pomm.el                                                                     :disabled:
 [[https://github.com/SqrtMinusOne/pomm.el][Yet another pomodoro timer for Emacs]]
 
 #+begin_src emacs-lisp
-(use-package pomm
-  :commands (pomm))
+;; (use-package pomm
+;;   :commands (pomm))
 
-(setq alert-default-style 'libnotify)
+;; (setq alert-default-style 'libnotify)
 #+end_src
 ** evil-org
 A package to add more evil-mode keybindings to org-mode.
@@ -1399,11 +1329,11 @@ A package to add more evil-mode keybindings to org-mode.
 #+end_src
 ** org-speed-commands
 #+begin_src emacs-lisp
-(after! org
-  (setq org-use-speed-commands
-        (lambda ()
-          (and (looking-at org-outline-regexp)
-               (looking-back "^\**")))))
+;; (after! org
+;;   (setq org-use-speed-commands
+;;         (lambda ()
+;;           (and (looking-at org-outline-regexp)
+;;                (looking-back "^\**")))))
 #+end_src
 
 ** Encryption
@@ -1421,13 +1351,13 @@ A package to add more evil-mode keybindings to org-mode.
 #+end_src
 *** org-crypt
 #+begin_src emacs-lisp
-(use-package org-crypt
-  :after org
-  :config
-  (org-crypt-use-before-save-magic)
-  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
-  :custom
-  (org-crypt-key "BF2828095372F24D"))
+;; (use-package org-crypt
+;;   :after org
+;;   :config
+;;   (org-crypt-use-before-save-magic)
+;;   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+;;   :custom
+;;   (org-crypt-key "BF2828095372F24D"))
 #+end_src
 ** Utils
 *** copy a link
@@ -1488,6 +1418,9 @@ A package to add more evil-mode keybindings to org-mode.
 (add-to-list 'org-hugo-special-block-type-properties '("sidenote" . (:trim-pre t :trim-post t)))
 (setq org-hugo-paired-shortcodes "%sidenote")
 
+#+end_src
+**** Functions
+#+begin_src emacs-lisp
 (defun vd/hugo-add-slug ()
   "Adds a Hugo slug as EXPORT_FILE_NAME property"
  (interactive)
@@ -1512,7 +1445,7 @@ A package to add more evil-mode keybindings to org-mode.
 #+end_src
 
 * Projects
-** Projectile
+** TODO Projectile
 #+begin_src emacs-lisp
 (use-package projectile
   :config
@@ -1729,7 +1662,6 @@ References:
 *** lsp-ui
 #+begin_src emacs-lisp
 (use-package lsp-ui
-  :ensure t
   :config
   (setq
         ;; lsp-ui-sideline-show-hover t
@@ -1959,16 +1891,16 @@ References:
  (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
  (add-to-list 'web-mode-indentation-params '("lineup-ternary" . nil))
 )
-
+#+end_src
+** vue
+#+begin_src emacs-lisp
 (use-package vue-mode
   :mode "\\.vue\\'"
   :hook (vue-mode . prettier-js-mode)
   :config
   (add-hook 'vue-mode-hook #'lsp)
   (setq prettier-js-args '("--parser vue")))
-
 #+end_src
-
 ** PlantUML
 #+begin_src emacs-lisp
 (use-package plantuml-mode
@@ -2011,8 +1943,7 @@ References:
 **** Snatch JSON
 Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Emacs]].
   #+begin_src emacs-lisp
-  ( use-package  json-snatcher
-     :ensure t
+  (use-package  json-snatcher
      :commands (jsons-print-path))
   #+end_src
 *** CSV
@@ -2208,106 +2139,12 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
          (current-buffer)))
 #+end_src
 * Completion
-** ivy
-#+begin_src emacs-lisp
-;; (use-package ivy
-;;   :diminish
-;;   :config
-;;   ;; :bind (("C-s" . swiper)
-;;   ;;        :map ivy-minibuffer-map
-;;   ;;        ("TAB" . ivy-alt-done)
-;;   ;;        ("C-f" . ivy-alt-done)
-;;   ;;        ("C-l" . ivy-alt-done)
-;;   ;;        ("C-j" . ivy-next-line)
-;;   ;;        ("C-k" . ivy-previous-line)
-;;   ;;        :map ivy-switch-buffer-map
-;;   ;;        ("C-k" . ivy-previous-line)
-;;   ;;        ("C-l" . ivy-done)
-;;   ;;        ("C-d" . ivy-switch-buffer-kill)
-;;   ;;        :map ivy-reverse-i-search-map
-;;   ;;        ("C-k" . ivy-previous-line)
-;;   ;;        ("C-d" . ivy-reverse-i-search-kill))
-;;   :init
-;;   (ivy-mode 1)
-;;   :config
-;;   (setq ivy-use-virtual-buffers t)
-;;   (setq ivy-wrap t)
-;;   (setq ivy-count-format "(%d/%d) ")
-;;   (setq enable-recursive-minibuffers t)
-
-;;   ;; Use different regex strategies per completion command
-;;   (push '(completion-at-point . ivy--regex-fuzzy) ivy-re-builders-alist) ;; This doesn't seem to work...
-;;   (push '(swiper . ivy--regex-ignore-order) ivy-re-builders-alist)
-;;   (push '(counsel-M-x . ivy--regex-ignore-order) ivy-re-builders-alist)
-
-;;   ;; Set minibuffer height for different commands
-;;   (setf (alist-get 'counsel-projectile-ag ivy-height-alist) 15)
-;;   (setf (alist-get 'counsel-projectile-rg ivy-height-alist) 15)
-;;   (setf (alist-get 'swiper ivy-height-alist) 15)
-;;   (setf (alist-get 'counsel-switch-buffer ivy-height-alist) 7)
-;;   (seq ivy-use-virtual-buffers t))
-
-
-#+end_src
-** ivy-rich
-[[https://github.com/Yevgnen/ivy-rich][ivy-rich]] provides a more informative interface for ivy.
-#+begin_src emacs-lisp
-;; (use-package ivy-rich
-;;   :after ivy
-;;   :config
-;;   (ivy-rich-mode 1)
-;;   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
-#+end_src
-** ivy-prescient
-A package that enhances sorting & filtering of candidates. =ivy-prescient= adds integration with Ivy.
-
-References:
-- [[https://github.com/raxod502/prescient.el][prescient.el repo]]
-#+begin_src emacs-lisp :noweb yes
-;; (use-package ivy-prescient
-;;   :after counsel
-;;   :config
-;;   (ivy-prescient-mode +1)
-;;   (setq ivy-prescient-retain-classic-highlighting t)
-;;   (prescient-persist-mode 1)
-;;   (setq ivy-prescient-sort-commands
-;;         '(:not swiper
-;;                swiper-isearch
-;;                ivy-switch-buffer
-;;                ;; ivy-resume
-;;                ;; ivy--restore-session
-;;                lsp-ivy-workspace-symbol
-;;                dap-switch-stack-frame
-;;                my/dap-switch-stack-frame
-;;                dap-switch-session
-;;                dap-switch-thread
-;;                counsel-grep
-;;                ;; counsel-find-file
-;;                counsel-git-grep
-;;                counsel-rg
-;;                counsel-ag
-;;                counsel-ack
-;;                counsel-fzf
-;;                counsel-pt
-;;                counsel-imenu
-;;                counsel-yank-pop
-;;                counsel-recentf
-;;                counsel-buffer-or-recentf
-;;                proced-filter-interactive
-;;                proced-sort-interactive
-;;                my/persp-ivy-switch-buffer-other-window
-;;                lsp-execute-code-action))
-;;   ;; Do not use prescient in find-file
-;;   (ivy--alist-set 'ivy-sort-functions-alist #'read-file-name-internal #'ivy-sort-file-function-default))
-#+end_src
-
 ** counsel
 #+begin_src emacs-lisp
 (use-package counsel
   :after ivy
-  :bind (
-  ("C-c g" . counsel-google)
-  ("C-c j" . counsel-org-goto)))
+  :bind (("C-c g" . counsel-google)
+         ("C-c j" . counsel-org-goto)))
 
 ;; Make sure we don't have to ESC multiple times
 ;; (define-key ivy-minibuffer-map (kbd "<escape>") 'minibuffer-keyboard-quit))
@@ -2317,9 +2154,7 @@ Replace ~I-search~ by swiper
 
 #+begin_src emacs-lisp
 (use-package swiper
-   :bind (
-   ("C-s" . swiper-isearch)
-))
+   :bind (("C-s" . swiper-isearch)))
 #+end_src
 ** company
 #+begin_src emacs-lisp
@@ -2410,6 +2245,7 @@ Replace ~I-search~ by swiper
 
 #+end_src
 * Hydras
+** ag
 #+begin_src emacs-lisp
 ;; (defhydra hydra-ag (:exit t :columns 2)
 ;;   "Ag Search"
@@ -2427,28 +2263,27 @@ Replace ~I-search~ by swiper
 #+end_src
 ** multiple-cursors
 #+begin_src emacs-lisp
-;; (defhydra multiple-cursors-hydra (:columns 3
-;;                                            :idle 1.0)
-;;   "Multiple cursors"
-;;   ("l" mc/edit-lines "Edit lines in region" :exit t)
-;;   ("b" mc/edit-beginnings-of-lines "Edit beginnings of lines in region" :exit t)
-;;   ("e" mc/edit-ends-of-lines "Edit ends of lines in region" :exit t)
-;;   ("a" mc/mark-all-dwim "Mark all dwim" :exit t)
-;;   ("S" mc/mark-all-symbols-like-this "Mark all symbols likes this" :exit t)
-;;   ("w" mc/mark-all-words-like-this "Mark all words like this" :exit t)
-;;   ("r" mc/mark-all-in-region "Mark all in region" :exit t)
-;;   ("R" mc/mark-all-in-region-regexp "Mark all in region (regexp)" :exit t)
-;;   ("d" mc/mark-all-like-this-in-defun "Mark all like this in defun" :exit t)
-;;   ("s" mc/mark-all-symbols-like-this-in-defun "Mark all symbols like this in defun" :exit t)
-;;   ("W" mc/mark-all-words-like-this-in-defun "Mark all words like this in defun" :exit t)
-;;   ("i" mc/insert-numbers "Insert numbers" :exit t)
-;;   ("n" mc/mark-next-like-this "Mark next like this")
-;;   ("N" mc/skip-to-next-like-this "Skip to next like this")
-;;   ("M-n" mc/unmark-next-like-this "Unmark next like this")
-;;   ("p" mc/mark-previous-like-this "Mark previous like this")
-;;   ("P" mc/skip-to-previous-like-this "Skip to previous like this")
-;;   ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
-;;   ("q" nil "Quit" :exit t))
+(defhydra multiple-cursors-hydra (:columns 3 :idle 1.0)
+  "Multiple cursors"
+  ("l" mc/edit-lines "Edit lines in region" :exit t)
+  ("b" mc/edit-beginnings-of-lines "Edit beginnings of lines in region" :exit t)
+  ("e" mc/edit-ends-of-lines "Edit ends of lines in region" :exit t)
+  ("a" mc/mark-all-dwim "Mark all dwim" :exit t)
+  ("S" mc/mark-all-symbols-like-this "Mark all symbols likes this" :exit t)
+  ("w" mc/mark-all-words-like-this "Mark all words like this" :exit t)
+  ("r" mc/mark-all-in-region "Mark all in region" :exit t)
+  ("R" mc/mark-all-in-region-regexp "Mark all in region (regexp)" :exit t)
+  ("d" mc/mark-all-like-this-in-defun "Mark all like this in defun" :exit t)
+  ("s" mc/mark-all-symbols-like-this-in-defun "Mark all symbols like this in defun" :exit t)
+  ("W" mc/mark-all-words-like-this-in-defun "Mark all words like this in defun" :exit t)
+  ("i" mc/insert-numbers "Insert numbers" :exit t)
+  ("n" mc/mark-next-like-this "Mark next like this")
+  ("N" mc/skip-to-next-like-this "Skip to next like this")
+  ("M-n" mc/unmark-next-like-this "Unmark next like this")
+  ("p" mc/mark-previous-like-this "Mark previous like this")
+  ("P" mc/skip-to-previous-like-this "Skip to previous like this")
+  ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
+  ("q" nil "Quit" :exit t))
 #+end_src
 
 ** ediff
@@ -2633,7 +2468,7 @@ T - tag prefix
 #+end_src
 * Applications
 ** RSS
-*** elfeed
+*** TODO elfeed
 #+begin_src emacs-lisp
 (use-package elfeed
   :commands (elfeed)
@@ -2772,119 +2607,119 @@ T - tag prefix
 ;; (add-hook 'emacs-startup-hook (lambda () (run-at-time 5 600 'elfeed-update)))
 #+end_src
 
-**** rdrview
+**** TODO rdrview
 #+begin_src emacs-lisp
 ;; From https://github.com/SqrtMinusOne/dotfiles
-(defun sqrtminusone/rdrview-get (url callback)
-  "Get the rdrview representation of URL.
+;; (defun sqrtminusone/rdrview-get (url callback)
+;;   "Get the rdrview representation of URL.
 
-Call CALLBACK with the output."
-  (let* ((buffer (generate-new-buffer "rdrview"))
-         (proc (start-process "rdrview" buffer "rdrview"
-                              url "-T" "title,sitename,body"
-                              "-H")))
-    (set-process-sentinel
-     proc
-     (lambda (process _msg)
-       (let ((status (process-status process))
-             (code (process-exit-status process)))
-         (cond ((and (eq status 'exit) (= code 0))
-                (progn
-                  (funcall callback
-                           (with-current-buffer (process-buffer process)
-                             (buffer-string)))
-                  (kill-buffer (process-buffer process))) )
-               ((or (and (eq status 'exit) (> code 0))
-                    (eq status 'signal))
-                (let ((err (with-current-buffer (process-buffer process)
-                             (buffer-string))))
-                  (kill-buffer (process-buffer process))
-                  (user-error "Error in rdrview: %s" err)))))))
-    proc))
+;; Call CALLBACK with the output."
+;;   (let* ((buffer (generate-new-buffer "rdrview"))
+;;          (proc (start-process "rdrview" buffer "rdrview"
+;;                               url "-T" "title,sitename,body"
+;;                               "-H")))
+;;     (set-process-sentinel
+;;      proc
+;;      (lambda (process _msg)
+;;        (let ((status (process-status process))
+;;              (code (process-exit-status process)))
+;;          (cond ((and (eq status 'exit) (= code 0))
+;;                 (progn
+;;                   (funcall callback
+;;                            (with-current-buffer (process-buffer process)
+;;                              (buffer-string)))
+;;                   (kill-buffer (process-buffer process))) )
+;;                ((or (and (eq status 'exit) (> code 0))
+;;                     (eq status 'signal))
+;;                 (let ((err (with-current-buffer (process-buffer process)
+;;                              (buffer-string))))
+;;                   (kill-buffer (process-buffer process))
+;;                   (user-error "Error in rdrview: %s" err)))))))
+;;     proc))
 
-(defun sqrtminusone/rdrview-parse (dom-string)
-  (let ((dom (with-temp-buffer
-               (insert dom-string)
-               (libxml-parse-html-region (point-min) (point-max)))))
-    (let (title sitename content (i 0))
-      (dolist (child (dom-children (car (dom-by-id dom "readability-page-1"))))
-        (when (listp child)
-          (cond
-           ((eq (car child) 'h1)
-            (setq title (dom-text child)))
-           ((eq (car child) 'h2)
-            (setq sitename (dom-text child)))
-           ((eq (car child) 'div)
-            (setq content child)))))
-      (while (and
-              (not (dom-by-tag content 'h1))
-              (dom-search
-               content
-               (lambda (el)
-                 (when (listp el)
-                   (pcase (car el)
-                     ('h2 (setf (car el) 'h1))
-                     ('h3 (setf (car el) 'h2))
-                     ('h4 (setf (car el) 'h3))
-                     ('h5 (setf (car el) 'h4))
-                     ('h6 (setf (car el) 'h5))))))))
-      `((title . ,title)
-        (sitename . ,sitename)
-        (content . ,(with-temp-buffer
-                      (dom-print content)
-                      (buffer-string)))))))
+;; (defun sqrtminusone/rdrview-parse (dom-string)
+;;   (let ((dom (with-temp-buffer
+;;                (insert dom-string)
+;;                (libxml-parse-html-region (point-min) (point-max)))))
+;;     (let (title sitename content (i 0))
+;;       (dolist (child (dom-children (car (dom-by-id dom "readability-page-1"))))
+;;         (when (listp child)
+;;           (cond
+;;            ((eq (car child) 'h1)
+;;             (setq title (dom-text child)))
+;;            ((eq (car child) 'h2)
+;;             (setq sitename (dom-text child)))
+;;            ((eq (car child) 'div)
+;;             (setq content child)))))
+;;       (while (and
+;;               (not (dom-by-tag content 'h1))
+;;               (dom-search
+;;                content
+;;                (lambda (el)
+;;                  (when (listp el)
+;;                    (pcase (car el)
+;;                      ('h2 (setf (car el) 'h1))
+;;                      ('h3 (setf (car el) 'h2))
+;;                      ('h4 (setf (car el) 'h3))
+;;                      ('h5 (setf (car el) 'h4))
+;;                      ('h6 (setf (car el) 'h5))))))))
+;;       `((title . ,title)
+;;         (sitename . ,sitename)
+;;         (content . ,(with-temp-buffer
+;;                       (dom-print content)
+;;                       (buffer-string)))))))
 
-(defvar-local my/elfeed-show-rdrview-html nil)
+;; (defvar-local my/elfeed-show-rdrview-html nil)
 
-(defun sqrtminusone/rdrview-elfeed-show ()
-  (interactive)
-  (unless elfeed-show-entry
-    (user-error "No elfeed entry in this buffer!"))
-  (my/rdrview-get
-   (elfeed-entry-link elfeed-show-entry)
-   (lambda (result)
-     (let* ((data (sqrtminusone/rdrview-parse result))
-            (inhibit-read-only t)
-            (title (elfeed-entry-title elfeed-show-entry))
-            (date (seconds-to-time (elfeed-entry-date elfeed-show-entry)))
-            (authors (elfeed-meta elfeed-show-entry :authors))
-            (link (elfeed-entry-link elfeed-show-entry))
-            (tags (elfeed-entry-tags elfeed-show-entry))
-            (tagsstr (mapconcat #'symbol-name tags ", "))
-            (nicedate (format-time-string "%a, %e %b %Y %T %Z" date))
-            (content (alist-get 'content data))
-            (feed (elfeed-entry-feed elfeed-show-entry))
-            (feed-title (elfeed-feed-title feed))
-            (base (and feed (elfeed-compute-base (elfeed-feed-url feed)))))
-       (erase-buffer)
-       (insert (format (propertize "Title: %s\n" 'face 'message-header-name)
-                       (propertize title 'face 'message-header-subject)))
-       (when elfeed-show-entry-author
-         (dolist (author authors)
-           (let ((formatted (elfeed--show-format-author author)))
-             (insert
-              (format (propertize "Author: %s\n" 'face 'message-header-name)
-                      (propertize formatted 'face 'message-header-to))))))
-       (insert (format (propertize "Date: %s\n" 'face 'message-header-name)
-                       (propertize nicedate 'face 'message-header-other)))
-       (insert (format (propertize "Feed: %s\n" 'face 'message-header-name)
-                       (propertize feed-title 'face 'message-header-other)))
-       (when tags
-         (insert (format (propertize "Tags: %s\n" 'face 'message-header-name)
-                         (propertize tagsstr 'face 'message-header-other))))
-       (insert (propertize "Link: " 'face 'message-header-name))
-       (elfeed-insert-link link link)
-       (insert "\n")
-       (cl-loop for enclosure in (elfeed-entry-enclosures elfeed-show-entry)
-                do (insert (propertize "Enclosure: " 'face 'message-header-name))
-                do (elfeed-insert-link (car enclosure))
-                do (insert "\n"))
-       (insert "\n")
-       (if content
-           (elfeed-insert-html content base)
-         (insert (propertize "(empty)\n" 'face 'italic)))
-       (setq-local my/elfeed-show-rdrview-html content)
-       (goto-char (point-min))))))
+;; (defun sqrtminusone/rdrview-elfeed-show ()
+;;   (interactive)
+;;   (unless elfeed-show-entry
+;;     (user-error "No elfeed entry in this buffer!"))
+;;   (my/rdrview-get
+;;    (elfeed-entry-link elfeed-show-entry)
+;;    (lambda (result)
+;;      (let* ((data (sqrtminusone/rdrview-parse result))
+;;             (inhibit-read-only t)
+;;             (title (elfeed-entry-title elfeed-show-entry))
+;;             (date (seconds-to-time (elfeed-entry-date elfeed-show-entry)))
+;;             (authors (elfeed-meta elfeed-show-entry :authors))
+;;             (link (elfeed-entry-link elfeed-show-entry))
+;;             (tags (elfeed-entry-tags elfeed-show-entry))
+;;             (tagsstr (mapconcat #'symbol-name tags ", "))
+;;             (nicedate (format-time-string "%a, %e %b %Y %T %Z" date))
+;;             (content (alist-get 'content data))
+;;             (feed (elfeed-entry-feed elfeed-show-entry))
+;;             (feed-title (elfeed-feed-title feed))
+;;             (base (and feed (elfeed-compute-base (elfeed-feed-url feed)))))
+;;        (erase-buffer)
+;;        (insert (format (propertize "Title: %s\n" 'face 'message-header-name)
+;;                        (propertize title 'face 'message-header-subject)))
+;;        (when elfeed-show-entry-author
+;;          (dolist (author authors)
+;;            (let ((formatted (elfeed--show-format-author author)))
+;;              (insert
+;;               (format (propertize "Author: %s\n" 'face 'message-header-name)
+;;                       (propertize formatted 'face 'message-header-to))))))
+;;        (insert (format (propertize "Date: %s\n" 'face 'message-header-name)
+;;                        (propertize nicedate 'face 'message-header-other)))
+;;        (insert (format (propertize "Feed: %s\n" 'face 'message-header-name)
+;;                        (propertize feed-title 'face 'message-header-other)))
+;;        (when tags
+;;          (insert (format (propertize "Tags: %s\n" 'face 'message-header-name)
+;;                          (propertize tagsstr 'face 'message-header-other))))
+;;        (insert (propertize "Link: " 'face 'message-header-name))
+;;        (elfeed-insert-link link link)
+;;        (insert "\n")
+;;        (cl-loop for enclosure in (elfeed-entry-enclosures elfeed-show-entry)
+;;                 do (insert (propertize "Enclosure: " 'face 'message-header-name))
+;;                 do (elfeed-insert-link (car enclosure))
+;;                 do (insert "\n"))
+;;        (insert "\n")
+;;        (if content
+;;            (elfeed-insert-html content base)
+;;          (insert (propertize "(empty)\n" 'face 'italic)))
+;;        (setq-local my/elfeed-show-rdrview-html content)
+;;        (goto-char (point-min))))))
 
 #+end_src
 **** reddigg
@@ -3052,65 +2887,46 @@ Add some goodies to elfeed
 
 #+end_src
 ** Documentation
-*** man & info
+*** man & info                                                                :disabled:
 #+begin_src emacs-lisp
-(setq Man-width-max 180)
-(my-leader-def "hM" 'man)
-(general-define-key
- :states '(normal)
- :keymaps 'Info-mode-map
- (kbd "RET") 'Info-follow-nearest-node)
+;; (setq Man-width-max 180)
+;; (my-leader-def "hM" 'man)
+;; (general-define-key
+;;  :states '(normal)
+;;  :keymaps 'Info-mode-map
+;;  (kbd "RET") 'Info-follow-nearest-node)
 
-(defun my/man-fix-width (&rest _)
-  (setq-local Man-width (- (window-width) 4)))
+;; (defun my/man-fix-width (&rest _)
+;;   (setq-local Man-width (- (window-width) 4)))
 
-(advice-add #'Man-update-manpage :before #'my/man-fix-width)
+;; (advice-add #'Man-update-manpage :before #'my/man-fix-width)
 #+end_src
-*** help-map
+*** help-map                                                                  :disabled:
 #+begin_src emacs-lisp
-(use-package helpful
-  :commands (helpful-callable
-             helpful-variable
-             helpful-key
-             helpful-macro
-             helpful-function
-             helpful-command))
+;; (use-package helpful
+;;   :commands (helpful-callable
+;;              helpful-variable
+;;              helpful-key
+;;              helpful-macro
+;;              helpful-function
+;;              helpful-command))
 
 #+end_src
 
 As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code below.
 #+begin_src emacs-lisp
-(my-leader-def
-  "mH" '(:keymap help-map :which-key "help"))
+;; (my-leader-def
+;;   "mH" '(:keymap help-map :which-key "help"))
 
-(general-define-key
- :keymaps 'help-map
- "f" 'helpful-function
- "k" 'helpful-key
- "v" 'helpful-variable
- "o" 'helpful-symbol)
+;; (general-define-key
+;;  :keymaps 'help-map
+;;  "f" 'helpful-function
+;;  "k" 'helpful-key
+;;  "v" 'helpful-variable
+;;  "o" 'helpful-symbol)
 #+end_src
 *** google-translate
 #+begin_src emacs-lisp
-;; (use-package google-translate
-;;   :ensure t
-;;   :config
-;;   (when (and (string-match "0.11.14"
-;;       (google-translate-version))
-;;       (>= (time-to-seconds)
-;;       (time-to-seconds
-;;       (encode-time 0 0 0 23 9 2018))))
-;;   (defun google-translate--get-b-d1 ()
-;;       ;; TKK='427110.1469889687'
-;;       (list 427110 1469889687)))
-;;   (require 'google-translate-smooth-ui)
-;;   (setq google-translate-translation-directions-alist
-;;         '(("en" . "de") ("de" . "en")))
-;;   (setq google-translate-output-destination nil)
-;;   (setq google-translate-pop-up-buffer-set-focus t)
-;;   (setq google-translate-default-source-language "en")
-;;   (setq google-translate-default-target-language "de"))
-
 ;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
 (use-package google-translate
   :custom
@@ -3123,6 +2939,7 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   (setq google-translate-default-target-language "de")
   (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130)))
 
+;; TODO: Change this
 (my-leader-def
   :infix "m l g"
   "" '(:which-key "google translate")
@@ -3132,7 +2949,7 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   "Q" 'google-translate-query-translate-reverse
   "t" 'google-translate-smooth-translate)
 #+end_src
-*** dict.cc
+*** TODO dict.cc                                                              :todo:todo:
 #+begin_src emacs-lisp
 (use-package dictcc)
 (my-leader-def "m l d" 'dictcc)
@@ -3147,35 +2964,32 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
    wakatime-cli-path "/home/victor/.pyenv/versions/emacs/bin/wakatime")
   (global-wakatime-mode))
 #+end_src
-*** TECH
+*** Jira
 #+begin_src emacs-lisp
 (use-package jiralib2)
-
 (use-package ejira
   :init
   (setq
-         ;; NOTE, this directory needs to be in `org-agenda-files'`
-        ejira-org-directory       org-directory
-        ejira-projects            '("TECH" "SEC")
+   ;; NOTE, this directory needs to be in `org-agenda-files'`
+   ejira-org-directory       org-directory
+   ejira-projects            '("TECH" "SEC")
 
-        ejira-priorities-alist    '(("Highest" . ?A)
-                                    ("High"    . ?B)
-                                    ("Medium"  . ?C)
-                                    ("Low"     . ?D)
-                                    ("Lowest"  . ?E))
-        ejira-todo-states-alist   '(("To Do"       . 1)
-                                    ("In Progress" . 2)
-                                    ("Done"        . 3)))
-  :bind
-  (:map org-mode-map
+   ejira-priorities-alist    '(("Highest" . ?A)
+                               ("High"    . ?B)
+                               ("Medium"  . ?C)
+                               ("Low"     . ?D)
+                               ("Lowest"  . ?E))
+   ejira-todo-states-alist   '(("To Do"       . 1)
+                               ("In Progress" . 2)
+                               ("Done"        . 3)))
+  :bind (:map org-mode-map
    ("C-x j o" . ejira-browse-issue-under-point)
    ("C-x j f" . ejira-focus-item-under-point)
    ("C-x j p" . ejira-pull-item-under-point)
    ("C-x j x" . ejira-push-item-under-point)
    ("C-x j P" . ejira-progress-issue)
    ("C-x j c" . ejira-add-comment)
-   ("C-x j u" . ejira-update-my-projects)
-  )
+   ("C-x j u" . ejira-update-my-projects))
   :config
   ;; Tries to auto-set custom fields by looking into /editmeta
   ;; of an issue and an epic.
@@ -3197,12 +3011,55 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   ;;  '("j" "My JIRA issues"
   ;;    ((ejira-jql "resolution = unresolved and assignee = currentUser()"
   ;;                ((org-agenda-overriding-header "Assigned to me"))))))
-)
+  )
 #+end_src
 ** Bookmarks
 *** pocket-reader.el
 #+begin_src emacs-lisp
+(use-package pocket-reader
+    :after (pocket-lib)
+    :config
+    ;; Check max column width for site field
+    (setq pocket-reader-site-column-max-width 20)
 
+    ;; don't archive automatically on open
+    (setq pocket-reader-archive-on-open nil))
+
+    ;; dirt hack to change title-width
+    (defun pocket-reader--set-tabulated-list-format ()
+      "Set `tabulated-list-format' according to the maximum width of items about to be displayed."
+      (when-let ((domain-width (cl-loop for item being the hash-values of pocket-reader-items
+                                        maximizing (length (ht-get item 'domain))))
+                 (title-width (- (window-text-width) 11 2 domain-width 70 1)))
+        (when (> domain-width pocket-reader-site-column-max-width)
+          (setq domain-width pocket-reader-site-column-max-width))
+        (setq tabulated-list-format (vector (list "Added" 10 pocket-reader-added-column-sort-function)
+                                            (list "*" 1 t)
+                                            (list "Title" title-width t)
+                                            (list "Site" domain-width t)
+                                            (list "Tags" 10 t)))))
+;; Define key bindings
+(map! :map pocket-reader-mode-map
+      :after pocket-reader
+      :nm "d" #'pocket-reader-delete
+      :nm "SD" #'dorneanu/pocket-reader-send-to-dropbox
+      :nm "a" #'pocket-reader-toggle-archived
+      :nm "B" #'pocket-reader-open-in-external-browser
+      :nm "e" #'pocket-reader-excerpt
+      :nm "G" #'pocket-reader-more
+      :nm "TAB" #'pocket-reader-open-url
+      :nm "tr" #'pocket-reader-remove-tags
+      :nm "tN" #'dorneanu/pocket-reader-remove-next
+      :nm "C-b" #'dorneanu/tiddlywiki-add-bookmark
+      :nm "ta" #'pocket-reader-add-tags
+      :nm "gr" #'pocket-reader-refresh
+      :nm "p" #'pocket-reader-search
+      :nm "U" #'pocket-reader-unmark-all
+      :nm "y" #'pocket-reader-copy-url
+      :nm "Y" #'dorneanu/pocket-reader-copy-to-scratch)
+#+end_src
+**** Functions
+#+begin_src emacs-lisp
 ;; Copy current url to scratch buffer
 (defun dorneanu/pocket-reader-copy-to-scratch ()
   "Copy URL of current item to kill-ring/clipboard."
@@ -3252,52 +3109,11 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   "Show getpocket items to be shared"
   (interactive)
   (pocket-reader-search "t:2read" :add nil))
-
-(use-package pocket-reader
-    :after (pocket-lib)
-    :config
-    ;; Check max column width for site field
-    (setq pocket-reader-site-column-max-width 20)
-
-    ;; don't archive automatically on open
-    (setq pocket-reader-archive-on-open nil))
-
-    ;; dirt hack to change title-width
-    (defun pocket-reader--set-tabulated-list-format ()
-      "Set `tabulated-list-format' according to the maximum width of items about to be displayed."
-      (when-let ((domain-width (cl-loop for item being the hash-values of pocket-reader-items
-                                        maximizing (length (ht-get item 'domain))))
-                 (title-width (- (window-text-width) 11 2 domain-width 70 1)))
-        (when (> domain-width pocket-reader-site-column-max-width)
-          (setq domain-width pocket-reader-site-column-max-width))
-        (setq tabulated-list-format (vector (list "Added" 10 pocket-reader-added-column-sort-function)
-                                            (list "*" 1 t)
-                                            (list "Title" title-width t)
-                                            (list "Site" domain-width t)
-                                            (list "Tags" 10 t)))))
-;; Define key bindings
-(map! :map pocket-reader-mode-map
-      :after pocket-reader
-      :nm "d" #'pocket-reader-delete
-      :nm "SD" #'dorneanu/pocket-reader-send-to-dropbox
-      :nm "a" #'pocket-reader-toggle-archived
-      :nm "B" #'pocket-reader-open-in-external-browser
-      :nm "e" #'pocket-reader-excerpt
-      :nm "G" #'pocket-reader-more
-      :nm "TAB" #'pocket-reader-open-url
-      :nm "tr" #'pocket-reader-remove-tags
-      :nm "tN" #'dorneanu/pocket-reader-remove-next
-      :nm "C-b" #'dorneanu/tiddlywiki-add-bookmark
-      :nm "ta" #'pocket-reader-add-tags
-      :nm "gr" #'pocket-reader-refresh
-      :nm "p" #'pocket-reader-search
-      :nm "U" #'pocket-reader-unmark-all
-      :nm "y" #'pocket-reader-copy-url
-      :nm "Y" #'dorneanu/pocket-reader-copy-to-scratch)
 #+end_src
 ** Twitter
 #+begin_src emacs-lisp
 (use-package twittering-mode)
+;; I'm not sure about this
 (setq twittering-allow-insecure-server-cert t)
 #+end_src
 
