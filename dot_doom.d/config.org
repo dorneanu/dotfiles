@@ -14,16 +14,34 @@
 (setq auth-sources '("~/.authinfo.gpg"))
 #+end_src
 ** Startup performance
+*** measure startup speed
 #+begin_src emacs-lisp
-  ;; -*- lexical-binding: t; -*-
-  ;; The default is 800 kilobytes.  Measured in bytes.
-  (setq gc-cons-threshold (* 50 1000 1000))
-  ;; Profile emacs startup
-  (add-hook 'emacs-startup-hook
-            (lambda ()
-              (message "*** Emacs loaded in %s seconds with %d garbage collections."
-                       (emacs-init-time "%.2f")
-                       gcs-done)))
+;; (setq my/emacs-started nil)
+
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (message "*** Emacs loaded in %s with %d garbage collections."
+;;                      (format "%.2f seconds"
+;;                              (float-time
+;;                               (time-subtract after-init-time before-init-time)))
+;;                      gcs-done))
+;;           (setq my/emacs-started t))
+#+end_src
+*** garbage collection
+Setting variables
+#+begin_src emacs-lisp
+;; (setq gc-cons-threshold 80000000)
+;; (setq read-process-output-max (* 1024 1024))
+#+end_src
+
+Run garbage collection when Emacs is unfocused
+
+#+begin_src emacs-lisp
+;; (add-hook 'after-init-hook
+;;           #'(lambda ()
+;;               (setq gc-cons-threshold (* 100 1000 1000))))
+;; (add-hook 'focus-out-hook 'garbage-collect)
+;; (run-with-idle-timer 5 t 'garbage-collect)
 #+end_src
 
 ** Server Mode
@@ -33,7 +51,7 @@
 
 ** Diminish
 #+begin_src emacs-lisp
-(use-package diminish)
+;; (use-package diminish)
 #+end_src
 
 ** Defaults
@@ -41,14 +59,14 @@
 ;; UTF-8 everywhere
 (set-default-coding-systems 'utf-8)
 
-;; Escape cancels everything
+;; ;; Escape cancels everything
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; Automatically revert buffers for changed files
 (global-auto-revert-mode 1)
 
-;; Revert dired and other buffers
-(setq global-auto-revert-non-file-buffers t)
+;; ;; Revert dired and other buffers
+;; (setq global-auto-revert-non-file-buffers t)
 #+end_src
 * Keyboard Bindings
 ** Evil
@@ -204,32 +222,37 @@
 (my-leader-def "?" 'which-key-show-top-level)
 (my-leader-def "E" 'eval-expression)
 #+end_src
-*** Local leader
-Prevent ~evil-snipe~ to overwrite doom local leader key.
+
+*** Leader
 #+begin_src emacs-lisp
-(setq evil-snipe-override-evil-repeat-keys nil)
+(setq doom-leader-key "SPC")
+(setq doom-leader-alt-key "M-m")
+#+end_src
+
+*** Local leader
+#+begin_src emacs-lisp
 (setq doom-localleader-key ",")
 (setq doom-localleader-alt-key "M-,")
 #+end_src
 *** Universal argument
 #+begin_src emacs-lisp
-(general-def
-  :keymaps 'universal-argument-map
-  "M-u" 'universal-argument-more)
-(general-def
-  :keymaps 'override
-  :states '(normal motion emacs insert visual)
-  "M-u" 'universal-argument)
+;; (general-def
+;;   :keymaps 'universal-argument-map
+;;   "M-u" 'universal-argument-more)
+;; (general-def
+;;   :keymaps 'override
+;;   :states '(normal motion emacs insert visual)
+;;   "M-u" 'universal-argument)
 #+end_src
 *** Profiler
 The built-in profiler is a magnificent tool to troubleshoot performance issues.
 #+begin_src emacs-lisp
-(my-leader-def
-  :infix "P"
-  "" '(:which-key "profiler")
-  "s" 'profiler-start
-  "e" 'profiler-stop
-  "p" 'profiler-report)
+;; (my-leader-def
+;;   :infix "P"
+;;   "" '(:which-key "profiler")
+;;   "s" 'profiler-start
+;;   "e" 'profiler-stop
+;;   "p" 'profiler-report)
 #+end_src
 *** Buffer switching
 #+begin_src emacs-lisp
@@ -263,38 +286,272 @@ The built-in profiler is a magnificent tool to troubleshoot performance issues.
 #+end_src
 *** Zooming
 #+begin_src emacs-lisp
-(defun my/zoom-in ()
-  "Increase font size by 10 points"
-  (interactive)
-  (set-face-attribute 'default nil
-                      :height
-                      (+ (face-attribute 'default :height) 10)))
+;; (defun my/zoom-in ()
+;;   "Increase font size by 10 points"
+;;   (interactive)
+;;   (set-face-attribute 'default nil
+;;                       :height
+;;                       (+ (face-attribute 'default :height) 10)))
 
-(defun my/zoom-out ()
-  "Decrease font size by 10 points"
-  (interactive)
-  (set-face-attribute 'default nil
-                      :height
-                      (- (face-attribute 'default :height) 10)))
+;; (defun my/zoom-out ()
+;;   "Decrease font size by 10 points"
+;;   (interactive)
+;;   (set-face-attribute 'default nil
+;;                       :height
+;;                       (- (face-attribute 'default :height) 10)))
 
-;; change font size, interactively
-(global-set-key (kbd "C-+") 'my/zoom-in)
-(global-set-key (kbd "C-=") 'my/zoom-out)
+;; ;; change font size, interactively
+;; (global-set-key (kbd "C-+") 'my/zoom-in)
+;; (global-set-key (kbd "C-=") 'my/zoom-out)
+#+end_src
+* Editing
+** Indentation
+*** aggressive-indent-mode
+#+begin_src emacs-lisp
+;; (use-package aggressive-indent
+;;   :commands (aggressive-indent-mode))
+#+end_src
+*** Tabs
+#+begin_src emacs-lisp
+(setq tab-always-indent t)
+
+(setq-default default-tab-width 4)
+(setq-default tab-width 4)
+(setq-default evil-indent-convert-tabs nil)
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(setq-default evil-shift-round nil)
+#+end_src
+** Clipboard
+#+begin_src emacs-lisp
+(setq select-enable-clipboard t)
+(setq mouse-yank-at-point t)
+#+end_src
+** Undo
+#+begin_src emacs-lisp
+;; (use-package  undo-tree
+;;   :bind  ("C-x u" . undo-tree-visualize)
+;;   :diminish undo-tree-mode
+;;   :hook  (after-init . global-undo-tree-mode )
+;;   :init
+;;   (setq undo-tree-visualizer-relative-timestamps t
+;;         undo-tree-visualizer-diff t))
+(use-package vundo)
+#+end_src
+** Snippets
+*** yasnippet
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :bind (
+         ("M-o" . yas-insert-snippet)
+         ("C-c y" . yas-expand))
+  :config
+  (setq yas-snippet-dirs
+	`(,(concat (expand-file-name doom-user-directory) "snippets")
+	  yasnippet-snippets-dir))
+  (setq yas-triggers-in-field t)
+  (yas-global-mode 1))
+
+(use-package yasnippet-snippets
+  :after yasnippet
+  :config
+  (yas-reload-all))
+
+
+;; turn off yasnippet for several modes
+(defun  my/force-yasnippet-off ()
+  (yas-minor-mode -1)
+  (setq yas-dont-activate t))
+
+(map! :after yasnippet
+      :map yas-minor-mode-map
+      :i "C-c l" #'yas-expand
+      :i "C-c j" #'yas-next-field
+      :i "C-c k" #'yas-prev-field)
+
+(add-hook 'term-mode-hook 'my/force-yasnippet-off)
+(add-hook 'shell-mode-hook 'my/force-yasnippet-off)
+(add-hook 'eshell-mode-hook 'my/force-yasnippet-off)
+
+#+end_src
+*** yankpad
+#+begin_src emacs-lisp
+(use-package yankpad
+  :commands (yankpad-expand)
+  :config
+  (setq yankpad-file (concat org-directory "yankpad.org"))
+  (yankpad-reload)
+  (add-to-list 'company-backends #'company-yankpad))
+#+end_src
+** smartparens
+#+begin_src emacs-lisp
+;; (use-package smartparens)
+#+end_src
+** iedit
+Quick, fast edits of every symbol selected.
+#+begin_src emacs-lisp
+(use-package iedit
+  :commands (iedit-mode))
+
+(my-leader-def "s*" '(iedit-mode :which-key "Activate iedit-mode"))
+#+end_src
+
+** Expand region
+A package to select an ever-increasing (or ever-decreasing) region of text.
+
+#+begin_src emacs-lisp
+(use-package expand-region
+  :bind* (("M-p a o" . er/mark-org-code-block)
+          ("M-p a w" . sk/mark-around-word)
+          ("M-p a p" . sk/mark-around-text-paragraph)
+          ("M-p a f" . er/mark-defun)
+          ("M-p a e" . sk/mark-around-LaTeX-environment)
+          ("M-p a t" . er/mark-LaTeX-math)
+          ("M-p a m" . er/mark-python-block)
+          ("M-p a j" . er/mark-ruby-block-up)
+          ("M-p a q" . er/mark-outside-quotes)
+          ("M-p a b" . er/mark-outside-pairs)
+          ("M-p a u" . er/mark-url)
+          ("M-p a c" . er/mark-comment)
+          ("M-p a v" . sk/mark-around-symbol)
+          ("M-p i p" . er/mark-text-paragraph)
+          ("M-p i f" . er/mark-defun)
+          ("M-p i w" . er/mark-word)
+          ("M-p i e" . er/mark-LaTeX-inside-environment)
+          ("M-p i t" . sk/mark-inside-LaTeX-math)
+          ("M-p i u" . er/mark-url)
+          ("M-p i c" . er/mark-comment)
+          ("M-p i b" . er/mark-inside-pairs)
+          ("M-p i q" . er/mark-inside-quotes)
+          ("M-p i o" . sk/mark-inside-org-code)
+          ("M-p i m" . sk/mark-inside-python-block)
+          ("M-p i j" . sk/mark-inside-ruby-block)
+          ("M-p i v" . er/mark-symbol)))
+#+end_src
+
+** Visual fill column mode
+#+begin_src emacs-lisp
+;; from https://github.com/rasendubi/dotfiles/blob/master/README.org
+(use-package visual-fill-column
+  :commands (visual-fill-column-mode)
+  :config
+  (add-hook 'visual-fill-column-mode-hook
+            (lambda () (setq visual-fill-column-center-text t))))
+#+end_src
+** parinfer for lispy languages
+#+begin_src emacs-lisp
+;; (use-package parinfer
+;;   :disabled
+;;   :hook ((clojure-mode . parinfer-mode)
+;;          (emacs-lisp-mode . parinfer-mode)
+;;          (common-lisp-mode . parinfer-mode)
+;;          (scheme-mode . parinfer-mode)
+;;          (lisp-mode . parinfer-mode))
+;;   :config
+;;   (setq parinfer-extensions
+;;       '(defaults       ; should be included.
+;;         pretty-parens  ; different paren styles for different modes.
+;;         evil           ; If you use Evil.
+;;         smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
+;;         smart-yank)))  ; Yank behavior depend on mode.
+
+;; (my-leader-def
+;;   "tp" 'parinfer-toggle-mode)
+#+end_src
+** multiple cursors
+#+begin_src emacs-lisp
+;; from https://hungyi.net/posts/hydra-for-evil-mc/
+(defhydra hungyi/hydra-multiple-cursors (:color pink
+                       :hint nil
+                       :pre (evil-mc-pause-cursors))
+  "
+^Match^            ^Line-wise^           ^Manual^
+^^^^^^----------------------------------------------------
+_Z_: match all     _J_: make & go down   _z_: toggle here
+_m_: make & next   _K_: make & go up     _r_: remove last
+_M_: make & prev   ^ ^                   _R_: remove all
+_n_: skip & next   ^ ^                   _p_: pause/resume
+_N_: skip & prev
+
+Current pattern: %`evil-mc-pattern
+
+"
+  ("Z" #'evil-mc-make-all-cursors)
+  ("m" #'evil-mc-make-and-goto-next-match)
+  ("M" #'evil-mc-make-and-goto-prev-match)
+  ("n" #'evil-mc-skip-and-goto-next-match)
+  ("N" #'evil-mc-skip-and-goto-prev-match)
+  ("J" #'evil-mc-make-cursor-move-next-line)
+  ("K" #'evil-mc-make-cursor-move-prev-line)
+  ("z" #'+multiple-cursors/evil-mc-toggle-cursor-here)
+  ("r" #'+multiple-cursors/evil-mc-undo-cursor)
+  ("s" #'mc/mark-sgml-tag-pair)
+  ("R" #'evil-mc-undo-all-cursors)
+  ("p" #'+multiple-cursors/evil-mc-toggle-cursors)
+  ("q" #'evil-mc-resume-cursors "quit" :color blue)
+  ("<escape>" #'evil-mc-resume-cursors "quit" :color blue))
+
+(my-leader-def "mmc" 'hungyi/hydra-multiple-cursors/body)
+#+end_src
+* Reading
+** olivetti-mode
+#+begin_src emacs-lisp
+(use-package olivetti
+  :hook
+  ((olivetti-mode-on-hook . (lambda () (olivetti-set-width 120)))))
+
+;; Activate olivetti mode in eww buffers
+;; (add-hook 'eww-after-render-hook '(lambda ()
+;;     (eww-readable)
+;;     ;; (olivetti-mode)
+;;     ;; Open new buffer in vertical split
+;;     (set-variable 'split-height-threshold nil t)
+;;     (set-variable 'split-width-threshold 90) ; make this as low as needed
+;;     (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))))
+#+end_src
+** ispell
+#+begin_src emacs-lisp
+;; from https://200ok.ch/posts/2020-08-22_setting_up_spell_checking_with_multiple_dictionaries.html
+(use-package ispell
+  :custom
+  (setenv "LANG" "en_US.UTF-8")
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "de_DE,en_US,ro")
+  ;; ispell-set-spellchecker-params has to be called
+  ;; before ispell-hunspell-add-multi-dic will work
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "de_DE,en_US,ro")
+  ;; For saving words to the personal dictionary, don't infer it from
+  ;; the locale, otherwise it would save to ~/.hunspell_de_DE.
+  (setq ispell-personal-dictionary "~/.hunspell_personal"))
+
+#+end_src
+* Navigation
+** avy
+#+begin_src emacs-lisp
+(use-package avy
+  :commands (avy-goto-char avy-goto-word-0 avy-goto-line))
+
+(my-leader-def
+  "j"   '(:ignore t :which-key "jump")
+  "jj"  '(avy-goto-char :which-key "jump to char")
+  "jw"  '(avy-goto-word-0 :which-key "jump to word")
+  "jl"  '(avy-goto-line :which-key "jump to line"))
 #+end_src
 * UI
 ** Minimal interface
 #+begin_src emacs-lisp
-(setq inhibit-startup-message t)
-(unless vd/is-termux
-  (scroll-bar-mode -1)        ; Disable visible scrollbar
-  (tool-bar-mode -1)          ; Disable the toolbar
-  (tooltip-mode -1)           ; Disable tooltips
-  (set-fringe-mode 10))       ; Give some breathing room
+;; (setq inhibit-startup-message t)
+;; (unless vd/is-termux
+;;   (scroll-bar-mode -1)        ; Disable visible scrollbar
+;;   (tool-bar-mode -1)          ; Disable the toolbar
+;;   (tooltip-mode -1)           ; Disable tooltips
+;;   (set-fringe-mode 10))       ; Give some breathing room
 
-(menu-bar-mode -1)            ; Disable the menu bar
+;; (menu-bar-mode -1)            ; Disable the menu bar
 
-;; Set up the visible bell
-(setq visible-bell t)
+;; ;; Set up the visible bell
+;; (setq visible-bell t)
 #+end_src
 ** General settings
 y or n instead of yes or no
@@ -309,39 +566,31 @@ Hide mouse cursor while typing
 
 Show pairs
 #+begin_src emacs-lisp
-(show-paren-mode 1)
+;; (show-paren-mode 1)
 #+end_src
 
 Highlight the current line
 #+begin_src emacs-lisp
-(global-hl-line-mode t)
+;; (global-hl-line-mode t)
 #+end_src
 ** Scrolling
 #+begin_src emacs-lisp
-(unless vd/is-termux
-  (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
-  (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-  (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-  (setq scroll-step 1) ;; keyboard scroll one line at a time
-  (setq use-dialog-box nil))
-#+end_src
-** Windows size
-#+begin_src emacs-lisp
-(unless vd/is-termux
-  ;; (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
-  ;; (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
-  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
+;; (unless vd/is-termux
+;;   (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
+;;   (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+;;   (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+;;   (setq scroll-step 1) ;; keyboard scroll one line at a time
+;;   (setq use-dialog-box nil))
 #+end_src
 ** Line numbers
 #+begin_src emacs-lisp
-(global-display-line-numbers-mode 0)
-;; (line-number-mode nil)
-;; (setq display-line-numbers-type 'visual)
-;; (column-number-mode)
+;; (global-display-line-numbers-mode 0)
+;; ;; (line-number-mode nil)
+;; ;; (setq display-line-numbers-type 'visual)
+;; ;; (column-number-mode)
 
-;; allow line numbers only in buffer that have code
-(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+;; ;; allow line numbers only in buffer that have code
+;; (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 #+end_src
 ** Word wrapping
 #+begin_src emacs-lisp
@@ -355,6 +604,17 @@ Set theme
 *** Fonts
 #+begin_src emacs-lisp
 (setq doom-font (font-spec :family "Source Code Pro" :size 15))
+#+end_src
+**** emojify
+#+begin_src emacs-lisp
+(use-package emojify
+  :bind (("C-x c ." . emojify-insert-emoji))
+  :config
+  (when (member "Noto Color Emoji" (font-family-list))
+    (set-fontset-font
+     t 'symbol (font-spec :family "Noto Color Emoji") nil 'prepend))
+  (setq emojify-display-style 'unicode)
+  (setq emojify-emoji-styles '(unicode)))
 #+end_src
 *** Icons
 #+begin_src emacs-lisp
@@ -375,25 +635,29 @@ Set theme
    (interactive)
    (face-remap-add-relative 'default :family "Fira Mono"))
 #+end_src
+*** treemacs theme
+#+begin_src emacs-lisp
+(setq doom-themes-treemacs-theme "doom-colors")
+#+end_src
 ** Mode line
 #+begin_src emacs-lisp
-(use-package doom-modeline
-  ;; :if (not (display-graphic-p))
-  :hook (after-init . doom-modeline-init)
-  :custom-face
-      (mode-line ((t (:height 0.85))))
-      (mode-line-inactive ((t (:height 0.85))))
-  :config
-  (setq doom-modeline-env-enable-python t)
-  (setq doom-modeline-env-enable-go t)
-  (setq doom-modeline-buffer-encoding 'nondefault)
-  (setq doom-modeline-lsp t)
-  (setq doom-modeline-hud t)
-  (setq doom-modeline-persp-icon nil)
-  (setq doom-modeline-persp-name nil)
-  (setq doom-modeline-minor-modes nil)
-  (setq doom-modeline-buffer-state-icon nil)
-  (doom-modeline-mode 1))
+;; (use-package doom-modeline
+;;   ;; :if (not (display-graphic-p))
+;;   :hook (after-init . doom-modeline-init)
+;;   :custom-face
+;;       (mode-line ((t (:height 0.85))))
+;;       (mode-line-inactive ((t (:height 0.85))))
+;;   :config
+;;   (setq doom-modeline-env-enable-python t)
+;;   (setq doom-modeline-env-enable-go t)
+;;   (setq doom-modeline-buffer-encoding 'nondefault)
+;;   (setq doom-modeline-lsp t)
+;;   (setq doom-modeline-hud t)
+;;   (setq doom-modeline-persp-icon nil)
+;;   (setq doom-modeline-persp-name nil)
+;;   (setq doom-modeline-minor-modes nil)
+;;   (setq doom-modeline-buffer-state-icon nil)
+;;   (doom-modeline-mode 1))
 #+end_src
 
 ** Dimmer
@@ -535,1191 +799,23 @@ I have to load by defining a ~load-path~.
 #+end_src
 ** gif-screenshot
 #+begin_src emacs-lisp
-(use-package! gif-screencast
-  :commands gif-screencast-mode
-  :config
-  (map! :map gif-screencast-mode-map
-        :g "<f7>" #'gif-screencast-start-or-stop
-        :g "<f8>" #'gif-screencast-toggle-pause
-        :g "<f9>" #'gif-screencast-stop)
-  :custom
-  (setq gif-screencast-args '("-x")) ;; To shut up the shutter sound of `screencapture' (see `gif-screencast-command').
-  (setq gif-screencast-capture-format "ppm")) ;; Optional: Required to crop captured images.)
-#+end_src
-* File manager
-** dirvish
-#+begin_src emacs-lisp
-(dirvish-override-dired-mode)
-#+end_src
-* Editing
-** Indentation
-*** aggressive-indent-mode
-#+begin_src emacs-lisp
-(use-package aggressive-indent
-  :commands (aggressive-indent-mode))
-#+end_src
-*** Tabs
-#+begin_src emacs-lisp
-(setq tab-always-indent t)
-
-(setq-default default-tab-width 4)
-(setq-default tab-width 4)
-(setq-default evil-indent-convert-tabs nil)
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
-(setq-default evil-shift-round nil)
-#+end_src
-** Clipboard
-#+begin_src emacs-lisp
-(setq select-enable-clipboard t)
-(setq mouse-yank-at-point t)
-#+end_src
-** Undo
-#+begin_src emacs-lisp
-;; (use-package  undo-tree
-;;   :bind  ("C-x u" . undo-tree-visualize)
-;;   :diminish undo-tree-mode
-;;   :hook  (after-init . global-undo-tree-mode )
-;;   :init
-;;   (setq undo-tree-visualizer-relative-timestamps t
-;;         undo-tree-visualizer-diff t))
-(use-package vundo)
-#+end_src
-** Snippets
-#+begin_src emacs-lisp
-(use-package yasnippet-snippets
-  :after yasnippet
-  :config
-  (yas-reload-all))
-
-(use-package yasnippet
-  :bind (("M-o" . yas-insert-snippet)
-          ("C-c y" . yas-expand))
-  :config
-  (setq yas-snippet-dirs
-	`(,(concat (expand-file-name doom-user-directory) "snippets")
-	  yasnippet-snippets-dir))
-  (setq yas-triggers-in-field t)
-  (yas-global-mode 1))
-
-(use-package yankpad
-  :commands (yankpad-expand)
-  :config
-  (setq yankpad-file (concat org-directory "yankpad.org"))
-  (yankpad-reload)
-  (add-to-list 'company-backends #'company-yankpad)
-)
-
-;; turn off yasnippet for several modes
-(defun  my/force-yasnippet-off ()
-    (yas-minor-mode -1)
-    (setq yas-dont-activate t))
-
-(map! :after yasnippet
-      :map yas-minor-mode-map
-      :i "C-c l" #'yas-expand
-      :i "C-c j" #'yas-next-field
-      :i "C-c k" #'yas-prev-field)
-
-(add-hook 'term-mode-hook 'my/force-yasnippet-off)
-(add-hook 'shell-mode-hook 'my/force-yasnippet-off)
-(add-hook 'eshell-mode-hook 'my/force-yasnippet-off)
-
-
-#+end_src
-** smartparens
-#+begin_src emacs-lisp
-(use-package smartparens)
-#+end_src
-** iedit
-Quick, fast edits of every symbol selected.
-#+begin_src emacs-lisp
-(use-package iedit
-  :commands (iedit-mode))
-
-(my-leader-def "s*" '(iedit-mode :which-key "Activate iedit-mode"))
+;; (use-package! gif-screencast
+;;   :commands gif-screencast-mode
+;;   :config
+;;   (map! :map gif-screencast-mode-map
+;;         :g "<f7>" #'gif-screencast-start-or-stop
+;;         :g "<f8>" #'gif-screencast-toggle-pause
+;;         :g "<f9>" #'gif-screencast-stop)
+;;   :custom
+;;   (setq gif-screencast-args '("-x")) ;; To shut up the shutter sound of `screencapture' (see `gif-screencast-command').
+;;   (setq gif-screencast-capture-format "ppm")) ;; Optional: Required to crop captured images.)
 #+end_src
 
-** Expand region
-A package to select an ever-increasing (or ever-decreasing) region of text.
-
-#+begin_src emacs-lisp
-(use-package expand-region
-  :bind* (("M-m a o" . er/mark-org-code-block)
-          ("M-m a w" . sk/mark-around-word)
-          ("M-m a p" . sk/mark-around-text-paragraph)
-          ("M-m a f" . er/mark-defun)
-          ("M-m a e" . sk/mark-around-LaTeX-environment)
-          ("M-m a t" . er/mark-LaTeX-math)
-          ("M-m a m" . er/mark-python-block)
-          ("M-m a j" . er/mark-ruby-block-up)
-          ("M-m a q" . er/mark-outside-quotes)
-          ("M-m a b" . er/mark-outside-pairs)
-          ("M-m a u" . er/mark-url)
-          ("M-m a c" . er/mark-comment)
-          ("M-m a v" . sk/mark-around-symbol)
-          ("M-m i p" . er/mark-text-paragraph)
-          ("M-m i f" . er/mark-defun)
-          ("M-m i w" . er/mark-word)
-          ("M-m i e" . er/mark-LaTeX-inside-environment)
-          ("M-m i t" . sk/mark-inside-LaTeX-math)
-          ("M-m i u" . er/mark-url)
-          ("M-m i c" . er/mark-comment)
-          ("M-m i b" . er/mark-inside-pairs)
-          ("M-m i q" . er/mark-inside-quotes)
-          ("M-m i o" . sk/mark-inside-org-code)
-          ("M-m i m" . sk/mark-inside-python-block)
-          ("M-m i j" . sk/mark-inside-ruby-block)
-          ("M-m i v" . er/mark-symbol)))
-#+end_src
-
-** Visual fill column mode
-#+begin_src emacs-lisp
-;; from https://github.com/rasendubi/dotfiles/blob/master/README.org
-(use-package visual-fill-column
-  :commands (visual-fill-column-mode)
-  :config
-  (add-hook 'visual-fill-column-mode-hook
-            (lambda () (setq visual-fill-column-center-text t))))
-#+end_src
-** parinfer for lispy languages
-#+begin_src emacs-lisp
-(use-package parinfer
-  :disabled
-  :hook ((clojure-mode . parinfer-mode)
-         (emacs-lisp-mode . parinfer-mode)
-         (common-lisp-mode . parinfer-mode)
-         (scheme-mode . parinfer-mode)
-         (lisp-mode . parinfer-mode))
-  :config
-  (setq parinfer-extensions
-      '(defaults       ; should be included.
-        pretty-parens  ; different paren styles for different modes.
-        evil           ; If you use Evil.
-        smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
-        smart-yank)))  ; Yank behavior depend on mode.
-
-;; (my-leader-def
-;;   "tp" 'parinfer-toggle-mode)
-#+end_src
-*
-** multiple cursors
-#+begin_src emacs-lisp
-;; from https://hungyi.net/posts/hydra-for-evil-mc/
-(defhydra hungyi/hydra-multiple-cursors (:color pink
-                       :hint nil
-                       :pre (evil-mc-pause-cursors))
-  "
-^Match^            ^Line-wise^           ^Manual^
-^^^^^^----------------------------------------------------
-_Z_: match all     _J_: make & go down   _z_: toggle here
-_m_: make & next   _K_: make & go up     _r_: remove last
-_M_: make & prev   ^ ^                   _R_: remove all
-_n_: skip & next   ^ ^                   _p_: pause/resume
-_N_: skip & prev
-
-Current pattern: %`evil-mc-pattern
-
-"
-  ("Z" #'evil-mc-make-all-cursors)
-  ("m" #'evil-mc-make-and-goto-next-match)
-  ("M" #'evil-mc-make-and-goto-prev-match)
-  ("n" #'evil-mc-skip-and-goto-next-match)
-  ("N" #'evil-mc-skip-and-goto-prev-match)
-  ("J" #'evil-mc-make-cursor-move-next-line)
-  ("K" #'evil-mc-make-cursor-move-prev-line)
-  ("z" #'+multiple-cursors/evil-mc-toggle-cursor-here)
-  ("r" #'+multiple-cursors/evil-mc-undo-cursor)
-  ("s" #'mc/mark-sgml-tag-pair)
-  ("R" #'evil-mc-undo-all-cursors)
-  ("p" #'+multiple-cursors/evil-mc-toggle-cursors)
-  ("q" #'evil-mc-resume-cursors "quit" :color blue)
-  ("<escape>" #'evil-mc-resume-cursors "quit" :color blue))
-
-(my-leader-def "mmc" 'hungyi/hydra-multiple-cursors/body)
-#+end_src
-* Reading
-** olivetti-mode
-#+begin_src emacs-lisp
-(use-package olivetti
-  :hook
-  ((olivetti-mode-on-hook . (lambda () (olivetti-set-width 120)))))
-
-;; Activate olivetti mode in eww buffers
-(add-hook 'eww-after-render-hook '(lambda ()
-    (eww-readable)
-    ;; (olivetti-mode)
-    ;; Open new buffer in vertical split
-    (set-variable 'split-height-threshold nil t)
-    (set-variable 'split-width-threshold 90) ; make this as low as needed
-    (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))))
-#+end_src
-** ispell
-#+begin_src emacs-lisp
-;; from https://200ok.ch/posts/2020-08-22_setting_up_spell_checking_with_multiple_dictionaries.html
-(use-package ispell
-  :custom
-  (setenv "LANG" "en_US.UTF-8")
-  (setq ispell-program-name "hunspell")
-  (setq ispell-dictionary "de_DE,en_US,ro")
-  ;; ispell-set-spellchecker-params has to be called
-  ;; before ispell-hunspell-add-multi-dic will work
-  (ispell-set-spellchecker-params)
-  (ispell-hunspell-add-multi-dic "de_DE,en_US,ro")
-  ;; For saving words to the personal dictionary, don't infer it from
-  ;; the locale, otherwise it would save to ~/.hunspell_de_DE.
-  (setq ispell-personal-dictionary "~/.hunspell_personal"))
-
-#+end_src
-* Navigation
-** avy
-#+begin_src emacs-lisp
-(use-package avy
-  :commands (avy-goto-char avy-goto-word-0 avy-goto-line))
-
-(my-leader-def
-  "j"   '(:ignore t :which-key "jump")
-  "jj"  '(avy-goto-char :which-key "jump to char")
-  "jw"  '(avy-goto-word-0 :which-key "jump to word")
-  "jl"  '(avy-goto-line :which-key "jump to line"))
-#+end_src
-* Registers
-** Hydra
-#+begin_src emacs-lisp
-(defhydra sk/hydra-registers (:color blue
-                              :hint nil)
-  "
- _a_: append     _c_: copy-to    _j_: jump       _r_: rectangle-copy   _q_: quit
- _i_: insert     _n_: number-to  _f_: frameset   _w_: window-config
- _+_: increment  _p_: point-to
-  "
-  ("a" append-to-register)
-  ("c" copy-to-register)
-  ("i" insert-register)
-  ("f" frameset-to-register)
-  ("j" jump-to-register)
-  ("n" number-to-register)
-  ("r" copy-rectangle-to-register)
-  ("w" window-configuration-to-register)
-  ("+" increment-register)
-  ("p" point-to-register)
-  ("q" nil :color blue))
-
-(my-leader-def "r\"" '(sk/hydra-registers/body :which-key "Hydra for registers"))
-#+end_src
 * Gnus
 ** nnreddit
 #+begin_src emacs-lisp
 ;; Applies to first-time Gnus users
 (custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
-#+end_src
-* Projects
-** Projectile
-#+begin_src emacs-lisp
-(use-package projectile
-  :config
-  (projectile-mode))
-
-(my-leader-def
-  :infix "mp"
-  ""   '(:ipgnore t :which-key "Projects")
-  "."  'counsel-fzf
-  "e"  'project-eshell
-  "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
-  "s"  'projectile-switch-project
-  "F"  'counsel-rg
-  "p"  'projectile--find-file
-  "c"  'projectile-compile-project
-  "v"  'projectile-run-vterm
-  "d"  'projectile-dired)
-
-
-(use-package counsel-projectile
-  :after (counsel projectile))
-#+end_src
-
-#+RESULTS:
-: counsel-projectile
-
-** Git/Magit
-#+begin_src emacs-lisp
-(use-package magit
-  :commands (magit-status magit-file-dispatch)
-  :config
-  (setq magit-blame-styles
-        '((margin
-           (margin-format    . ("%a %A %s"))
-           (margin-width     . 42)
-           (margin-face      . magit-blame-margin)
-           (margin-body-face . (magit-blame-dimmed)))
-          (headings
-           (heading-format   . "%-20a %C %s\n"))
-          (highlight
-           (highlight-face   . magit-blame-highlight))
-          (lines
-           (show-lines       . t)
-           (show-message     . t)))))
-
-(use-package forge
-  :after magit
-  :config
-  (add-to-list 'forge-alist '("gitlab.etu.ru"
-                              "gitlab.etu.ru/api/v4"
-                              "gitlab.etu.ru"
-                              forge-gitlab-repository)))
-(use-package git-gutter
-    :custom
-    (git-gutter:modified-sign "~")
-    (git-gutter:added-sign    "+")
-    (git-gutter:deleted-sign  "-")
-    ;; :custom-face
-    ;; (git-gutter:modified ((t (:foreground "#f1fa8c" :background "#f1fa8c"))))
-    ;; (git-gutter:added    ((t (:foreground "#50fa7b" :background "#50fa7b"))))
-    ;; (git-gutter:deleted  ((t (:foreground "#ff79c6" :background "#ff79c6"))))
-    :config
-    (global-git-gutter-mode +1))
-
-(use-package git-timemachine
-  :commands (git-timemachine))
-#+end_src
-*** diff-hl
-Highlight git diffs on the fly
-#+begin_src emacs-lisp
-;; (use-package diff-hl
-;;   :commands (global-diff-hl-mode
-;;              diff-hl-mode
-;;              diff-hl-next-hunk
-;;              diff-hl-previous-hunk
-;;              diff-hl-mark-hunk
-;;              diff-hl-diff-goto-hunk
-;;              diff-hl-revert-hunk)
-;;   :config
-;;   (global-diff-hl-mode)
-;;   (diff-hl-flydiff-mode)
-;;   (diff-hl-margin-mode)
-;;   (diff-hl-dired-mode))
-
-;; (my-leader-def
-;;   :infix "md"
-;;   "[ h"  'diff-hl-previous-hunk
-;;   "i h"  'diff-hl-mark-hunk
-;;   "a h"  'diff-hl-mark-hunk
-;;   "g h"  'diff-hl-diff-goto-hunk)
-#+end_src
-* Programming
-** LSP
-LSP-mode provides an IDE-like experience for Emacs - real-time diagnostic, code actions, intelligent autocompletion, etc.
-
-References:
-- [[https://emacs-lsp.github.io/lsp-mode/][lsp-mode homepage]]
-
-*** lsp-mode
-#+begin_src emacs-lisp
-(use-package lsp-mode
-  :config
-  (setq lsp-idle-delay 0.5
-        lsp-enable-symbol-highlighting t
-        lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
-        ;; lsp-disabled-clients '(eslint)
-        lsp-pyls-plugins-flake8-enabled t)
-  :hook (
-         (go-mode . lsp)
-         (typescript-mode . lsp)
-         (js-mode . lsp)
-         (vue-mode . lsp)
-         (svelte-mode . lsp)
-         (python-mode . lsp)
-         (json-mode . lsp)
-         ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
-         ;; (lsp-mode . lsb-enable-which-key-integration))
-         )
-  :commands (lsp lsp-deferred)
-  :custom
-  (lsp-print-io nil)
-  (lsp-trace nil)
-  (lsp-print-performance nil)
-  (lsp-prefer-flymake t)
-)
-#+end_src
-*** lsp-ui
-#+begin_src emacs-lisp
-(use-package lsp-ui
-  :ensure t
-  :config
-  (setq
-        ;; lsp-ui-sideline-show-hover t
-        ;; lsp-ui-sideline-delay 0.5
-        ;; lsp-ui-sideline-ignore-duplicates t
-        lsp-ui-sideline-show-hover nil
-        lsp-ui-doc-delay 0.5
-        lsp-ui-doc-position 'bottom
-        lsp-ui-doc-alignment 'frame
-        lsp-ui-doc-header nil
-        lsp-ui-doc-include-signature t
-        lsp-ui-doc-use-childframe t)
-  :commands lsp-ui-mode
-  :custom
-  ;; lsp-ui-doc
-  (lsp-ui-doc-enable nil)
-  (lsp-ui-doc-header t)
-  (lsp-ui-doc-include-signature nil)
-  (lsp-ui-doc-position 'top) ;; top, bottom, or at-point
-  (lsp-ui-doc-max-width 120)
-  (lsp-ui-doc-max-height 30)
-  (lsp-ui-doc-use-childframe t)
-  (lsp-ui-doc-use-webkit t)
-  ;; signature
-  (lsp-signature-auto-activate nil)
-  (lsp-signature-render-documentation nil)
-  (lsp-eldoc-hook nil)
-  :bind
-  (:map lsp-ui-mode-map
-              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-              ([remap xref-find-references] . lsp-ui-peek-find-references)
-              ("C-c C-r" . lsp-ui-peek-find-references)
-              ("C-c C-j" . lsp-ui-peek-find-definitions)
-              ("C-c i"   . lsp-ui-peek-find-implementation)
-              ("C-c u" . lsp-ui-imenu)
-              ("C-c d" . lsp-ui-doc-glance)
-              ("C-c e" . lsp-treemacs-errors-list)
-              ("C-c D" . lsp-ui-doc-show)
-              ("C-c o" . lsp-describe-thing-at-point)
-              ("C-c s"   . lsp-ui-sideline-mode)
-              ("C-c x" . counsel-flycheck))
-)
-#+end_src
-*** lsp-volar
-#+begin_src emacs-lisp
-(use-package lsp-volar
-   :after (lsp))
-#+end_src
-*** Integrations
-The only integration left now is treemacs.
-**** lsp-treemacs
-#+begin_src emacs-lisp
-(use-package lsp-treemacs
-  :after (lsp)
-  :commands lsp-treemacs-errors-list)
-#+end_src
-*** Keybindings
-#+begin_src emacs-lisp
-(my-leader-def
-  :infix "l"
-  "" '(:which-key "lsp")
-  "d" 'lsp-ui-peek-find-definitions
-  "r" 'lsp-rename
-  "u" 'lsp-ui-peek-find-references
-  "s" 'lsp-ui-find-workspace-symbol
-  "l" 'lsp-execute-code-action
-  "t" 'lsp-treemacs-symbols
-  "e" 'list-flycheck-errors)
-#+end_src
-** Flycheck
-A syntax checking extension for Emacs. Integrates with LSP-mode, but can also use various standalone checkers.
-
-References:
-- [[https://www.flycheck.org/en/latest/][Flycheck homepage]]
-
-#+begin_src emacs-lisp
-(use-package flycheck
-  :defer t
-  :hook (lsp-mode . flycheck-mode))
-;; (use-package flycheck
-;;   :config
-;;   (global-flycheck-mode)
-;;   (setq flycheck-check-syntax-automatically '(save idle-buffer-switch mode-enabled))
-;;   ;; (add-hook 'evil-insert-state-exit-hook
-;;   ;;           (lambda ()
-;;   ;;             (if flycheck-checker
-;;   ;;                 (flycheck-buffer))
-;;   ;;             ))
-;;   (advice-add 'flycheck-eslint-config-exists-p :override (lambda() t))
-;;   (add-to-list 'display-buffer-alist
-;;                `(,(rx bos "*Flycheck errors*" eos)
-;;                  (display-buffer-reuse-window
-;;                   display-buffer-in-side-window)
-;;                  (side            . bottom)
-;;                  (reusable-frames . visible)
-;;                  (window-height   . 0.33))))
-#+end_src
-** Golang
-#+begin_src emacs-lisp
-(use-package go-mode
-  :mode "\\.go\\'"
-  :custom (gofmt-command "goimports")
-  :config
-  (defun lsp-go-install-save-hooks ()
-    (add-hook 'before-save-hook #'lsp-format-buffer t t)
-    (add-hook 'before-save-hook #'lsp-organize-imports t t))
-
-  ;; (my/set-smartparens-indent 'go-mode)
-  (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
-  (add-hook 'go-mode-hook #'smartparens-mode)
-  (add-hook 'go-mode-hook #'hs-minor-mode))
-
-  (use-package gotest)
-  (use-package go-tag
-      :config (setq go-tag-args (list "-transform" "camelcase")))
-#+end_src
-
-** Python
-#+begin_src emacs-lisp
-(use-package lsp-pyright
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp))))  ; or lsp-deferred
-(add-hook 'python-mode-hook #'smartparens-mode)
-#+end_src
-*** pyenv
-#+begin_src emacs-lisp
-(use-package pyenv-mode
-  :init
-  (add-to-list 'exec-path "~/.pyenv/shims")
-  (setenv "WORKON_HOME" "~/.pyenv/versions/")
-  :config
-  (pyenv-mode)
-  (my-leader-def "mpy" '(pyenv-mode-set :which-key "Activate pyenv")))
-#+end_src
-*** python-black
-#+begin_src emacs-lisp
-(use-package python-black
-    :after python)
-
-;; On save call black
-(python-black-on-save-mode)
-#+end_src
-** TypeScript
-#+begin_src emacs-lisp
-(use-package typescript-mode
-  :mode "\\.ts\\'"
-  :config
-  (add-hook 'typescript-mode-hook #'smartparens-mode)
-  (add-hook 'typescript-mode-hook #'rainbow-delimiters-mode)
-  (add-hook 'typescript-mode-hook #'hs-minor-mode))
-#+end_src
-** JavaScript
-#+begin_src emacs-lisp
-(add-hook 'js-mode-hook #'smartparens-mode)
-(add-hook 'js-mode-hook #'hs-minor-mode)
-#+end_src
-** prettier-js
-#+begin_src emacs-lisp
-(use-package prettier-js
-  :after js2-mode
-  :init
-  (add-hook 'js2-mode-hook 'prettier-js-mode)
-  (add-hook 'web-mode-hook 'prettier-js-mode)
-)
-#+end_src
-** Web
-#+begin_src emacs-lisp
-;; (use-package emmet-mode
-;;  :ensure t
-;;  :diminish (emmet-mode .  "ε")
-;;  :bind* (("C-)" . emmet-next-edit-point)
-;;          ("C-(" . emmet-prev-edit-point))
-;;  :commands (emmet-mode
-;;             emmet-next-edit-point
-;;            emmet-prev-edit-point))
-
-;; Inspiration: https://readingworldmagazine.com/emacs/2020-08-24-emacs-web-mode/
-(use-package web-mode
- :mode  (("\\.html\\'" . web-html-mode )
-         ("\\.tsx\\'" . web-tsx-mode ) )
- :init
- (setq
-  web-mode-markup-indent-offset 2
-  web-mode-css-indent-offset  2
-  web-mode-code-indent-offset  2
-  web-mode-attr-indent-offset  2
-  web-mode-enable-current-element-highlight t
-  web-mode-enable-current-column-highlight t
-  web-mode-enable-comment-keywords t
-  web-mode-comment-style 2
-  web-mode-enable-auto-indentation nil
-  web-mode-enable-block-face t
-  web-mode-enable-comment-keywords t
-  web-mode-enable-heredoc-fontification t
-  web-mode-enable-html-entities-fontification t
-  web-mode-auto-close-style 2
-  ;For <style> parts
-  web-mode-style-padding 1
-  ;For <script> parts
-  web-mode-script-padding 1
-  ;For multi-line blocks
-  web-mode-block-padding 0
-  ;; colorize colors in buffers
-  web-mode-enable-css-colorization t
-  web-mode-enable-auto-quoting nil )
- :config
- ;; web-tsx-mode
- (yas-minor-mode)
- 
- ;; ;start use smartparens to complete tags not webmode
- (defun +web-is-auto-close-style-3 (_id action _context)
-    (and (eq action 'insert)
-     (eq web-mode-auto-close-style 3)))
-
- ;initialize smartparens mode to ensure sp-local-pair defined
- (smartparens-mode t)
- (sp-local-pair 'web-mode "<" nil :unless '(:add +web-is-auto-close-style-3))
-
- ;; let smartparens handle these
- (setq
-  web-mode-enable-auto-quoting nil
-  web-mode-enable-auto-pairing t)
-
- (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
- (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
- (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
- (add-to-list 'web-mode-indentation-params '("lineup-ternary" . nil))
-)
-
-(use-package vue-mode
-  :mode "\\.vue\\'"
-  :hook (vue-mode . prettier-js-mode)
-  :config
-  (add-hook 'vue-mode-hook #'lsp)
-  (setq prettier-js-args '("--parser vue")))
-
-#+end_src
-
-** PlantUML
-#+begin_src emacs-lisp
-(use-package plantuml-mode
-  :mode "(\\.\\(plantuml?\\|uml\\|puml\\)\\'"
-  :config
-  (setq plantuml-default-exec-mode "jar")
-  (setq plantuml-indent-level 2)
-  (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
-  (add-to-list 'auto-mode-alist '("\\.uml\\'" . plantuml-mode))
-  (add-hook 'plantuml-mode-hook #'smartparens-mode))
-#+end_src
-** Lisp
-*** Meta Lisp
-#+begin_src emacs-lisp
-(use-package lispy
-  :hook ((emacs-lisp-mode . lispy-mode)
-         (scheme-mode . lispy-mode)))
-
-(use-package lispyville
-  :hook (lispy-mode . lispyville-mode))
-
-(sp-with-modes sp-lisp-modes
-  (sp-local-pair "'" nil :actions nil))
-#+end_src
-*** Emacs Lisp
-#+begin_src emacs-lisp
-;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
-;; (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
-(add-hook 'emacs-lisp-mode-hook #'lispy-mode)
-#+end_src
-** Data serialization
-*** JSON
-#+begin_src emacs-lisp
-(use-package json-mode
-  :mode "\\.json\\'"
-  :config
-  (add-hook 'json-mode #'smartparens-mode)
-  (add-hook 'json-mode #'hs-minor-mode))
-#+end_src
-**** Snatch JSON
-Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Emacs]].
-  #+begin_src emacs-lisp
-  ( use-package  json-snatcher
-     :ensure t
-     :commands (jsons-print-path))
-  #+end_src
-*** CSV
-#+begin_src emacs-lisp
-(use-package csv-mode
-  :mode "\\.csv\\'")
-#+end_src
-*** YAML
-#+begin_src emacs-lisp
-(use-package yaml-mode
-  :mode "\\.yml\\'"
-  :config
-  (add-hook 'yaml-mode-hook 'smartparens-mode)
-  (add-hook 'yaml-mode-hook 'highlight-indent-guides-mode)
-  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode)))
-#+end_src
-** Tiddlywiki
-#+begin_src emacs-lisp
-(use-package tiddlywiki-mode
-  :config
-  (add-to-list 'auto-mode-alist '("\\.tid\\'" . tiddlywiki-org-mode))
-  (tiddlywiki-widen-file)
-)
-
-(use-package ox-tiddly)
-
-;; default tiddlywiki base path
-(setq tiddlywiki-base-path "http://127.0.0.1:8181/recipes/default/tiddlers/")
-
-;; default values
-(setq
-     quote-title ""
-     quote-source ""
-     tiddler-title ""
- )
-
-
-
-;; Insert Tiddlywiki link from clipboard
-(defun dorneanu/tw5-add-link (&optional pURL)
-  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
-  (interactive)
-  (let*
-      (
-       (url (or pURL (org-web-tools--get-first-url)))
-       (html (org-web-tools--get-url url))
-       (title (org-web-tools--html-title html))
-       )
-    (format "%s ◦ [[%s|%s]]" (format-time-string "%Y-%m-%d") title url)
-    )
-  )
-
-;; create tw5 journal file
-(defun vd/tw5-journal-file-by-date ()
-"Create a new Tiddlywiki journal file with current time as name."
-  (interactive)
-  (let ((journal-file (format-time-string "/cs/priv/repos/brainfck.org/tw5/tiddlers/%Y-%m-%d.tid")))
-  (find-file journal-file))
-  )
-
-;; adds a tiddlywiki bookmark from pocket-reader mode
-(defun dorneanu/tiddlywiki-add-bookmark ()
-  "Adds a new bookmark to tiddlywiki. The URL is fetched from clipboard or killring"
-    (require 'url-util)
-    (interactive)
-    (pocket-reader-copy-url)
-
-    (setq my-url (org-web-tools--get-first-url))
-    (setq url-html (org-web-tools--get-url my-url))
-    (setq url-title (org-web-tools--html-title url-html))
-    (setq url-title-mod (read-string "Title: " url-title))
-    (setq url-path (url-hexify-string url-title-mod))
-    (setq url-note (read-string (concat "Note for " my-url ":")))
-    (setq url-tags (concat "Bookmark "(read-string "Additional tags: ")))
-
-    (request (concat tiddlywiki-base-path url-path)
-    :type "PUT"
-    :data (json-encode `(("name" . ,url-title-mod) ("note" . ,url-note) ("url" . ,my-url) ("tags" . ,url-tags)))
-    :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
-    :parser 'json-read
-    :success
-    (cl-function
-            (lambda (&key data &allow-other-keys)
-                (message "I sent: %S" (assoc-default 'args data))))
-    :complete (lambda (&rest _) (message "Added %s" (symbol-value 'url-title-mod)))
-    :error (lambda (&rest _) (message "Some error"))
-    :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
-                    (418 . (lambda (&rest _) (message "Got 418.")))
-                    (204 . (lambda (&rest _) (message "Got 202."))))
-    )
-)
-
-(defun dorneanu/tiddlywiki-add-quote ()
-  "Adds a new quote"
-    (interactive)
-
-    (setq quote-title (read-string "Quote title: " quote-title))
-    (setq url-path (url-hexify-string quote-title))
-    (setq quote-source (read-string (concat "Source for " quote-title ": ") quote-source))
-    (setq quote-body (read-string (concat "Text for " quote-title ": ")))
-    (setq quote-tags (concat "quote "(read-string "Additional tags: ")))
-
-    (request (concat tiddlywiki-base-path url-path)
-    :type "PUT"
-    :data (json-encode `(
-        ("title" . ,quote-title)
-        ("created" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
-        ("modified" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
-        ("source" . ,quote-source)
-        ("tags" . ,quote-tags)
-        ("text" . ,quote-body)
-        ("type" . "text/vnd.tiddlywiki")))
-    :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
-    :parser 'json-read
-    :success
-    (cl-function
-            (lambda (&key data &allow-other-keys)
-                (message "I sent: %S" (assoc-default 'args data))))
-    :complete (lambda (&rest _) (message "Added quote <%s>" (symbol-value 'quote-title)))
-    :error (lambda (&rest _) (message "Some error"))
-    :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
-                    (418 . (lambda (&rest _) (message "Got 418.")))
-                    (204 . (lambda (&rest _) (message "Got 202."))))
-    )
-)
-
-(defun dorneanu/tiddlywiki-add-tiddler ()
-  "Adds a new tiddler"
-    (interactive)
-
-    (setq tiddler-title (read-string "Title: " tiddler-title))
-    (setq tiddler-body (read-string (concat "Text for " tiddler-title ": ")))
-    (setq tiddler-tags (read-string "Tags: "))
-    (setq url-path (url-hexify-string tiddler-title))
-
-    (request (concat tiddlywiki-base-path url-path)
-    :type "PUT"
-    :data (json-encode `(
-        ("title" . ,tiddler-title)
-        ("created" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
-        ("modified" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
-        ("tags" . ,tiddler-tags)
-        ("text" . ,tiddler-body)
-        ("type" . "text/vnd.tiddlywiki")))
-    :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
-    :parser 'json-read
-    :success
-    (cl-function
-            (lambda (&key data &allow-other-keys)
-                (message "I sent: %S" (assoc-default 'args data))))
-    :complete (lambda (&rest _) (message "Added tiddler <%s>" (symbol-value 'tiddler-title)))
-    :error (lambda (&rest _) (message "Some error"))
-    :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
-                    (418 . (lambda (&rest _) (message "Got 418.")))
-                    (204 . (lambda (&rest _) (message "Got 202."))))
-    )
-)
-
-;; Add hydra
-(defhydra hydra-tiddlywiki (:color blue :hint nil)
-"
-Tiddlywiki commands^
----------------------------------------------------------
-_b_ Add new bookmark
-_j_ Add new journal entry
-_t_ Add new tiddler
-_q_ Add new quote
-"
-  ("b" dorneanu/tiddlywiki-add-bookmark)
-  ("j" vd/tw5-journal-file-by-date)
-  ("q" dorneanu/tiddlywiki-add-quote)
-  ("t" dorneanu/tiddlywiki-add-tiddler))
-
-;; Keybindings
-(my-leader-def
-  :infix "m w"
-  "h" '(hydra-tiddlywiki/body :which-key "Open Tiddlywiki hydra")
-  "j" '(vd/tw5-journal-file-by-date :which-key "Create/Open TW5 Journal file")
-  "s" '(my/rg-tiddlywiki-directory :which-key "Search in TW5 directory"))
-
-
-#+end_src
-** File templates
-#+begin_src emacs-lisp
-(set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
-#+end_src
-** Impatient Mode
-#+begin_src emacs-lisp
-(use-package impatient-mode)
-(defun markdown-html (buffer)
-  (princ (with-current-buffer buffer
-           (format "<!DOCTYPE html><html><title>Impatient Markdown</title><xmp theme=\"united\" style=\"display:none;\"> %s  </xmp><script src=\"http://ndossougbe.github.io/strapdown/dist/strapdown.js\"></script></html>" (buffer-substring-no-properties (point-min) (point-max))))
-         (current-buffer)))
-#+end_src
-* PKMS
-** org-roam
-#+begin_src emacs-lisp
-(use-package! org-roam
-  :init
-  (setq org-roam-v2-ack t)
-  (setq org-roam-file-extensions '("org"))
-  :custom
-  (org-roam-directory "/cs/priv/repos/roam/org")
-  (org-roam-completion-everywhere t)
-  (org-roam-dailies-directory "journal")
-  (org-roam-capture-templates
-   '(("d" "default" plain
-      "%?"
-      :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
-      :unnarrowed t)
-      ("j" "Journal" plain "%?"
-       :if-new (file+head "journal/%<%Y-%m-%d>.org"
-	  	  	    "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
-       :immediate-finish t
-       :unnarrowed t)
-     ("b" "book" plain "%?"
-      :if-new
-      (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
-      :immediate-finish t
-      :unnarrowed t)
-      ))
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f". org-roam-node-find)
-         ("C-c n s" . #'my/rg-org-roam-directory)
-         ("C-c n i" . org-roam-node-insert)
-         :map org-mode-map
-         ("C-M-i"    . completion-at-point))
-  :config
-  (org-roam-setup))
-#+end_src
-*** pocket-reader-org-roam-capture
-#+begin_src emacs-lisp
-;; From https://github.com/christofdamian/pocket-reader-org-roam-capture/blob/main/pocket-reader-org-roam-capture.el
-(require 'pocket-reader)
-(require 'org-roam)
-
-;;;; Functions
-(defun pocket-reader-org-roam-capture ()
-  "Create an `org-roam' capture for all marked or current pocket reader items."
-  (interactive)
-  (pocket-reader--at-marked-or-current-items
-    (when-let (
-               (resolved_title (pocket-reader--get-property 'resolved_title))
-               (resolved_url (pocket-reader--get-property 'resolved_url))
-               (item_id (pocket-reader--get-property 'item_id))
-               (time_added (pocket-reader--get-property 'time_added))
-               (excerpt (pocket-reader--get-property 'excerpt))
-               (tags (combine-and-quote-strings (pocket-reader--get-property 'tags))))
-      (let (
-            (org-roam-capture-templates '(("d" "default" plain #'org-roam--capture-get-point "%?" :file-name "pocket/${item_id}-${slug}" :head "#+TITLE: ${title}
-,#+roamtags: ${tags}
-
-URL: ${url}
-Id: ${item_id}
-
-${excerpt}
-" :unnarrowed t)))
-            (org-roam-capture--info `((title . ,resolved_title)
-                                      (slug  . ,resolved_title)
-                                      (url . ,resolved_url)
-                                      (item_id . ,item_id)
-                                      (excerpt . ,excerpt)
-                                      (tags . ,tags)))
-            (org-roam-capture--context 'title))
-        (setq org-roam-capture-additional-template-props (list :finalize 'find-file))
-        (org-roam-capture-)))))
-#+end_src
-** Functions
-#+begin_src emacs-lisp
-(defun dorneanu/org-roam-insert-link-clipboard (&optional pURL)
-  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
-  (interactive)
-  (let*
-      (
-       (url (or pURL (org-web-tools--get-first-url)))
-       (html (org-web-tools--get-url url))
-       (title (org-web-tools--html-title html))
-       )
-    (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url title))
-    )
-  )
-(global-set-key (kbd "C-c i l") (lambda () (interactive) (dorneanu/org-roam-insert-link-clipboard)))
-#+end_src
-
-* Completion
-** ivy
-#+begin_src emacs-lisp
-(use-package ivy
-  :diminish
-  :config
-  ;; :bind (("C-s" . swiper)
-  ;;        :map ivy-minibuffer-map
-  ;;        ("TAB" . ivy-alt-done)
-  ;;        ("C-f" . ivy-alt-done)
-  ;;        ("C-l" . ivy-alt-done)
-  ;;        ("C-j" . ivy-next-line)
-  ;;        ("C-k" . ivy-previous-line)
-  ;;        :map ivy-switch-buffer-map
-  ;;        ("C-k" . ivy-previous-line)
-  ;;        ("C-l" . ivy-done)
-  ;;        ("C-d" . ivy-switch-buffer-kill)
-  ;;        :map ivy-reverse-i-search-map
-  ;;        ("C-k" . ivy-previous-line)
-  ;;        ("C-d" . ivy-reverse-i-search-kill))
-  :init
-  (ivy-mode 1)
-  :config
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-wrap t)
-  (setq ivy-count-format "(%d/%d) ")
-  (setq enable-recursive-minibuffers t)
-
-  ;; Use different regex strategies per completion command
-  (push '(completion-at-point . ivy--regex-fuzzy) ivy-re-builders-alist) ;; This doesn't seem to work...
-  (push '(swiper . ivy--regex-ignore-order) ivy-re-builders-alist)
-  (push '(counsel-M-x . ivy--regex-ignore-order) ivy-re-builders-alist)
-
-  ;; Set minibuffer height for different commands
-  (setf (alist-get 'counsel-projectile-ag ivy-height-alist) 15)
-  (setf (alist-get 'counsel-projectile-rg ivy-height-alist) 15)
-  (setf (alist-get 'swiper ivy-height-alist) 15)
-  (setf (alist-get 'counsel-switch-buffer ivy-height-alist) 7)
-  (setq ivy-use-virtual-buffers t))
-
-#+end_src
-** ivy-rich
-[[https://github.com/Yevgnen/ivy-rich][ivy-rich]] provides a more informative interface for ivy.
-#+begin_src emacs-lisp
-(use-package ivy-rich
-  :after ivy
-  :config
-  (ivy-rich-mode 1)
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
-#+end_src
-** ivy-prescient
-A package that enhances sorting & filtering of candidates. =ivy-prescient= adds integration with Ivy.
-
-References:
-- [[https://github.com/raxod502/prescient.el][prescient.el repo]]
-#+begin_src emacs-lisp :noweb yes
-(use-package ivy-prescient
-  :after counsel
-  :config
-  (ivy-prescient-mode +1)
-  (setq ivy-prescient-retain-classic-highlighting t)
-  (prescient-persist-mode 1)
-  (setq ivy-prescient-sort-commands
-        '(:not swiper
-               swiper-isearch
-               ivy-switch-buffer
-               ;; ivy-resume
-               ;; ivy--restore-session
-               lsp-ivy-workspace-symbol
-               dap-switch-stack-frame
-               my/dap-switch-stack-frame
-               dap-switch-session
-               dap-switch-thread
-               counsel-grep
-               ;; counsel-find-file
-               counsel-git-grep
-               counsel-rg
-               counsel-ag
-               counsel-ack
-               counsel-fzf
-               counsel-pt
-               counsel-imenu
-               counsel-yank-pop
-               counsel-recentf
-               counsel-buffer-or-recentf
-               proced-filter-interactive
-               proced-sort-interactive
-               my/persp-ivy-switch-buffer-other-window
-               lsp-execute-code-action))
-  ;; Do not use prescient in find-file
-  (ivy--alist-set 'ivy-sort-functions-alist #'read-file-name-internal #'ivy-sort-file-function-default))
-#+end_src
-
-** counsel
-#+begin_src emacs-lisp
-(use-package counsel
-  :after ivy
-  :bind (("C-c g" . counsel-google))
-  :config
-  (counsel-mode))
-#+end_src
-** swipper
-#+begin_src emacs-lisp
-(use-package swiper
-  :after ivy)
-#+end_src
-** company
-#+begin_src emacs-lisp
- (use-package company
-  :defer 2
-  :general
-  (:keymaps 'company-mode-map
-   :states 'insert
-   "C-n" #'company-complete-common-or-cycle
-   "C-p" #'company-select-previous)
-  ('company-active-map
-   "C-n" #'company-complete-common-or-cycle
-   "C-p" #'company-select-previous-or-abort
-   "C-e" #'company-complete
-   "TAB" #'company-complete-common-or-cycle)
-
-  :diminish company-mode
-  :config
-  (setq-default company-dabbrev-downcase nil)
-  (setq-default company-search-filtering t)
-  ;; (setq-default company-global-modes '(not org-mode))
-  (global-company-mode))
-
-#+end_src
-** company-box
-#+begin_src emacs-lisp
-(use-package company-box
-  :disabled t
-  :diminish
-  :hook (company-mode . company-box-mode))
-#+end_src
-** key bindings
-#+begin_src emacs-lisp
-(my-leader-def
-  :infix "m"
-  "s" '(swiper-isearch :which-key "swipper-isearch")
-  "S" '(swiper-all :which-key "swipper-all"))
-
-(general-define-key
- :keymaps '(ivy-minibuffer-map swiper-map)
- "M-j" 'ivy-next-line
- "M-k" 'ivy-previous-line
- "<C-return>" 'ivy-call
- "M-RET" 'ivy-immediate-done
- [escape] 'minibuffer-keyboard-quit)
-#+end_src
-* Searching
-** rg
-#+begin_src emacs-lisp
-;; from https://alexpeits.github.io/emacs.d/
-(use-package rg
-  :commands (rg my/rg-project-or-ask)
-  :bind (("C-c n s" . my/rg-org-roam-directory))
-  ;;        :map rg-mode-map
-  ;;        ("m" . rg-menu)
-  ;;        ("s" . my/rg-save-search-as-name)
-  ;;        ("C-n" . next-line)
-  ;;        ("C-p" . previous-line)
-  ;;        ("j" . next-line)
-  ;;        ("k" . previous-line)
-  ;;        ("M-n" . rg-next-file)
-  ;;        ("M-p" . rg-prev-file))
-  :init
-  (setq rg-group-result t
-        rg-ignore-case 'smart)
-  (defalias 'rgp 'my/rg-project-or-ask)
-  :config
-  (rg-define-toggle "--multiline --multiline-dotall" "u")
-  (rg-define-toggle "--word-regexp" "w")
-  (rg-define-toggle "--files-with-matches" "L")
-  (rg-enable-default-bindings)
-  (rg-define-search my/rg-org-directory
-    :query ask
-    :format regexp
-    :files "org"
-    :dir org-directory
-    :confirm prefix)
-
-  ;; search in org roam folder
-  (rg-define-search my/rg-org-roam-directory
-    :query ask
-    :format regexp
-    :files "everything"
-    :dir org-roam-directory
-    :confirm prefix)
-
-  ;; prot
-  ;; https://protesilaos.com/dotemacs/#h:31622bf2-526b-4426-9fda-c0fc59ac8f4b
-  (rg-define-search my/rg-project-or-ask
-    :query ask
-    :format regexp
-    :files "everything"
-    :dir (or (projectile-project-root)
-             (read-directory-name "rg in: "))
-    :confirm prefix)
-
-  (defun my/rg-save-search-as-name ()
-    "Save `rg' buffer, naming it after the current search query."
-    (interactive)
-    (let ((pattern (rg-search-pattern rg-cur-search)))
-      (rg-save-search-as-name (concat "«" pattern "»"))))
-  )
-
 #+end_src
 * ORG Mode
 ** Basic
@@ -1790,6 +886,10 @@ References:
 
   ;; Default column view headings
   (setq org-columns-default-format "%50ITEM(Task) %10TODO %10CLOCKSUM %18CLOSED %18TIMESTAMP_IA")
+
+  ;; Toogle org links display
+  ;; (org-toggle-link-display)
+  (setq org-descriptive-links t)
 
   <<org-keys-setup>>
   <<org-productivity-setup>>)
@@ -1881,30 +981,31 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
 
    ;; Use straight line as separator between agenda blocks
    ;; https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472&utf8=dec&unicodeinhtml=dec
-   org-agenda-block-separator 9472
+   ;; org-agenda-block-separator 9472
    org-agenda-compact-blocks t
    org-agenda-start-day nil ;; i.e. today
    org-agenda-span 1
    org-agenda-start-on-weekday nil
 
    ;; Clock report settings
-   org-agenda-start-with-clockreport-mode t
-   org-clock-report-include-clocking-task t
-   org-agenda-clockreport-parameter-plist
-   '(:link t :maxlevel 6 :fileskip0 t :compact nil :narrow 90)
+   ;; org-agenda-start-with-clockreport-mode t
+   ;; org-clock-report-include-clocking-task t
+   ;; org-agenda-clockreport-parameter-plist
+   ;; '(:link t :maxlevel 6 :fileskip0 t :compact nil :narrow 90)
 
    ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
    org-agenda-prefix-format
-   '((agenda . "%5c %4e %?-12t %s")
+   '(
+     (agenda . "%5c %4e %?-12t %s")
      (todo   . " %4e %-12c")
      (tags   . " %-22c")
      (search . " %-12c"))
    )
-  (add-hook 'org-agenda-mode-hook
-            (lambda ()
-              (visual-line-mode -1)
-              (toggle-truncate-lines 1)
-              (display-line-numbers-mode 0)))
+  ;; (add-hook 'org-agenda-mode-hook
+  ;;           (lambda ()
+  ;;             (visual-line-mode -1)
+  ;;             (toggle-truncate-lines 1)
+  ;;             (display-line-numbers-mode 0)))
   )
 #+end_src
 ** org-download
@@ -2151,7 +1252,6 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 ** org-capture
 
 #+begin_src emacs-lisp
-
 (use-package org-capture
   :after org
   :defer 1
@@ -2410,45 +1510,1126 @@ A package to add more evil-mode keybindings to org-mode.
           (insert description)
           (org-entry-put nil "EXPORT_HUGO_CUSTOM_FRONT_MATTER" (concat ":posturl " url))))))
 #+end_src
-* Shell
-** eshell
+
+* Projects
+** Projectile
 #+begin_src emacs-lisp
-;; from https://config.daviwil.com/emacs
-(defun my/configure-eshell ()
-  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
-  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-  (setq eshell-history-size 10000)
-  (setq eshell-hist-ingnoredups t)
-  (setq eshell-buffer-maximum-lines 10000)
-
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
-  (general-define-key
-   :states '(normal)
-   :keymaps 'eshell-mode-map
-   (kbd "C-h") 'evil-window-left
-   (kbd "C-l") 'evil-window-right
-   (kbd "C-k") 'evil-window-up
-   (kbd "C-j") 'evil-window-down))
-
-(use-package eshell
-  :commands (eshell)
-  :bind (("C-c !" . eshell)
-         :map eshell-mode-map
-         ("C-c l" . my/eshell-clear))
-  :init
-  (defun my/eshell-clear ()
-    (interactive)
-    "Clear the eshell buffer."
-    (let  ((eshell-buffer-maximum-lines 0))
-      (eshell-truncate-buffer)))
+(use-package projectile
   :config
-  (add-hook 'eshell-first-time-mode-hook 'my/configure-eshell 90)
-  (setq eshell-banner-message "")
-  (setq eshell-prefer-lisp-functions t)
-  (setq password-cache t)               ; enable password caching
-  (setq password-cache-expiry 3600)     ; for one hour (time in secs)
+  (projectile-mode))
+
+(my-leader-def
+  :infix "mp"
+  ""   '(:ipgnore t :which-key "Projects")
+  "."  'counsel-fzf
+  "e"  'project-eshell
+  "f"  '(my/rg-project-or-ask :which-key "Run rg in project")
+  "s"  'projectile-switch-project
+  "F"  'counsel-rg
+  "p"  'projectile--find-file
+  "c"  'projectile-compile-project
+  "v"  'projectile-run-vterm
+  "d"  'projectile-dired)
+
+
+(use-package counsel-projectile
+  :after (counsel projectile))
+#+end_src
+
+** Git/Magit
+#+begin_src emacs-lisp
+(use-package magit
+  :commands (magit-status magit-file-dispatch)
+  :config
+  (setq magit-blame-styles
+        '((margin
+           (margin-format    . ("%a %A %s"))
+           (margin-width     . 42)
+           (margin-face      . magit-blame-margin)
+           (margin-body-face . (magit-blame-dimmed)))
+          (headings
+           (heading-format   . "%-20a %C %s\n"))
+          (highlight
+           (highlight-face   . magit-blame-highlight))
+          (lines
+           (show-lines       . t)
+           (show-message     . t)))))
+
+(use-package forge
+  :after magit
+  :config
+  (add-to-list 'forge-alist '("gitlab.etu.ru"
+                              "gitlab.etu.ru/api/v4"
+                              "gitlab.etu.ru"
+                              forge-gitlab-repository)))
+(use-package git-gutter
+    :custom
+    (git-gutter:modified-sign "~")
+    (git-gutter:added-sign    "+")
+    (git-gutter:deleted-sign  "-")
+    ;; :custom-face
+    ;; (git-gutter:modified ((t (:foreground "#f1fa8c" :background "#f1fa8c"))))
+    ;; (git-gutter:added    ((t (:foreground "#50fa7b" :background "#50fa7b"))))
+    ;; (git-gutter:deleted  ((t (:foreground "#ff79c6" :background "#ff79c6"))))
+    :config
+    (global-git-gutter-mode +1))
+
+(use-package git-timemachine
+  :commands (git-timemachine))
+#+end_src
+*** diff-hl
+Highlight git diffs on the fly
+#+begin_src emacs-lisp
+;; (use-package diff-hl
+;;   :commands (global-diff-hl-mode
+;;              diff-hl-mode
+;;              diff-hl-next-hunk
+;;              diff-hl-previous-hunk
+;;              diff-hl-mark-hunk
+;;              diff-hl-diff-goto-hunk
+;;              diff-hl-revert-hunk)
+;;   :config
+;;   (global-diff-hl-mode)
+;;   (diff-hl-flydiff-mode)
+;;   (diff-hl-margin-mode)
+;;   (diff-hl-dired-mode))
+
+;; (my-leader-def
+;;   :infix "md"
+;;   "[ h"  'diff-hl-previous-hunk
+;;   "i h"  'diff-hl-mark-hunk
+;;   "a h"  'diff-hl-mark-hunk
+;;   "g h"  'diff-hl-diff-goto-hunk)
+#+end_src
+* PKMS
+** org-roam
+#+begin_src emacs-lisp
+(use-package! org-roam
+  :init
+  (setq org-roam-v2-ack t)
+  (setq org-roam-file-extensions '("org"))
+  :custom
+  (org-roam-directory "/cs/priv/repos/roam/org")
+  (org-roam-completion-everywhere t)
+  (org-roam-dailies-directory "journal")
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)
+      ("j" "Journal" plain "%?"
+       :if-new (file+head "journal/%<%Y-%m-%d>.org"
+	  	  	    "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+       :immediate-finish t
+       :unnarrowed t)
+     ("b" "book" plain "%?"
+      :if-new
+      (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
+      :immediate-finish t
+      :unnarrowed t)
+      ))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f". org-roam-node-find)
+         ("C-c n s" . #'my/rg-org-roam-directory)
+         ("C-c n i" . org-roam-node-insert)
+         :map org-mode-map
+         ("C-M-i"    . completion-at-point))
+  :config
+  (org-roam-setup))
+#+end_src
+*** pocket-reader-org-roam-capture
+#+begin_src emacs-lisp
+;; From https://github.com/christofdamian/pocket-reader-org-roam-capture/blob/main/pocket-reader-org-roam-capture.el
+;; (require 'pocket-reader)
+;; (require 'org-roam)
+
+;; ;;;; Functions
+;; (defun pocket-reader-org-roam-capture ()
+;;   "Create an `org-roam' capture for all marked or current pocket reader items."
+;;   (interactive)
+;;   (pocket-reader--at-marked-or-current-items
+;;     (when-let (
+;;                (resolved_title (pocket-reader--get-property 'resolved_title))
+;;                (resolved_url (pocket-reader--get-property 'resolved_url))
+;;                (item_id (pocket-reader--get-property 'item_id))
+;;                (time_added (pocket-reader--get-property 'time_added))
+;;                (excerpt (pocket-reader--get-property 'excerpt))
+;;                (tags (combine-and-quote-strings (pocket-reader--get-property 'tags))))
+;;       (let (
+;;             (org-roam-capture-templates '(("d" "default" plain #'org-roam--capture-get-point "%?" :file-name "pocket/${item_id}-${slug}" :head "#+TITLE: ${title}
+;; ,#+roamtags: ${tags}
+
+;; URL: ${url}
+;; Id: ${item_id}
+
+;; ${excerpt}
+;; " :unnarrowed t)))
+;;             (org-roam-capture--info `((title . ,resolved_title)
+;;                                       (slug  . ,resolved_title)
+;;                                       (url . ,resolved_url)
+;;                                       (item_id . ,item_id)
+;;                                       (excerpt . ,excerpt)
+;;                                       (tags . ,tags)))
+;;             (org-roam-capture--context 'title))
+;;         (setq org-roam-capture-additional-template-props (list :finalize 'find-file))
+;;         (org-roam-capture-)))))
+#+end_src
+** Functions
+#+begin_src emacs-lisp
+(defun dorneanu/org-roam-insert-link-clipboard (&optional pURL)
+  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+  (interactive)
+  (let*
+      (
+       (url (or pURL (org-web-tools--get-first-url)))
+       (html (org-web-tools--get-url url))
+       (title (org-web-tools--html-title html))
+       )
+    (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url title))
+    )
   )
+(global-set-key (kbd "C-c i l") (lambda () (interactive) (dorneanu/org-roam-insert-link-clipboard)))
+#+end_src
+
+* Programming
+** LSP
+LSP-mode provides an IDE-like experience for Emacs - real-time diagnostic, code actions, intelligent autocompletion, etc.
+
+References:
+- [[https://emacs-lsp.github.io/lsp-mode/][lsp-mode homepage]]
+
+*** lsp-mode
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :config
+  (setq lsp-idle-delay 0.5
+        lsp-enable-symbol-highlighting t
+        lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
+        ;; lsp-disabled-clients '(eslint)
+        lsp-pyls-plugins-flake8-enabled t)
+  :hook (
+         (go-mode . lsp)
+         (typescript-mode . lsp)
+         (js-mode . lsp)
+         (vue-mode . lsp)
+         (svelte-mode . lsp)
+         (python-mode . lsp)
+         (json-mode . lsp)
+         ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
+         ;; (lsp-mode . lsb-enable-which-key-integration))
+         )
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-print-io nil)
+  (lsp-trace nil)
+  (lsp-print-performance nil)
+  (lsp-prefer-flymake t)
+)
+#+end_src
+*** lsp-ui
+#+begin_src emacs-lisp
+(use-package lsp-ui
+  :ensure t
+  :config
+  (setq
+        ;; lsp-ui-sideline-show-hover t
+        ;; lsp-ui-sideline-delay 0.5
+        ;; lsp-ui-sideline-ignore-duplicates t
+        lsp-ui-sideline-show-hover nil
+        lsp-ui-doc-delay 0.5
+        lsp-ui-doc-position 'bottom
+        lsp-ui-doc-alignment 'frame
+        lsp-ui-doc-header nil
+        lsp-ui-doc-include-signature t
+        lsp-ui-doc-use-childframe t)
+  :commands lsp-ui-mode
+  :custom
+  ;; lsp-ui-doc
+  (lsp-ui-doc-enable nil)
+  (lsp-ui-doc-header t)
+  (lsp-ui-doc-include-signature nil)
+  (lsp-ui-doc-position 'top) ;; top, bottom, or at-point
+  (lsp-ui-doc-max-width 120)
+  (lsp-ui-doc-max-height 30)
+  (lsp-ui-doc-use-childframe t)
+  (lsp-ui-doc-use-webkit t)
+  ;; signature
+  (lsp-signature-auto-activate nil)
+  (lsp-signature-render-documentation nil)
+  (lsp-eldoc-hook nil)
+  :bind
+  (:map lsp-ui-mode-map
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c C-r" . lsp-ui-peek-find-references)
+              ("C-c C-j" . lsp-ui-peek-find-definitions)
+              ("C-c i"   . lsp-ui-peek-find-implementation)
+              ("C-c u" . lsp-ui-imenu)
+              ("C-c d" . lsp-ui-doc-glance)
+              ("C-c e" . lsp-treemacs-errors-list)
+              ("C-c D" . lsp-ui-doc-show)
+              ("C-c o" . lsp-describe-thing-at-point)
+              ("C-c s"   . lsp-ui-sideline-mode)
+              ("C-c x" . counsel-flycheck))
+)
+#+end_src
+*** lsp-volar
+#+begin_src emacs-lisp
+;; (use-package lsp-volar
+;;    :after (lsp))
+#+end_src
+*** Integrations
+The only integration left now is treemacs.
+**** lsp-treemacs
+#+begin_src emacs-lisp
+(use-package lsp-treemacs
+  :after (lsp)
+  :commands lsp-treemacs-errors-list)
+#+end_src
+*** Keybindings
+#+begin_src emacs-lisp
+(my-leader-def
+  :infix "l"
+  "" '(:which-key "lsp")
+  "d" 'lsp-ui-peek-find-definitions
+  "r" 'lsp-rename
+  "u" 'lsp-ui-peek-find-references
+  "s" 'lsp-ui-find-workspace-symbol
+  "l" 'lsp-execute-code-action
+  "t" 'lsp-treemacs-symbols
+  "e" 'list-flycheck-errors)
+#+end_src
+** Flycheck
+A syntax checking extension for Emacs. Integrates with LSP-mode, but can also use various standalone checkers.
+
+References:
+- [[https://www.flycheck.org/en/latest/][Flycheck homepage]]
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :defer t
+  :hook (lsp-mode . flycheck-mode))
+;; (use-package flycheck
+;;   :config
+;;   (global-flycheck-mode)
+;;   (setq flycheck-check-syntax-automatically '(save idle-buffer-switch mode-enabled))
+;;   ;; (add-hook 'evil-insert-state-exit-hook
+;;   ;;           (lambda ()
+;;   ;;             (if flycheck-checker
+;;   ;;                 (flycheck-buffer))
+;;   ;;             ))
+;;   (advice-add 'flycheck-eslint-config-exists-p :override (lambda() t))
+;;   (add-to-list 'display-buffer-alist
+;;                `(,(rx bos "*Flycheck errors*" eos)
+;;                  (display-buffer-reuse-window
+;;                   display-buffer-in-side-window)
+;;                  (side            . bottom)
+;;                  (reusable-frames . visible)
+;;                  (window-height   . 0.33))))
+#+end_src
+** Golang
+#+begin_src emacs-lisp
+(use-package go-mode
+  :mode "\\.go\\'"
+  :custom (gofmt-command "goimports")
+  :config
+  (defun lsp-go-install-save-hooks ()
+    (add-hook 'before-save-hook #'lsp-format-buffer t t)
+    (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
+  ;; (my/set-smartparens-indent 'go-mode)
+  (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+  (add-hook 'go-mode-hook #'smartparens-mode)
+  (add-hook 'go-mode-hook #'hs-minor-mode))
+
+  (use-package gotest)
+  (use-package go-tag
+      :config (setq go-tag-args (list "-transform" "camelcase")))
+#+end_src
+
+** Python
+#+begin_src emacs-lisp
+(use-package lsp-pyright
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp))))  ; or lsp-deferred
+(add-hook 'python-mode-hook #'smartparens-mode)
+#+end_src
+*** pyenv
+#+begin_src emacs-lisp
+(use-package pyenv-mode
+  :init
+  (add-to-list 'exec-path "~/.pyenv/shims")
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  :config
+  (pyenv-mode)
+  (my-leader-def "mpy" '(pyenv-mode-set :which-key "Activate pyenv")))
+#+end_src
+*** python-black
+#+begin_src emacs-lisp
+(use-package python-black
+    :after python)
+
+;; On save call black
+(python-black-on-save-mode)
+#+end_src
+** TypeScript
+#+begin_src emacs-lisp
+(use-package typescript-mode
+  :mode "\\.ts\\'"
+  :config
+  (add-hook 'typescript-mode-hook #'smartparens-mode)
+  (add-hook 'typescript-mode-hook #'rainbow-delimiters-mode)
+  (add-hook 'typescript-mode-hook #'hs-minor-mode))
+#+end_src
+** JavaScript
+#+begin_src emacs-lisp
+(add-hook 'js-mode-hook #'smartparens-mode)
+(add-hook 'js-mode-hook #'hs-minor-mode)
+#+end_src
+** prettier-js
+#+begin_src emacs-lisp
+(use-package prettier-js
+  :after js2-mode
+  :init
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-hook 'web-mode-hook 'prettier-js-mode)
+)
+#+end_src
+** Web
+#+begin_src emacs-lisp
+;; (use-package emmet-mode
+;;  :ensure t
+;;  :diminish (emmet-mode .  "ε")
+;;  :bind* (("C-)" . emmet-next-edit-point)
+;;          ("C-(" . emmet-prev-edit-point))
+;;  :commands (emmet-mode
+;;             emmet-next-edit-point
+;;            emmet-prev-edit-point))
+
+;; Inspiration: https://readingworldmagazine.com/emacs/2020-08-24-emacs-web-mode/
+(use-package web-mode
+ :mode  (("\\.html\\'" . web-html-mode )
+         ("\\.tsx\\'" . web-tsx-mode ) )
+ :init
+ (setq
+  web-mode-markup-indent-offset 2
+  web-mode-css-indent-offset  2
+  web-mode-code-indent-offset  2
+  web-mode-attr-indent-offset  2
+  web-mode-enable-current-element-highlight t
+  web-mode-enable-current-column-highlight t
+  web-mode-enable-comment-keywords t
+  web-mode-comment-style 2
+  web-mode-enable-auto-indentation nil
+  web-mode-enable-block-face t
+  web-mode-enable-comment-keywords t
+  web-mode-enable-heredoc-fontification t
+  web-mode-enable-html-entities-fontification t
+  web-mode-auto-close-style 2
+  ;For <style> parts
+  web-mode-style-padding 1
+  ;For <script> parts
+  web-mode-script-padding 1
+  ;For multi-line blocks
+  web-mode-block-padding 0
+  ;; colorize colors in buffers
+  web-mode-enable-css-colorization t
+  web-mode-enable-auto-quoting nil )
+ :config
+ ;; web-tsx-mode
+ (yas-minor-mode)
+
+ ;; ;start use smartparens to complete tags not webmode
+ (defun +web-is-auto-close-style-3 (_id action _context)
+    (and (eq action 'insert)
+     (eq web-mode-auto-close-style 3)))
+
+ ;initialize smartparens mode to ensure sp-local-pair defined
+ (smartparens-mode t)
+ (sp-local-pair 'web-mode "<" nil :unless '(:add +web-is-auto-close-style-3))
+
+ ;; let smartparens handle these
+ (setq
+  web-mode-enable-auto-quoting nil
+  web-mode-enable-auto-pairing t)
+
+ (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
+ (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
+ (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
+ (add-to-list 'web-mode-indentation-params '("lineup-ternary" . nil))
+)
+
+(use-package vue-mode
+  :mode "\\.vue\\'"
+  :hook (vue-mode . prettier-js-mode)
+  :config
+  (add-hook 'vue-mode-hook #'lsp)
+  (setq prettier-js-args '("--parser vue")))
+
+#+end_src
+
+** PlantUML
+#+begin_src emacs-lisp
+(use-package plantuml-mode
+  :mode "(\\.\\(plantuml?\\|uml\\|puml\\)\\'"
+  :config
+  (setq plantuml-default-exec-mode "jar")
+  (setq plantuml-indent-level 2)
+  (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+  (add-to-list 'auto-mode-alist '("\\.uml\\'" . plantuml-mode))
+  (add-hook 'plantuml-mode-hook #'smartparens-mode))
+#+end_src
+** Lisp
+*** Meta Lisp
+#+begin_src emacs-lisp
+;; (use-package lispy
+;;   :hook ((emacs-lisp-mode . lispy-mode)
+;;          (scheme-mode . lispy-mode)))
+
+;; (use-package lispyville
+;;   :hook (lispy-mode . lispyville-mode))
+
+;; (sp-with-modes sp-lisp-modes
+;;   (sp-local-pair "'" nil :actions nil))
+#+end_src
+*** Emacs Lisp
+#+begin_src emacs-lisp
+;; (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
+;; (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
+;; (add-hook 'emacs-lisp-mode-hook #'lispy-mode)
+#+end_src
+** Data serialization
+*** JSON
+#+begin_src emacs-lisp
+(use-package json-mode
+  :mode "\\.json\\'"
+  :config
+  (add-hook 'json-mode #'smartparens-mode)
+  (add-hook 'json-mode #'hs-minor-mode))
+#+end_src
+**** Snatch JSON
+Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Emacs]].
+  #+begin_src emacs-lisp
+  ( use-package  json-snatcher
+     :ensure t
+     :commands (jsons-print-path))
+  #+end_src
+*** CSV
+#+begin_src emacs-lisp
+(use-package csv-mode
+  :mode "\\.csv\\'")
+#+end_src
+*** YAML
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :mode "\\.yml\\'"
+  :config
+  (add-hook 'yaml-mode-hook 'smartparens-mode)
+  (add-hook 'yaml-mode-hook 'highlight-indent-guides-mode)
+  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode)))
+#+end_src
+** Tiddlywiki
+#+begin_src emacs-lisp
+;; (use-package tiddlywiki-mode
+;;   :config
+;;   (add-to-list 'auto-mode-alist '("\\.tid\\'" . tiddlywiki-org-mode))
+;;   (tiddlywiki-widen-file)
+;; )
+
+;; (use-package ox-tiddly)
+
+;; ;; default tiddlywiki base path
+;; (setq tiddlywiki-base-path "http://127.0.0.1:8181/recipes/default/tiddlers/")
+
+;; ;; default values
+;; (setq
+;;      quote-title ""
+;;      quote-source ""
+;;      tiddler-title ""
+;;  )
+
+
+
+;; ;; Insert Tiddlywiki link from clipboard
+;; (defun dorneanu/tw5-add-link (&optional pURL)
+;;   "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+;;   (interactive)
+;;   (let*
+;;       (
+;;        (url (or pURL (org-web-tools--get-first-url)))
+;;        (html (org-web-tools--get-url url))
+;;        (title (org-web-tools--html-title html))
+;;        )
+;;     (format "%s ◦ [[%s|%s]]" (format-time-string "%Y-%m-%d") title url)
+;;     )
+;;   )
+
+;; ;; create tw5 journal file
+;; (defun vd/tw5-journal-file-by-date ()
+;; "Create a new Tiddlywiki journal file with current time as name."
+;;   (interactive)
+;;   (let ((journal-file (format-time-string "/cs/priv/repos/brainfck.org/tw5/tiddlers/%Y-%m-%d.tid")))
+;;   (find-file journal-file))
+;;   )
+
+;; ;; adds a tiddlywiki bookmark from pocket-reader mode
+;; (defun dorneanu/tiddlywiki-add-bookmark ()
+;;   "Adds a new bookmark to tiddlywiki. The URL is fetched from clipboard or killring"
+;;     (require 'url-util)
+;;     (interactive)
+;;     (pocket-reader-copy-url)
+
+;;     (setq my-url (org-web-tools--get-first-url))
+;;     (setq url-html (org-web-tools--get-url my-url))
+;;     (setq url-title (org-web-tools--html-title url-html))
+;;     (setq url-title-mod (read-string "Title: " url-title))
+;;     (setq url-path (url-hexify-string url-title-mod))
+;;     (setq url-note (read-string (concat "Note for " my-url ":")))
+;;     (setq url-tags (concat "Bookmark "(read-string "Additional tags: ")))
+
+;;     (request (concat tiddlywiki-base-path url-path)
+;;     :type "PUT"
+;;     :data (json-encode `(("name" . ,url-title-mod) ("note" . ,url-note) ("url" . ,my-url) ("tags" . ,url-tags)))
+;;     :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
+;;     :parser 'json-read
+;;     :success
+;;     (cl-function
+;;             (lambda (&key data &allow-other-keys)
+;;                 (message "I sent: %S" (assoc-default 'args data))))
+;;     :complete (lambda (&rest _) (message "Added %s" (symbol-value 'url-title-mod)))
+;;     :error (lambda (&rest _) (message "Some error"))
+;;     :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
+;;                     (418 . (lambda (&rest _) (message "Got 418.")))
+;;                     (204 . (lambda (&rest _) (message "Got 202."))))
+;;     )
+;; )
+
+;; (defun dorneanu/tiddlywiki-add-quote ()
+;;   "Adds a new quote"
+;;     (interactive)
+
+;;     (setq quote-title (read-string "Quote title: " quote-title))
+;;     (setq url-path (url-hexify-string quote-title))
+;;     (setq quote-source (read-string (concat "Source for " quote-title ": ") quote-source))
+;;     (setq quote-body (read-string (concat "Text for " quote-title ": ")))
+;;     (setq quote-tags (concat "quote "(read-string "Additional tags: ")))
+
+;;     (request (concat tiddlywiki-base-path url-path)
+;;     :type "PUT"
+;;     :data (json-encode `(
+;;         ("title" . ,quote-title)
+;;         ("created" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
+;;         ("modified" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
+;;         ("source" . ,quote-source)
+;;         ("tags" . ,quote-tags)
+;;         ("text" . ,quote-body)
+;;         ("type" . "text/vnd.tiddlywiki")))
+;;     :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
+;;     :parser 'json-read
+;;     :success
+;;     (cl-function
+;;             (lambda (&key data &allow-other-keys)
+;;                 (message "I sent: %S" (assoc-default 'args data))))
+;;     :complete (lambda (&rest _) (message "Added quote <%s>" (symbol-value 'quote-title)))
+;;     :error (lambda (&rest _) (message "Some error"))
+;;     :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
+;;                     (418 . (lambda (&rest _) (message "Got 418.")))
+;;                     (204 . (lambda (&rest _) (message "Got 202."))))
+;;     )
+;; )
+
+;; (defun dorneanu/tiddlywiki-add-tiddler ()
+;;   "Adds a new tiddler"
+;;     (interactive)
+
+;;     (setq tiddler-title (read-string "Title: " tiddler-title))
+;;     (setq tiddler-body (read-string (concat "Text for " tiddler-title ": ")))
+;;     (setq tiddler-tags (read-string "Tags: "))
+;;     (setq url-path (url-hexify-string tiddler-title))
+
+;;     (request (concat tiddlywiki-base-path url-path)
+;;     :type "PUT"
+;;     :data (json-encode `(
+;;         ("title" . ,tiddler-title)
+;;         ("created" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
+;;         ("modified" . ,(format-time-string "%Y%m%d%H%M%S%3N"))
+;;         ("tags" . ,tiddler-tags)
+;;         ("text" . ,tiddler-body)
+;;         ("type" . "text/vnd.tiddlywiki")))
+;;     :headers '(("Content-Type" . "application/json") ("X-Requested-With" . "TiddlyWiki") ("Accept" . "application/json"))
+;;     :parser 'json-read
+;;     :success
+;;     (cl-function
+;;             (lambda (&key data &allow-other-keys)
+;;                 (message "I sent: %S" (assoc-default 'args data))))
+;;     :complete (lambda (&rest _) (message "Added tiddler <%s>" (symbol-value 'tiddler-title)))
+;;     :error (lambda (&rest _) (message "Some error"))
+;;     :status-code '((400 . (lambda (&rest _) (message "Got 400.")))
+;;                     (418 . (lambda (&rest _) (message "Got 418.")))
+;;                     (204 . (lambda (&rest _) (message "Got 202."))))
+;;     )
+;; )
+
+;; ;; Add hydra
+;; (defhydra hydra-tiddlywiki (:color blue :hint nil)
+;; "
+;; Tiddlywiki commands^
+;; ---------------------------------------------------------
+;; _b_ Add new bookmark
+;; _j_ Add new journal entry
+;; _t_ Add new tiddler
+;; _q_ Add new quote
+;; "
+;;   ("b" dorneanu/tiddlywiki-add-bookmark)
+;;   ("j" vd/tw5-journal-file-by-date)
+;;   ("q" dorneanu/tiddlywiki-add-quote)
+;;   ("t" dorneanu/tiddlywiki-add-tiddler))
+
+;; ;; Keybindings
+;; (my-leader-def
+;;   :infix "m w"
+;;   "h" '(hydra-tiddlywiki/body :which-key "Open Tiddlywiki hydra")
+;;   "j" '(vd/tw5-journal-file-by-date :which-key "Create/Open TW5 Journal file")
+;;   "s" '(my/rg-tiddlywiki-directory :which-key "Search in TW5 directory"))
+
+
+#+end_src
+** File templates
+#+begin_src emacs-lisp
+;; (set-file-template! "\\.tid$" :trigger "__journal" :mode 'tiddlywiki-org-mode)
+#+end_src
+** Impatient Mode
+#+begin_src emacs-lisp
+(use-package impatient-mode)
+(defun markdown-html (buffer)
+  (princ (with-current-buffer buffer
+           (format "<!DOCTYPE html><html><title>Impatient Markdown</title><xmp theme=\"united\" style=\"display:none;\"> %s  </xmp><script src=\"http://ndossougbe.github.io/strapdown/dist/strapdown.js\"></script></html>" (buffer-substring-no-properties (point-min) (point-max))))
+         (current-buffer)))
+#+end_src
+* Completion
+** ivy
+#+begin_src emacs-lisp
+;; (use-package ivy
+;;   :diminish
+;;   :config
+;;   ;; :bind (("C-s" . swiper)
+;;   ;;        :map ivy-minibuffer-map
+;;   ;;        ("TAB" . ivy-alt-done)
+;;   ;;        ("C-f" . ivy-alt-done)
+;;   ;;        ("C-l" . ivy-alt-done)
+;;   ;;        ("C-j" . ivy-next-line)
+;;   ;;        ("C-k" . ivy-previous-line)
+;;   ;;        :map ivy-switch-buffer-map
+;;   ;;        ("C-k" . ivy-previous-line)
+;;   ;;        ("C-l" . ivy-done)
+;;   ;;        ("C-d" . ivy-switch-buffer-kill)
+;;   ;;        :map ivy-reverse-i-search-map
+;;   ;;        ("C-k" . ivy-previous-line)
+;;   ;;        ("C-d" . ivy-reverse-i-search-kill))
+;;   :init
+;;   (ivy-mode 1)
+;;   :config
+;;   (setq ivy-use-virtual-buffers t)
+;;   (setq ivy-wrap t)
+;;   (setq ivy-count-format "(%d/%d) ")
+;;   (setq enable-recursive-minibuffers t)
+
+;;   ;; Use different regex strategies per completion command
+;;   (push '(completion-at-point . ivy--regex-fuzzy) ivy-re-builders-alist) ;; This doesn't seem to work...
+;;   (push '(swiper . ivy--regex-ignore-order) ivy-re-builders-alist)
+;;   (push '(counsel-M-x . ivy--regex-ignore-order) ivy-re-builders-alist)
+
+;;   ;; Set minibuffer height for different commands
+;;   (setf (alist-get 'counsel-projectile-ag ivy-height-alist) 15)
+;;   (setf (alist-get 'counsel-projectile-rg ivy-height-alist) 15)
+;;   (setf (alist-get 'swiper ivy-height-alist) 15)
+;;   (setf (alist-get 'counsel-switch-buffer ivy-height-alist) 7)
+;;   (seq ivy-use-virtual-buffers t))
+
+
+#+end_src
+** ivy-rich
+[[https://github.com/Yevgnen/ivy-rich][ivy-rich]] provides a more informative interface for ivy.
+#+begin_src emacs-lisp
+;; (use-package ivy-rich
+;;   :after ivy
+;;   :config
+;;   (ivy-rich-mode 1)
+;;   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
+#+end_src
+** ivy-prescient
+A package that enhances sorting & filtering of candidates. =ivy-prescient= adds integration with Ivy.
+
+References:
+- [[https://github.com/raxod502/prescient.el][prescient.el repo]]
+#+begin_src emacs-lisp :noweb yes
+;; (use-package ivy-prescient
+;;   :after counsel
+;;   :config
+;;   (ivy-prescient-mode +1)
+;;   (setq ivy-prescient-retain-classic-highlighting t)
+;;   (prescient-persist-mode 1)
+;;   (setq ivy-prescient-sort-commands
+;;         '(:not swiper
+;;                swiper-isearch
+;;                ivy-switch-buffer
+;;                ;; ivy-resume
+;;                ;; ivy--restore-session
+;;                lsp-ivy-workspace-symbol
+;;                dap-switch-stack-frame
+;;                my/dap-switch-stack-frame
+;;                dap-switch-session
+;;                dap-switch-thread
+;;                counsel-grep
+;;                ;; counsel-find-file
+;;                counsel-git-grep
+;;                counsel-rg
+;;                counsel-ag
+;;                counsel-ack
+;;                counsel-fzf
+;;                counsel-pt
+;;                counsel-imenu
+;;                counsel-yank-pop
+;;                counsel-recentf
+;;                counsel-buffer-or-recentf
+;;                proced-filter-interactive
+;;                proced-sort-interactive
+;;                my/persp-ivy-switch-buffer-other-window
+;;                lsp-execute-code-action))
+;;   ;; Do not use prescient in find-file
+;;   (ivy--alist-set 'ivy-sort-functions-alist #'read-file-name-internal #'ivy-sort-file-function-default))
+#+end_src
+
+** counsel
+#+begin_src emacs-lisp
+(use-package counsel
+  :after ivy
+  :bind (
+  ("C-c g" . counsel-google)
+  ("C-c j" . counsel-org-goto)))
+
+;; Make sure we don't have to ESC multiple times
+;; (define-key ivy-minibuffer-map (kbd "<escape>") 'minibuffer-keyboard-quit))
+#+end_src
+** swipper
+Replace ~I-search~ by swiper
+
+#+begin_src emacs-lisp
+(use-package swiper
+   :bind (
+   ("C-s" . swiper-isearch)
+))
+#+end_src
+** company
+#+begin_src emacs-lisp
+ (use-package company
+  :defer 2
+  :general
+  (:keymaps 'company-mode-map
+   :states 'insert
+   "C-n" #'company-complete-common-or-cycle
+   "C-p" #'company-select-previous)
+  ('company-active-map
+   "C-n" #'company-complete-common-or-cycle
+   "C-p" #'company-select-previous-or-abort
+   "C-e" #'company-complete
+   "TAB" #'company-complete-common-or-cycle)
+
+  :diminish company-mode
+  :config
+  (setq-default company-dabbrev-downcase nil)
+  (setq-default company-search-filtering t)
+  ;; (setq-default company-global-modes '(not org-mode))
+  (global-company-mode))
+
+#+end_src
+** company-box
+#+begin_src emacs-lisp
+(use-package company-box
+  :disabled t
+  :diminish
+  :hook (company-mode . company-box-mode))
+#+end_src
+* Searching
+** rg
+#+begin_src emacs-lisp
+;; from https://alexpeits.github.io/emacs.d/
+(use-package rg
+  :commands (rg my/rg-project-or-ask)
+  :bind (("C-c n s" . my/rg-org-roam-directory))
+  ;;        :map rg-mode-map
+  ;;        ("m" . rg-menu)
+  ;;        ("s" . my/rg-save-search-as-name)
+  ;;        ("C-n" . next-line)
+  ;;        ("C-p" . previous-line)
+  ;;        ("j" . next-line)
+  ;;        ("k" . previous-line)
+  ;;        ("M-n" . rg-next-file)
+  ;;        ("M-p" . rg-prev-file))
+  :init
+  (setq rg-group-result t
+        rg-ignore-case 'smart)
+  (defalias 'rgp 'my/rg-project-or-ask)
+  :config
+  (rg-define-toggle "--multiline --multiline-dotall" "u")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L")
+  (rg-enable-default-bindings)
+  (rg-define-search my/rg-org-directory
+    :query ask
+    :format regexp
+    :files "org"
+    :dir org-directory
+    :confirm prefix)
+
+  ;; search in org roam folder
+  (rg-define-search my/rg-org-roam-directory
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir org-roam-directory
+    :confirm prefix)
+
+  ;; prot
+  ;; https://protesilaos.com/dotemacs/#h:31622bf2-526b-4426-9fda-c0fc59ac8f4b
+  (rg-define-search my/rg-project-or-ask
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir (or (projectile-project-root)
+             (read-directory-name "rg in: "))
+    :confirm prefix)
+
+  (defun my/rg-save-search-as-name ()
+    "Save `rg' buffer, naming it after the current search query."
+    (interactive)
+    (let ((pattern (rg-search-pattern rg-cur-search)))
+      (rg-save-search-as-name (concat "«" pattern "»"))))
+  )
+
+#+end_src
+* Hydras
+#+begin_src emacs-lisp
+;; (defhydra hydra-ag (:exit t :columns 2)
+;;   "Ag Search"
+;;   ("c" helm-ag "Current directory")
+;;   ("d" (lambda ()
+;;          (interactive)
+;;          (let ((current-prefix-arg '(4)))
+;;            (call-interactively 'helm-ag))) "Select directory")
+;;   ("D" helm-do-ag "Select directory (interactive)")
+;;   ("f" helm-ag-this-file "Current file")
+;;   ("F" helm-do-ag-this-file "Current file (interactive)")
+;;   ("p" helm-ag-project-root "Project")
+;;   ("b" helm-ag-buffers "Buffers")
+;;   ("B" helm-do-ag-buffers "Buffers (interactive)"))
+#+end_src
+** multiple-cursors
+#+begin_src emacs-lisp
+;; (defhydra multiple-cursors-hydra (:columns 3
+;;                                            :idle 1.0)
+;;   "Multiple cursors"
+;;   ("l" mc/edit-lines "Edit lines in region" :exit t)
+;;   ("b" mc/edit-beginnings-of-lines "Edit beginnings of lines in region" :exit t)
+;;   ("e" mc/edit-ends-of-lines "Edit ends of lines in region" :exit t)
+;;   ("a" mc/mark-all-dwim "Mark all dwim" :exit t)
+;;   ("S" mc/mark-all-symbols-like-this "Mark all symbols likes this" :exit t)
+;;   ("w" mc/mark-all-words-like-this "Mark all words like this" :exit t)
+;;   ("r" mc/mark-all-in-region "Mark all in region" :exit t)
+;;   ("R" mc/mark-all-in-region-regexp "Mark all in region (regexp)" :exit t)
+;;   ("d" mc/mark-all-like-this-in-defun "Mark all like this in defun" :exit t)
+;;   ("s" mc/mark-all-symbols-like-this-in-defun "Mark all symbols like this in defun" :exit t)
+;;   ("W" mc/mark-all-words-like-this-in-defun "Mark all words like this in defun" :exit t)
+;;   ("i" mc/insert-numbers "Insert numbers" :exit t)
+;;   ("n" mc/mark-next-like-this "Mark next like this")
+;;   ("N" mc/skip-to-next-like-this "Skip to next like this")
+;;   ("M-n" mc/unmark-next-like-this "Unmark next like this")
+;;   ("p" mc/mark-previous-like-this "Mark previous like this")
+;;   ("P" mc/skip-to-previous-like-this "Skip to previous like this")
+;;   ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
+;;   ("q" nil "Quit" :exit t))
+#+end_src
+
+** ediff
+
+#+begin_src emacs-lisp
+;; https://github.com/abo-abo/hydra/wiki/Emacs
+(defhydra hydra-ediff (:color blue :hint nil)
+  "
+^Buffers           Files           VC                     Ediff regions
+----------------------------------------------------------------------
+_b_uffers           _f_iles (_=_)       _r_evisions              _l_inewise
+_B_uffers (3-way)   _F_iles (3-way)                          _w_ordwise
+                  _c_urrent file
+"
+  ("b" ediff-buffers)
+  ("B" ediff-buffers3)
+  ("=" ediff-files)
+  ("f" ediff-files)
+  ("F" ediff-files3)
+  ("c" ediff-current-file)
+  ("r" ediff-revision)
+  ("l" ediff-regions-linewise)
+  ("w" ediff-regions-wordwise))
+#+end_src
+** projectile
+#+begin_src emacs-lisp
+(defhydra hydra-projectile (:color teal
+			    :columns 4)
+  "Projectile"
+  ("f"   projectile-find-file                "Find File")
+  ("r"   projectile-recentf                  "Recent Files")
+  ("z"   projectile-cache-current-file       "Cache Current File")
+  ("x"   projectile-remove-known-project     "Remove Known Project")
+
+  ("d"   projectile-find-dir                 "Find Directory")
+  ("b"   projectile-switch-to-buffer         "Switch to Buffer")
+  ("c"   projectile-invalidate-cache         "Clear Cache")
+  ("X"   projectile-cleanup-known-projects   "Cleanup Known Projects")
+
+  ("o"   projectile-multi-occur              "Multi Occur")
+  ("s"   projectile-switch-project           "Switch Project")
+  ("k"   projectile-kill-buffers             "Kill Buffers")
+  ("q"   nil "Cancel" :color blue))
+#+end_src
+** bookmarks
+#+begin_src emacs-lisp
+(defhydra hydra-bookmarks (:hint nil :exit t)
+  "
+  bookmarks:    _j_ → jump to bookmark _l_ → list bookmarks    _s_ → set bookmark
+                _D_ → delete bookmark
+  "
+  ("j" #'bookmark-jump)
+  ("l" #'bookmark-bmenu-list)
+  ("s" #'bookmark-set)
+  ("D" #'bookmark-delete))
+#+end_src
+** yasnippet
+#+begin_src emacs-lisp
+(defhydra hydra-yasnippet (:color blue :hint nil)
+"
+Snippets^
+---------------------------------------------------------
+_q_ uit
+_i_ insert snippet
+_n_ new snippet
+_l_ load directory
+_r_ reload all
+_v_ visit snippet
+_d_ describe table
+"
+  ("q" nil :exit t)
+  ("i" yas-insert-snippet)
+  ("n" yas-new-snippet)
+  ("l" yas-load-directory)
+  ("r" yas-reload-all)
+  ("v" yas-visit-snippet-file)
+  ("d" yas-describe-tables))
+#+end_src
+** lsp
+#+begin_src emacs-lisp
+;; https://github.com/yilkalargaw/yet-another-emacs
+(defhydra hydra-lsp (:exit t :hint nil :quit-key ("q" "C-g"))
+  "
+ Buffer^^               Server^^                   Symbol
+-------------------------------------------------------------------------------------
+ [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
+ [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
+ [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
+  ("d" lsp-find-declaration)
+  ("D" lsp-ui-peek-find-definitions)
+  ("R" lsp-ui-peek-find-references)
+  ("i" lsp-ui-peek-find-implementation)
+  ("t" lsp-find-type-definition)
+  ("s" lsp-signature-help)
+  ("o" lsp-describe-thing-at-point)
+  ("r" lsp-rename)
+
+  ("f" lsp-format-buffer)
+  ("m" lsp-ui-imenu)
+  ("x" lsp-execute-code-action)
+
+  ("M-s" lsp-describe-session)
+  ("M-r" lsp-restart-workspace)
+  ("S" lsp-shutdown-workspace))
+#+end_src
+** dired
+#+begin_src emacs-lisp
+;; https://github.com/yilkalargaw/yet-another-emacs
+(defhydra hydra-dired (:hint nil :color pink :quit-key ("q" "C-g"))
+  "
+_+_ mkdir          _v_iew           _m_ark             _(_ details        _i_nsert-subdir    wdired
+_C_opy             _O_ view other   _U_nmark all       _)_ omit-mode      _$_ hide-subdir    C-x C-q : edit
+_D_elete           _o_pen other     _u_nmark           _l_ redisplay      _w_ kill-subdir    C-c C-c : commit
+_R_ename           _M_ chmod        _t_oggle           _g_ revert buf     _e_ ediff          C-c ESC : abort
+_Y_ rel symlink    _G_ chgrp        _E_xtension mark   _s_ort             _=_ pdiff
+_S_ymlink          ^ ^              _F_ind marked      _._ toggle hydra   \\ flyspell
+_r_sync            ^ ^              ^ ^                ^ ^                _?_ summary
+_z_ compress-file  _A_ find regexp
+_Z_ compress       _Q_ repl regexp
+T - tag prefix
+"
+  ("\\" dired-do-ispell)
+  ("(" dired-hide-details-mode)
+  (")" dired-omit-mode)
+  ("+" dired-create-directory)
+  ("=" diredp-ediff)         ;; smart diff
+  ("?" dired-summary)
+  ("$" diredp-hide-subdir-nomove)
+  ("A" dired-do-find-regexp)
+  ("C" dired-do-copy)        ;; Copy all marked files
+  ("D" dired-do-delete)
+  ("E" dired-mark-extension)
+  ("e" dired-ediff-files)
+  ("F" dired-do-find-marked-files)
+  ("G" dired-do-chgrp)
+  ("g" revert-buffer)        ;; read all directories again (refresh)
+  ("i" dired-maybe-insert-subdir)
+  ("l" dired-do-redisplay)   ;; relist the marked or singel directory
+  ("M" dired-do-chmod)
+  ("m" dired-mark)
+  ("O" dired-display-file)
+  ("o" dired-find-file-other-window)
+  ("Q" dired-do-find-regexp-and-replace)
+  ("R" dired-do-rename)
+  ("r" dired-do-rsynch)
+  ("S" dired-do-symlink)
+  ("s" dired-sort-toggle-or-edit)
+  ("t" dired-toggle-marks)
+  ("U" dired-unmark-all-marks)
+  ("u" dired-unmark)
+  ("v" dired-view-file)      ;; q to exit, s to search, = gets line #
+  ("w" dired-kill-subdir)
+  ("Y" dired-do-relsymlink)
+  ("z" diredp-compress-this-file)
+  ("Z" dired-do-compress)
+  ("q" nil)
+  ("." nil :color blue))
+#+end_src
+* Registers
+** Hydra
+#+begin_src emacs-lisp
+(defhydra sk/hydra-registers (:color blue
+                              :hint nil)
+  "
+ _a_: append     _c_: copy-to    _j_: jump       _r_: rectangle-copy   _q_: quit
+ _i_: insert     _n_: number-to  _f_: frameset   _w_: window-config
+ _+_: increment  _p_: point-to
+  "
+  ("a" append-to-register)
+  ("c" copy-to-register)
+  ("i" insert-register)
+  ("f" frameset-to-register)
+  ("j" jump-to-register)
+  ("n" number-to-register)
+  ("r" copy-rectangle-to-register)
+  ("w" window-configuration-to-register)
+  ("+" increment-register)
+  ("p" point-to-register)
+  ("q" nil :color blue))
+
+(my-leader-def "r\"" '(sk/hydra-registers/body :which-key "Hydra for registers"))
 #+end_src
 * Applications
 ** RSS
@@ -2459,6 +2640,8 @@ A package to add more evil-mode keybindings to org-mode.
   :config
   (use-package pocket-lib)
   (use-package org-web-tools)
+  (use-package hnreader)
+  (use-package url-util)
 
   (setq elfeed-db-directory "~/.elfeed")
   (setq elfeed-enclosure-default-dir (expand-file-name "~/Downloads"))
@@ -2481,12 +2664,17 @@ A package to add more evil-mode keybindings to org-mode.
         [remap kill-this-buffer] "q"
         [remap kill-buffer] "q"
         :n doom-leader-key nil
+        :n "c" #'elfeed-search-clear-filter
         :n "q" #'+rss/quit
         :n "e" #'elfeed-update
+        :n "gp" #'sqrtminusone/rdrview-elfeed-show
         :n "r" #'elfeed-search-untag-all-unread
+        :n "R" #'my/elfeed-reddit-show-commments
+        :n "H" #'my/elfeed-hn-show-commments
         :n "u" #'elfeed-search-tag-all-unread
         :n "s" #'elfeed-search-live-filter
         :n "RET" #'elfeed-search-show-entry
+        :n "o" #'sqrtminusone/elfeed-search-filter-source
         :n "p" #'elfeed-show-pdf
         :n "+" #'elfeed-search-tag-all
         :n "-" #'elfeed-search-untag-all
@@ -2504,6 +2692,7 @@ A package to add more evil-mode keybindings to org-mode.
         :nm "a" #'pocket-reader-elfeed-entry-add-link
         :n "B" #'elfeed-show-eww-open
         :nm "o" #'ace-link-elfeed
+        :n "H" #'my/elfeed-hn-show-comments-at-point
         :nm "RET" #'org-ref-elfeed-add
         :nm "n" #'elfeed-show-next
         :nm "N" #'elfeed-show-prev
@@ -2562,12 +2751,179 @@ A package to add more evil-mode keybindings to org-mode.
   (define-key elfeed-show-mode-map (kbd "B") 'my/elfeed-show-eww)
 )
 
+;; https://github.com/SqrtMinusOne/dotfiles
+(defun sqrtminusone/elfeed-search-filter-source (entry)
+  "Filter elfeed search buffer by the feed under cursor."
+  (interactive (list (elfeed-search-selected :ignore-region)))
+  (when (elfeed-entry-p entry)
+    (elfeed-search-set-filter
+     (concat
+      "@6-months-ago "
+      "+unread "
+      "="
+      (replace-regexp-in-string
+       (rx "?" (* not-newline) eos)
+       ""
+       (elfeed-feed-url (elfeed-entry-feed entry)))))))
+
 
 ;; Update elfeed regularly
 ;; https://www.reddit.com/r/emacs/comments/bvbp92/is_there_a_simple_way_to_get_elfeed_to_update/
 ;; (add-hook 'emacs-startup-hook (lambda () (run-at-time 5 600 'elfeed-update)))
 #+end_src
 
+**** rdrview
+#+begin_src emacs-lisp
+;; From https://github.com/SqrtMinusOne/dotfiles
+(defun sqrtminusone/rdrview-get (url callback)
+  "Get the rdrview representation of URL.
+
+Call CALLBACK with the output."
+  (let* ((buffer (generate-new-buffer "rdrview"))
+         (proc (start-process "rdrview" buffer "rdrview"
+                              url "-T" "title,sitename,body"
+                              "-H")))
+    (set-process-sentinel
+     proc
+     (lambda (process _msg)
+       (let ((status (process-status process))
+             (code (process-exit-status process)))
+         (cond ((and (eq status 'exit) (= code 0))
+                (progn
+                  (funcall callback
+                           (with-current-buffer (process-buffer process)
+                             (buffer-string)))
+                  (kill-buffer (process-buffer process))) )
+               ((or (and (eq status 'exit) (> code 0))
+                    (eq status 'signal))
+                (let ((err (with-current-buffer (process-buffer process)
+                             (buffer-string))))
+                  (kill-buffer (process-buffer process))
+                  (user-error "Error in rdrview: %s" err)))))))
+    proc))
+
+(defun sqrtminusone/rdrview-parse (dom-string)
+  (let ((dom (with-temp-buffer
+               (insert dom-string)
+               (libxml-parse-html-region (point-min) (point-max)))))
+    (let (title sitename content (i 0))
+      (dolist (child (dom-children (car (dom-by-id dom "readability-page-1"))))
+        (when (listp child)
+          (cond
+           ((eq (car child) 'h1)
+            (setq title (dom-text child)))
+           ((eq (car child) 'h2)
+            (setq sitename (dom-text child)))
+           ((eq (car child) 'div)
+            (setq content child)))))
+      (while (and
+              (not (dom-by-tag content 'h1))
+              (dom-search
+               content
+               (lambda (el)
+                 (when (listp el)
+                   (pcase (car el)
+                     ('h2 (setf (car el) 'h1))
+                     ('h3 (setf (car el) 'h2))
+                     ('h4 (setf (car el) 'h3))
+                     ('h5 (setf (car el) 'h4))
+                     ('h6 (setf (car el) 'h5))))))))
+      `((title . ,title)
+        (sitename . ,sitename)
+        (content . ,(with-temp-buffer
+                      (dom-print content)
+                      (buffer-string)))))))
+
+(defvar-local my/elfeed-show-rdrview-html nil)
+
+(defun sqrtminusone/rdrview-elfeed-show ()
+  (interactive)
+  (unless elfeed-show-entry
+    (user-error "No elfeed entry in this buffer!"))
+  (my/rdrview-get
+   (elfeed-entry-link elfeed-show-entry)
+   (lambda (result)
+     (let* ((data (sqrtminusone/rdrview-parse result))
+            (inhibit-read-only t)
+            (title (elfeed-entry-title elfeed-show-entry))
+            (date (seconds-to-time (elfeed-entry-date elfeed-show-entry)))
+            (authors (elfeed-meta elfeed-show-entry :authors))
+            (link (elfeed-entry-link elfeed-show-entry))
+            (tags (elfeed-entry-tags elfeed-show-entry))
+            (tagsstr (mapconcat #'symbol-name tags ", "))
+            (nicedate (format-time-string "%a, %e %b %Y %T %Z" date))
+            (content (alist-get 'content data))
+            (feed (elfeed-entry-feed elfeed-show-entry))
+            (feed-title (elfeed-feed-title feed))
+            (base (and feed (elfeed-compute-base (elfeed-feed-url feed)))))
+       (erase-buffer)
+       (insert (format (propertize "Title: %s\n" 'face 'message-header-name)
+                       (propertize title 'face 'message-header-subject)))
+       (when elfeed-show-entry-author
+         (dolist (author authors)
+           (let ((formatted (elfeed--show-format-author author)))
+             (insert
+              (format (propertize "Author: %s\n" 'face 'message-header-name)
+                      (propertize formatted 'face 'message-header-to))))))
+       (insert (format (propertize "Date: %s\n" 'face 'message-header-name)
+                       (propertize nicedate 'face 'message-header-other)))
+       (insert (format (propertize "Feed: %s\n" 'face 'message-header-name)
+                       (propertize feed-title 'face 'message-header-other)))
+       (when tags
+         (insert (format (propertize "Tags: %s\n" 'face 'message-header-name)
+                         (propertize tagsstr 'face 'message-header-other))))
+       (insert (propertize "Link: " 'face 'message-header-name))
+       (elfeed-insert-link link link)
+       (insert "\n")
+       (cl-loop for enclosure in (elfeed-entry-enclosures elfeed-show-entry)
+                do (insert (propertize "Enclosure: " 'face 'message-header-name))
+                do (elfeed-insert-link (car enclosure))
+                do (insert "\n"))
+       (insert "\n")
+       (if content
+           (elfeed-insert-html content base)
+         (insert (propertize "(empty)\n" 'face 'italic)))
+       (setq-local my/elfeed-show-rdrview-html content)
+       (goto-char (point-min))))))
+
+#+end_src
+**** reddigg
+Use reddigg to show reddit threads.
+#+begin_src emacs-lisp
+(defun my/elfeed-reddit-show-commments (&optional link)
+  (interactive)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (reddigg-view-comments link)))
+#+end_src
+**** hnreader
+Open in same window
+#+begin_src emacs-lisp
+(setq hnreader-view-comments-in-same-window nil)
+#+end_src
+
+Use hnreader to show HN threads
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-commments (&optional link)
+  (interactive)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (setq-local hnreader-view-comments-in-same-window nil)
+    (hnreader-promise-comment (format "%s" link))))
+#+end_src
+
+Use hnread to show HN threads for a URL at point
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-comments-at-point ()
+  "Kill the url at point."
+  (interactive)
+  (setq-local hnreader-view-comments-in-same-window t)
+  (hnreader-comment (format "%s" (url-get-url-at-point))))
+#+end_src
 
 *** elfeed-org
 Allows to configure ~elfeed~ with an ORG file.
@@ -2810,6 +3166,16 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
         ejira-todo-states-alist   '(("To Do"       . 1)
                                     ("In Progress" . 2)
                                     ("Done"        . 3)))
+  :bind
+  (:map org-mode-map
+   ("C-x j o" . ejira-browse-issue-under-point)
+   ("C-x j f" . ejira-focus-item-under-point)
+   ("C-x j p" . ejira-pull-item-under-point)
+   ("C-x j x" . ejira-push-item-under-point)
+   ("C-x j P" . ejira-progress-issue)
+   ("C-x j c" . ejira-add-comment)
+   ("C-x j u" . ejira-update-my-projects)
+  )
   :config
   ;; Tries to auto-set custom fields by looking into /editmeta
   ;; of an issue and an epic.
@@ -2827,10 +3193,11 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
   (add-to-list 'org-agenda-files ejira-org-directory)
 
   ;; Add an agenda view to browse the issues that
-  (org-add-agenda-custom-command
-   '("j" "My JIRA issues"
-     ((ejira-jql "resolution = unresolved and assignee = currentUser()"
-                 ((org-agenda-overriding-header "Assigned to me")))))))
+  ;; (org-add-agenda-custom-command
+  ;;  '("j" "My JIRA issues"
+  ;;    ((ejira-jql "resolution = unresolved and assignee = currentUser()"
+  ;;                ((org-agenda-overriding-header "Assigned to me"))))))
+)
 #+end_src
 ** Bookmarks
 *** pocket-reader.el
@@ -2932,216 +3299,6 @@ As I use =C-h= to switch buffers, I moved the help to =SPC-h= with the code belo
 #+begin_src emacs-lisp
 (use-package twittering-mode)
 (setq twittering-allow-insecure-server-cert t)
-#+end_src
-* Hydras
-** https://github.com/otijhuis/emacs.d
-#+begin_src emacs-lisp
-;; (defhydra hydra-ag (:exit t :columns 2)
-;;   "Ag Search"
-;;   ("c" helm-ag "Current directory")
-;;   ("d" (lambda ()
-;;          (interactive)
-;;          (let ((current-prefix-arg '(4)))
-;;            (call-interactively 'helm-ag))) "Select directory")
-;;   ("D" helm-do-ag "Select directory (interactive)")
-;;   ("f" helm-ag-this-file "Current file")
-;;   ("F" helm-do-ag-this-file "Current file (interactive)")
-;;   ("p" helm-ag-project-root "Project")
-;;   ("b" helm-ag-buffers "Buffers")
-;;   ("B" helm-do-ag-buffers "Buffers (interactive)"))
-#+end_src
-** https://github.com/ejmr/DotEmacs/blob/master/init.el
-** multiple-cursors
-#+begin_src emacs-lisp
-;; (defhydra multiple-cursors-hydra (:columns 3
-;;                                            :idle 1.0)
-;;   "Multiple cursors"
-;;   ("l" mc/edit-lines "Edit lines in region" :exit t)
-;;   ("b" mc/edit-beginnings-of-lines "Edit beginnings of lines in region" :exit t)
-;;   ("e" mc/edit-ends-of-lines "Edit ends of lines in region" :exit t)
-;;   ("a" mc/mark-all-dwim "Mark all dwim" :exit t)
-;;   ("S" mc/mark-all-symbols-like-this "Mark all symbols likes this" :exit t)
-;;   ("w" mc/mark-all-words-like-this "Mark all words like this" :exit t)
-;;   ("r" mc/mark-all-in-region "Mark all in region" :exit t)
-;;   ("R" mc/mark-all-in-region-regexp "Mark all in region (regexp)" :exit t)
-;;   ("d" mc/mark-all-like-this-in-defun "Mark all like this in defun" :exit t)
-;;   ("s" mc/mark-all-symbols-like-this-in-defun "Mark all symbols like this in defun" :exit t)
-;;   ("W" mc/mark-all-words-like-this-in-defun "Mark all words like this in defun" :exit t)
-;;   ("i" mc/insert-numbers "Insert numbers" :exit t)
-;;   ("n" mc/mark-next-like-this "Mark next like this")
-;;   ("N" mc/skip-to-next-like-this "Skip to next like this")
-;;   ("M-n" mc/unmark-next-like-this "Unmark next like this")
-;;   ("p" mc/mark-previous-like-this "Mark previous like this")
-;;   ("P" mc/skip-to-previous-like-this "Skip to previous like this")
-;;   ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
-;;   ("q" nil "Quit" :exit t))
-#+end_src
-
-** ediff
-
-#+begin_src emacs-lisp
-;; https://github.com/abo-abo/hydra/wiki/Emacs
-(defhydra hydra-ediff (:color blue :hint nil)
-  "
-^Buffers           Files           VC                     Ediff regions
-----------------------------------------------------------------------
-_b_uffers           _f_iles (_=_)       _r_evisions              _l_inewise
-_B_uffers (3-way)   _F_iles (3-way)                          _w_ordwise
-                  _c_urrent file
-"
-  ("b" ediff-buffers)
-  ("B" ediff-buffers3)
-  ("=" ediff-files)
-  ("f" ediff-files)
-  ("F" ediff-files3)
-  ("c" ediff-current-file)
-  ("r" ediff-revision)
-  ("l" ediff-regions-linewise)
-  ("w" ediff-regions-wordwise))
-#+end_src
-** projectile
-#+begin_src emacs-lisp
-(defhydra hydra-projectile (:color teal
-			    :columns 4)
-  "Projectile"
-  ("f"   projectile-find-file                "Find File")
-  ("r"   projectile-recentf                  "Recent Files")
-  ("z"   projectile-cache-current-file       "Cache Current File")
-  ("x"   projectile-remove-known-project     "Remove Known Project")
-
-  ("d"   projectile-find-dir                 "Find Directory")
-  ("b"   projectile-switch-to-buffer         "Switch to Buffer")
-  ("c"   projectile-invalidate-cache         "Clear Cache")
-  ("X"   projectile-cleanup-known-projects   "Cleanup Known Projects")
-
-  ("o"   projectile-multi-occur              "Multi Occur")
-  ("s"   projectile-switch-project           "Switch Project")
-  ("k"   projectile-kill-buffers             "Kill Buffers")
-  ("q"   nil "Cancel" :color blue))
-#+end_src
-** bookmarks
-#+begin_src emacs-lisp
-(defhydra hydra-bookmarks (:hint nil :exit t)
-  "
-  bookmarks:    _j_ → jump to bookmark _l_ → list bookmarks    _s_ → set bookmark
-                _D_ → delete bookmark
-  "
-  ("j" #'bookmark-jump)
-  ("l" #'bookmark-bmenu-list)
-  ("s" #'bookmark-set)
-  ("D" #'bookmark-delete))
-#+end_src
-** yasnippet
-#+begin_src emacs-lisp
-(defhydra hydra-yasnippet (:color blue :hint nil)
-"
-Snippets^
----------------------------------------------------------
-_q_ uit
-_i_ insert snippet
-_n_ new snippet
-_l_ load directory
-_r_ reload all
-_v_ visit snippet
-_d_ describe table
-"
-  ("q" nil :exit t)
-  ("i" yas-insert-snippet)
-  ("n" yas-new-snippet)
-  ("l" yas-load-directory)
-  ("r" yas-reload-all)
-  ("v" yas-visit-snippet-file)
-  ("d" yas-describe-tables))
-#+end_src
-** lsp
-#+begin_src emacs-lisp
-;; https://github.com/yilkalargaw/yet-another-emacs
-(defhydra hydra-lsp (:exit t :hint nil :quit-key ("q" "C-g"))
-  "
- Buffer^^               Server^^                   Symbol
--------------------------------------------------------------------------------------
- [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
- [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
- [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
-  ("d" lsp-find-declaration)
-  ("D" lsp-ui-peek-find-definitions)
-  ("R" lsp-ui-peek-find-references)
-  ("i" lsp-ui-peek-find-implementation)
-  ("t" lsp-find-type-definition)
-  ("s" lsp-signature-help)
-  ("o" lsp-describe-thing-at-point)
-  ("r" lsp-rename)
-
-  ("f" lsp-format-buffer)
-  ("m" lsp-ui-imenu)
-  ("x" lsp-execute-code-action)
-
-  ("M-s" lsp-describe-session)
-  ("M-r" lsp-restart-workspace)
-  ("S" lsp-shutdown-workspace))
-#+end_src
-** dired
-#+begin_src emacs-lisp
-;; https://github.com/yilkalargaw/yet-another-emacs
-(defhydra hydra-dired (:hint nil :color pink :quit-key ("q" "C-g"))
-  "
-_+_ mkdir          _v_iew           _m_ark             _(_ details        _i_nsert-subdir    wdired
-_C_opy             _O_ view other   _U_nmark all       _)_ omit-mode      _$_ hide-subdir    C-x C-q : edit
-_D_elete           _o_pen other     _u_nmark           _l_ redisplay      _w_ kill-subdir    C-c C-c : commit
-_R_ename           _M_ chmod        _t_oggle           _g_ revert buf     _e_ ediff          C-c ESC : abort
-_Y_ rel symlink    _G_ chgrp        _E_xtension mark   _s_ort             _=_ pdiff
-_S_ymlink          ^ ^              _F_ind marked      _._ toggle hydra   \\ flyspell
-_r_sync            ^ ^              ^ ^                ^ ^                _?_ summary
-_z_ compress-file  _A_ find regexp
-_Z_ compress       _Q_ repl regexp
-T - tag prefix
-"
-  ("\\" dired-do-ispell)
-  ("(" dired-hide-details-mode)
-  (")" dired-omit-mode)
-  ("+" dired-create-directory)
-  ("=" diredp-ediff)         ;; smart diff
-  ("?" dired-summary)
-  ("$" diredp-hide-subdir-nomove)
-  ("A" dired-do-find-regexp)
-  ("C" dired-do-copy)        ;; Copy all marked files
-  ("D" dired-do-delete)
-  ("E" dired-mark-extension)
-  ("e" dired-ediff-files)
-  ("F" dired-do-find-marked-files)
-  ("G" dired-do-chgrp)
-  ("g" revert-buffer)        ;; read all directories again (refresh)
-  ("i" dired-maybe-insert-subdir)
-  ("l" dired-do-redisplay)   ;; relist the marked or singel directory
-  ("M" dired-do-chmod)
-  ("m" dired-mark)
-  ("O" dired-display-file)
-  ("o" dired-find-file-other-window)
-  ("Q" dired-do-find-regexp-and-replace)
-  ("R" dired-do-rename)
-  ("r" dired-do-rsynch)
-  ("S" dired-do-symlink)
-  ("s" dired-sort-toggle-or-edit)
-  ("t" dired-toggle-marks)
-  ("U" dired-unmark-all-marks)
-  ("u" dired-unmark)
-  ("v" dired-view-file)      ;; q to exit, s to search, = gets line #
-  ("w" dired-kill-subdir)
-  ("Y" dired-do-relsymlink)
-  ("z" diredp-compress-this-file)
-  ("Z" dired-do-compress)
-  ("q" nil)
-  ("." nil :color blue))
-#+end_src
-* Learning
-** org-fc
-Used for spaced repetition
-#+begin_src emacs-lisp
-(use-package org-fc
-  :custom
-  (org-fc-directories '("/cs/priv/repos/roam/org"))
-  :config
-  (require 'org-fc-hydra))
 #+end_src
 
 * Inspiration
