@@ -2347,6 +2347,38 @@ T - tag prefix
   ("q" nil)
   ("." nil :color blue))
 #+end_src
+** org
+From [[https://sriramkswamy.github.io/dotemacs/]]
+
+#+begin_src emacs-lisp
+(defhydra sk/hydra-org-jump (:color pink
+                             :hint nil)
+  "
+ ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
+ ^^^^^^^^^^^-------------------------------------------------------------------------------
+ ^ ^ _k_ ^ ^   ^ ^ _K_ ^ ^   ^ ^ _u_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _p_ ^ ^   ^ ^ _P_ ^ ^    _q_ quit
+ _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
+ ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
+"
+  ("j" outline-next-visible-heading)
+  ("k" outline-previous-visible-heading)
+  ("l" org-down-element)
+  ("h" org-up-element)
+  ("J" org-forward-heading-same-level)
+  ("K" org-backward-heading-same-level)
+  ("u" org-next-item)
+  ("d" org-previous-item)
+  ("f" org-table-next-field)
+  ("b" org-table-previous-field)
+  ("n" org-next-block)
+  ("p" org-previous-block)
+  ("N" org-next-link)
+  ("P" org-previous-link)
+  ("q" nil :color blue))
+(map! :leader
+      :prefix "mh"
+      "o" #'sk/hydra-org-jump/body)
+#+end_src
 * Registers
 ** Hydra
 #+begin_src emacs-lisp
