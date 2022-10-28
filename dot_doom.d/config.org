@@ -54,11 +54,16 @@ Setting variables
 Run garbage collection when Emacs is unfocused
 
 #+begin_src emacs-lisp
-;; (add-hook 'after-init-hook
-;;           #'(lambda ()
-;;               (setq gc-cons-threshold (* 100 1000 1000))))
-;; (add-hook 'focus-out-hook 'garbage-collect)
-;; (run-with-idle-timer 5 t 'garbage-collect)
+(use-package gcmh
+  :diminish gcmh-mode
+  :config
+  (setq gcmh-idle-delay 5
+        gcmh-high-cons-threshold (* 16 1024 1024))  ; 16mb
+  (gcmh-mode 1))
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-percentage 0.1))) ;; Default value for `gc-cons-percentage'
 #+end_src
 
 * Keyboard Bindings
@@ -659,6 +664,15 @@ Highlight TODOs and stuff
   ("q" nil :color blue))
 
 (my-leader-def "mhw" 'sk/hydra-of-windows/body)
+#+end_src
+** Workspaces
+Use ~SPC TAB TAB~ to switch between workspaces
+#+begin_src emacs-lisp
+(map! :leader
+      (:when (featurep! :ui workspaces)
+       (:prefix-map ("TAB" . "workspace")
+        :desc "Switch to last workspace"  "TAB"   #'+workspace/other)))
+
 #+end_src
 ** screenshots.el
 I have to load by defining a ~load-path~.
@@ -1442,7 +1456,7 @@ Highlight git diffs on the fly
   :custom
   (org-roam-directory "/cs/priv/repos/roam/org")
   (org-roam-completion-everywhere t)
-  (org-roam-dailies-directory "journal")
+  ;; (org-roam-dailies-directory "journal")
   (org-roam-capture-templates
    '(("d" "default" plain
       "%?"
@@ -1467,6 +1481,44 @@ Highlight git diffs on the fly
          ("C-M-i"    . completion-at-point))
   :config
   (org-roam-setup))
+#+end_src
+** org-roam-dailies
+#+begin_src emacs-lisp
+(after! org-roam-dailies
+  (setq org-roam-dailies-directory "journal/")
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry
+           "* %?"
+           :if-new (file+head "%<%Y-%m-%d>.org"
+                              "#+TITLE: %<%Y-%m-%d>\n#+DATE: %<%Y-%m-%d>\n#+FILETAGS: journal")))))
+  (map! :leader
+        :prefix "n"
+        (:prefix ("j" . "journal")
+         :desc "Arbitrary date" "d" #'org-roam-dailies-goto-date
+         :desc "Today"          "j" #'org-roam-dailies-goto-today
+         :desc "Tomorrow"       "m" #'org-roam-dailies-goto-tomorrow
+         :desc "Yesterday"      "y" #'org-roam-dailies-goto-yesterday))
+#+end_src
+** consult-org-roam
+From [[https://keido.site/notes/nothung/]]
+#+begin_src emacs-lisp
+(use-package! consult-org-roam
+   :init
+   (require 'consult-org-roam)
+   ;; Activate the minor-mode
+   (consult-org-roam-mode 1)
+   :custom
+   (consult-org-roam-grep-func #'consult-ripgrep)
+   :config
+   ;; Eventually suppress previewing for certain functions
+   (consult-customize
+    consult-org-roam-forward-links
+    :preview-key (kbd "M-.")))
+
+(map! :leader
+      :prefix "m r"
+      "s" #'consult-org-roam-search
+      "b" #'consult-org-roam-backlinks)
 #+end_src
 ** Functions
 #+begin_src emacs-lisp
@@ -2018,14 +2070,35 @@ Replace ~I-search~ by swiper
    "C-p" #'company-select-previous-or-abort
    "C-e" #'company-complete
    "TAB" #'company-complete-common-or-cycle)
-
   :diminish company-mode
   :config
-  (setq-default company-dabbrev-downcase nil)
-  (setq-default company-search-filtering t)
-  ;; (setq-default company-global-modes '(not org-mode))
-  (global-company-mode))
+  (global-company-mode 0)
+  (setq ;; Only 2 letters required for completion to activate.
+        company-minimum-prefix-length 2
 
+        ;; Search other buffers for completion candidates
+        company-dabbrev-other-buffers t
+
+        ;; M-⟪num⟫ to select an option according to its number.
+        company-show-numbers t
+
+        ;; Edge of the completion list cycles around.
+        company-selection-wrap-around t
+
+        ;; Do not downcase completions by default.
+        company-dabbrev-downcase nil
+
+        ;; Even if I write something with the ‘wrong’ case,
+        ;; provide the ‘correct’ casing.
+        company-dabbrev-ignore-case t
+
+        ;; Immediately activate completion.
+        company-idle-delay 0
+
+        company-dabbrev-downcase nil
+        company-search-filtering t))
+  ;; (setq-default company-global-modes '(not org-mode))
+  (add-hook 'prog-mode-hook 'company-mode)
 #+end_src
 ** company-box
 #+begin_src emacs-lisp
