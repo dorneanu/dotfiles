@@ -28,7 +28,7 @@
 ;; Tiddlywiki folder
 (setq tiddlywiki-directory "/cs/priv/repos/brainfck.org/")
 
-(setq auth-sources '("~/.authinfo.gpg"))
+(setq auth-sources '("~/.authinfo.gpg", (password-store)))
 #+end_src
 ** Startup performance
 *** measure startup speed                                                     :disabled:
@@ -281,6 +281,19 @@ Run garbage collection when Emacs is unfocused
 *** dictcc
 #+begin_src emacs-lisp
 (my-leader-def "m l d" 'dictcc)
+#+end_src
+*** ejira
+#+begin_src emacs-lisp
+(my-leader-def
+  :infix "m j"
+   "o" 'ejira-browse-issue-under-point
+   "f" 'ejira-focus-item-under-point
+   "p" 'ejira-pull-item-under-point
+   "x" 'ejira-push-item-under-point
+   "P" 'ejira-progress-issue
+   "c" 'ejira-add-comment
+   "u" 'ejira-update-my-projects
+)
 #+end_src
 *** lsp
 #+begin_src emacs-lisp
@@ -2871,14 +2884,6 @@ Add some goodies to elfeed
    ejira-todo-states-alist   '(("To Do"       . 1)
                                ("In Progress" . 2)
                                ("Done"        . 3)))
-  :bind (:map org-mode-map
-   ("C-x j o" . ejira-browse-issue-under-point)
-   ("C-x j f" . ejira-focus-item-under-point)
-   ("C-x j p" . ejira-pull-item-under-point)
-   ("C-x j x" . ejira-push-item-under-point)
-   ("C-x j P" . ejira-progress-issue)
-   ("C-x j c" . ejira-add-comment)
-   ("C-x j u" . ejira-update-my-projects))
   :config
   ;; Tries to auto-set custom fields by looking into /editmeta
   ;; of an issue and an epic.
@@ -2893,7 +2898,7 @@ Add some goodies to elfeed
 
   ;; Make the issues visisble in your agenda by adding `ejira-org-directory'
   ;; into your `org-agenda-files'.
-  (add-to-list 'org-agenda-files ejira-org-directory)
+  ;; (add-to-list 'org-agenda-files ejira-org-directory)
 
   ;; Add an agenda view to browse the issues that
   ;; (org-add-agenda-custom-command
@@ -2901,6 +2906,120 @@ Add some goodies to elfeed
   ;;    ((ejira-jql "resolution = unresolved and assignee = currentUser()"
   ;;                ((org-agenda-overriding-header "Assigned to me"))))))
   )
+
+#+end_src
+*** mu4e
+#+begin_src emacs-lisp
+(use-package mu4e
+  ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
+  ;; :defer 20 ; Wait until 20 seconds after startup
+  :config
+
+
+  ;; This is set to 't' to avoid mail syncing issues when using mbsync
+  ;; (setq mu4e-change-filenames-when-moving t)
+
+  ;; Refresh mail using isync every 10 minutes
+  (setq mu4e-update-interval (* 10 60))
+  (setq mu4e-get-mail-command "mbsync -a")
+  (setq mu4e-maildir "/cs/priv/mail")
+
+  ;; Set date format (header view)
+  (setq mu4e-headers-date-format "%F"))
+
+
+;; Use password store (especially for SMTP passwords)
+(after! auth-source
+    (setq auth-sources '(password-store))
+)
+  ;; (setq mu4e-drafts-folder "/[Gmail]/Drafts")
+  ;; (setq mu4e-sent-folder   "/[Gmail]/Sent Mail")
+  ;; (setq mu4e-refile-folder "/[Gmail]/All Mail")
+  ;; (setq mu4e-trash-folder  "/[Gmail]/Trash")
+
+  ;; (setq mu4e-maildir-shortcuts
+  ;;       '(("/Inbox"             . ?i)
+  ;;         ("/[Gmail]/Sent Mail" . ?s)
+  ;;         ("/[Gmail]/Trash"     . ?t)
+  ;;         ("/[Gmail]/Drafts"    . ?d)
+  ;;         ("/[Gmail]/All Mail"  . ?a))))
+#+end_src
+**** gmail
+#+begin_src emacs-lisp
+;; (set-email-account! "gmail"
+;;  '((mu4e-sent-folder       . "/[Gmail]/sent")
+;;    (mu4e-trash-folder      . "/[Gmail]/bin")
+;;    (smtpmail-smtp-user     . (+pass-get-secret "mail/gmail/personal/username")))
+;;  t)
+#+end_src
+**** variomedia
+#+begin_src emacs-lisp
+;; (set-email-account! "variomedia"
+;;  '((mu4e-sent-folder       . "/variomedia/sent")
+;;    (mu4e-trash-folder      . "/variomedia/bin")
+;;    (smtpmail-smtp-user     . (+pass-get-secret "mail/personal/username")))
+;;  t)
+
+#+end_src
+**** contexts
+#+begin_src emacs-lisp
+ (setq mu4e-contexts
+       `( ,(make-mu4e-context
+            :name "gmail"
+            :enter-func (lambda () (mu4e-message "Entering gmail context"))
+            :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+            ;; we match based on the contact-fields of the message
+            :match-func
+            (lambda (msg)
+              (when msg
+                (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+            :vars `((user-mail-address . ,(+pass-get-secret "mail/gmail/personal/username"))
+                    (user-full-name    . "Cyneox")
+                    (smtpmail-smtp-user . ,(+pass-get-secret "mail/gmail/personal/username"))
+                    (smtpmail-smtp-server  . "smtp.gmail.com")
+                    (smtpmail-smtp-service . 465)
+                    (smtpmail-stream-type  . ssl)
+                    (mu4e-compose-signature . "Cyneox via Gmail")
+                    (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                    (mu4e-sent-folder  . "/[Gmail]/sent")
+                    (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                    (mu4e-trash-folder  . "/[Gmail]/bin")))
+          ,(make-mu4e-context
+            :name "variomedia"
+            :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+            :match-func
+            (lambda (msg)
+              (when msg
+                (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+            :vars `((user-mail-address . ,(+pass-get-secret "mail/personal/username"))
+                    (user-full-name    . "Victor Dorneanu")
+                    (smtpmail-smtp-user . ,(+pass-get-secret "mail/personal/username"))
+                    (smtpmail-smtp-server  . "smtp.variomedia.de")
+                    (smtpmail-smtp-service . 465)
+                    (smtpmail-stream-type  . ssl)
+                    (mu4e-compose-signature . "Victor via Emacs")
+                    (mu4e-drafts-folder  . "/variomedia/drafts")
+                    (mu4e-sent-folder  . "/variomedia/sent")
+                    (mu4e-trash-folder  . "/variomedia/bin")))
+          ,(make-mu4e-context
+            :name "cashlink"
+            :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+            :match-func
+            (lambda (msg)
+              (when msg
+                (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+            :vars `((user-mail-address . ,(+pass-get-secret "mail/gmail/work/username"))
+                    (user-full-name    . "Victor Dorneanu")
+                    (smtpmail-smtp-user . ,(+pass-get-secret "mail/gmail/work/username"))
+                    (smtpmail-smtp-server  . "smtp.gmail.com")
+                    (smtpmail-smtp-service . 465)
+                    (smtpmail-stream-type  . ssl)
+                    (mu4e-compose-signature . "Victor via Emacs")
+                    (mu4e-drafts-folder  . "/cashlink/drafts")
+                    (mu4e-sent-folder  . "/cashlink/sent")
+                    (mu4e-trash-folder  . "/cashlink/bin")
+                    (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Senior Security Engineer @ Cashlink\n"))
+                    ))))
 #+end_src
 ** Bookmarks
 *** pocket-reader.el
