@@ -457,6 +457,34 @@ Current pattern: %`evil-mc-pattern
 (use-package avy
   :commands (avy-goto-char avy-goto-word-0 avy-goto-line))
 #+end_src
+** dired
+Setup dired
+#+begin_src emacs-lisp
+(use-package dired
+  :commands (dired dired-jump)
+  :bind (:map dired-mode-map
+              ("h" . dired-up-directory)
+              ("j" . dired-next-line)
+              ("k" . dired-previous-line)
+              ("l" . dired-single-buffer)
+              ("TAB" . dired-subtree-toggle))
+  :delight "Dired"
+  :custom
+  (dired-auto-revert-buffer t)
+  (dired-dwim-target t)
+  (dired-hide-details-hide-symlink-targets nil)
+  (dired-listing-switches "-alh --group-directories-first")
+  (dired-ls-F-marks-symlinks nil)
+  (dired-recursive-copies 'always))
+#+end_src
+
+Setup dired-subtree
+
+#+begin_src emacs-lisp
+(use-package dired-subtree
+  :after dired)
+#+end_src
+
 * UI
 ** Minimal interface
 #+begin_src emacs-lisp
@@ -711,6 +739,10 @@ I have to load by defining a ~load-path~.
   (setq org-return-follows-link t)
   (setq org-src-tab-acts-natively nil)
 
+  ;; Toogle org links display
+  ;; (org-toggle-link-display)
+  (setq org-link-descriptive t)
+
   ;; right-align tags
   (setq org-tags-column 80)
   (setq org-agenda-tags-column 80)
@@ -768,9 +800,6 @@ I have to load by defining a ~load-path~.
   ;; Default column view headings
   (setq org-columns-default-format "%50ITEM(Task) %10TODO %10CLOCKSUM %18CLOSED %18TIMESTAMP_IA")
 
-  ;; Toogle org links display
-  ;; (org-toggle-link-display)
-  (setq org-descriptive-links t)
 
   <<org-keys-setup>>
   <<org-productivity-setup>>)
@@ -869,10 +898,9 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
    org-agenda-start-on-weekday nil
 
    ;; Clock report settings
-   ;; org-agenda-start-with-clockreport-mode t
-   ;; org-clock-report-include-clocking-task t
-   ;; org-agenda-clockreport-parameter-plist
-   ;; '(:link t :maxlevel 6 :fileskip0 t :compact nil :narrow 90)
+   org-agenda-start-with-clockreport-mode t
+   org-clock-report-include-clocking-task t
+   org-agenda-clockreport-parameter-plist '(:link nil :maxlevel 6 :fileskip0 t :compact nil)
 
    ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
    org-agenda-prefix-format
@@ -910,6 +938,9 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 (use-package org-super-agenda
   :after org-agenda
   :config
+  ;; Toogle org links display
+  ;; (org-toggle-link-display)
+  (setq org-link-descriptive t)
   (setq org-agenda-custom-commands
         '(
           ("a" "Agenda"
@@ -2062,6 +2093,47 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
 ;; Make sure we don't have to ESC multiple times
 ;; (define-key ivy-minibuffer-map (kbd "<escape>") 'minibuffer-keyboard-quit))
 #+end_src
+** consult
+From [[https://github.com/rememberYou/.emacs.d/blob/master/config.org]]
+
+#+begin_src emacs-lisp
+(use-package consult
+  :after projectile
+  :bind  (;; Related to the control commands.
+          ("<help> a" . consult-apropos)
+          ("C-x b" . consult-buffer)
+          ("C-x M-:" . consult-complex-command)
+          ("C-c k" . consult-kmacro)
+          ;; Related to the navigation.
+          ("M-g a" . consult-org-agenda)
+          ("M-g e" . consult-error)
+          ("M-g g" . consult-goto-line)
+          ("M-g h" . consult-org-heading)
+          ("M-g i" . consult-imenu)
+          ("M-g k" . consult-global-mark)
+          ("M-g l" . consult-line)
+          ("M-g m" . consult-mark)
+          ("M-g o" . consult-outline)
+          ("M-g I" . consult-project-imenu)
+          ;; Related to the search and selection.
+          ("M-s G" . consult-git-grep)
+          ("M-s g" . consult-grep)
+          ("M-s k" . consult-keep-lines)
+          ("M-s l" . consult-locate)
+          ("M-s m" . consult-multi-occur)
+          ("M-s r" . consult-ripgrep)
+          ("M-s u" . consult-focus-lines)
+          ("M-s f" . consult-find))
+  :custom
+  (completion-in-region-function #'consult-completion-in-region)
+  (consult-narrow-key "<")
+  (consult-project-root-function #'projectile-project-root)
+  ;; Provides consistent display for both `consult-register' and the register
+  ;; preview when editing registers.
+  (register-preview-delay 0)
+  (register-preview-function #'consult-register-preview))
+
+#+end_src
 ** swipper
 Replace ~I-search~ by swiper
 
@@ -2925,7 +2997,14 @@ Add some goodies to elfeed
   (setq mu4e-maildir "/cs/priv/mail")
 
   ;; Set date format (header view)
-  (setq mu4e-headers-date-format "%F"))
+  (setq mu4e-headers-date-format "%F")
+
+  ;; How should html context be converted
+  (setq mu4e-html2text-command "/usr/local/bin/w3m -T text/html")
+
+  ;; Improve rendering of rich-text messages (html)
+  (setq shr-color-visible-luminance-min 80))
+
 
 
 ;; Use password store (especially for SMTP passwords)
