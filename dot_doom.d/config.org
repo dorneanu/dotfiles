@@ -730,7 +730,7 @@ I have to load by defining a ~load-path~.
 ** Basic
 #+begin_src emacs-lisp :noweb yes
 (use-package org
-  :defer t
+  ;; :defer t
   :init
   (setq org-directory "~/work/repos/org/")
   :config
@@ -2985,9 +2985,15 @@ Add some goodies to elfeed
 (use-package mu4e
   ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
   ;; :defer 20 ; Wait until 20 seconds after startup
+  :custom
+  (mu4e-use-fancy-chars t)
+  (mu4e-headers-fields
+   '((:account    . 13)
+     (:human-date . 12)
+     (:flags      . 6)
+     (:from       . 22)
+     (:subject    . nil)))
   :config
-
-
   ;; This is set to 't' to avoid mail syncing issues when using mbsync
   ;; (setq mu4e-change-filenames-when-moving t)
 
@@ -2996,11 +3002,17 @@ Add some goodies to elfeed
   (setq mu4e-get-mail-command "mbsync -a")
   (setq mu4e-maildir "/cs/priv/mail")
 
+  ;; Set citation settings
+  (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+
   ;; Set date format (header view)
   (setq mu4e-headers-date-format "%F")
 
   ;; How should html context be converted
-  (setq mu4e-html2text-command "/usr/local/bin/w3m -T text/html")
+  ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+  (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
 
   ;; Improve rendering of rich-text messages (html)
   (setq shr-color-visible-luminance-min 80))
@@ -3022,23 +3034,6 @@ Add some goodies to elfeed
   ;;         ("/[Gmail]/Trash"     . ?t)
   ;;         ("/[Gmail]/Drafts"    . ?d)
   ;;         ("/[Gmail]/All Mail"  . ?a))))
-#+end_src
-**** gmail
-#+begin_src emacs-lisp
-;; (set-email-account! "gmail"
-;;  '((mu4e-sent-folder       . "/[Gmail]/sent")
-;;    (mu4e-trash-folder      . "/[Gmail]/bin")
-;;    (smtpmail-smtp-user     . (+pass-get-secret "mail/gmail/personal/username")))
-;;  t)
-#+end_src
-**** variomedia
-#+begin_src emacs-lisp
-;; (set-email-account! "variomedia"
-;;  '((mu4e-sent-folder       . "/variomedia/sent")
-;;    (mu4e-trash-folder      . "/variomedia/bin")
-;;    (smtpmail-smtp-user     . (+pass-get-secret "mail/personal/username")))
-;;  t)
-
 #+end_src
 **** contexts
 #+begin_src emacs-lisp
