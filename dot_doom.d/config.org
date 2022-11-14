@@ -7,7 +7,11 @@
 ** Defaults
 #+begin_src emacs-lisp
 ;; UTF-8 everywhere
-(set-default-coding-systems 'utf-8)
+(set-default-coding-systems 'utf-8)     ; Default to utf-8 encoding
+(prefer-coding-system       'utf-8)     ; Add utf-8 at the front for automatic detection.
+(set-terminal-coding-system 'utf-8)     ; Set coding system of terminal output
+(set-keyboard-coding-system 'utf-8)     ; Set coding system for keyboard input on TERMINAL
+(set-language-environment "English")    ; Set up multilingual environment
 
 ;; ;; Escape cancels everything
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
@@ -17,6 +21,14 @@
 
 ;; ;; Revert dired and other buffers
 ;; (setq global-auto-revert-non-file-buffers t)
+#+end_src
+** Recovery
+#+begin_src emacs-lisp
+(setq auto-save-list-file-prefix ; Prefix for generating auto-save-list-file-name
+      (expand-file-name ".auto-save-list/.saves-" user-emacs-directory)
+      auto-save-default t        ; Auto-save every buffer that visits a file
+      auto-save-timeout 20       ; Number of seconds between auto-save
+      auto-save-interval 200)    ; Number of keystrokes between auto-saves
 #+end_src
 ** Variables
 #+begin_src emacs-lisp
@@ -327,6 +339,29 @@ Run garbage collection when Emacs is unfocused
 (setq select-enable-clipboard t)
 (setq mouse-yank-at-point t)
 #+end_src
+** Regions
+#+begin_src emacs-lisp
+(use-package copy-as-format
+  :bind
+  (:map mode-specific-map
+        :prefix-map copy-as-format-prefix-map
+        :prefix "f"
+        ("f" . copy-as-format)
+        ("a" . copy-as-format-asciidoc)
+        ("b" . copy-as-format-bitbucket)
+        ("d" . copy-as-format-disqus)
+        ("g" . copy-as-format-github)
+        ("l" . copy-as-format-gitlab)
+        ("c" . copy-as-format-hipchat)
+        ("h" . copy-as-format-html)
+        ("j" . copy-as-format-jira)
+        ("m" . copy-as-format-markdown)
+        ("w" . copy-as-format-mediawiki)
+        ("o" . copy-as-format-org-mode)
+        ("p" . copy-as-format-pod)
+        ("r" . copy-as-format-rst)
+        ("s" . copy-as-format-slack)))
+#+end_src
 ** vundo
 #+begin_src emacs-lisp
 (use-package vundo)
@@ -483,6 +518,18 @@ Setup dired-subtree
 #+begin_src emacs-lisp
 (use-package dired-subtree
   :after dired)
+#+end_src
+** quick jumps
+#+begin_src emacs-lisp
+(use-package link-hint
+  :bind
+  (("<XF86Search>" . link-hint-open-link)
+   ("S-<XF86Search>" . link-hint-copy-link)
+   :map mode-specific-map
+   :prefix-map link-hint-keymap
+   :prefix "l"
+   ("o" . link-hint-open-link)
+   ("c" . link-hint-copy-link)))
 #+end_src
 
 * UI
@@ -901,6 +948,14 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
    org-agenda-start-with-clockreport-mode t
    org-clock-report-include-clocking-task t
    org-agenda-clockreport-parameter-plist '(:link nil :maxlevel 6 :fileskip0 t :compact nil)
+
+   ;; Time grid
+   ;; (setq org-agenda-time-grid
+   ;;       '((daily today require-timed)
+   ;;         (0900 01000 1100 1200 1300 1400 1500 1600 1700 1800 1900 2000 2100 2200 2300 2400)
+   ;;         "-"
+   ;;         "────────────────"))
+
 
    ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
    org-agenda-prefix-format
@@ -1465,6 +1520,12 @@ A package to add more evil-mode keybindings to org-mode.
 
 (use-package git-timemachine
   :commands (git-timemachine))
+
+(use-package browse-at-remote
+  :bind
+  (:map link-hint-keymap
+        ("r" . browse-at-remote)
+        ("k" . browse-at-remote-kill)))
 #+end_src
 *** diff-hl
 Highlight git diffs on the fly
@@ -1722,6 +1783,24 @@ References:
   (use-package gotest)
   (use-package go-tag
       :config (setq go-tag-args (list "-transform" "camelcase")))
+
+(use-package company-go
+  :after go-mode
+  :defer t
+  :config
+  (push 'company-go company-backends))
+
+(use-package go-guru
+  :hook
+  (go-mode . go-guru-hl-identifier-mode))
+
+(use-package flycheck-golangci-lint
+  :hook
+  (go-mode . flycheck-golangci-lint-setup))
+
+(use-package go-eldoc
+  :hook
+  (go-mode . go-eldoc-setup))
 #+end_src
 
 ** Python
@@ -2088,7 +2167,9 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
 #+begin_src emacs-lisp
 (use-package counsel
   :after ivy
-  :bind (("C-c g" . counsel-google)))
+  :bind (
+         ("C-c g" . counsel-google)
+         ("C-c q" . counsel-org-tag)))
 
 ;; Make sure we don't have to ESC multiple times
 ;; (define-key ivy-minibuffer-map (kbd "<escape>") 'minibuffer-keyboard-quit))
