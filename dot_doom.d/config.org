@@ -40,6 +40,8 @@
 ;; Tiddlywiki folder
 (setq tiddlywiki-directory "/cs/priv/repos/brainfck.org/")
 
+(use-package auth-source-pass
+    :config  (auth-source-pass-enable))
 (setq auth-sources '("~/.authinfo.gpg", (password-store)))
 #+end_src
 ** Startup performance
@@ -410,6 +412,12 @@ Run garbage collection when Emacs is unfocused
   (setq yankpad-file (concat org-directory "yankpad.org"))
   (yankpad-reload)
   (add-to-list 'company-backends #'company-yankpad))
+
+(map! :after yankpad
+      :nmi "C-x C-y" #'yankpad-insert
+      :leader
+      :desc "yankpad insert"
+      "m y" #'yankpad-insert)
 #+end_src
 ** iedit
 Quick, fast edits of every symbol selected.
@@ -453,6 +461,48 @@ Current pattern: %`evil-mc-pattern
 
 (my-leader-def "mmc" 'hungyi/hydra-multiple-cursors/body)
 #+end_src
+** smartparens
+#+begin_src emacs-lisp
+;; from https://github.com/dakra/dmacs
+(use-package smartparens
+  :defer 1
+  :hook ((
+          emacs-lisp-mode lisp-mode lisp-data-mode clojure-mode cider-repl-mode hy-mode
+          prolog-mode go-mode cc-mode python-mode
+          typescript-mode json-mode javascript-mode java-mode
+          ) . smartparens-strict-mode)
+  ;; :hook (prog-mode . smartparens-strict-mode)
+  :bind (:map smartparens-mode-map
+         ;; This is the paredit mode map minus a few key bindings
+         ;; that I use in other modes (e.g. M-?)
+         ("C-M-f" . sp-forward-sexp) ;; navigation
+         ("C-M-b" . sp-backward-sexp)
+         ("C-M-u" . sp-backward-up-sexp)
+         ("C-M-d" . sp-down-sexp)
+         ("C-M-p" . sp-backward-down-sexp)
+         ("C-M-n" . sp-up-sexp)
+         ("C-w" . whole-line-or-region-sp-kill-region)
+         ("M-s" . sp-splice-sexp) ;; depth-changing commands
+         ("M-r" . sp-splice-sexp-killing-around)
+         ("M-(" . sp-wrap-round)
+         ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
+         ("C-<right>" . sp-forward-slurp-sexp)
+         ("C-}" . sp-forward-barf-sexp)
+         ("C-<left>" . sp-forward-barf-sexp)
+         ("C-(" . sp-backward-slurp-sexp)
+         ("C-M-<left>" . sp-backward-slurp-sexp)
+         ("C-{" . sp-backward-barf-sexp)
+         ("C-M-<right>" . sp-backward-barf-sexp)
+         ("M-S" . sp-split-sexp) ;; misc
+         ("M-j" . sp-join-sexp))
+  :config
+  (require 'smartparens-config)
+  (setq sp-base-key-bindings 'paredit)
+  (setq sp-autoskip-closing-pair 'always)
+
+  ;; use smartparens-mode everywhere
+  (smartparens-global-mode))
+#+end_src
 * Reading
 ** olivetti-mode
 #+begin_src emacs-lisp
@@ -484,6 +534,14 @@ Current pattern: %`evil-mc-pattern
   ;; For saving words to the personal dictionary, don't infer it from
   ;; the locale, otherwise it would save to ~/.hunspell_de_DE.
   (setq ispell-personal-dictionary "~/.hunspell_personal"))
+
+#+end_src
+** epub
+#+begin_src emacs-lisp
+(use-package nov
+  :mode ("\\.epub\\'" . nov-mode))
+
+(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
 
 #+end_src
 * Navigation
@@ -588,22 +646,40 @@ Highlight the current line
 ** Theme
 Set theme
 #+begin_src emacs-lisp
-(setq doom-theme 'doom-material)
+;; (setq doom-theme 'kaolin-dark)
+(use-package doom-themes
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-one t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  ;; (doom-themes-neotree-config)
+  ;; or for treemacs users
+  (setq doom-themes-treemacs-theme "Netbeans") ; use "doom-colors" for less minimal icon theme
+  (doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 #+end_src
 *** Fonts
 #+begin_src emacs-lisp
 (setq doom-font (font-spec :family "Source Code Pro" :size 15))
+;; (setq doom-font (font-spec :family "Fira Mono" :size 11))
+;; (setq doom-unicode-font (font-spec :family "Fira Mono"))
 #+end_src
 **** emojify
 #+begin_src emacs-lisp
-(use-package emojify
-  :bind (("C-x c ." . emojify-insert-emoji))
-  :config
-  (when (member "Noto Color Emoji" (font-family-list))
-    (set-fontset-font
-     t 'symbol (font-spec :family "Noto Color Emoji") nil 'prepend))
-  (setq emojify-display-style 'unicode)
-  (setq emojify-emoji-styles '(unicode)))
+;; (use-package emojify
+;;   :bind (("C-x c ." . emojify-insert-emoji))
+;;   :config
+;;   (when (member "Noto Color Emoji" (font-family-list))
+;;     (set-fontset-font
+;;      t 'symbol (font-spec :family "Noto Color Emoji") nil 'prepend))
+;;   (setq emojify-display-style 'unicode)
+;;   (setq emojify-emoji-styles '(unicode)))
 #+end_src
 *** Icons
 #+begin_src emacs-lisp
@@ -626,7 +702,11 @@ Set theme
 #+end_src
 *** treemacs theme
 #+begin_src emacs-lisp
-(setq doom-themes-treemacs-theme "doom-colors")
+(with-eval-after-load 'doom-themes
+  (doom-themes-treemacs-config))
+;; (setq doom-themes-treemacs-theme "doom-atom")
+(setq doom-themes-treemacs-enable-variable-pitch nil)
+;; (setq treemacs-no-png-images t)
 #+end_src
 ** Dimmer
 #+begin_src emacs-lisp
@@ -1829,6 +1909,10 @@ References:
 ;; On save call black
 (python-black-on-save-mode)
 #+end_src
+*** ipython
+#+begin_src emacs-lisp
+(use-package ein)
+#+end_src
 ** TypeScript
 #+begin_src emacs-lisp
 (use-package typescript-mode
@@ -3027,7 +3111,7 @@ Add some goodies to elfeed
   (setq
    ;; NOTE, this directory needs to be in `org-agenda-files'`
    ejira-org-directory       org-directory
-   ejira-projects            '("TECH" "SEC")
+   ejira-projects            '("TECH" "SEC" "CP")
 
    ejira-priorities-alist    '(("Highest" . ?A)
                                ("High"    . ?B)
