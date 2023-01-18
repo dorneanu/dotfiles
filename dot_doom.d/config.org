@@ -3297,6 +3297,7 @@ Add some goodies to elfeed
       :nm "TAB" #'pocket-reader-open-url
       :nm "tr" #'pocket-reader-remove-tags
       :nm "tN" #'dorneanu/pocket-reader-remove-next
+      :nm "mm" #'dorneanu/pocket-play-with-mpv
       :nm "C-b" #'dorneanu/tiddlywiki-add-bookmark
       :nm "ta" #'pocket-reader-add-tags
       :nm "gr" #'pocket-reader-refresh
@@ -3356,6 +3357,20 @@ Add some goodies to elfeed
   "Show getpocket items to be shared"
   (interactive)
   (pocket-reader-search "t:2read" :add nil))
+
+(defun dorneanu/pocket-play-with-mpv ()
+  "Play entry link with mpv."
+  (interactive)
+  (let* ((quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720") nil nil))
+        (item (ht-get pocket-reader-items (tabulated-list-get-id)))
+        (url (pocket-reader--get-url item)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." url quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
+
 #+end_src
 ** Twitter
 #+begin_src emacs-lisp
