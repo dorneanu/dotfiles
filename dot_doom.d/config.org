@@ -21,6 +21,8 @@
 
 ;; ;; Revert dired and other buffers
 ;; (setq global-auto-revert-non-file-buffers t)
+
+
 #+end_src
 ** Recovery
 #+begin_src emacs-lisp
@@ -43,6 +45,9 @@
 (use-package auth-source-pass
     :config  (auth-source-pass-enable))
 (setq auth-sources '("~/.authinfo.gpg", (password-store)))
+
+;; Enable local Variables
+(setq enable-local-variables t)
 #+end_src
 ** Startup performance
 *** measure startup speed                                                     :disabled:
@@ -68,16 +73,16 @@ Setting variables
 Run garbage collection when Emacs is unfocused
 
 #+begin_src emacs-lisp
-(use-package gcmh
-  :diminish gcmh-mode
-  :config
-  (setq gcmh-idle-delay 5
-        gcmh-high-cons-threshold (* 16 1024 1024))  ; 16mb
-  (gcmh-mode 1))
+;; (use-package gcmh
+;;   :diminish gcmh-mode
+;;   :config
+;;   (setq gcmh-idle-delay 5
+;;         gcmh-high-cons-threshold (* 16 1024 1024))  ; 16mb
+;;   (gcmh-mode 1))
 
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (setq gc-cons-percentage 0.1))) ;; Default value for `gc-cons-percentage'
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (setq gc-cons-percentage 0.1))) ;; Default value for `gc-cons-percentage'
 #+end_src
 
 * Keyboard Bindings
@@ -439,15 +444,14 @@ Run garbage collection when Emacs is unfocused
 *** yankpad
 #+begin_src emacs-lisp
 (use-package yankpad
-  :commands (yankpad-expand)
+  :bind
+  ("C-x C-y"  . yankpad-insert)
   :config
   (setq yankpad-file (concat org-directory "yankpad.org"))
   (yankpad-reload)
   (add-to-list 'company-backends #'company-yankpad))
 
-(map! :after yankpad
-      :nmi "C-x C-y" #'yankpad-insert
-      :leader
+(map! :leader
       :desc "yankpad insert"
       "m y" #'yankpad-insert)
 #+end_src
@@ -585,6 +589,23 @@ Current pattern: %`evil-mc-pattern
 
 (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
 
+#+end_src
+** eww
+#+begin_src emacs-lisp
+(use-package shrface
+  :defer t
+  :config
+  (shrface-basic)
+  (shrface-trial)
+  (shrface-default-keybindings) ; setup default keybindings
+  (setq shrface-href-versatile t))
+
+(use-package eww
+  :defer t
+  :init
+  (add-hook 'eww-after-render-hook #'shrface-mode)
+  :config
+  (require 'shrface))
 #+end_src
 * Navigation
 ** avy
@@ -937,6 +958,11 @@ I have to load by defining a ~load-path~.
   ;; disable org-babel execution while exporting
   (setq org-confirm-babel-evaluate nil)
   (setq org-export-use-babel t)
+
+  ;; Indentation and formatting in org babel code blocks
+  (setq org-edit-src-content-indentation 0
+        org-src-tab-acts-natively t
+        org-src-preserve-indentation t)
 
   ;; Use the special C-a, C-e and C-k definitions for Org, which enable some special behavior in headings.
   (setq org-special-ctrl-a/e t)
