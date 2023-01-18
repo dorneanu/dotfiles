@@ -2791,7 +2791,7 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
 
 ;; Update elfeed regularly
 ;; https://www.reddit.com/r/emacs/comments/bvbp92/is_there_a_simple_way_to_get_elfeed_to_update/
-;; (add-hook 'emacs-startup-hook (lambda () (run-at-time 5 600 'elfeed-update)))
+(add-hook 'emacs-startup-hook (lambda () (run-at-time 5 3600 'elfeed-update)))
 #+end_src
 
 **** TODO rdrview
