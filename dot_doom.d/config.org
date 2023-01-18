@@ -3363,6 +3363,18 @@ Add some goodies to elfeed
 ;; I'm not sure about this
 (setq twittering-allow-insecure-server-cert t)
 #+end_src
+** ChatGPT
+#+begin_src emacs-lisp
+(use-package! chatgpt
+  :defer t
+  :config
+  (unless (boundp 'python-interpreter)
+    (defvaralias 'python-interpreter 'python-shell-interpreter))
+  (setq chatgpt-repo-path (expand-file-name "straight/repos/ChatGPT.el/" doom-local-dir))
+  (set-popup-rule! (regexp-quote "*ChatGPT*")
+    :side 'bottom :size .5 :ttl nil :quit t :modeline nil)
+  :bind ("C-c q" . chatgpt-query))
+#+end_src
 
 * Inspiration
 - https://www.suenkler.info/emacs/emacs-config/
