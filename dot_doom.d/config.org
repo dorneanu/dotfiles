@@ -364,6 +364,38 @@ Run garbage collection when Emacs is unfocused
         ("r" . copy-as-format-rst)
         ("s" . copy-as-format-slack)))
 #+end_src
+*** wrap-region
+#+begin_src emacs-lisp
+(use-package wrap-region
+  :ensure   t
+  :config
+  (wrap-region-global-mode t)
+  (wrap-region-add-wrappers
+   '(("(" ")")
+     ("[" "]")
+     ("{" "}")
+     ("<" ">")
+     ("'" "'")
+     ("\"" "\"")
+     ("‘" "’"   "q")
+     ("“" "”"   "Q")
+     ("*" "*"   "b"   org-mode)                 ; bolden
+     ("*" "*"   "*"   org-mode)                 ; bolden
+     ("/" "/"   "i"   org-mode)                 ; italics
+     ("/" "/"   "/"   org-mode)                 ; italics
+     ("~" "~"   "c"   org-mode)                 ; code
+     ("~" "~"   "~"   org-mode)                 ; code
+     ("=" "="   "v"   org-mode)                 ; verbatim
+     ("=" "="   "="   org-mode)                 ; verbatim
+     ("_" "_"   "u" '(org-mode markdown-mode))  ; underline
+     ("**" "**" "b"   markdown-mode)            ; bolden
+     ("*" "*"   "i"   markdown-mode)            ; italics
+     ("`" "`"   "c" '(markdown-mode ruby-mode)) ; code
+     ("`" "'"   "c"   lisp-mode)                ; code
+     ))
+  :diminish wrap-region-mode)
+
+#+end_src
 ** vundo
 #+begin_src emacs-lisp
 (use-package vundo)
