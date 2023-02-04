@@ -22,6 +22,9 @@
 ;; ;; Revert dired and other buffers
 ;; (setq global-auto-revert-non-file-buffers t)
 
+;; Set utf-8 (fixes ripgrep error)
+(setq default-process-coding-system '(utf-8 . utf-8))
+
 
 #+end_src
 ** Recovery
@@ -600,12 +603,63 @@ Current pattern: %`evil-mc-pattern
   (shrface-default-keybindings) ; setup default keybindings
   (setq shrface-href-versatile t))
 
+;; From https://github.com/howardabrams/dot-files/blob/master/emacs-browser.org
 (use-package eww
   :defer t
+  :bind (("C-c w w" . eww)
+         ("C-c w i" . eww-wiki)
+         ("C-c w l" . eww-follow-link))
   :init
-  (add-hook 'eww-after-render-hook #'shrface-mode)
+  (setq browse-url-browser-function 'eww-browse-url)
+  (setq eww-search-prefix "http://www.google.com/search?q=")
+
+  (defun eww-wiki (text)
+    "Function used to search wikipedia for the given text."
+    (interactive (list (read-string "Wiki for: ")))
+    (eww (format "https://en.m.wikipedia.org/wiki/Special:Search?search=%s"
+                 (url-encode-url text))))
+
   :config
+  (add-hook 'eww-after-render-hook #'shrface-mode)
+  (add-hook 'eww-mode 'ace-link-mode)
   (require 'shrface))
+#+end_src
+** leo
+#+begin_src emacs-lisp
+(use-package leo)
+(map! :leader
+      :prefix "ml"
+      "e" #'leo-translate-word)
+#+end_src
+** wordreference
+#+begin_src emacs-lisp
+(use-package wordreference
+  :bind (:map wordreference-mode-map
+              ("S" . wordreference-switch-source-target-and-search))
+  :config
+  (setq
+   wordreference-source-lang "en"
+   wordreference-target-lang "de"))
+
+(map! :leader
+      :prefix "ml"
+      "w" #'wordreference-search)
+#+end_src
+* Writing
+** powerthesaurus
+#+begin_src emacs-lisp
+;; https://www.powerthesaurus.org/
+(use-package powerthesaurus)
+(map! :leader
+      :prefix "ms"
+      "-" #'powerthesaurus-lookup-word-dwim)
+
+#+end_src
+** COMMENT flyspell-correct
+#+begin_src emacs-lisp
+(use-package flyspell-correct
+  :after flyspell
+  :bind (:map flyspell-mode-map ("C-c m f" . flyspell-correct-wrapper)))
 #+end_src
 * Navigation
 ** avy
@@ -715,7 +769,7 @@ Set theme
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
+  (load-theme 'kaolin-ocean t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -770,6 +824,41 @@ Set theme
 ;; (setq doom-themes-treemacs-theme "doom-atom")
 (setq doom-themes-treemacs-enable-variable-pitch nil)
 ;; (setq treemacs-no-png-images t)
+#+end_src
+*** nano-theme
+#+begin_src emacs-lisp
+(use-package nano-theme)
+#+end_src
+** modeline
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :config
+  (setq doom-modeline-icon t
+        doom-modeline-major-mode-icon t
+        doom-modeline-buffer-file-name-style 'truncate-upto-project
+        doom-modeline-persp-name t
+        doom-modeline-checker-simple-format t
+
+        ;; Whether display environment version or not
+        doom-modeline-env-version t
+
+        ;; Or for individual languages
+        doom-modeline-env-enable-python t
+        doom-modeline-env-enable-go t
+        doom-modeline-env-enable-rust t
+
+        ;; Change the executables to use for the language version string
+        doom-modeline-env-python-executable "python"
+        doom-modeline-env-go-executable "go"
+        doom-modeline-env-rust-executable "rustc"
+
+        ;; Whether display irc notifications or not. Requires `circe' package.
+        doom-modeline-irc t
+        doom-modeline-irc-stylize 'identity
+
+        ;;
+        doom-modeline-checker-simple-format t)
+)
 #+end_src
 ** Dimmer
 #+begin_src emacs-lisp
@@ -1035,13 +1124,13 @@ I have to load by defining a ~load-path~.
 *** org-emphasis-alist
 #+begin_src emacs-lisp
 ;; https://emacs.stackexchange.com/questions/44081/how-to-tweak-org-emphasis-alist-to-put-e-g-neon-yellow-over-bold-or-italic
-;; (setq org-emphasis-alist
-;;   '(("*" org-bold)
-;;     ("/" italic)
-;;     ("_" (:background "deep sky blue" :foreground "MidnightBlue"))
-;;     ("=" org-verbatim verbatim)
-;;     ("~" (:foreground "orange"))
-;;     ("+" (:strike-through t))))
+(setq org-emphasis-alist
+  '(("*" (bold :foreground "orange"))
+    ("/" italic)
+    ;; ("_" (:background "deep sky blue" :foreground "MidnightBlue"))
+    ("=" org-verbatim verbatim)
+    ("~" (:foreground "orange"))
+    ("+" (:strike-through t))))
 #+end_src
 
 ** org-contrib
@@ -1167,6 +1256,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                           '(
                             (:log t)
                             (:discard (:tag "inactive"))
+                            (:discard (:tag "jira"))
                             (:name "Started"
                              :todo ("STARTED")
                              :order 1)
@@ -1699,6 +1789,53 @@ Highlight git diffs on the fly
 ;;   "a h"  'diff-hl-mark-hunk
 ;;   "g h"  'diff-hl-diff-goto-hunk)
 #+end_src
+** vc
+#+begin_src emacs-lisp
+(use-package vc
+  :custom
+  (setq vc-git-root-log-format
+        `("%d %h %ai %an: %s"
+          ;; The first shy group matches the characters drawn by --graph.
+          ;; We use numbered groups because `log-view-message-re' wants the
+          ;; revision number to be group 1.
+          ,(concat "^\\(?:[*/\\|]+\\)\\(?:[*/\\| ]+\\)?"
+                   "\\(?2: ([^)]+) \\)?\\(?1:[0-9a-z]+\\) "
+                   "\\(?4:[0-9]\\{4\\}-[0-9-]\\{4\\}[0-9\s+:-]\\{16\\}\\) "
+                   "\\(?3:.*?\\):")
+          ((1 'log-view-message)
+           (2 'change-log-list nil lax)
+           (3 'change-log-name)
+           (4 'change-log-date))))
+)
+#+end_src
+Show more git log information:
+
+#+begin_src emacs-lisp
+(defvar my-vc-git-log-entry-expand-args '("-1" "--stat" "--no-color")
+  "List of strings to expand Git commit in log-view buffers.
+    See `my-vc-git-expanded-log-entry'.")
+
+(defun my-vc-git-expanded-log-entry (revision)
+  (with-temp-buffer
+    (apply #'vc-git-command t nil nil
+           `("log"
+             ,revision
+             ,@my-vc-git-log-entry-expand-args ,@(ensure-list vc-git-log-switches)
+             "--"))
+    (goto-char (point-min))
+    (unless (eobp)
+      ;; Indent the expanded log entry.
+      (while (re-search-forward "^  " nil t)
+        (replace-match "")
+        (forward-line))
+      (buffer-string))))
+
+;; Now I override the original with the modified behaviour
+(advice-add #'vc-git-expanded-log-entry :override #'my-vc-git-expanded-log-entry)
+
+;; ;; To get the original back, remove the advice:
+;; (advice-remove #'vc-git-expanded-log-entry #'my-vc-git-expanded-log-entry)
+#+end_src
 * PKMS
 ** org-roam
 #+begin_src emacs-lisp
@@ -1706,6 +1843,12 @@ Highlight git diffs on the fly
   :init
   (setq org-roam-v2-ack t)
   (setq org-roam-file-extensions '("org"))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f". org-roam-node-find)
+         ("C-c n s" . #'my/rg-org-roam-directory)
+         ("C-c n i" . org-roam-node-insert)
+         :map org-mode-map
+         ("C-M-i"    . completion-at-point))
   :custom
   (org-roam-directory "/cs/priv/repos/roam/org")
   (org-roam-completion-everywhere t)
@@ -1715,23 +1858,19 @@ Highlight git diffs on the fly
       "%?"
       :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
       :unnarrowed t)
-      ("j" "Journal" plain "%?"
-       :if-new (file+head "journal/%<%Y-%m-%d>.org"
-                "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
-       :immediate-finish t
-       :unnarrowed t)
+     ("j" "Journal" plain "%?"
+      :if-new (file+head "journal/%<%Y-%m-%d>.org"
+                         "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+      :immediate-finish t
+      :unnarrowed t)
      ("b" "book" plain "%?"
       :if-new
       (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
       :immediate-finish t
       :unnarrowed t)
-      ))
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f". org-roam-node-find)
-         ("C-c n s" . #'my/rg-org-roam-directory)
-         ("C-c n i" . org-roam-node-insert)
-         :map org-mode-map
-         ("C-M-i"    . completion-at-point))
+     ("x" "Blog" plain "%?"
+      :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
+      :unnarrowed t)))
   :config
   (org-roam-setup))
 #+end_src
@@ -1766,11 +1905,17 @@ From [[https://keido.site/notes/nothung/]]
    ;; Eventually suppress previewing for certain functions
    (consult-customize
     consult-org-roam-forward-links
+    :preview-key (kbd "M-."))
+   (consult-customize
+    consult-org-roam-search
     :preview-key (kbd "M-.")))
+
 
 (map! :leader
       :prefix "m r"
       "s" #'consult-org-roam-search
+      "f" #'consult-org-roam-forward-links
+      "F" #'consult-org-roam-file-find
       "b" #'consult-org-roam-backlinks)
 #+end_src
 ** Functions
@@ -2136,6 +2281,22 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
   (add-hook 'yaml-mode-hook 'highlight-indent-guides-mode)
   (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode)))
 #+end_src
+**** yaml-pro
+#+begin_src emacs-lisp
+(use-package! yaml-pro
+  :after yaml-mode
+  :hook (yaml-mode . yaml-pro-mode)
+  :config
+  (map! :map yaml-pro-mode-map
+       [remap imenu] #'yaml-pro-jump
+        :n "zc" #'yaml-pro-fold-at-point
+        :n "zo" #'yaml-pro-unfold-at-point
+        :n "gk" #'yaml-pro-prev-subtree
+        :n "gj" #'yaml-pro-next-subtree
+        :n "gK" #'yaml-pro-up-level
+        :n "M-k" #'yaml-pro-move-subtree-up
+        :n "M-j" #'yaml-pro-move-subtree-down))
+#+end_src
 ** Tiddlywiki
 #+begin_src emacs-lisp
 ;; (use-package tiddlywiki-mode
@@ -2364,15 +2525,14 @@ From [[https://github.com/rememberYou/.emacs.d/blob/master/config.org]]
   ;; Provides consistent display for both `consult-register' and the register
   ;; preview when editing registers.
   (register-preview-delay 0)
-  (register-preview-function #'consult-register-preview))
+  (register-preview-function #'consult-register-format))
 
 #+end_src
 ** swipper
-Replace ~I-search~ by swiper
 
 #+begin_src emacs-lisp
-(use-package swiper
-   :bind (("C-s" . swiper-isearch)))
+;; (use-package swiper
+;;    :bind (("C-s" . swiper-isearch)))
 #+end_src
 ** company
 #+begin_src emacs-lisp
@@ -2415,7 +2575,7 @@ Replace ~I-search~ by swiper
 
         company-dabbrev-downcase nil
         company-search-filtering t))
-  ;; (setq-default company-global-modes '(not org-mode))
+  (setq-default company-global-modes '(not org-mode))
   (add-hook 'prog-mode-hook 'company-mode)
 #+end_src
 ** company-box
@@ -3437,7 +3597,7 @@ Add some goodies to elfeed
     (message "Opening %s with height≤%s with mpv..." url quality-val)
     (when (< 0 quality-val)
       (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
-    (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
+    (start-process "mpv" nil "mpv" quality-arg url)))
 
 #+end_src
 ** Twitter
