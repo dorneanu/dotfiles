@@ -1378,6 +1378,10 @@ Excluding =org-contacts= from here because byte compilation breaks it for some r
      (tags   . " %-22c")
      (search . " %-12c"))
    )
+
+   ;; Add extra files to org-agenda-files
+   (add-to-list 'org-agenda-files "~/syncthing/org/brainfck.org")
+
   ;; (add-hook 'org-agenda-mode-hook
   ;;           (lambda ()
   ;;             (visual-line-mode -1)
