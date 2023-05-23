@@ -660,6 +660,33 @@ Current pattern: %`evil-mc-pattern
   (setq ispell-personal-dictionary "~/.hunspell_personal"))
 
 #+end_src
+** visual-fill-column
+#+begin_src emacs-lisp
+(use-package visual-fill-column
+  :bind (("C-c t v" . visual-fill-column-mode))
+  ;; :init
+  ;; (dolist (hook '(visual-line-mode-hook
+  ;;                 prog-mode-hook
+  ;;                 text-mode-hook
+  ;;                 ;;                   help-mode-hook;;未成功
+  ;;                 ))
+  ;;   (add-hook hook #'visual-fill-column-mode))
+  :config
+  (setq-default
+   visual-fill-column-width 110
+   visual-fill-column-center-text t)
+  visual-fill-column-fringes-outside-margins nil)
+
+#+end_src
+** focus-mode
+#+begin_src emacs-lisp
+(use-package focus-mode
+  :bind (
+         ("C-c t F" . focus-mode)
+         ("C-c t f" . focus-change-thing)
+         ("C-c t ." . focus-next-thing))
+)
+#+end_src
 ** epub
 #+begin_src emacs-lisp
 (use-package nov
