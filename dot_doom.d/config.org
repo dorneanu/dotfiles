@@ -1447,6 +1447,9 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                              :deadline past
                              :scheduled past
                              :order 2)
+                            (:name "This Week"
+                             :property ("week")
+                             )
                             (:name "Soon"
                              :deadline feature
                              :scheduled feature
@@ -1475,7 +1478,18 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:name "Projects"
                              :auto-property "project"
                              :order 1)
+                            (:discard (:anything))))))
+            )
+           )
+          ("r" "Resonance"
+           ((alltodo "" ((org-agenda-overriding-header "Resonance calendar")
+                         (org-super-agenda-groups
+                          '(
+                            (:discard (:not (:tag ("video" "article"))))
+                            (:and (:tag ))
+                            (:auto-parent t)
                             (:discard (:anything))))))))
+
           ("w" "Work"
            ((agenda "" ((org-agend-span 'day)
                         (org-super-agenda-groups
@@ -2071,6 +2085,21 @@ Show more git log information:
       (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
       :immediate-finish t
       :unnarrowed t)
+     ;; Idea from https://daryl.wakatara.com/emacs-gtd-flow-evolved/
+     ("r" "Rez" plain "%?"
+      :target (file+head "rez/%<%Y>/${slug}.org"
+                         "#+TITLE: ${title}
+      #+CREATED: %u
+
+      * ${title}
+      :PROPERTIES:
+      :URL:
+      :END:
+
+      * Actions
+      * Quotes
+      * Notes
+      ") :unnarrowed t)
      ("x" "Blog" plain "%?"
       :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
       :unnarrowed t)
