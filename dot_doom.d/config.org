@@ -710,6 +710,7 @@ Current pattern: %`evil-mc-pattern
   :defer t
   :bind (("C-c w w" . eww)
          ("C-c w i" . eww-wiki)
+         ("C-c w c" . browse-url-chrome)
          ("C-c w l" . eww-follow-link))
   :init
   ;; (setq browse-url-browser-function 'eww-browse-url)
