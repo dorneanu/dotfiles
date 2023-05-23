@@ -727,8 +727,9 @@ Current pattern: %`evil-mc-pattern
   (add-hook 'eww-after-render-hook #'shrface-mode)
   (add-hook 'eww-mode 'ace-link-mode)
   (require 'shrface))
+
 #+end_src
-** leo
+**  leo
 #+begin_src emacs-lisp
 (use-package leo)
 (map! :leader
@@ -1160,10 +1161,25 @@ I have to load by defining a ~load-path~.
 (use-package screenshot :load-path "~/.emacs.d/.local/straight/repos/screenshot")
 #+end_src
 * Gnus
+** nntp
+#+begin_src emacs-lisp
+(setq gnus-secondary-select-methods
+      '((nntp "feedbase"
+             (nntp-open-connection-function nntp-open-tls-stream) ; feedbase does not do STARTTLS (yet?)
+             (nntp-port-number 563) ; nntps
+             (nntp-address "feedbase.org"))))
+#+end_src
+** nndiscourse
+#+begin_src emacs-lisp
+;; Applies to first-time Gnus users
+(custom-set-variables '(gnus-select-method
+    (quote (nndiscourse "talk.lagedernation.org" (nndiscourse-scheme "https")))))
+#+end_src
 ** nnreddit
 #+begin_src emacs-lisp
 ;; Applies to first-time Gnus users
-(custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
+;; (custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
+(add-to-list 'gnus-secondary-select-methods '(nnreddit ""))
 #+end_src
 * ORG Mode
 ** Basic
