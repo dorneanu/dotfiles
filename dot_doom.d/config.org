@@ -417,6 +417,35 @@ Load password store (using ~pass~)
   :diminish wrap-region-mode)
 
 #+end_src
+*** expand-region
+#+begin_src emacs-lisp
+;; (use-package expand-region
+;;   :bind
+;;   (("C-=" . er/expand-region)
+;;    ("C-+" . er/contract-region)
+;;    :map mode-specific-map
+;;    :prefix-map region-prefix-map
+;;    :prefix "r"
+;;    ("(" . er/mark-inside-pairs)
+;;    (")" . er/mark-outside-pairs)
+;;    ("'" . er/mark-inside-quotes)
+;;    ([34] . er/mark-outside-quotes) ; it's just a quotation mark
+;;    ("o" . er/mark-org-parent)
+;;    ("u" . er/mark-url)
+;;    ("b" . er/mark-org-code-block)
+;;    ("." . er/mark-method-call)
+;;    (">" . er/mark-next-accessor)
+;;    ("w" . er/mark-word)
+;;    ("d" . er/mark-defun)
+;;    ("e" . er/mark-email)
+;;    ("," . er/mark-symbol)
+;;    ("<" . er/mark-symbol-with-prefix)
+;;    (";" . er/mark-comment)
+;;    ("s" . er/mark-sentence)
+;;    ("S" . er/mark-text-sentence)
+;;    ("p" . er/mark-paragraph)
+;;    ("P" . er/mark-text-paragraph)))
+#+end_src
 ** vundo
 #+begin_src emacs-lisp
 (use-package vundo)
