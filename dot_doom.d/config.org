@@ -3882,10 +3882,29 @@ Add some goodies to elfeed
 (setq chatgpt-shell-openai-key (+pass-get-secret "emacs/ejira-url"))
 
 #+end_src
+** org-ai
+#+begin_src emacs-lisp
+(use-package! org-ai
+  :commands (org-ai-mode
+             org-ai-global-mode)
+  :after auth-source
+  :defer t
+  :init
+  (add-hook 'org-mode-hook #'org-ai-mode) ; enable org-ai in org-mode
+  (org-ai-global-mode) ; installs global keybindings on C-c M-a
+  :custom
+  (org-ai-openai-api-token (substring (shell-command-to-string "pass show emacs/openai-key") 0 -1))
+  :config
+  ;; (setq org-ai-openai-api-token (+pass-get-secret "emacs/openai-key"))
+  (setq org-ai-default-chat-model "gpt-3.5-turbo") ; if you are on the gpt-4 beta:
+  (org-ai-install-yasnippets) ; if you are using yasnippet and want `ai` snippets
+  )
+
+#+end_src
 ** Copilot
 #+begin_src emacs-lisp
 (use-package! copilot
-  :hook (prog-mode . copilot-mode)
+  ;; :hook (prog-mode . copilot-mode)
   :bind (:map copilot-completion-map
               ("<tab>" . 'copilot-accept-completion)
               ("TAB" . 'copilot-accept-completion)
