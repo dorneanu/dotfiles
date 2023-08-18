@@ -87,6 +87,16 @@ Some helpful macro for generating keybindings out of tables:
            "\n")
 #+end_src
 **
+*** Leaders
+Change default Doom leaders:
+
+#+begin_src emacs-lisp
+(setq doom-leader-key "SPC")
+(setq doom-leader-alt-key "M-n")
+
+(setq doom-localleader-key ",")
+(setq doom-localleader-alt-key "M-,")
+#+end_src
 
 *** Buffer switching
 #+begin_src emacs-lisp
@@ -173,7 +183,7 @@ Configure GPG assistant
         org-src-preserve-indentation       t
         org-log-done                       'time
         ;; org-tags-column                    (- 4 (window-width))
-        org-tags-column                    0
+        org-tags-column                    60
         org-directory                      "~/work/repos/org"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
 
@@ -202,6 +212,7 @@ Configure GPG assistant
   (setq org-refile-allow-creating-parent-nodes 'confirm)
 
   <<org-mode-visual-prettify-symbols>>
+
 )
 
 ;; Disable flyspell-mode
@@ -593,8 +604,10 @@ Use pretty symbols
               (add-to-list 'prettify-symbols-alist pair))
             (prettify-symbols-mode)))
 #+end_src
-** Org-roam
-After hearing about it for so many years and thinking I really should
+*** org-roam
+
+
+After hearing *about* it for so many years and thinking I really should
 install it one day, 2023 is finally the year I installed org-roam! For
 those unaware of it, org-roam is a Zettelkasten-style knowledge
 management system based on org-mode.
@@ -649,6 +662,36 @@ Take full advantage of ~consult~
    ("C-c n l" . consult-org-roam-forward-links)
    ("C-c n r" . consult-org-roam-search))
 #+end_src
+*** emphasize test
+#+begin_src emacs-lisp
+(after! org
+
+;; Nice inspiration from https://protesilaos.com/codelog/2022-01-05-custom-face-org-emphasis-alist/
+(defface my-org-emphasis-italic
+  '((default :inherit italic)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#005e00")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#44bc44"))
+  "My italic emphasis for Org.")
+
+(defface my-org-emphasis-underline
+  '((default :inherit underline)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#813e00")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#d0bc00"))
+  "My underline emphasis for Org.")
+
+(setq org-emphasis-alist
+  '(("*" (bold :foreground "Orange" ))
+    ("/" my-org-emphasis-italic)
+    ("_" my-org-emphasis-underline)
+    ("=" (:background "maroon" :foreground "white"))
+    ("~" (:background "deep sky blue" :foreground "MidnightBlue"))
+    ("+" (:strike-through t)))))
+
+#+end_src
 ** TODO org-tempo
 ** org-download
 
@@ -670,8 +713,8 @@ Insert images easily into ORG mode files
 :END:
 ** fonts
 #+begin_src emacs-lisp
-(setq  doom-font (font-spec :family "Fira Mono" :size 11)
-       doom-variable-pitch-font (font-spec :family "Source Code Pro" :size 15)
+(setq  doom-font (font-spec :family "Source Code Pro" :size 15)
+       doom-variable-pitch-font (font-spec :family "Fira Mono" :size 15)
        doom-unicode-font (font-spec :family "Fira Mono"))
 #+end_src
 ** modeline modules
@@ -756,6 +799,20 @@ Use expand-region
    ("S" . er/mark-text-sentence)
    ("p" . er/mark-paragraph)
    ("P" . er/mark-text-paragraph)))
+#+end_src
+*** wrap-region
+#+begin_src emacs-lisp
+(use-package! wrap-region)
+
+;; Enable wrap-region in org omde
+(add-hook 'org-mode-hook #'wrap-region-mode)
+
+(wrap-region-add-wrapper "=" "=" nil 'org-mode)
+(wrap-region-add-wrapper "*" "*" nil 'org-mode)
+(wrap-region-add-wrapper "/" "/" nil 'org-mode)
+(wrap-region-add-wrapper "_" "_" nil 'org-mode)
+(wrap-region-add-wrapper "~" "~" nil 'org-mode)
+(wrap-region-add-wrapper "+" "+" nil 'org-mode)
 #+end_src
 
 * Navigation
@@ -1143,6 +1200,57 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
   (dumb-jump-prefer-searcher 'rg))
 #+end_src
 
+* Completion
+** ivy
+*** Settings
+
+#+begin_src emacs-lisp
+(after! ivy
+  (setq ivy-truncate-lines nil))
+#+end_src
+
+*** Actions
+
+Open buffer/files in horizontal/vertical split using ~ivy-actions~:
+
+#+begin_src emacs-lisp
+;; From https://www.reddit.com/r/emacs/comments/efg362/ivy_open_selection_vertically_or_horizontally/
+(defun find-file-right (filename)
+  (interactive)
+  (split-window-right)
+  (other-window 1)
+  (find-file filename))
+
+(defun find-file-below (filename)
+  (interactive)
+  (split-window-below)
+  (other-window 1)
+  (find-file filename))
+
+(after! ivy
+(ivy-set-actions
+ 'counsel-find-file
+ '(("|" find-file-right "open right")
+   ("%" find-file-below "open below"))))
+
+(after! ivy
+(ivy-set-actions
+ 'counsel-recentf
+ '(("|" find-file-right "open right")
+   ("%" find-file-below "open below"))))
+
+(after! ivy
+(ivy-set-actions
+ 'counsel-buffer-or-recentf
+ '(("|" find-file-right "open right")
+   ("%" find-file-below "open below"))))
+
+(after! ivy
+(ivy-set-actions
+ 'ivy-switch-buffer
+ '(("|" find-file-right "open right")
+   ("%" find-file-below "open below"))))
+#+end_src
 * Auto completion
 ** consult
 #+begin_src emacs-lisp
@@ -1164,6 +1272,7 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
           ("M-g m" . consult-mark)
           ("M-g o" . consult-outline)
           ("M-g I" . consult-project-imenu)
+          ("M-g y" . consult-yank-from-kill-ring)
           ;; Related to the search and selection.
           ;; ("M-f G" . consult-git-grep)
           ;; ("M-f g" . consult-grep)
@@ -1193,6 +1302,51 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
          ("M-o" . embark-act)
          ("M-O" . embark-dwim)))
 #+end_src
+
+Open files either vertically or horizontally using embark:
+
+#+begin_src emacs-lisp
+;; From https://karthinks.com/software/fifteen-ways-to-use-embark/
+
+;; Use ace-window to select window where to load file
+(eval-when-compile
+  (defmacro my/embark-ace-action (fn)
+    `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
+       (interactive)
+       (with-demoted-errors "%s"
+         (require 'ace-window)
+         (let ((aw-dispatch-always t))
+           (aw-switch-to-window (aw-select nil))
+           (call-interactively (symbol-function ',fn)))))))
+
+(eval-when-compile
+  (defmacro my/embark-split-action (fn split-type)
+    `(defun ,(intern (concat "my/embark-"
+                             (symbol-name fn)
+                             "-"
+                             (car (last  (split-string
+                                          (symbol-name split-type) "-"))))) ()
+       (interactive)
+       (funcall #',split-type)
+       (call-interactively #',fn))))
+
+(define-key embark-file-map     (kbd "W") (my/embark-ace-action find-file))
+(define-key embark-buffer-map     (kbd "W") (my/embark-ace-action find-file))
+(define-key embark-bookmark-map     (kbd "W") (my/embark-ace-action find-file))
+
+;; Open file in new vertical split
+(define-key embark-file-map     (kbd "V") (my/embark-split-action find-file split-window-below))
+(define-key embark-buffer-map   (kbd "V") (my/embark-split-action find-file split-window-below))
+(define-key embark-bookmark-map   (kbd "V") (my/embark-split-action find-file split-window-below))
+
+;; Open file in new horizontal split
+(define-key embark-file-map     (kbd "X") (my/embark-split-action find-file split-window-right))
+(define-key embark-buffer-map     (kbd "X") (my/embark-split-action find-file split-window-right))
+(define-key embark-bookmark-map     (kbd "X") (my/embark-split-action find-file split-window-right))
+#+end_src
+
+💡: You can find more examples at https://karthinks.com/software/fifteen-ways-to-use-embark/.
+Initially I wanted to use [[https://discourse.doomemacs.org/t/open-selected-completion-candidate-in-a-split/2525/2][this]] solution but it didn't work.
 
 ** Yasnippet
 Yasnippet allows you to insert some pre-made code by just typing a few
@@ -1231,6 +1385,16 @@ sure or if you don’t remember what your snippet is.
 #+end_src
 
 ** company-dict
+** github copilot
+#+begin_src emacs-lisp
+(use-package! copilot
+  ;;:hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+#+end_src
 * Applications
 ** RSS
 *** TODO elfeed
@@ -1290,6 +1454,7 @@ My toggle keybinds are prefixed by ~t~.
 | t   | my/modify-frame-alpha-background/body |                                  |
 | T   | counsel-load-theme                    |                                  |
 | d   |                                       | debug                            |
+| f   | focus-mode                            | Activate focus-mode              |
 | de  | toggle-debug-on-error                 |                                  |
 | dq  | toggle-debug-on-quit                  |                                  |
 | i   |                                       | input method                     |
@@ -1323,10 +1488,16 @@ My toggle keybinds are prefixed by ~t~.
 ** Inserts
 
 #+name: keybinds-inserts
-| Key | Function               | Description                 |
-|-----+------------------------+-----------------------------|
-|     |                        | inserts                     |
-| c   | org-download-clipboard | Insert image from clipboard |
+| Key | Function                     | Description                 |
+|-----+------------------------------+-----------------------------|
+|     |                              | inserts                     |
+| c   | org-download-clipboard       | Insert image from clipboard |
+| eb  | org-emphasize-bold           |                             |
+| ec  | org-emphasize-code           |                             |
+| ei  | org-emphasize-italic         |                             |
+| es  | org-emphasize-strike-through |                             |
+| eu  | org-emphasize-underline      |                             |
+| ev  | org-emphasize-verbatim       |                             |
 
 ** Open
 
@@ -1398,6 +1569,8 @@ Different keybindings to jump to a window, character or another workspace.
 ** Applications
 #+begin_src emacs-lisp
 (package! chatgpt-shell :recipe (:host github :repo "xenodium/chatgpt-shell"))
+(package! copilot
+  :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
 (package! keepass-mode)
 #+end_src
 ** Auto completion
@@ -1463,9 +1636,14 @@ ace-link
 #+begin_src emacs-lisp
 (package! xwwp :recipe (:host github :repo "kchanqvq/xwwp"))
 #+end_src
+** Editing
+#+begin_src emacs-lisp
+(package! wrap-region)
+#+end_src
 ** Reading
 #+begin_src emacs-lisp
 (package! olivetti)
+(package! focus)
 #+end_src
 ** Themes
 #+begin_src emacs-lisp
