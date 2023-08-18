@@ -1,0 +1,1482 @@
+#+title: New Doom Config
+#+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
+#+property: header-args:emacs-lisp+ :tangle ~/.config/doom-config/config.el
+#+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
+
+* Basics
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
+:header-args:emacs-lisp+: :exports code :results silent :lexical t
+:END:
+** Defaults
+Some defaults I'd like to use
+
+#+begin_src emacs-lisp
+(setq-default
+ cursor-in-non-selected-windows t                 ; Hide the cursor in inactive windows
+ display-time-default-load-average nil            ; Don't display load average
+ fill-column 80                                   ; Set width for automatic line breaks
+ help-window-select t                             ; Focus new help windows when opened
+ initial-scratch-message ""                       ; Empty the initial *scratch* buffer
+ kill-ring-max 128                                ; Maximum length of kill ring
+ load-prefer-newer t                              ; Prefer the newest version of a file
+ mark-ring-max 128                                ; Maximum length of mark ring
+ read-process-output-max (* 1024 1024)            ; Increase the amount of data reads from the process
+ ;; scroll-conservatively most-positive-fixnum       ; Always scroll by one line
+ select-enable-clipboard t                        ; Merge system's and Emacs' clipboard
+ tab-width 4                                      ; Set width for tabs
+ use-package-always-ensure t                      ; Avoid the :ensure keyword for each package
+ user-full-name "Victor Dorneanu"                 ; Set the full name of the current user
+ user-mail-address ""                             ; Set the email address of the current user
+ vc-follow-symlinks t                             ; Always follow the symlinks
+ custom-safe-themes t                             ; Allo all themes
+ view-read-only t)                                ; Always open read-only buffers in view-mode
+
+(column-number-mode t)                            ; Show the column number
+(fset 'yes-or-no-p 'y-or-n-p)                     ; Replace yes/no prompts with y/n
+(global-hl-line-mode)                             ; Hightlight current line
+(set-default-coding-systems 'utf-8)               ; Default to utf-8 encoding
+(show-paren-mode t)                               ; Show the parent
+#+end_src
+
+** Emacs Behavior
+** Key management
+*** general
+#+begin_src emacs-lisp
+(use-package! general
+  :config
+  (general-create-definer dorneanu/undefine
+    :keymaps 'override
+    :states '(normal emacs))
+
+  (general-create-definer dorneanu/evil
+    :states '(normal))
+
+  (general-create-definer dorneanu/leader-key
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  (general-create-definer dorneanu/major-leader-key
+    :states '(normal insert visual emacs)
+    :keymaps 'override
+    :prefix ","
+    :global-prefix "M-m"))
+#+end_src
+
+Some helpful macro for generating keybindings out of tables:
+
+#+name: general-keybindings-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=keybinds-windows prefix=""
+(mapconcat (lambda (line)
+             (let* ((key      (nth 0 line))
+                    (function (nth 1 line))
+                    (comment  (or (nth 2 line) ""))
+                    (package  (or (nth 3 line) "")))
+               (format "\"%s%s\" %s"
+                       prefix
+                       key
+                       (if (string= "" comment)
+                           (if (member function '("" "nil")) "nil" (concat "#'" function))
+                         (format "'(%s :wk %s%s)"
+                                 (if (member function '("" "nil")) ":ignore t" function)
+                                 (if (member function '("none" "nil")) "t" (concat "\"" comment "\""))
+                                 (if (string-blank-p package) "" (concat ":package " package)))))))
+           table
+           "\n")
+#+end_src
+**
+
+*** Buffer switching
+#+begin_src emacs-lisp
+(general-define-key
+  :keymaps 'override
+  "C-<right>" 'evil-window-right
+  "C-<left>" 'evil-window-left
+  "C-<up>" 'evil-window-up
+  "C-<down>" 'evil-window-down
+  "C-h" 'evil-window-left
+  "C-l" 'evil-window-right
+  "C-k" 'evil-window-up
+  "C-j" 'evil-window-down
+  "C-x h" 'previous-buffer
+  "C-x l" 'next-buffer)
+#+end_src
+** Security
+*** pass
+
+Use ~pass~ with auth-source
+
+#+begin_src emacs-lisp
+(use-package! auth-source-pass
+    :config
+    (message "Enabling auth-source-pass")
+    (auth-source-pass-enable))
+#+end_src
+** epa-file
+
+Configure GPG assistant
+
+#+begin_src emacs-lisp
+(use-package! epa-file
+  :config
+  (setq
+   epa-file-encrypt-to '("BF2828095372F24D")
+   password-cache nil
+   password-cache-expiry nil
+   epa-pinentry-mode 'ask)
+  :custom
+  (epa-file-select-keys 'silent))
+#+end_src
+
+* ORG mode
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
+:header-args:emacs-lisp+: :exports code :results silent :lexical t
+:END:
+** Basics
+#+begin_src emacs-lisp :noweb yes
+(use-package! org
+  ;; :hook (
+         ;; (org-mode . visual-line-mode)
+         ;;(org-mode . org-num-mode))
+  :custom-face
+  (org-macro ((t (:foreground "#b48ead"))))
+  :init
+  (auto-fill-mode t)
+
+  :config
+  ;; <<org-hydra-babel>>
+  ;; (require 'ox-beamer)
+  ;; (require 'org-protocol)
+  (setq org-hide-leading-stars             nil
+        org-hide-macro-markers             t
+        ;; org-ellipsis                       " ⤵"
+        org-ellipsis                       "..."
+        org-image-actual-width             600
+        org-redisplay-inline-images        t
+        org-display-inline-images          t
+        org-startup-with-inline-images     "inlineimages"
+        org-pretty-entities                t
+        org-fontify-whole-heading-line     t
+        org-fontify-done-headline          t
+        org-fontify-quote-and-verse-blocks t
+        org-startup-indented               t
+        org-startup-align-all-tables       t
+        org-use-property-inheritance       t
+        org-list-allow-alphabetical        t
+        org-M-RET-may-split-line           nil
+        org-src-window-setup               'split-window-below
+        org-src-fontify-natively           t
+        org-src-tab-acts-natively          t
+        org-src-preserve-indentation       t
+        org-log-done                       'time
+        ;; org-tags-column                    (- 4 (window-width))
+        org-tags-column                    0
+        org-directory                      "~/work/repos/org"
+        org-default-notes-file             (expand-file-name "notes.org" org-directory))
+
+  ;; Default column view headings
+  (setq org-columns-default-format "%50ITEM(Task) %10TODO %10CLOCKSUM %18CLOSED %18TIMESTAMP_IA")
+
+  ;; Use the special C-a, C-e and C-k definitions for Org, which enable some special behavior in headings.
+  (setq org-special-ctrl-a/e t)
+  (setq org-special-ctrl-k t)
+
+  ;; No blank lines before new entries
+  (setq org-blank-before-new-entry
+        '((heading . nil)
+          (plain-list-item . nil)))
+
+    ;; do logging
+  (setq org-log-into-drawer t)
+  (setq org-log-done t)
+  (setq org-log-reschedule nil)
+  (setq org-log-redeadline nil)
+
+  ;; Refiling
+  ;; Allow to create new nodes when refiling
+  (setq org-refile-targets '((nil :maxlevel . 9)
+                         (org-agenda-files :maxlevel . 9)))
+  (setq org-refile-allow-creating-parent-nodes 'confirm)
+
+  <<org-mode-visual-prettify-symbols>>
+)
+
+;; Disable flyspell-mode
+(add-hook! 'org-mode-hook (setq-local flyspell-mode nil))
+
+;; Disable flycheck-mode
+(add-hook! 'org-mode-hook (setq-local flycheck-mode nil))
+
+;; Open GPG files in org mode
+(add-to-list 'auto-mode-alist '("\\.gpg\\'" . org-mode))
+
+;; Set TODO keywords
+;; (setq org-todo-keywords '((sequence "TODO(t)" "WIP(i)"  "MEETING(m)" "STARTED(s)" "NEXT(n)" "WAITING(w)" "|" "DONE(d)" "CANCELED(c)")))
+
+(setq org-todo-keywords
+        '((sequence
+           "TODO(t)"
+           "STARTED(s)"
+           "NEXT(n)"
+           "WIP(i)"
+           "WAITING(w!)"
+           "|"
+           "DONE(d)"
+           "CANCELED(c)")
+          (sequence
+           "PROJ(p)"
+           "MEETING(m)"
+           "REVIEW(r)"
+           "IDEA(i)"
+           "|"
+           "STOP(c)"
+           "EVENT(m)"
+           ))
+        org-todo-keyword-faces
+        '(("[-]"  . +org-todo-active)
+          ("NEXT" . +org-todo-active)
+          ("STARTED" . +org-todo-active)
+          ("WAITING" . +org-todo-onhold)
+          ("CANCELED" . +org-archived)
+          ("PROJ" . +org-todo-project)
+          ("DONE"   . +org-todo-cancel)))
+#+end_src
+
+** org-agenda
+#+begin_src emacs-lisp
+(use-package! org-agenda
+  :after org
+  :config
+  (setq
+   ;; Set agenda files
+   org-agenda-files (list org-directory)
+
+   org-agenda-file-regexp
+   (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
+                             org-agenda-file-regexp)
+
+   ;; Skip unavailable agenda files
+   org-agenda-skip-unavailable-files t
+
+   ;; Skip done tasks
+   org-agenda-skip-scheduled-if-done t
+   org-agenda-skip-deadline-if-done t
+
+   ;; Show warnings for deadlines 7 days in advance.
+   org-deadline-warning-days 5
+   org-agenda-include-deadlines t
+   org-agenda-todo-list-sublevels t
+
+   ;; Set column width for tags in agenda
+   org-agenda-tags-column 80
+
+
+   ;; org-agenda-todo-ignore-scheduled 'all
+   ;; org-agenda-todo-ignore-deadlines 'all
+   ;; org-agenda-todo-ignore-with-date 'all
+
+   ;; Use straight line as separator between agenda blocks
+   ;; https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472&utf8=dec&unicodeinhtml=dec
+   ;; org-agenda-block-separator 9472
+   org-agenda-compact-blocks t
+   org-agenda-start-day nil ;; i.e. today
+   org-agenda-span 1
+   org-agenda-start-on-weekday nil
+
+   ;; Clock report settings
+   org-agenda-start-with-clockreport-mode t
+   org-clock-report-include-clocking-task t
+   org-agenda-clockreport-parameter-plist '(:link nil :maxlevel 6 :fileskip0 t :compact nil)
+
+   ;; Time grid
+   org-agenda-time-grid
+   '((daily today require-timed)
+     (0900 01000 1100 1200 1300 1400 1500 1600 1700 1800)
+     "-"
+     "────────────────")
+
+
+   ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
+   org-agenda-prefix-format
+   '(
+     (agenda . "%5c %4e %?-12t %s")
+     (todo   . " %4e %-12c")
+     (tags   . " %-22c")
+     (search . " %-12c"))
+   )
+
+  ;; (add-hook 'org-agenda-mode-hook
+  ;;           (lambda ()
+  ;;             (visual-line-mode -1)
+  ;;             (toggle-truncate-lines 1)
+  ;;             (display-line-numbers-mode 0)))
+
+  ;; Add extra files to org-agenda-files
+  (add-to-list 'org-agenda-files "~/syncthing/org/brainfck.org")
+)
+
+#+end_src
+
+** org-super-agenda
+Define custom org agenda commands.
+Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
+
+#+begin_src emacs-lisp
+(use-package! org-super-agenda
+  :after org-agenda
+  :config
+  ;; Toogle org links display
+  ;; (org-toggle-link-display)
+
+  ;; Enable it
+  (org-super-agenda-mode)
+
+  ;; Toggle org links display
+  (setq org-link-descriptive t)
+
+  ;; Set agenda custom commands
+  (setq org-agenda-custom-commands
+        '(
+          ("a" "Agenda"
+           ((agenda "" ((org-agend-span 'day)
+                        (org-super-agenda-groups
+                         '(
+                           (:name "Today"
+                            :time-grid t
+                            :date today
+                            :scheduled today
+                            :order 1)
+                           (:discard (:anything))))))
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-agenda-prefix-format '(
+                                                     (agenda . "%7c %4e %?-12t %s")
+                                                     (todo . " %-8c [%-4e] %?-12t %s")
+                                                     (tags   . " %-22c")
+                                                     (search . " %-12c")
+                                                     ))
+                         (org-super-agenda-groups
+                          '(
+                            (:log t)
+                            (:discard (:tag "inactive"))
+                            (:discard (:tag "jira"))
+                            (:name "Started"
+                             :todo ("STARTED")
+                             :order 1)
+                            (:name "Quickies"
+                             :and (:effort< "0:15" :not (:tag "recurring"))
+                             )
+                            (:name "This Week"
+                             :auto-property "week"
+                             )
+                            (:name "Overdue"
+                             :deadline past
+                             :scheduled past
+                             :order 2)
+                            (:name "Soon"
+                             :deadline feature
+                             :scheduled feature
+                             :order 2)
+                            (:name "Waiting"
+                             :todo "WAITING"
+                             :order 2)
+                            (:name "To refile"
+                             :category "inbox"
+                             :todo ""
+                             :order 10)
+                            (:name "Next to do"
+                             :todo "NEXT"
+                             :order 20)
+                            ;; (:name "WIP"
+                            ;;  :todo ("WIP")
+                            ;;  :order 40)
+                            (:discard (:anything))))))
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
+                         (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
+                         (org-super-agenda-groups
+                          '(
+                            (:log t)
+                            (:discard (:tag "inactive"))
+                            (:name "Projects"
+                             :auto-property "project"
+                             :todo t
+                             :order 1)
+                            (:discard (:anything))))))
+            )
+           )
+          ("r" "Resonance"
+           ((alltodo "" ((org-agenda-overriding-header "Resonance calendar")
+                         (org-super-agenda-groups
+                          '(
+                            (:discard (:not (:tag ("video" "article"))))
+                            (:and (:tag ))
+                            (:auto-parent t)
+                            (:discard (:anything))))))))
+          ))
+  )
+#+end_src
+
+** org-modern
+
+#+begin_src emacs-lisp
+(use-package! org-modern
+  :after org
+  :config
+  (setq
+   ;; Edit settings
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+   ;; Appearance
+   org-modern-radio-target    '("❰" t "❱")
+   org-modern-internal-target '("↪ " t "")
+   org-modern-todo t
+   org-modern-tag t
+   org-modern-timestamp t
+   org-modern-statistics nil
+   org-modern-progress nil
+   org-modern-priority t
+   org-modern-horizontal-rule "──────────"
+   org-modern-hide-stars "·"
+   ;; org-modern-star ["⁖"]
+   org-modern-keyword "‣"
+   org-modern-list '((43 . "•")
+                     (45 . "–")
+                     (42 . "↪")))
+  ;; (custom-set-faces!
+  ;;   `((org-modern-tag)
+  ;;     :background ,(doom-blend (doom-color 'blue) (doom-color 'bg) 0.1)
+  ;;     :foreground ,(doom-color 'grey))
+  ;;   `((org-modern-radio-target org-modern-internal-target)
+  ;;     :inherit 'default :foreground ,(doom-color 'blue)))
+  ;; )
+  )
+
+(add-hook! 'org-mode-hook #'org-modern-mode)
+(add-hook! 'org-agenda-finalize #'org-modern-agenda)
+#+end_src
+
+I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs-config/):
+
+#+begin_src emacs-lisp
+(use-package! svg-tag-mode
+  :config
+  (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+  (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+  (defconst day-re "[A-Za-z]\\{3\\}")
+  (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
+
+  (defun svg-progress-percent (value)
+    (svg-image (svg-lib-concat
+                (svg-lib-progress-bar
+                 (/ (string-to-number value) 100.0) nil
+                 :height 0.8 :foreground (doom-color 'fg) :background (doom-color 'bg)
+                 :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                (svg-lib-tag (concat value "%") nil
+                             :height 0.8 :foreground (doom-color 'fg) :background (doom-color 'bg)
+                             :stroke 0 :margin 0)) :ascent 'center))
+
+  (defun svg-progress-count (value)
+    (let* ((seq (mapcar #'string-to-number (split-string value "/")))
+           (count (float (car seq)))
+           (total (float (cadr seq))))
+      (svg-image (svg-lib-concat
+                  (svg-lib-progress-bar (/ count total) nil
+                                        :foreground (doom-color 'fg)
+                                        :background (doom-color 'bg) :height 0.8
+                                        :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                  (svg-lib-tag value nil
+                               :foreground (doom-color 'fg)
+                               :background (doom-color 'bg)
+                               :stroke 0 :margin 0 :height 0.8)) :ascent 'center)))
+
+  (set-face-attribute 'svg-tag-default-face nil :family "Source Code Pro")
+  (setq svg-tag-tags
+        `(;; Progress e.g. [63%] or [10/15]
+          ("\\(\\[[0-9]\\{1,3\\}%\\]\\)" . ((lambda (tag)
+                                              (svg-progress-percent (substring tag 1 -2)))))
+          ("\\(\\[[0-9]+/[0-9]+\\]\\)" . ((lambda (tag)
+                                            (svg-progress-count (substring tag 1 -1)))))
+          ;; Task priority e.g. [#A], [#B], or [#C]
+          ("\\[#A\\]" . ((lambda (tag) (svg-tag-make tag :face 'error :inverse t :height .85
+                                                :beg 2 :end -1 :margin 0 :radius 10))))
+          ("\\[#B\\]" . ((lambda (tag) (svg-tag-make tag :face 'warning :inverse t :height .85
+                                                :beg 2 :end -1 :margin 0 :radius 10))))
+          ("\\[#C\\]" . ((lambda (tag) (svg-tag-make tag :face 'org-todo :inverse t :height .85
+                                                :beg 2 :end -1 :margin 0 :radius 10))))
+          ;; Keywords
+          ("TODO" . ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face 'org-todo))))
+          ("WAITING" . ((lambda (tag) (svg-tag-make tag :height .95 :face 'org-warning))))
+          ("DONE" . ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face 'org-done))))
+          ("CANCELED" . ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face 'org-archived))))
+          ("NEXT\\|STARTED" . ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face '+org-todo-active))))
+          ("PROJ\\|IDEA\\|MEETING" .
+           ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face '+org-todo-project))))
+          ("REVIEW" . ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face '+org-todo-onhold))))))
+
+  :hook (org-mode . svg-tag-mode)
+  )
+#+end_src
+** org-babel
+Some org-babel specific configuration:
+#+begin_src emacs-lisp
+;; disable org-babel execution while exporting
+(setq org-confirm-babel-evaluate nil)
+(setq org-export-use-babel t)
+
+;; Indentation and formatting in org babel code blocks
+(setq org-edit-src-content-indentation 0
+      org-src-tab-acts-natively t
+      org-src-preserve-indentation t)
+#+end_src
+
+** Visual configuration
+While most modes of Emacs are dedicated to development, and therefore are much
+more comfortable with a fixed-pitch font, more literary modes such as org-mode
+are much more enjoyable if you have a variable pitch font enabled. *BUT*, these
+modes can also require some fixed-pitch fonts for some elements of the buffer,
+such as code blocks with org-mode. ~mixed-pitch~ comes to the rescue!
+
+#+begin_src emacs-lisp
+(use-package! mixed-pitch
+  :after org
+  :hook
+  (org-mode . mixed-pitch-mode)
+  :config
+  (add-hook 'org-agenda-mode-hook (lambda () (mixed-pitch-mode -1))))
+#+end_src
+
+I have an issue with org-mode’s emphasis markers: I find them ugly. I can of
+course hide them if I simply set ~org-hide-emphasis-markers~ to ~t~, but it
+makes editing hard since I never know whether I am before or after the emphasis
+marker when editing near the beginning/end of an emphasized region. ~org-appear~
+fixes this issue so that it shows the emphasis markers only when the cursor is
+in the emphasized region, otherwise they will remain hidden! Very cool!
+
+#+begin_src emacs-lisp
+(use-package! org-appear
+  :after org
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis   t
+        org-hide-emphasis-markers t
+        org-appear-autolinks      t
+        org-appear-autoentities   t
+        org-appear-autosubmarkers t)
+  (run-at-time nil nil #'org-appear--set-elements))
+#+end_src
+
+Use pretty symbols
+
+#+name: org-mode-visual-prettify-symbols
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook
+          (lambda ()
+            (dolist (pair '(("[ ]"         . ?☐)
+                            ("[X]"         . ?☑)
+                            ("[-]"         . ?❍)
+                            ("#+title:"    . ?📕)
+                            ("#+TITLE:"    . ?📕)
+                            ("#+author:"   . ?✎)
+                            ("#+AUTHOR:"   . ?✎)
+                            ("#+email:"    . ?📧)
+                            ("#+EMAIL:"    . ?📧)
+                            ("#+include"   . ?⭳)
+                            ("#+INCLUDE"   . ?⭳)
+                            ("#+begin_src" . ?λ)
+                            ("#+BEGIN_SRC" . ?λ)
+                            ("#+end_src"   . ?λ)
+                            ("#+END_SRC"   . ?λ)))
+              (add-to-list 'prettify-symbols-alist pair))
+            (prettify-symbols-mode)))
+#+end_src
+** Org-roam
+After hearing about it for so many years and thinking I really should
+install it one day, 2023 is finally the year I installed org-roam! For
+those unaware of it, org-roam is a Zettelkasten-style knowledge
+management system based on org-mode.
+
+#+begin_src emacs-lisp
+(use-package org-roam
+  :defer t
+  :custom
+  (org-roam-directory "/cs/priv/repos/roam/org")
+  (org-roam-completion-everywhere t)
+  :config
+  (org-roam-db-autosync-mode 1))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! org-roam-ui
+  :defer t
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+#+end_src
+
+Take full advantage of ~consult~
+
+#+begin_src emacs-lisp
+(use-package! consult-org-roam
+   :after org-roam
+   :init
+   (require 'consult-org-roam)
+   ;; Activate the minor mode
+   (consult-org-roam-mode 1)
+   :custom
+   ;; Use `ripgrep' for searching with `consult-org-roam-search'
+   (consult-org-roam-grep-func #'consult-ripgrep)
+   ;; Configure a custom narrow key for `consult-buffer'
+   (consult-org-roam-buffer-narrow-key ?r)
+   ;; Display org-roam buffers right after non-org-roam buffers
+   ;; in consult-buffer (and not down at the bottom)
+   (consult-org-roam-buffer-after-buffers t)
+   :config
+   ;; Eventually suppress previewing for certain functions
+   (consult-customize
+    consult-org-roam-forward-links
+    :preview-key (kbd "M-."))
+   :bind
+   ;; Define some convenient keybindings as an addition
+   ("C-c n e" . consult-org-roam-file-find)
+   ("C-c n b" . consult-org-roam-backlinks)
+   ("C-c n l" . consult-org-roam-forward-links)
+   ("C-c n r" . consult-org-roam-search))
+#+end_src
+** TODO org-tempo
+** org-download
+
+Insert images easily into ORG mode files
+
+#+begin_src emacs-lisp
+(use-package! org-download
+  :after org
+  :hook (org-mode . org-download-enable))
+
+;; Drag-and-drop to `dired`
+(add-hook 'dired-mode-hook 'org-download-enable)
+#+end_src
+
+* User Interface
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
+:header-args:emacs-lisp+: :exports code :results silent :lexical t
+:END:
+** fonts
+#+begin_src emacs-lisp
+(setq  doom-font (font-spec :family "Fira Mono" :size 11)
+       doom-variable-pitch-font (font-spec :family "Source Code Pro" :size 15)
+       doom-unicode-font (font-spec :family "Fira Mono"))
+#+end_src
+** modeline modules
+I sometimes use Emacs in fullscreen, meaning my usual taskbar will be hidden.
+This is why I want the current date and time to be displayed, in an ISO-8601
+style, although not exactly ISO-8601 (this is the best time format, fight me).
+
+#+begin_src emacs-lisp
+(require 'time)
+(setq display-time-format "%Y-%m-%d %H:%M")
+(display-time-mode 1) ; display time in modeline
+#+end_src
+
+Something my taskbar doesn’t have is a battery indicator. However, I want it
+enabled only if I am on a laptop or if a battery is available.
+
+#+begin_src emacs-lisp
+(let ((battery-str (battery)))
+  (unless (or (equal "Battery status not available" battery-str)
+              (string-match-p (regexp-quote "N/A") battery-str))
+    (display-battery-mode 1)))
+#+end_src
+** doom-modeline
+
+I start to like the modeline:
+
+#+begin_src emacs-lisp
+(use-package! doom-modeline
+  :hook (after-init . doom-modeline-mode)
+  :config
+  (setq doom-modeline-buffer-encoding t
+        ;; doom-modeline-persp-name t
+        doom-modeline-modal-icon t))
+#+end_src
+** solaire
+
+#+begin_src emacs-lisp
+(use-package! solaire-mode
+  :defer t
+  :init
+  (solaire-global-mode t)
+  :custom
+  (solaire-mode-remap-fringe t))
+#+end_src
+** auto-dim-other-buffers
+#+begin_src emacs-lisp
+(use-package! auto-dim-other-buffers
+  :if (display-graphic-p)
+  :config
+  (auto-dim-other-buffers-mode t))
+
+#+end_src
+* Editing
+** Regions
+*** expand-region
+Use expand-region
+
+#+begin_src emacs-lisp
+(use-package! expand-region
+  :bind
+  (("M-g =" . er/expand-region)
+   ("M-g - " . er/contract-region)
+   :map mode-specific-map
+   :prefix-map region-prefix-map
+   :prefix "r"
+   ("(" . er/mark-inside-pairs)
+   (")" . er/mark-outside-pairs)
+   ("'" . er/mark-inside-quotes)
+   ([34] . er/mark-outside-quotes) ; it's just a quotation mark
+   ("o" . er/mark-org-parent)
+   ("u" . er/mark-url)
+   ("b" . er/mark-org-code-block)
+   ("." . er/mark-method-call)
+   (">" . er/mark-next-accessor)
+   ("w" . er/mark-word)
+   ("d" . er/mark-defun)
+   ("e" . er/mark-email)
+   ("," . er/mark-symbol)
+   ("<" . er/mark-symbol-with-prefix)
+   (";" . er/mark-comment)
+   ("s" . er/mark-sentence)
+   ("S" . er/mark-text-sentence)
+   ("p" . er/mark-paragraph)
+   ("P" . er/mark-text-paragraph)))
+#+end_src
+
+* Navigation
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
+:header-args:emacs-lisp+: :exports code :results silent :lexical t
+:END:
+** avy
+#+begin_src emacs-lisp
+(use-package! avy
+  :defer t
+  :config
+  (setq avy-keys           '(?a ?u ?i ?e ?c ?t ?s ?r ?n)
+        avy-dispatch-alist '((?x . avy-action-kill-move)
+                             (?X . avy-action-kill-stay)
+                             (?T . avy-action-teleport)
+                             (?m . avy-action-mark)
+                             (?C . avy-action-copy)
+                             (?y . avy-action-yank)
+                             (?Y . avy-action-yank-line)
+                             (?I . avy-action-ispell)
+                             (?z . avy-action-zap-to-char)))
+  (defun my/avy-goto-url ()
+    "Jump to url with avy."
+    (interactive)
+    (avy-jump "https?://"))
+  (defun my/avy-open-url ()
+    "Open url selected with avy."
+    (interactive)
+    (my/avy-goto-url)
+    (browse-url-at-point)))
+
+(dorneanu/evil
+  :pakages 'avy
+  "gc" #'evil-avy-goto-char-timer
+  "gl" #'evil-avy-goto-line)
+
+
+(dorneanu/major-leader-key
+  :packages 'avy
+  :infix "a"
+  "c"  '(:ignore t :which-key "copy")
+  "cl" #'avy-copy-line
+  "cr" #'avy-copy-region
+  "k"  '(:ignore t :which-key "kill")
+  "kl" #'avy-kill-whole-line
+  "kL" #'avy-kill-ring-save-whole-line
+  "kr" #'avy-kill-region
+  "kR" #'avy-kill-ring-save-region
+  "m"  '(:ignore t :which-key "move")
+  "ml" #'avy-move-line
+  "mr" #'avy-move-region
+  "mt" #'avy-transpose-lines-in-region
+  "n"  #'avy-next
+  "p"  #'avy-prev
+  "u"  #'my/avy-goto-url
+  "U"  #'my/avy-open-url)
+
+(dorneanu/major-leader-key
+  :packages '(avy org)
+  :keymaps 'org-mode-map
+  "A" '(:ignore t :which-key "avy")
+  "Ar" #'avy-org-refile-as-child
+  "Ah" #'avy-org-goto-heading-timer)
+#+end_src
+** dirvish
+#+begin_src emacs-lisp
+(use-package! dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("m" "/mnt/"                       "Drives")
+     ("t" "~/.local/share/Trash/files/" "TrashCan")))
+  :config
+  ;; (dirvish-peek-mode) ; Preview files in minibuffer
+  ;; (dirvish-side-follow-mode) ; similar to `treemacs-follow-mode'
+  (setq dirvish-mode-line-format
+        '(:left (sort symlink) :right (omit yank index)))
+  (setq dirvish-attributes
+        '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
+  (setq delete-by-moving-to-trash t)
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --group-directories-first --no-group")
+  :bind ; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+  (("C-c f" . dirvish-fd)
+   :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+   ("a"   . dirvish-quick-access)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+   ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+   ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+   ("TAB" . dirvish-subtree-toggle)
+   ("M-f" . dirvish-history-go-forward)
+   ("M-b" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ("M-t" . dirvish-layout-toggle)
+   ("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump)))
+#+end_src
+** window management
+Switch between windows using ~switch-window~
+
+#+begin_src emacs-lisp
+(use-package! switch-window)
+#+end_src
+** tabs :disabled:
+Let's configure ~centaur-tabs~
+
+#+begin_src emacs-lisp
+;; (use-package! centaur-tabs
+;;   :config
+;;   (centaur-tabs-mode t)
+;;   (setq centaur-tabs-style "chamfer"
+;;         centaur-tabs-enable-key-bindings t)
+;;   ;; Group tabs by projectile project
+;;   (centaur-tabs-group-by-projectile-project))
+#+end_src
+
+* Reading
+** olivetti
+I love /olivetti/ mode
+
+#+begin_src emacs-lisp
+(use-package! olivetti
+  :custom
+  (olivetti-body-width 0.8))
+#+end_src
+
+* Programming
+** Version Control
+*** magit
+
+[[https://github.com/alphapapa][Alphapapa]] also created an awesome package for Magit: magit-todos which display
+in the Magit buffer a list of TODOs found in the current project to remind you
+of what to do next.
+
+First, let’s se tup our todo keywords with ~hl-todo~. A good few todo keywords
+are already defined in the ~hl-todo-keyword-faces~ variable. Why not use them?
+~hl-todo-mode~ enables fontlock highlight of these keywords in a buffer. Let’s
+enable this mode globally.
+
+#+begin_src emacs-lisp
+(use-package! hl-todo
+  :defer t
+  :init (global-hl-todo-mode 1))
+#+end_src
+
+We can now configure properly ~magit-todos~. Notice my custom function hooked to
+~magit-mode-hook~. This is because this package tries to find TODOs in all files
+in the current project, and my yadm repository’s root is my ~$HOME~. So, yeah,
+no ~magit-todos~ in yadm.
+
+#+begin_src emacs-lisp
+(use-package! magit-todos
+  :after (magit hl-todo)
+  :init
+  (with-eval-after-load 'magit
+    (defun my/magit-todos-if-not-yadm ()
+      "Deactivate magit-todos if in yadm Tramp connection.
+If `magit--default-directory' points to a yadm Tramp directory,
+deactivate `magit-todos-mode', otherwise enable it."
+      (if (string-prefix-p "/yadm:" magit--default-directory)
+          (magit-todos-mode -1)
+        (magit-todos-mode +1)))
+    (add-hook 'magit-mode-hook #'my/magit-todos-if-not-yadm))
+  :config
+  (setq magit-todos-ignore-case t))
+#+end_src
+*** forge
+** Shells
+** Languages
+*** Python
+First, we need to set up the main Python mode. With this, we’ll also
+add Python to the list of LSP languages and to the list of languages
+org-babel supports.
+#+begin_src emacs-lisp
+(use-package! python
+  :defer t
+  :after ob
+  :mode (("SConstruct\\'" . python-mode)
+         ("SConscript\\'" . python-mode)
+         ("[./]flake8\\'" . conf-mode)
+         ("/Pipfile\\'"   . conf-mode))
+  :init
+  (setq python-indent-guess-indent-offset-verbose nil)
+  (add-hook 'python-mode-local-vars-hook #'lsp)
+  :config
+  (setq python-indent-guess-indent-offset-verbose nil)
+  (when (and (executable-find "python3")
+           (string= python-shell-interpreter "python"))
+    (setq python-shell-interpreter "python3")))
+#+end_src
+*** Go
+#+begin_src emacs-lisp
+(use-package! go-mode
+  :defer t
+  :bind
+  ;; (:map go-mode-map
+  ;;       ("M-." . godef-jump)
+  ;;       ("M-]" . next-error)
+  ;;       ("M-[" . previous-error))
+  :hook
+  (before-save . gofmt-before-save)
+  :custom
+  (gofmt-command "goimports")
+  :init
+  (setenv "GO111MODULE" "on")
+  (or (getenv "GOPATH")
+      (setenv "GOPATH" (expand-file-name "~/go")))
+  (setenv "PATH" (concat (getenv "GOPATH") "/bin" ":" (getenv "PATH"))))
+
+(use-package! company-go
+  :after go-mode
+  :defer t
+  :config
+  (push 'company-go company-backends))
+
+(use-package! go-guru
+  :hook
+  (go-mode . go-guru-hl-identifier-mode))
+
+(use-package! flycheck-golangci-lint
+  :hook
+  (go-mode . flycheck-golangci-lint-setup))
+
+(use-package! go-eldoc
+  :hook
+  (go-mode . go-eldoc-setup))
+#+end_src
+*** Web Programming
+[[https://emmet.io/][Emmet]] is a powerful templating engine that can generate through simple
+CSS-like expression some HTML to avoid the user writing everything by
+hand.
+#+begin_src emacs-lisp
+(use-package! emmet-mode
+  :defer t
+  :hook ((css-mode  . emmet-mode)
+         (html-mode . emmet-mode)
+         (web-mode  . emmet-mode)
+         (sass-mode . emmet-mode)
+         (scss-mode . emmet-mode)
+         (web-mode  . emmet-mode))
+  :config
+  (general-define-key
+   :keymaps 'emmet-mode-keymap
+   "M-RET" #'emmet-expand-yas))
+
+(dorneanu/major-leader-key
+ :keymaps 'web-mode-map
+ :packages '(web-mode emmet-mode)
+ "e" '(:ignore t :which-key "emmet")
+ "ee" #'emmet-expand-line
+ "ep" #'emmet-preview
+ "eP" #'emmet-preview-mode
+ "ew" #'emmet-wrap-with-markup)
+#+end_src
+
+Impatient mode serves web buffers live over HTTP, including your live
+modifications.
+#+begin_src emacs-lisp
+(use-package! impatient-mode
+  :defer t)
+#+end_src
+
+Web mode is a sort of hybrid major mode that allows editing several
+languages in the same buffer, mainly HTML, CSS, and Javascript.
+#+begin_src emacs-lisp
+(use-package! web-mode
+  :hook html-mode
+  ;; :hook (web-mode . prettier-js-mode)
+  :hook (web-mode . lsp-deferred)
+  :mode (("\\.phtml\\'"      . web-mode)
+         ("\\.tpl\\.php\\'"  . web-mode)
+         ("\\.twig\\'"       . web-mode)
+         ("\\.xml\\'"        . web-mode)
+         ("\\.html\\'"       . web-mode)
+         ("\\.htm\\'"        . web-mode)
+         ("\\.[gj]sp\\'"     . web-mode)
+         ("\\.as[cp]x?\\'"   . web-mode)
+         ("\\.eex\\'"        . web-mode)
+         ("\\.erb\\'"        . web-mode)
+         ("\\.mustache\\'"   . web-mode)
+         ("\\.handlebars\\'" . web-mode)
+         ("\\.hbs\\'"        . web-mode)
+         ("\\.eco\\'"        . web-mode)
+         ("\\.ejs\\'"        . web-mode)
+         ("\\.svelte\\'"     . web-mode)
+         ("\\.ctp\\'"        . web-mode)
+         ("\\.djhtml\\'"     . web-mode)
+         ("\\.vue\\'"        . web-mode))
+  :config
+  (setq web-mode-markup-indent-offset 2
+        web-mode-code-indent-offset   2
+        web-mode-css-indent-offset    2
+        web-mode-style-padding        0
+        web-mode-script-padding       0))
+
+;; (phundrak/major-leader-key
+;;  :keymaps 'web-mode-map
+;;  :packages 'web-mode
+;;  "="  '(:ignore t :which-key "format")
+;;  "E"  '(:ignore t :which-key "errors")
+;;  "El" #'web-mode-dom-errors-show
+;;  "gb" #'web-mode-element-beginning
+;;  "g"  '(:ignore t :which-key "goto")
+;;  "gc" #'web-mode-element-child
+;;  "gp" #'web-mode-element-parent
+;;  "gs" #'web-mode-element-sibling-next
+;;  "h"  '(:ignore t :which-key "dom")
+;;  "hp" #'web-mode-dom-xpath
+;;  "r"  '(:ignore t :which-key "refactor")
+;;  "rc" #'web-mode-element-clone
+;;  "rd" #'web-mode-element-vanish
+;;  "rk" #'web-mode-element-kill
+;;  "rr" #'web-mode-element-rename
+;;  "rw" #'web-mode-element-wrap
+;;  "z"  #'web-mode-fold-or-unfold)
+;; (phundrak/major-leader-key
+;;  :keymaps 'web-mode-map
+;;  :packages '(lsp-mode web-mode)
+;;  "l" '(:keymap lsp-command-map :which-key "lsp"))
+#+end_src
+
+Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
+
+#+begin_src emacs-lisp
+(use-package company-web
+  :defer t
+  :after (emmet-mode web-mode))
+#+end_src
+*** terraform
+#+begin_src emacs-lisp
+(use-package! terraform
+  :defer t
+  :config
+  (setq terraform-indent-level 2
+        terraform-format-on-save t))
+
+(add-hook! 'terraform-mode-hook #'terraform-format-on-save-mode)
+#+end_src
+
+* Browsers
+** xwidget-webkit
+
+I like to open an URL directly in Emacs without having to switch to Chrome:
+
+#+begin_src emacs-lisp
+(general-define-key
+ :keymaps 'xwidget-webkit-mode-map
+ "C-c j" 'xwidget-webkit-clone-and-split-below
+ "C-c l" 'xwidget-webkit-clone-and-split-right)
+#+end_src
+
+Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules/tools/lookup/][lookup module]] from Doom Emacs.
+
+#+begin_src emacs-lisp
+(setq +lookup-open-url-fn #'+lookup-xwidget-webkit-open-url-fn)
+#+end_src
+
+* Searching
+** deadgrep
+#+begin_src emacs-lisp
+;; (use-package! deadgrep)
+#+end_src
+** rg.el
+#+begin_src emacs-lisp
+(use-package! rg
+  :config
+  (rg-enable-default-bindings))
+#+end_src
+** dumb-jump
+#+begin_src emacs-lisp
+(use-package! dumb-jump
+  :defer t
+  :custom
+  (dumb-jump-selector 'ivy)
+  (dumb-jump-prefer-searcher 'rg))
+#+end_src
+
+* Auto completion
+** consult
+#+begin_src emacs-lisp
+(use-package! consult
+  :defer t
+  :bind  (;; Related to the control commands.
+          ("<help> a" . consult-apropos)
+          ;; ("C-x b" . consult-buffer)
+          ("C-x M-:" . consult-complex-command)
+          ("C-c k" . consult-kmacro)
+          ;; Related to the navigation.
+          ("M-g a" . consult-org-agenda)
+          ("M-g e" . consult-error)
+          ("M-g g" . consult-goto-line)
+          ("M-g h" . consult-org-heading)
+          ("M-g i" . consult-imenu)
+          ("M-g k" . consult-global-mark)
+          ("M-g l" . consult-line)
+          ("M-g m" . consult-mark)
+          ("M-g o" . consult-outline)
+          ("M-g I" . consult-project-imenu)
+          ;; Related to the search and selection.
+          ;; ("M-f G" . consult-git-grep)
+          ;; ("M-f g" . consult-grep)
+          ;; ("M-f k" . consult-keep-lines)
+          ;; ("M-f l" . consult-locate)
+          ;; ("M-f m" . consult-multi-occur)
+          ;; ("M-f r" . consult-ripgrep)
+          ;; ("M-f u" . consult-focus-lines)
+          ;; ("M-f f" . consult-find)
+          ))
+  ;; :custom
+  ;; (completion-in-region-function #'consult-completion-in-region)
+  ;; (consult-narrow-key "<")
+  ;; (consult-project-root-function #'projectile-project-root)
+  ;; ;; Provides consistent display for both `consult-register' and the register
+  ;; ;; preview when editing registers.
+  ;; (register-preview-delay 0)
+  ;; (register-preview-function #'consult-register-preview))
+#+end_src
+** Embark
+
+#+begin_src emacs-lisp
+(use-package! embark-consult)
+
+(use-package! embark
+  :bind (("C-;" . embark-act)
+         ("M-o" . embark-act)
+         ("M-O" . embark-dwim)))
+#+end_src
+
+** Yasnippet
+Yasnippet allows you to insert some pre-made code by just typing a few
+characters. It can even generate some string with Elisp expressions and ask the
+user for some input in some precise places.
+
+#+begin_src emacs-lisp
+(use-package! yasnippet
+  :defer t
+  :init
+  (yas-global-mode)
+  :hook ((prog-mode . yas-minor-mode)
+         (text-mode . yas-minor-mode)))
+#+end_src
+
+Of course, yasnippet wouldn’t be as awesome as it is without pre-made snippets.
+
+#+begin_src emacs-lisp
+(use-package! yasnippet-snippets
+  :defer t
+  :after yasnippet)
+#+end_src
+
+And finally, with ivy you can choose your snippets from a menu if you’re not
+sure or if you don’t remember what your snippet is.
+
+#+begin_src emacs-lisp
+(use-package ivy-yasnippet
+  :defer t
+  :after (ivy yasnippet))
+
+(dorneanu/leader-key
+  :infix "i"
+  :packages 'ivy-yasnippet
+  "y" #'ivy-yasnippet)
+#+end_src
+
+** company-dict
+* Applications
+** RSS
+*** TODO elfeed
+** Productivity
+*** TODO wakatime
+*** TODO jira
+** AI
+*** chatgpt-shell
+#+begin_src emacs-lisp
+(use-package! chatgpt-shell
+  :commands (chatgpt-shell)
+  :bind (("C-c a p" . chatgpt-shell-prompt)
+         ("C-c a s" . chatgpt-shell))
+  :config
+  (setq chatgpt-shell-openai-key (+pass-get-secret "emacs/chatgpt")))
+#+end_src
+* Keybindings
+
+#+begin_src emacs-lisp
+;; Toggles
+(dorneanu/major-leader-key
+  :infix "t"
+  <<general-keybindings-gen(table=keybinds-toggles)>>)
+
+;; Projects
+(dorneanu/major-leader-key
+  :infix "p"
+  <<general-keybindings-gen(table=keybinds-projects)>>)
+
+;; Searching
+(dorneanu/major-leader-key
+  :infix "s"
+  <<general-keybindings-gen(table=keybinds-searching)>>)
+
+;; Opens
+(dorneanu/major-leader-key
+  :infix "o"
+  <<general-keybindings-gen(table=keybinds-open)>>)
+
+;; Inserts
+(dorneanu/major-leader-key
+  :infix "i"
+  <<general-keybindings-gen(table=keybinds-inserts)>>)
+
+#+end_src
+
+#+RESULTS:
+
+** Toggles
+My toggle keybinds are prefixed by ~t~.
+
+#+name: keybinds-toggles
+| Key | Function                              | Description                      |
+|-----+---------------------------------------+----------------------------------|
+|     |                                       | toggles                          |
+| TAB | tab-bar-mode                          |                                  |
+| t   | my/modify-frame-alpha-background/body |                                  |
+| T   | counsel-load-theme                    |                                  |
+| d   |                                       | debug                            |
+| de  | toggle-debug-on-error                 |                                  |
+| dq  | toggle-debug-on-quit                  |                                  |
+| i   |                                       | input method                     |
+| it  | toggle-input-method                   |                                  |
+| is  | set-input-method                      |                                  |
+| o   | olivetti-mode                         | Togggle olivetti mode            |
+| n   | org-num-mode                          | Toggle org num mode              |
+| m   | hide-mode-line-mode                   | Hides modeline in current buffer |
+
+** Projects
+
+#+name: keybinds-projects
+| Key | Function                      | Description            |
+|-----+-------------------------------+------------------------|
+|     |                               | projects               |
+| e   | project-eshell                | Run eshell in project  |
+| r   | consult-ripgrep               | Run ripgrep in project |
+| d   | projectile-dired              |                        |
+| D   | projectile-dired-other-window |                        |
+
+** Searches
+
+#+name: keybinds-searching
+| Key | Function              | Description               |
+|-----+-----------------------+---------------------------|
+|     |                       | searches                  |
+| r   | rg                    | Run rg.el                 |
+| s   | swiper                | Run swiper                |
+| S   | swiper-all            | Run swiper-all            |
+| .   | swiper-thing-at-point | Run swiper-thing-at-point |
+** Inserts
+
+#+name: keybinds-inserts
+| Key | Function               | Description                 |
+|-----+------------------------+-----------------------------|
+|     |                        | inserts                     |
+| c   | org-download-clipboard | Insert image from clipboard |
+
+** Open
+
+#+name: keybinds-open
+| Key | Function                  | Description                    |
+|-----+---------------------------+--------------------------------|
+|     |                           | opens                          |
+| x   | xwidget-webkit-browse-url | Opens an URL in xwidget-webkit |
+| c   | browse-url-chrome         | Open Chrome                    |
+| e   | eww-browse                | Run eww browser                |
+
+** Windows
+
+A couple of keybinds are hidden from which-key, otherwise there’s not much to
+say. The prefix here is ~w~.
+#+name: keybinds-windows
+| Key | Function                      | Description |
+|-----+-------------------------------+-------------|
+|     |                               | windows     |
+| h   | evil-window-left              |             |
+| j   | evil-window-down              |             |
+| k   | evil-window-up                |             |
+| l   | evil-window-right             |             |
+| .   | windows-adjust-size/body      |             |
+| -   | split-window-below-and-focus  |             |
+| /   | split-window-right-and-focus  |             |
+| $   | winum-select-window-by-number |             |
+| 0   | winum-select-window-0-or-10   | none        |
+| 1   | winum-select-window-1         | none        |
+| 2   | winum-select-window-2         | none        |
+| 3   | winum-select-window-3         | none        |
+| 4   | winum-select-window-4         | none        |
+| 5   | winum-select-window-5         | none        |
+| 6   | winum-select-window-6         | none        |
+| 7   | winum-select-window-7         | none        |
+| 8   | winum-select-window-8         | none        |
+| 9   | winum-select-window-9         | none        |
+| b   | kill-buffer-and-delete-window |             |
+| d   | delete-window                 |             |
+| o   | other-window                  |             |
+| D   | delete-other-windows          |             |
+| w   |                               | writeroom   |
+| w.  | writeroom-buffer-width/body   |             |
+| ww  | writeroom-mode                |             |
+
+** Jumps
+Different keybindings to jump to a window, character or another workspace.
+
+#+begin_src emacs-lisp
+(dorneanu/leader-key
+  ;; :packages 'avy
+  :infix "j"
+  "c" #'evil-avy-goto-char-timer
+  "w" #'ace-window
+  "TAB" #'+workspace/other
+  "s" #'persp-frame-switch
+  "n" #'+workspace/switch-right
+  "b" #'+workspace/switch-left
+  "l" #'avy-goto-line)
+#+end_src
+
+#+RESULTS:
+
+* Packages
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle ~/.config/doom-config/packages.el :mkdirp yes
+:header-args:emacs-lisp+: :exports code :results silent :lexical t
+:END:
+** Applications
+#+begin_src emacs-lisp
+(package! chatgpt-shell :recipe (:host github :repo "xenodium/chatgpt-shell"))
+(package! keepass-mode)
+#+end_src
+** Auto completion
+#+begin_src emacs-lisp
+(package! consult)
+(package! embark)
+(package! embark-consult)
+(package! ivy-yasnippet)
+(package! yasnippet-snippets)
+#+end_src
+** Navigation
+Dir and friends:
+
+#+begin_src emacs-lisp
+(package! dirvish)
+#+end_src
+
+Window management
+
+#+begin_src emacs-lisp
+(package! switch-window)
+#+end_src
+
+ace-link
+
+#+begin_src emacs-lisp
+(package! ace-link)
+#+end_src
+** Security
+#+begin_src emacs-lisp
+(package! pinentry)
+#+end_src
+
+
+** Key management
+#+begin_src emacs-lisp
+(package! general)
+#+end_src
+** ORG mode
+#+begin_src emacs-lisp
+(package! org-modern)
+(package! org-appear)
+(package! mixed-pitch)
+(package! svg-tag-mode)
+
+;; org roam
+(package! consult-org-roam)
+
+(package! org-super-agenda)
+(package! org-download)
+#+end_src
+** Programming
+#+begin_src emacs-lisp
+(package! impatient-mode)
+#+end_src
+** Searching
+#+begin_src emacs-lisp
+;; (package! deadgrep)
+(package! rg)
+
+#+end_src
+** Browsing
+#+begin_src emacs-lisp
+(package! xwwp :recipe (:host github :repo "kchanqvq/xwwp"))
+#+end_src
+** Reading
+#+begin_src emacs-lisp
+(package! olivetti)
+#+end_src
+** Themes
+#+begin_src emacs-lisp
+(package! doom-themes)
+(package! modus-themes)
+(package! ef-themes)
+(package! kaolin-themes)
+
+(package! auto-dim-other-buffers)
+#+end_src
+** Exports
+#+begin_src emacs-lisp
+(package! copy-as-format)
+#+end_src
