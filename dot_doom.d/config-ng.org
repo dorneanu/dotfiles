@@ -255,6 +255,27 @@ Configure GPG assistant
           ("PROJ" . +org-todo-project)
           ("DONE"   . +org-todo-cancel)))
 #+end_src
+** Custom functions
+
+Prefetch HTML title whenever ~org-link-insert~ (~C-c C-l~) is called:
+
+#+begin_src emacs-lisp
+;; Found here: https://gist.github.com/jmn/34cd4205fa30ccf83f94cb1bc0198f3f
+(defun jmn/url-get-title (url &optional descr)
+  "Takes a URL and returns the value of the <title> HTML tag,
+   Thanks to https://frozenlock.org/tag/url-retrieve/ for documenting url-retrieve"
+  (let ((buffer (url-retrieve-synchronously url))
+        (title nil))
+    (save-excursion
+      (set-buffer buffer)
+      (goto-char (point-min))
+      (search-forward-regexp "<title>\\([^<]+?\\)</title>")
+      (setq title (match-string 1 ) )
+      (kill-buffer (current-buffer)))
+    title))
+
+(setq org-make-link-description-function 'jmn/url-get-title)
+#+end_src
 
 ** org-agenda
 #+begin_src emacs-lisp
