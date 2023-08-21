@@ -45,8 +45,11 @@
 ;; Tiddlywiki folder
 (setq tiddlywiki-directory "/cs/priv/repos/brainfck.org/")
 
-(use-package auth-source-pass
-    :config  (auth-source-pass-enable))
+(use-package! auth-source-pass
+    :demand t
+    :config
+    (message "Enabling auth-source-pass")
+    (auth-source-pass-enable))
 (setq auth-sources '("~/.authinfo.gpg", (password-store)))
 
 ;; Enable local Variables
@@ -90,15 +93,14 @@ Run garbage collection when Emacs is unfocused
 ** Password store
 Load password store (using ~pass~)
 #+begin_src emacs-lisp
-(use-package auth-source)
-(use-package password-store)
-(use-package pass)
+(use-package! auth-source)
+(use-package! password-store)
+(use-package! pass)
 
 ;; Use password store (especially for SMTP passwords)
 (after! auth-source
     (setq auth-sources '(password-store))
 )
-
 #+end_src
 
 * Keyboard Bindings
@@ -141,6 +143,11 @@ Load password store (using ~pass~)
   "C-j" 'evil-window-down
   "C-x h" 'previous-buffer
   "C-x l" 'next-buffer)
+#+end_src
+*** Keybindings
+Yanking
+#+begin_src emacs-lisp
+(map! "M-i" #'yank)
 #+end_src
 ** which-key
 #+begin_src emacs-lisp
@@ -300,7 +307,9 @@ Load password store (using ~pass~)
   "j"   '(:ignore t :which-key "jump")
   "jj"  '(avy-goto-char :which-key "jump to char")
   "jw"  '(avy-goto-word-0 :which-key "jump to word")
-  "jl"  '(avy-goto-line :which-key "jump to line"))
+  "jl"  '(avy-goto-line :which-key "jump to line")
+  "jml" '(avy-move-line :which-key "Move line")
+  "jmr" '(avy-move-region :which-key "Move region"))
 #+end_src
 *** google-translate
 #+begin_src emacs-lisp
@@ -622,6 +631,7 @@ Current pattern: %`evil-mc-pattern
     (sp-local-pair "*" "*" :wrap "C-ö *")
     (sp-local-pair "/" "/" :wrap "C-ö /")
     (sp-local-pair "_" "_" :wrap "C-ö _")
+    (sp-local-pair "~" "~" :wrap "C-ö ~")
     (sp-local-pair "+" "+" :wrap "C-ö +"))
 
   ;; use smartparens-mode everywhere
@@ -630,9 +640,14 @@ Current pattern: %`evil-mc-pattern
 * Reading
 ** olivetti-mode
 #+begin_src emacs-lisp
-(use-package olivetti
-  :hook
-  ((olivetti-mode-on-hook . (lambda () (olivetti-set-width 120)))))
+;; (use-package olivetti
+;;   :hook
+;;   ((olivetti-mode-on-hook . (lambda () (olivetti-set-width 120)))))
+(use-package! olivetti
+  :init
+  (setq-default olivetti-body-width 0.618)
+  :bind (("C-c t o" . olivetti-mode))
+  :commands olivetti-mode)
 
 ;; Activate olivetti mode in eww buffers
 ;; (add-hook 'eww-after-render-hook '(lambda ()
@@ -711,6 +726,7 @@ Current pattern: %`evil-mc-pattern
   :bind (("C-c w w" . eww)
          ("C-c w i" . eww-wiki)
          ("C-c w c" . browse-url-chrome)
+         ("C-c w x" . xwidget-webkit-browse-url)
          ("C-c w l" . eww-follow-link))
   :init
   ;; (setq browse-url-browser-function 'eww-browse-url)
@@ -729,7 +745,12 @@ Current pattern: %`evil-mc-pattern
   (require 'shrface))
 
 #+end_src
-**  leo
+** xwidget
+#+begin_src emacs-lisp
+;; (require 'elfeed-webkit)
+(modify-frame-parameters nil '((inhibit-double-buffering . t)))
+#+end_src
+** leo
 #+begin_src emacs-lisp
 (use-package leo)
 (map! :leader
@@ -862,6 +883,13 @@ Setup dired-subtree
    ("o" . link-hint-open-link)
    ("c" . link-hint-copy-link)))
 #+end_src
+** ace-link
+#+begin_src emacs-lisp
+(map! :map org-mode-map
+    :localleader
+    :prefix ("l" . "clock")
+    "a" #'ace-link-org)
+#+end_src
 
 * UI
 ** Minimal interface
@@ -920,22 +948,29 @@ Highlight the current line
 Set theme
 #+begin_src emacs-lisp
 ;; (setq doom-theme 'kaolin-dark)
-(use-package doom-themes
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'kaolin-ocean t)
+;; (use-package doom-themes
+;;   :config
+;;   ;; Global settings (defaults)
+;;   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+;;         doom-themes-enable-italic t) ; if nil, italics is universally disabled
+;;   (load-theme 'kaolin-ocean t)
 
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  ;; (doom-themes-neotree-config)
-  ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "Netbeans") ; use "doom-colors" for less minimal icon theme
-  (doom-themes-treemacs-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+;;   ;; Enable flashing mode-line on errors
+;;   (doom-themes-visual-bell-config)
+;;   ;; Enable custom neotree theme (all-the-icons must be installed!)
+;;   ;; (doom-themes-neotree-config)
+;;   ;; or for treemacs users
+;;   (setq doom-themes-treemacs-theme "Netbeans") ; use "doom-colors" for less minimal icon theme
+;;   (doom-themes-treemacs-config)
+;;   ;; Corrects (and improves) org-mode's native fontification.
+;;   (doom-themes-org-config))
+
+(use-package! modus-operandi-theme
+  :defer
+  :init
+  (setq modus-operandi-theme-scale-headings t)
+  (setq modus-operandi-theme-diffs 'desaturated)
+  (setq modus-operandi-theme-intense-paren-match t))
 #+end_src
 *** Fonts
 #+begin_src emacs-lisp
@@ -977,7 +1012,7 @@ Set theme
 #+begin_src emacs-lisp
 (with-eval-after-load 'doom-themes
   (doom-themes-treemacs-config))
-;; (setq doom-themes-treemacs-theme "doom-atom")
+(setq doom-themes-treemacs-theme "default")
 (setq doom-themes-treemacs-enable-variable-pitch nil)
 ;; (setq treemacs-no-png-images t)
 #+end_src
@@ -1300,13 +1335,46 @@ I have to load by defining a ~load-path~.
 *** org-emphasis-alist
 #+begin_src emacs-lisp
 ;; https://emacs.stackexchange.com/questions/44081/how-to-tweak-org-emphasis-alist-to-put-e-g-neon-yellow-over-bold-or-italic
+;; (setq org-emphasis-alist
+;;   '(("*" (bold :foreground "orange"))
+;;     ("/" italic)
+;;     ;; ("_" (:background "deep sky blue" :foreground "MidnightBlue"))
+;;     ("=" org-verbatim verbatim)
+;;     ("~" (:foreground "orange"))
+;;     ("+" (:strike-through t))))
+
+;; https://protesilaos.com/emacs/modus-themes
+(defface my-org-emphasis-bold
+  '((default :inherit bold)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#a60000")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#ff8059"))
+  "My bold emphasis for Org.")
+
+(defface my-org-emphasis-italic
+  '((default :inherit italic)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#005e00")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#44bc44"))
+  "My italic emphasis for Org.")
+
+(defface my-org-emphasis-underline
+  '((default :inherit underline)
+    (((class color) (min-colors 88) (background light))
+     :foreground "#813e00")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#d0bc00"))
+  "My underline emphasis for Org.")
+
 (setq org-emphasis-alist
-  '(("*" (bold :foreground "orange"))
-    ("/" italic)
-    ;; ("_" (:background "deep sky blue" :foreground "MidnightBlue"))
-    ("=" org-verbatim verbatim)
-    ("~" (:foreground "orange"))
-    ("+" (:strike-through t))))
+      '(("*" my-org-emphasis-bold)
+        ("/" my-org-emphasis-italic)
+        ("_" my-org-emphasis-underline)
+        ("=" org-verbatim verbatim)
+        ("~" org-code verbatim)
+        ("+" (:strike-through t))))
 #+end_src
 
 ** org-contrib
@@ -1443,13 +1511,13 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:name "Quickies"
                              :and (:effort< "0:15" :not (:tag "recurring"))
                              )
+                            (:name "This Week"
+                             :auto-property "week"
+                             )
                             (:name "Overdue"
                              :deadline past
                              :scheduled past
                              :order 2)
-                            (:name "This Week"
-                             :property ("week")
-                             )
                             (:name "Soon"
                              :deadline feature
                              :scheduled feature
@@ -1477,6 +1545,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:discard (:tag "inactive"))
                             (:name "Projects"
                              :auto-property "project"
+                             :todo t
                              :order 1)
                             (:discard (:anything))))))
             )
@@ -1716,9 +1785,11 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 
 ** org-ql
 [[https://github.com/alphapapa/org-ql][org-ql]] is a package to query the org files. I'm using it in my review workflow and for custom agenda views.
-#+begin_src emacs-lisp :tangle no :noweb-ref org-productivity-setup
-(use-package org-ql)
+
+#+begin_src emacs-lisp
+(use-package! org-ql)
 #+end_src
+
 ** org-journal                                                                 :disabled:
 [[https://github.com/bastibe/org-journal][org-journal]] is a plugin for maintaining a journal in org mode. I want(ed) to have its entries separate from my knowledge base.
 
@@ -1796,7 +1867,7 @@ A package to add more evil-mode keybindings to org-mode.
 ** Encryption
 *** epa-file
 #+begin_src emacs-lisp
-(use-package epa-file
+(use-package! epa-file
   :config
   (setq
    epa-file-encrypt-to '("BF2828095372F24D")
@@ -1829,8 +1900,8 @@ A package to add more evil-mode keybindings to org-mode.
     (kill-new url)
     (message (concat "copied url: " url))))
 
-(general-nmap :keymaps 'org-mode-map
-  "C-x C-l" 'vd/org-link-copy)
+;; (general-nmap :keymaps 'org-mode-map
+;;   "C-x C-l" 'vd/org-link-copy)
 #+end_src
 *** auto clock-in when task is marked STARTED
 #+begin_src emacs-lisp :noweb-ref org-keys-setup
@@ -2146,7 +2217,7 @@ From [[https://keido.site/notes/nothung/]]
 
 (map! :leader
       :prefix "m r"
-      "s" #'consult-org-roam-search
+      ;; "s" #'consult-org-roam-search
       "f" #'consult-org-roam-forward-links
       "F" #'consult-org-roam-file-find
       "b" #'consult-org-roam-backlinks)
@@ -2208,7 +2279,7 @@ References:
 (use-package lsp-ui
   :config
   (setq
-        ;; lsp-ui-sideline-show-hover t
+        lsp-ui-sideline-show-hover t
         ;; lsp-ui-sideline-delay 0.5
         ;; lsp-ui-sideline-ignore-duplicates t
         lsp-ui-sideline-show-hover nil
@@ -2457,14 +2528,15 @@ References:
 #+end_src
 ** PlantUML
 #+begin_src emacs-lisp
-(use-package plantuml-mode
-  :mode "(\\.\\(plantuml?\\|uml\\|puml\\)\\'"
-  :config
-  (setq plantuml-default-exec-mode "jar")
+(use-package! plantuml-mode
+  :init
+  (setq plantuml-default-exec-mode 'jar)
   (setq plantuml-indent-level 2)
-  (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
-  (add-to-list 'auto-mode-alist '("\\.uml\\'" . plantuml-mode))
-  (add-hook 'plantuml-mode-hook #'smartparens-mode))
+  (setq plantuml-jar-path "/usr/share/java/plantuml/plantuml.jar")
+  (setq org-plantuml-jar-path (expand-file-name "/usr/share/java/plantuml/plantuml.jar"))
+  (setq org-startup-with-inline-images t)
+  (add-to-list 'org-src-lang-modes '("plantuml" . plantuml))
+  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t))))
 #+end_src
 ** Lisp
 *** Meta Lisp
@@ -2718,6 +2790,18 @@ Get the path to JSON element [[https://github.com/Sterlingg/json-snatcher][in Em
            (format "<!DOCTYPE html><html><title>Impatient Markdown</title><xmp theme=\"united\" style=\"display:none;\"> %s  </xmp><script src=\"http://ndossougbe.github.io/strapdown/dist/strapdown.js\"></script></html>" (buffer-substring-no-properties (point-min) (point-max))))
          (current-buffer)))
 #+end_src
+** tree-sitter
+#+begin_src emacs-lisp
+(use-package! tree-sitter
+   :hook (prog-mode . turn-on-tree-sitter-mode)
+   :hook (tree-sitter-after-on . tree-sitter-hl-mode)
+   :config
+   (require 'tree-sitter-langs)
+   ;; This makes every node a link to a section of code
+   (setq tree-sitter-debug-jump-buttons t
+         ;; and this highlights the entire sub tree in your code
+         tree-sitter-debug-highlight-jump-region t))
+#+end_src
 * Completion
 ** counsel
 #+begin_src emacs-lisp
@@ -2744,6 +2828,7 @@ From [[https://github.com/rememberYou/.emacs.d/blob/master/config.org]]
           ;; Related to the navigation.
           ("M-g a" . consult-org-agenda)
           ("M-g e" . consult-error)
+          ("M-g f" . consult-ripgrep)
           ("M-g g" . consult-goto-line)
           ("M-g h" . consult-org-heading)
           ("M-g i" . consult-imenu)
@@ -2774,8 +2859,12 @@ From [[https://github.com/rememberYou/.emacs.d/blob/master/config.org]]
 ** swipper
 
 #+begin_src emacs-lisp
-(use-package swiper)
-(my-leader-def "m ." 'swiper-isearch)
+(use-package! swiper)
+(map! :leader
+      :prefix "ms"
+      "." #'swiper-thing-at-point
+      "," #'swiper-isearch
+      "a" #'swiper-all-thing-at-point)
 #+end_src
 ** company
 #+begin_src emacs-lisp
@@ -2784,11 +2873,11 @@ From [[https://github.com/rememberYou/.emacs.d/blob/master/config.org]]
   :general
   (:keymaps 'company-mode-map
    :states 'insert
-   "C-n" #'company-complete-common-or-cycle
-   "C-p" #'company-select-previous)
+   "M-n" #'company-complete-common-or-cycle
+   "M-p" #'company-select-previous)
   ('company-active-map
-   "C-n" #'company-complete-common-or-cycle
-   "C-p" #'company-select-previous-or-abort
+   "M-n" #'company-complete-common-or-cycle
+   "M-p" #'company-select-previous-or-abort
    "C-e" #'company-complete
    "TAB" #'company-complete-common-or-cycle)
   :diminish company-mode
@@ -3172,6 +3261,7 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
         :n "+" #'elfeed-search-tag-all
         :n "-" #'elfeed-search-untag-all
         :n "S" #'elfeed-search-set-filter
+        :nm "T" #'elfeed-webkit-toggle
         :n "b" #'elfeed-search-browse-url
         :n "B" #'elfeed-search-eww-open
         :n "a" #'pocket-reader-elfeed-search-add-link
@@ -3183,6 +3273,7 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
         :n doom-leader-key nil
         :nm "q" #'+rss/delete-pane
         :nm "a" #'pocket-reader-elfeed-entry-add-link
+        :nm "gl" #'ace-link-eww
         :n "B" #'elfeed-show-eww-open
         :nm "o" #'ace-link-elfeed
         :n "H" #'my/elfeed-hn-show-comments-at-point
@@ -3190,6 +3281,7 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
         :nm "n" #'elfeed-show-next
         :nm "N" #'elfeed-show-prev
         :nm "p" #'elfeed-show-pdf
+        :nm "T" #'elfeed-webkit-toggle
         :nm "+" #'elfeed-show-tag
         :nm "-" #'elfeed-show-untag
         :nm "s" #'elfeed-show-new-live-search
@@ -3527,11 +3619,11 @@ Add some goodies to elfeed
   ;; (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
   (elfeed-tube-setup)
   :bind (:map elfeed-show-mode-map
-         ("M" . #'dorneanu/elfeed-play-with-mpv)
+         ("M-m" . #'dorneanu/elfeed-play-with-mpv)
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)
          :map elfeed-search-mode-map
-         ("M" . #'dorneanu/elfeed-play-with-mpv)
+         ("M-m" . #'dorneanu/elfeed-play-with-mpv)
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)))
 
@@ -3550,6 +3642,11 @@ Add some goodies to elfeed
     :desc "copy timestamp URL" :n "RET" #'youtube-sub-extractor-copy-ts-link
     :desc "browse at timestamp" :n "C-c C-o" #'youtube-sub-extractor-browse-ts-link))
   (setq youtube-sub-extractor-timestamps nil)
+#+end_src
+*** elfeed-webkit
+#+begin_src emacs-lisp
+;; (use-package! elfeed-webkit
+;;   :after (elfeed))
 #+end_src
 ** Documentation
 *** google-translate
@@ -3598,7 +3695,7 @@ Add some goodies to elfeed
   (setq
    ;; NOTE, this directory needs to be in `org-agenda-files'`
    ejira-org-directory       org-directory
-   ejira-projects            '("TECH" "SEC" "CP")
+   ejira-projects            '("QDS")
 
    ejira-priorities-alist    '(("Highest" . ?A)
                                ("High"    . ?B)
@@ -3633,22 +3730,57 @@ Add some goodies to elfeed
 
 #+end_src
 *** mu4e
+**** General
+Read mail from Emacs
 #+begin_src emacs-lisp
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
+;; (use-package! mu4e)
+;; (use-package! mu4e-contrib)
+;; (use-package mu4e-contrib)
+
 (use-package! mu4e
-  ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
-  ;; :defer 20 ; Wait until 20 seconds after startup
-  :defer t
-  :custom
-  (mu4e-use-fancy-chars t)
-  (mu4e-headers-fields
-   '((:account    . 13)
-     (:human-date . 12)
-     (:flags      . 6)
-     (:from       . 22)
-     (:subject    . nil)))
+  :commands (mu4e mu4e-compose-new)
+  :after (auth-source)
+  :init
+  ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+  (defun mu4e--main-action-str (name func)
+    "This seems to be needed until evil-collection supports the latest version of mu4e."
+    "mu4e-main-action")
+  (require 'mu4e)
+  (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
+  (message "mu4e init finished")
+  (setq mu4e-contexts nil)
+  (setq boru-kacka (+pass-get-secret "mail/gmail/personal/username"))
+
   :config
+  ;;   ;; Overall layout
+  (message "Config of mu4e loaded")
+  (setq mu4e-use-fancy-chars t)
+  (setq mu4e-headers-fields
+        '((:account    . 13)
+          (:human-date . 12)
+          (:flags      . 6)
+          (:from       . 22)
+          (:subject    . nil)))
+
+  ;; And change default threading characters to some "nicer" looking chars
+  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+  ;; Also change to some nicer characters for marks
+  (setq mu4e-headers-new-mark    '("N" . "📨"))
+  (setq mu4e-headers-passed-mark  '("P" . "›"))
+  (setq mu4e-headers-replied-mark '("R" . "‹"))
+  (setq mu4e-headers-seen-mark   '("S" . ""))
+  (setq mu4e-headers-attach-mark '("a" . "📎"))
+  (setq mu4e-headers-personal-mark '("p" . ""))
+  (setq mu4e-headers-unread-mark '("u" . "📫"))
+
   ;; This is set to 't' to avoid mail syncing issues when using mbsync
-  ;; (setq mu4e-change-filenames-when-moving t)
+  (setq mu4e-change-filenames-when-moving t)
 
   ;; Refresh mail using isync every 10 minutes
   (setq mu4e-update-interval (* 10 60))
@@ -3669,8 +3801,15 @@ Add some goodies to elfeed
 
   ;; Improve rendering of rich-text messages (html)
   (setq shr-color-visible-luminance-min 80)
+  )
+#+end_src
 
-  ;; Set contexts
+Use a function to set mu4e contexts
+
+#+begin_src emacs-lisp
+(defun dorneanu/set-mu4e-contexts ()
+  "Set mail contexts for mu4e"
+  (interactive)
   (setq mu4e-contexts
         `( ,(make-mu4e-context
              :name "gmail"
@@ -3701,8 +3840,7 @@ Add some goodies to elfeed
                  (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
              :vars `((user-mail-address . ,(+pass-get-secret "mail/personal/username"))
                      (user-full-name    . "Victor Dorneanu")
-                     (smtpmail-smtp-user . ,(+pass-get-secret "mail/personal/username"))
-                     (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-smtp-user . ,(+pass-get-secret "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
                      (smtpmail-smtp-service . 465)
                      (smtpmail-stream-type  . ssl)
                      (mu4e-compose-signature . "Victor via Emacs")
@@ -3715,44 +3853,51 @@ Add some goodies to elfeed
              :match-func
              (lambda (msg)
                (when msg
-                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
              :vars `((user-mail-address . ,(+pass-get-secret "mail/gmail/work/username"))
                      (user-full-name    . "Victor Dorneanu")
                      (smtpmail-smtp-user . ,(+pass-get-secret "mail/gmail/work/username"))
                      (smtpmail-smtp-server  . "smtp.gmail.com")
                      (smtpmail-smtp-service . 465)
                      (smtpmail-stream-type  . ssl)
-                     (mu4e-compose-signature . "Victor via Emacs")
                      (mu4e-drafts-folder  . "/cashlink/drafts")
                      (mu4e-sent-folder  . "/cashlink/sent")
                      (mu4e-trash-folder  . "/cashlink/bin")
-                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Senior Security Engineer @ Cashlink\n"))
-                     )))))
+                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                     ))))
+  )
 
-
-
-  ;; (setq mu4e-drafts-folder "/[Gmail]/Drafts")
-  ;; (setq mu4e-sent-folder   "/[Gmail]/Sent Mail")
-  ;; (setq mu4e-refile-folder "/[Gmail]/All Mail")
-  ;; (setq mu4e-trash-folder  "/[Gmail]/Trash")
-
-  ;; (setq mu4e-maildir-shortcuts
-  ;;       '(("/Inbox"             . ?i)
-  ;;         ("/[Gmail]/Sent Mail" . ?s)
-  ;;         ("/[Gmail]/Trash"     . ?t)
-  ;;         ("/[Gmail]/Drafts"    . ?d)
-  ;;         ("/[Gmail]/All Mail"  . ?a))))
 #+end_src
-**** contexts
+
+Use ~mu4e-contrib~:
 #+begin_src emacs-lisp
-(after! mu4e
- )
+(use-package! mu4e-contrib
+  :after mu4e)
+#+end_src
+**** mu4e-views
+#+begin_src emacs-lisp
+(use-package mu4e-views
+  :after mu4e
+  :bind (:map mu4e-headers-mode-map
+      ("v" . mu4e-views-mu4e-select-view-msg-method) ;; select viewing method
+      ("M-n" . mu4e-views-cursor-msg-view-window-down) ;; from headers window scroll the email view
+      ("M-p" . mu4e-views-cursor-msg-view-window-up) ;; from headers window scroll the email view
+      ("f" . mu4e-views-toggle-auto-view-selected-message) ;; toggle opening messages automatically when moving in the headers view
+      ("i" . mu4e-views-mu4e-view-as-nonblocked-html) ;; show currently selected email with all remote content
+  )
+  :config
+  ;; (setq mu4e-views-default-view-method "html") ;; make xwidgets default
+  ;; (mu4e-views-mu4e-use-view-msg-method "html") ;; select the default
+  ;; (setq mu4e-views-next-previous-message-behaviour 'stick-to-current-window) ;; when pressing n and p stay in the current window
+  ;; (setq mu4e-views-auto-view-selected-message t)
+  ) ;; automatically open messages when moving in the headers view
 #+end_src
 ** Bookmarks
 *** pocket-reader.el
 #+begin_src emacs-lisp
 (use-package pocket-reader
-    :after (pocket-lib)
+    :commands (pocket-reader)
+    ;; :after (pocket-lib)
     :config
     ;; Check max column width for site field
     (setq pocket-reader-site-column-max-width 20)
@@ -3879,8 +4024,20 @@ Add some goodies to elfeed
 ;;   :bind ("C-c q" . chatgpt-query))
 
 (require 'chatgpt-shell)
-(setq chatgpt-shell-openai-key (+pass-get-secret "emacs/ejira-url"))
+(setq chatgpt-shell-openai-key (+pass-get-secret "emacs/chatgpt"))
 
+#+end_src
+** chatgpt-shell
+#+begin_src emacs-lisp
+(use-package! chatgpt-shell
+  :commands (chatgpt-shell)
+  :bind (
+         ("C-c a p" . chatgpt-shell-prompt)
+         ("C-c a s" . chatgpt-shell)
+         )
+  :config
+  (setq chatgpt-shell-openai-key (+pass-get-secret "emacs/chatgpt"))
+  )
 #+end_src
 ** org-ai
 #+begin_src emacs-lisp
@@ -3908,9 +4065,14 @@ Add some goodies to elfeed
   :bind (:map copilot-completion-map
               ("<tab>" . 'copilot-accept-completion)
               ("TAB" . 'copilot-accept-completion)
+              ("C-c o" . 'copilot-accept-completion)
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 #+end_src
+
+#+RESULTS:
+: copilot-accept-completion-by-word
+
 ** pass
 #+begin_src emacs-lisp
 (use-package pass)
