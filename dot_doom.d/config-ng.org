@@ -256,7 +256,7 @@ Configure GPG assistant
           ("DONE"   . +org-todo-cancel)))
 #+end_src
 ** Custom functions
-
+*** Prefetch HTML title (org-link-insert)
 Prefetch HTML title whenever ~org-link-insert~ (~C-c C-l~) is called:
 
 #+begin_src emacs-lisp
@@ -276,7 +276,72 @@ Prefetch HTML title whenever ~org-link-insert~ (~C-c C-l~) is called:
 
 (setq org-make-link-description-function 'jmn/url-get-title)
 #+end_src
+*** Create ORG heading from clipboard link
+#+begin_src emacs-lisp
+(defun dorneanu/org-insert-link-from-clipboard (&optional pURL)
+  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+  (interactive)
+  (let*
+      ((url (or pURL (org-web-tools--get-first-url)))
+       (html (org-web-tools--get-url url))
+       (title (org-web-tools--html-title html)))
+    (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url title))))
+#+end_src
 
+*** Auto clock-in when task is started
+#+begin_src emacs-lisp :noweb-ref org-keys-setup
+;; From https://github.com/svetlyak40wt/dot-emacs/blob/master/.emacs.d/lib/org-auto-clock.el
+;; Auto clock-in when task is marked STARTED
+(after! 'org
+  '(progn
+     (defun wicked/org-clock-in-if-starting ()
+       "Clock in when the task is marked STARTED."
+       (when (and (string= org-state "STARTED")
+                  (not (string= org-last-state org-state)))
+         (org-clock-in)))
+
+     (add-hook 'org-after-todo-state-change-hook 'wicked/org-clock-in-if-starting)
+
+     (defadvice org-clock-in (after wicked activate)
+       "Set this task's status to 'STARTED'."
+       (org-todo "STARTED"))
+
+
+     (defun wicked/org-clock-out-if-waiting ()
+       "Clock out when the task is marked WAITING or WIP (Work in Progress)."
+       (when (and (or (string= org-state "WAITING")
+                      (string= org-state "WIP"))
+                  (equal (marker-buffer org-clock-marker) (current-buffer))
+                  (< (point) org-clock-marker)
+                  (> (save-excursion (outline-next-heading) (point))
+                     org-clock-marker)
+                  (not (string= org-last-state org-state)))
+         (org-clock-out)))
+
+     (add-hook 'org-after-todo-state-change-hook 'wicked/org-clock-out-if-waiting)))
+#+end_src
+
+*** enter clock data manually
+From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
+
+#+begin_src emacs-lisp
+(defun dorneanu/org-clock-enter-manually (begin end)
+  "Enter a clock item manually."
+  (interactive (list (org-read-date t t) (org-read-date t t)))
+  (save-excursion
+    (org-clock-find-position nil)
+    (insert-before-markers-and-inherit "\n")
+    (backward-char 1)
+    (insert-and-inherit org-clock-string " ")
+    (org-insert-time-stamp begin t t)
+    (org-insert-time-stamp end t t "--")
+    (org-evaluate-time-range t)))
+
+(map! :map org-mode-map
+    :localleader
+    :prefix ("c" . "clock")
+    "m" #'dorneanu/org-clock-enter-manually)
+#+end_src
 ** org-agenda
 #+begin_src emacs-lisp
 (use-package! org-agenda
@@ -726,6 +791,11 @@ Insert images easily into ORG mode files
 ;; Drag-and-drop to `dired`
 (add-hook 'dired-mode-hook 'org-download-enable)
 #+end_src
+** org-web-tools
+#+begin_src emacs-lisp
+(use-package! org-web-tools
+  :after org)
+#+end_src
 
 * User Interface
 :PROPERTIES:
@@ -834,6 +904,22 @@ Use expand-region
 (wrap-region-add-wrapper "_" "_" nil 'org-mode)
 (wrap-region-add-wrapper "~" "~" nil 'org-mode)
 (wrap-region-add-wrapper "+" "+" nil 'org-mode)
+#+end_src
+** Multiple cursors
+*** multiple-cursors
+I'm still testing these key bindings. From https://github.com/dakra/dmacs
+
+#+begin_src emacs-lisp
+(use-package! multiple-cursors
+  :bind (("C-c m" . mc/mark-all-dwim)
+         ("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)
+         :map mc/keymap
+         ("C-x v" . mc/vertical-align-with-space)
+         ("C-x n" . mc-hide-unmatched-lines-mode))
+  :config
+  (global-unset-key (kbd "M-<down-mouse-1>"))
+  (global-set-key (kbd "M-<mouse-1>") 'mc/add-cursor-on-click))
 #+end_src
 * Multimedia
 ** TODO emms
@@ -1535,22 +1621,23 @@ sure or if you don’t remember what your snippet is.
 My toggle keybinds are prefixed by ~t~.
 
 #+name: keybinds-toggles
-| Key | Function                              | Description                      |
-|-----+---------------------------------------+----------------------------------|
-|     |                                       | toggles                          |
-| TAB | tab-bar-mode                          |                                  |
-| t   | my/modify-frame-alpha-background/body |                                  |
-| T   | counsel-load-theme                    |                                  |
-| d   |                                       | debug                            |
-| f   | focus-mode                            | Activate focus-mode              |
-| de  | toggle-debug-on-error                 |                                  |
-| dq  | toggle-debug-on-quit                  |                                  |
-| i   |                                       | input method                     |
-| it  | toggle-input-method                   |                                  |
-| is  | set-input-method                      |                                  |
-| o   | olivetti-mode                         | Togggle olivetti mode            |
-| n   | org-num-mode                          | Toggle org num mode              |
-| m   | hide-mode-line-mode                   | Hides modeline in current buffer |
+| Key | Function                              | Description                       |
+|-----+---------------------------------------+-----------------------------------|
+|     |                                       | toggles                           |
+| TAB | tab-bar-mode                          |                                   |
+| t   | my/modify-frame-alpha-background/body |                                   |
+| T   | counsel-load-theme                    |                                   |
+| d   |                                       | debug                             |
+| f   | focus-mode                            | Activate focus-mode               |
+| de  | toggle-debug-on-error                 |                                   |
+| dq  | toggle-debug-on-quit                  |                                   |
+| i   |                                       | input method                      |
+| it  | toggle-input-method                   |                                   |
+| is  | set-input-method                      |                                   |
+| o   | olivetti-mode                         | Togggle olivetti mode             |
+| n   | org-num-mode                          | Toggle org num mode               |
+| m   | hide-mode-line-mode                   | Hides modeline in current buffer  |
+| v   | visual-fill-column-mode               | Activates visual fill column mode |
 
 ** Projects
 
@@ -1576,16 +1663,17 @@ My toggle keybinds are prefixed by ~t~.
 ** Inserts
 
 #+name: keybinds-inserts
-| Key | Function                     | Description                 |
-|-----+------------------------------+-----------------------------|
-|     |                              | inserts                     |
-| c   | org-download-clipboard       | Insert image from clipboard |
-| eb  | org-emphasize-bold           |                             |
-| ec  | org-emphasize-code           |                             |
-| ei  | org-emphasize-italic         |                             |
-| es  | org-emphasize-strike-through |                             |
-| eu  | org-emphasize-underline      |                             |
-| ev  | org-emphasize-verbatim       |                             |
+| Key | Function                                | Description                 |
+|-----+-----------------------------------------+-----------------------------|
+|     |                                         | inserts                     |
+| c   | org-download-clipboard                  | Insert image from clipboard |
+| eb  | org-emphasize-bold                      |                             |
+| ec  | org-emphasize-code                      |                             |
+| ei  | org-emphasize-italic                    |                             |
+| es  | org-emphasize-strike-through            |                             |
+| eu  | org-emphasize-underline                 |                             |
+| ev  | org-emphasize-verbatim                  |                             |
+| lc  | dorneanu/org-insert-link-from-clipboard | Insert link from clipboard  |
 
 ** Open
 
@@ -1709,6 +1797,7 @@ ace-link
 
 (package! org-super-agenda)
 (package! org-download)
+(package! org-web-tools)
 #+end_src
 ** Programming
 #+begin_src emacs-lisp
