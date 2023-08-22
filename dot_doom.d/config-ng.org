@@ -42,6 +42,7 @@ Some defaults I'd like to use
 ** Emacs Behavior
 ** Key management
 *** general
+
 #+begin_src emacs-lisp
 (use-package! general
   :config
@@ -60,7 +61,7 @@ Some defaults I'd like to use
   (general-create-definer dorneanu/major-leader-key
     :states '(normal insert visual emacs)
     :keymaps 'override
-    :prefix ","
+    :prefix "SPC"
     :global-prefix "M-m"))
 #+end_src
 
@@ -95,7 +96,7 @@ Change default Doom leaders:
 (setq doom-leader-alt-key "M-n")
 
 (setq doom-localleader-key ",")
-(setq doom-localleader-alt-key "M-,")
+(setq doom-localleader-alt-key "M-#")
 #+end_src
 
 *** Buffer switching
@@ -113,6 +114,55 @@ Change default Doom leaders:
   "C-x h" 'previous-buffer
   "C-x l" 'next-buffer)
 #+end_src
+*** Hydras
+
+Zen mode for focus:
+
+#+begin_src emacs-lisp
+(defhydra zen-mode (:color blue :hint nil)
+  "
+  Commands for zen mode^:
+  "
+  ("o"  olivetti-mode "olivetti-mode" :exit nil)
+  ("e"  olivetti-expand "olivetti-expand" :exit nil)
+  ("s" olivetti-shrink "olivetti-shrink" :exit nil)
+  ("f" visual-fill-column-mode "visual-fill-column-mode" :exit nil)
+  ("F" set-fill-column "Set fill column" :exit nil)
+  ("q" nil "quit" :color red))
+#+end_src
+
+#+begin_src emacs-lisp
+(defhydra hydra-buffer-menu (:color pink
+                             :hint nil)
+  "
+^Mark^             ^Unmark^           ^Actions^          ^Search
+^^^^^^^^-----------------------------------------------------------------
+_m_: mark          _u_: unmark        _x_: execute       _R_: re-isearch
+_s_: save          _U_: unmark up     _b_: bury          _I_: isearch
+_d_: delete        ^ ^                _g_: refresh       _O_: multi-occur
+_D_: delete up     ^ ^                _T_: files only: % -28`Buffer-menu-files-only
+_~_: modified
+"
+  ("m" Buffer-menu-mark)
+  ("u" Buffer-menu-unmark)
+  ("U" Buffer-menu-backup-unmark)
+  ("d" Buffer-menu-delete)
+  ("D" Buffer-menu-delete-backwards)
+  ("s" Buffer-menu-save)
+  ("~" Buffer-menu-not-modified)
+  ("x" Buffer-menu-execute)
+  ("b" Buffer-menu-bury)
+  ("g" revert-buffer)
+  ("T" Buffer-menu-toggle-files-only)
+  ("O" Buffer-menu-multi-occur :color blue)
+  ("I" Buffer-menu-isearch-buffers :color blue)
+  ("R" Buffer-menu-isearch-buffers-regexp :color blue)
+  ("c" nil "cancel")
+  ("v" Buffer-menu-select "select" :color blue)
+  ("o" Buffer-menu-other-window "other-window" :color blue)
+  ("q" quit-window "quit" :color blue))
+#+end_src
+
 ** Security
 *** pass
 
@@ -216,10 +266,12 @@ Configure GPG assistant
 )
 
 ;; Disable flyspell-mode
-(add-hook! 'org-mode-hook (setq-local flyspell-mode nil))
+;; (add-hook! 'org-mode-hook (setq-local flyspell-mode -1))
+(remove-hook 'text-mode-hook #'flyspell-mode)
 
 ;; Disable flycheck-mode
-(add-hook! 'org-mode-hook (setq-local flycheck-mode nil))
+;; (add-hook! 'org-mode-hook (setq-local flycheck-mode nil))
+(remove-hook 'text-mode-hook #'flycheck-mode)
 
 ;; Open GPG files in org mode
 (add-to-list 'auto-mode-alist '("\\.gpg\\'" . org-mode))
@@ -1096,6 +1148,21 @@ I love /olivetti/ mode
   :custom
   (olivetti-body-width 0.8))
 #+end_src
+** visual-fill-column-mode
+#+begin_src emacs-lisp
+(setq visual-fill-column-center-text t
+      visual-fill-column-width 100)
+#+end_src
+** spelling
+#+begin_src emacs-lisp
+(use-package! flyspell
+  :defer t
+  :init
+  ;; Disable for some modes
+  (remove-hook! '(org-mode-hook
+                  prog-mode-hook) #'flyspell-mode)
+)
+#+end_src
 
 * Programming
 ** Version Control
@@ -1613,6 +1680,16 @@ sure or if you don’t remember what your snippet is.
   :infix "i"
   <<general-keybindings-gen(table=keybinds-inserts)>>)
 
+;; Windows
+(dorneanu/major-leader-key
+  :infix "w"
+  <<general-keybindings-gen(table=keybinds-windows)>>)
+
+;; Windows
+(dorneanu/major-leader-key
+  :infix "h"
+  <<general-keybindings-gen(table=keybinds-hydras)>>)
+
 #+end_src
 
 #+RESULTS:
@@ -1658,8 +1735,9 @@ My toggle keybinds are prefixed by ~t~.
 |     |                       | searches                  |
 | r   | rg                    | Run rg.el                 |
 | s   | swiper                | Run swiper                |
-| S   | swiper-all            | Run swiper-all            |
+| a   | swiper-all            | Run swiper-all            |
 | .   | swiper-thing-at-point | Run swiper-thing-at-point |
+
 ** Inserts
 
 #+name: keybinds-inserts
@@ -1685,39 +1763,28 @@ My toggle keybinds are prefixed by ~t~.
 | c   | browse-url-chrome         | Open Chrome                    |
 | e   | eww-browse                | Run eww browser                |
 
+** Hydras
+
+#+name: keybinds-hydras
+| Key | Function      | Description              |
+|-----+---------------+--------------------------|
+|     |               | hydras                   |
+| z   | zen-mode/body | Opens hydra for zen mode |
+
 ** Windows
 
-A couple of keybinds are hidden from which-key, otherwise there’s not much to
-say. The prefix here is ~w~.
 #+name: keybinds-windows
-| Key | Function                      | Description |
-|-----+-------------------------------+-------------|
-|     |                               | windows     |
-| h   | evil-window-left              |             |
-| j   | evil-window-down              |             |
-| k   | evil-window-up                |             |
-| l   | evil-window-right             |             |
-| .   | windows-adjust-size/body      |             |
-| -   | split-window-below-and-focus  |             |
-| /   | split-window-right-and-focus  |             |
-| $   | winum-select-window-by-number |             |
-| 0   | winum-select-window-0-or-10   | none        |
-| 1   | winum-select-window-1         | none        |
-| 2   | winum-select-window-2         | none        |
-| 3   | winum-select-window-3         | none        |
-| 4   | winum-select-window-4         | none        |
-| 5   | winum-select-window-5         | none        |
-| 6   | winum-select-window-6         | none        |
-| 7   | winum-select-window-7         | none        |
-| 8   | winum-select-window-8         | none        |
-| 9   | winum-select-window-9         | none        |
-| b   | kill-buffer-and-delete-window |             |
-| d   | delete-window                 |             |
-| o   | other-window                  |             |
-| D   | delete-other-windows          |             |
-| w   |                               | writeroom   |
-| w.  | writeroom-buffer-width/body   |             |
-| ww  | writeroom-mode                |             |
+| Key | Function                     | Description                        |
+|-----+------------------------------+------------------------------------|
+|     |                              | windows                            |
+| .   | +hydra/window-nav/body       | Change window size and move around |
+| -   | split-window-below-and-focus |                                    |
+| /   | split-window-right-and-focus |                                    |
+| o   | other-window                 |                                    |
+| D   | delete-other-windows         |                                    |
+| w   |                              | writeroom                          |
+| w.  | writeroom-buffer-width/body  |                                    |
+| ww  | writeroom-mode               |                                    |
 
 ** Jumps
 Different keybindings to jump to a window, character or another workspace.
@@ -1768,6 +1835,11 @@ Window management
 
 #+begin_src emacs-lisp
 (package! switch-window)
+#+end_src
+
+Buffer management
+#+begin_src emacs-lisp
+(package! bufler)
 #+end_src
 
 ace-link
@@ -1838,4 +1910,5 @@ ace-link
 ** Exports
 #+begin_src emacs-lisp
 (package! copy-as-format)
+(package! ox-hugo)
 #+end_src
