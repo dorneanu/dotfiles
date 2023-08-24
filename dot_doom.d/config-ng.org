@@ -3,6 +3,12 @@
 #+property: header-args:emacs-lisp+ :tangle ~/.config/doom-config/config.el
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 
+* Still to fix
+** TODO org-clock doesn't start automatically when marking item as STARTED
+** TODO add elfeed
+** TODO add mu4e
+** TODO function for embark to open url in xwidget
+** TODO review org-roam-capture-templates
 * Basics
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
@@ -29,7 +35,7 @@ Some defaults I'd like to use
  user-full-name "Victor Dorneanu"                 ; Set the full name of the current user
  user-mail-address ""                             ; Set the email address of the current user
  vc-follow-symlinks t                             ; Always follow the symlinks
- custom-safe-themes t                             ; Allo all themes
+ ;; custom-safe-themes t                             ; Allo all themes
  view-read-only t)                                ; Always open read-only buffers in view-mode
 
 (column-number-mode t)                            ; Show the column number
@@ -88,6 +94,27 @@ Some helpful macro for generating keybindings out of tables:
            "\n")
 #+end_src
 **
+*** mouse
+I still use the mouse for scrolling, changing frame sizes:
+
+#+begin_src emacs-lisp
+(unless (display-graphic-p)
+  (xterm-mouse-mode 1))
+
+;; Automatically focus frame
+(setq mouse-autoselect-window t)
+
+;; Some keybindings
+(global-set-key (kbd "C-S-<wheel-up>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-<wheel-up>") 'enlarge-window)
+(global-set-key (kbd "C-S-<mouse-4>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-<mouse-4>") 'enlarge-window)
+
+(global-set-key (kbd "C-S-<wheel-down>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-<wheel-down>") 'shrink-window)
+(global-set-key (kbd "C-S-<mouse-5>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-<mouse-5>") 'shrink-window)
+#+end_src
 *** Leaders
 Change default Doom leaders:
 
@@ -760,6 +787,48 @@ management system based on org-mode.
   (org-roam-db-autosync-mode 1))
 #+end_src
 
+Set capture templates for org-roam:
+#+begin_src emacs-lisp
+(after! org-roam
+  (setq org-roam-capture-templates
+        '(("d" "default" plain
+           "%?"
+           :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("j" "Journal" plain "%?"
+           :if-new (file+head "journal/%<%Y-%m-%d>.org"
+                              "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ("b" "book" plain "%?"
+           :if-new
+           (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ;; Idea from https://daryl.wakatara.com/emacs-gtd-flow-evolved/
+          ("r" "Rez" plain "%?"
+           :target (file+head "rez/%<%Y>/${slug}.org"
+                              "#+TITLE: ${title}
+      ,#+CREATED: %u
+
+      ,* ${title}
+      :PROPERTIES:
+      :URL:
+      :END:
+
+      ,* Actions
+      ,* Quotes
+      ,* Notes
+      ") :unnarrowed t)
+          ("x" "Blog" plain "%?"
+           :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
+           :unnarrowed t)
+          ))
+)
+#+end_src
+
+Configure org-roam-ui:
+
 #+begin_src emacs-lisp
 (use-package! org-roam-ui
   :defer t
@@ -800,6 +869,25 @@ Take full advantage of ~consult~
    ("C-c n l" . consult-org-roam-forward-links)
    ("C-c n r" . consult-org-roam-search))
 #+end_src
+
+**** org-roam-dailies
+#+begin_src emacs-lisp
+(after! org-roam-dailies
+  (setq org-roam-dailies-directory "journal/")
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry
+           "* %?"
+           :if-new (file+head "%<%Y-%m-%d>.org"
+                              "#+TITLE: %<%Y-%m-%d>\n#+DATE: %<%Y-%m-%d>\n#+FILETAGS: journal")))))
+  (map! :leader
+        :prefix "n"
+        (:prefix ("j" . "journal")
+         :desc "Arbitrary date" "d" #'org-roam-dailies-goto-date
+         :desc "Today"          "j" #'org-roam-dailies-goto-today
+         :desc "Tomorrow"       "m" #'org-roam-dailies-goto-tomorrow
+         :desc "Yesterday"      "y" #'org-roam-dailies-goto-yesterday))
+#+end_src
+
 *** emphasize test
 #+begin_src emacs-lisp
 (after! org
@@ -1386,7 +1474,8 @@ I like to open an URL directly in Emacs without having to switch to Chrome:
 (general-define-key
  :keymaps 'xwidget-webkit-mode-map
  "C-c j" 'xwidget-webkit-clone-and-split-below
- "C-c l" 'xwidget-webkit-clone-and-split-right)
+ "C-c l" 'xwidget-webkit-clone-and-split-right
+ "C-c x" 'kill-buffer-and-window)
 #+end_src
 
 Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules/tools/lookup/][lookup module]] from Doom Emacs.
@@ -1417,18 +1506,20 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
 
 * Completion
 ** ivy
+Currently I use ~vertico~, ~consult~ and ~marginalia~. But I'll let this here for "historical" reasons.
+
 *** ivy-posframe
 #+begin_src emacs-lisp
-(use-package! ivy-posframe
-  :config
-  ;; display at `ivy-posframe-style'
-  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
-  (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
-  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-window-center)))
-  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-bottom-left)))
-  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-window-bottom-left)))
-  ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-top-center)))
-  (ivy-posframe-mode 1))
+;; (use-package! ivy-posframe
+;;   :config
+;;   ;; display at `ivy-posframe-style'
+;;   ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
+;;   (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-center)))
+;;   ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-window-center)))
+;;   ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-bottom-left)))
+;;   ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-window-bottom-left)))
+;;   ;; (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display-at-frame-top-center)))
+;;   (ivy-posframe-mode 1))
 #+end_src
 *** Settings
 
@@ -1639,6 +1730,274 @@ sure or if you don’t remember what your snippet is.
 * Applications
 ** RSS
 *** TODO elfeed
+Configure elfeed first:
+
+#+begin_src emacs-lisp
+(use-package! elfeed
+  :commands (elfeed)
+  :config
+  (setq elfeed-db-directory "~/.elfeed"
+        elfeed-enclosure-default-dir (expand-file-name "~/Downloads")
+        elfeed-goodies/wide-threshold 0.2
+        elfeed-set-timeout 36000
+        elfeed-search-filter "@1-week-ago +unread"
+        elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw)
+  )
+
+;; Keybindings
+;; TODO: Review this
+(map! :map elfeed-search-mode-map
+      :after elfeed-search
+      [remap kill-this-buffer] "q"
+      [remap kill-buffer] "q"
+      :n doom-leader-key nil
+      :n "c" #'elfeed-search-clear-filter
+      :n "q" #'+rss/quit
+      :n "e" #'elfeed-update
+      :n "gp" #'sqrtminusone/rdrview-elfeed-show
+      :n "r" #'elfeed-search-untag-all-unread
+      :n "R" #'my/elfeed-reddit-show-commments
+      :n "H" #'my/elfeed-hn-show-commments
+      :n "u" #'elfeed-search-tag-all-unread
+      :n "s" #'elfeed-search-live-filter
+      :n "RET" #'elfeed-search-show-entry
+      :n "o" #'sqrtminusone/elfeed-search-filter-source
+      :n "p" #'elfeed-show-pdf
+      :n "+" #'elfeed-search-tag-all
+      :n "-" #'elfeed-search-untag-all
+      :n "S" #'elfeed-search-set-filter
+      :nm "T" #'elfeed-webkit-toggle
+      :n "be" #'dorneanu/elfeed-search-browse-url-eww
+      :n "bx" #'dorneanu/elfeed-search-browse-url-xwidget
+      :n "bc" #'dorneanu/elfeed-search-browse-url-chrome
+      :n "B" #'elfeed-search-eww-open
+      :n "a" #'pocket-reader-elfeed-search-add-link
+      :n "y" #'elfeed-search-yank)
+
+(map! :map elfeed-show-mode-map
+      :after elfeed-show
+      [remap kill-this-buffer] "q"
+      [remap kill-buffer] "q"
+      :n doom-leader-key nil
+      :nm "q" #'+rss/delete-pane
+      :nm "a" #'pocket-reader-elfeed-entry-add-link
+      :nm "gl" #'ace-link-eww
+      :n "B" #'elfeed-show-eww-open
+      :n "be" #'dorneanu/elfeed-show-browse-url-eww
+      :n "bx" #'dorneanu/elfeed-show-browse-url-xwidget
+      :n "bc" #'dorneanu/elfeed-show-browse-url-chrome
+      :nm "o" #'ace-link-elfeed
+      :n "H" #'my/elfeed-hn-show-comments-at-point
+      :nm "RET" #'org-ref-elfeed-add
+      :nm "n" #'elfeed-show-next
+      :nm "N" #'elfeed-show-prev
+      :nm "p" #'elfeed-show-pdf
+      :nm "T" #'elfeed-webkit-toggle
+      :nm "+" #'elfeed-show-tag
+      :nm "-" #'elfeed-show-untag
+      :nm "s" #'elfeed-show-new-live-search
+      :nm "y" #'elfeed-show-yank)
+
+
+;; Style the show-mode layout
+(add-hook!
+ 'elfeed-show-mode-hook (
+                         lambda ()
+                         ;; (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
+                         (setq fill-column 50)
+                         (visual-fill-column-mode)
+                         ))
+#+end_src
+
+Custom functions:
+
+#+begin_src emacs-lisp
+(defun hp/elfeed-entry-line-draw (entry)
+  "Print ENTRY to the buffer."
+  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+         (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+         (feed (elfeed-entry-feed entry))
+         (feed-title
+          (when feed
+            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
+         (title-width (- (window-width) elfeed-goodies/feed-source-column-width
+                         elfeed-goodies/tag-column-width 4))
+         (title-column (elfeed-format-column
+                        title (elfeed-clamp
+                               elfeed-search-title-min-width
+                               title-width
+                               title-width)
+                        :left))
+         (tag-column (elfeed-format-column
+                      tags-str (elfeed-clamp (length tags-str)
+                                             elfeed-goodies/tag-column-width
+                                             elfeed-goodies/tag-column-width)
+                      :left))
+         (feed-column (elfeed-format-column
+                       feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width)
+                       :left))
+         (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
+         ;; (entry-authors (concatenate-authors
+         ;;                 (elfeed-meta entry :authors)))
+         ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
+         )
+    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
+        (progn
+          (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize date 'face 'elfeed-search-date-face) " ")
+          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+          ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
+          (insert (propertize title 'face title-faces 'kbd-help title))
+          )
+      (insert (propertize title 'face title-faces 'kbd-help title))))
+  )
+
+#+end_src
+
+Functions for browsing items:
+
+#+begin_src emacs-lisp
+;; Browse URL functions
+;; elfeed-show-mode
+(defun dorneanu/elfeed-show-browse-url-xwidget (&optional use-generic-p)
+  "open with xwidget"
+  (interactive "P")
+  (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+    (elfeed-show-visit use-generic-p)))
+
+(defun dorneanu/elfeed-show-browse-url-chrome (&optional use-generic-p)
+  "open with chrome"
+  (interactive "P")
+  (let ((browse-url-browser-function #'browse-url-chrome))
+    (elfeed-show-visit use-generic-p)))
+
+(defun dorneanu/elfeed-show-browse-url-eww (&optional use-generic-p)
+  "open with chrome"
+  (interactive "P")
+  (let ((browse-url-browser-function #'eww-browse-url))
+    (elfeed-show-visit use-generic-p)))
+
+;; elfeed-search-mode
+(defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
+  "open with xwidget"
+  (interactive "P")
+  ;; Split window and focus there
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+    (elfeed-search-browse-url use-generic-p)))
+
+(defun dorneanu/elfeed-search-browse-url-chrome (&optional use-generic-p)
+  "open with chrome"
+  (interactive "P")
+  (let ((browse-url-browser-function #'browse-url-chrome))
+    (elfeed-search-browse-url use-generic-p)))
+
+(defun dorneanu/elfeed-search-browse-url-eww (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((browse-url-browser-function #'eww-browse-url))
+    (elfeed-search-browse-url use-generic-p)))
+#+end_src
+
+Use elfeed-score:
+
+#+begin_src emacs-lisp
+(use-package! elfeed-score
+  :after elfeed
+  :custom
+  (elfeed-score-score-file (concat org-directory "/Feeds/elfeed.score"))
+  :config
+  (map! :map elfeed-search-mode-map
+        :n "=" elfeed-score-map)
+  (elfeed-score-enable))
+#+end_src
+
+
+Read elfeed configuration from ORG file:
+
+#+begin_src emacs-lisp
+(use-package! elfeed-org
+  :after (elfeed)
+  :config
+  (setq rmh-elfeed-org-files '("~/work/repos/org/elfeed.org.gpg")))
+
+#+end_src
+
+Configure elfeed-tube:
+
+#+begin_src emacs-lisp
+(use-package! elfeed-tube
+  :after elfeed
+  :config
+  (elfeed-tube-setup)
+  :bind (:map elfeed-show-mode-map
+         ("M-m" . #'dorneanu/elfeed-play-with-mpv)
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)
+         :map elfeed-search-mode-map
+         ("M-m" . #'dorneanu/elfeed-play-with-mpv)
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)))
+#+end_src
+
+Open ~elfeed~ in its own workspace (from [[https://github.com/hieutkt/dotfiles/tree/main/emacs/.doom.d][here]]):
+
+
+#+begin_src emacs-lisp
+(after! (elfeed)
+  (defadvice! hp/elfeed-in-own-workspace (&rest _)
+  "Open Elfeeds in its own workspace."
+  :before #'elfeed
+  (when (modulep! :ui workspaces)
+    (+workspace-switch "Elfeeds" t))))
+#+end_src
+
+**** reddigg
+Use reddigg to show reddit threads.
+#+begin_src emacs-lisp
+(defun my/elfeed-reddit-show-commments (&optional link)
+  (interactive)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (reddigg-view-comments link)))
+#+end_src
+**** hnreader
+Open in same window
+#+begin_src emacs-lisp
+(setq hnreader-view-comments-in-same-window nil)
+#+end_src
+
+Use hnreader to show HN threads
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-commments (&optional link)
+  (interactive)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (setq-local hnreader-view-comments-in-same-window nil)
+    (hnreader-promise-comment (format "%s" link))))
+#+end_src
+
+Use hnread to show HN threads for a URL at point
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-comments-at-point ()
+  "Kill the url at point."
+  (interactive)
+  (setq-local hnreader-view-comments-in-same-window t)
+  (hnreader-comment (format "%s" (url-get-url-at-point))))
+#+end_src
+
 ** Productivity
 *** TODO wakatime
 *** TODO jira
@@ -1815,6 +2174,12 @@ Different keybindings to jump to a window, character or another workspace.
 (package! copilot
   :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
 (package! keepass-mode)
+
+;; For elfeed
+(package! elfeed-tube)
+(package! elfeed-score)
+(package! hnreader)
+(package! reddigg)
 #+end_src
 ** Auto completion
 #+begin_src emacs-lisp
