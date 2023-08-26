@@ -2181,7 +2181,15 @@ Use hnread to show HN threads for a URL at point
 #+end_src
 
 ** Productivity
-*** TODO wakatime
+*** wakatime
+#+begin_src emacs-lisp
+(use-package! wakatime-mode
+  :config
+  (setq
+   wakatime-python-bin "/home/victor/.pyenv/versions/emacs/bin/python"
+   wakatime-cli-path "/home/victor/.pyenv/versions/emacs/bin/wakatime")
+  (global-wakatime-mode))
+#+end_src
 *** TODO jira
 ** AI
 *** chatgpt-shell
@@ -2362,6 +2370,8 @@ Different keybindings to jump to a window, character or another workspace.
 (package! elfeed-score)
 (package! hnreader)
 (package! reddigg)
+
+(package! wakatime-mode)
 #+end_src
 ** Auto completion
 #+begin_src emacs-lisp
