@@ -1464,6 +1464,188 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 
 (add-hook! 'terraform-mode-hook #'terraform-format-on-save-mode)
 #+end_src
+* Email
+** mu4e
+*** General config
+#+begin_src emacs-lisp
+;; Make sure we find the mu4e package
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+(use-package! mu4e
+  :commands (mu4e)
+  ;; Open mu4e with the 'Mail' key (if your keyboard has one)
+  :bind (("C-c a m" . mu4e)
+         :map mu4e-main-mode-map
+         ("U" . mu4e-update-mail-and-index-background)
+         :map mu4e-headers-mode-map
+         ("TAB" . mu4e-headers-next-unread)
+         ;; ("j" . mu4e-move-to-junk)
+         ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+         :map mu4e-view-mode-map
+         ("A" . mu4e-view-attachment-action)
+         ("M-o" . ace-link-mu4e)
+         ("o" . ace-link-mu4e)
+         ("n" . mu4e-scroll-up)
+         ("p" . mu4e-scroll-down)
+         ("N" . mu4e-view-headers-next)
+         ("P" . mu4e-view-headers-prev)
+         ;; ("j" . mu4e-move-to-junk)
+         )
+  :hook (message-send . message-warn-if-no-attachments)
+  :init
+  ;; Prefer text over html/ritchtext
+  (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
+
+  ;; Use completing-read (which is ivy) instead of ido
+  (setq mu4e-completing-read-function 'completing-read)
+
+  ;; set mu4e as default mail client
+  (setq mail-user-agent 'mu4e-user-agent)
+
+  :config
+
+  ;; Refresh mail using isync every 10 minutes
+  (setq mu4e-update-interval (* 10 60))
+
+  ;; Command used to retrieve new mails
+  (setq mu4e-get-mail-command "mbsync -a")
+
+  ;; Defaults
+  (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
+  (setq-default mu4e-drafts-folder "/private/Drafts")
+  (setq-default mu4e-sent-folder   "/private/Sent")
+  (setq-default mu4e-trash-folder  "/private/Trash")
+
+  ;; Set citation settings
+  (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+  ;; And change default threading characters to some "nicer" looking chars
+  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+  ;; Also change to some nicer characters for marks
+  (setq mu4e-headers-new-mark    '("N" . "📨"))
+  (setq mu4e-headers-passed-mark  '("P" . "›"))
+  (setq mu4e-headers-replied-mark '("R" . "‹"))
+  (setq mu4e-headers-seen-mark   '("S" . ""))
+  (setq mu4e-headers-attach-mark '("a" . "📎"))
+  (setq mu4e-headers-personal-mark '("p" . ""))
+  (setq mu4e-headers-unread-mark '("u" . "📫"))
+
+
+  ;; Set date format (header view)
+  (setq mu4e-headers-date-format "%F")
+
+  ;; How should html context be converted
+  ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+  (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
+
+  ;; Improve rendering of rich-text messages (html)
+  (setq shr-color-visible-luminance-min 80)
+
+  ;; Show email address as well and not only the name
+  (setq-default mu4e-view-show-addresses t)
+
+  ;; Don't reply to self
+  (setq mu4e-compose-dont-reply-to-self t)
+
+  ;; Setup some handy shortcuts
+  ;; you can quickly switch to your Inbox -- press ``ji''
+  ;; then, when you want archive some messages, move them to
+  ;; the 'All Mail' folder by pressing ``ma''.
+
+  ;; View mail in browser with "a V"
+  (add-to-list 'mu4e-view-actions
+               '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+  (add-to-list 'mu4e-view-actions
+               '("fViewInChrome" . mu4e-action-view-in-chrome) t)
+  (add-to-list 'mu4e-view-actions
+               '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
+
+  (setq mu4e-maildir-shortcuts
+        '(("/private/Inbox"   . ?i)
+          ("/private/Sent"    . ?s)
+          ("/private/Trash"   . ?t)
+          ("/private/Drafts"  . ?d)
+          ("/private/Junk"    . ?j)
+          ("/private/Archive" . ?a)))
+
+  ;; Set contexts
+  (dorneanu/set-mu4e-contexts)
+  )
+
+#+end_src
+*** Contexts
+Set contexts
+#+begin_src emacs-lisp
+(defun dorneanu/set-mu4e-contexts ()
+  "Set mail contexts for mu4e"
+  (interactive)
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "gmail"
+             :enter-func (lambda () (mu4e-message "Entering gmail context"))
+             :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+             ;; we match based on the contact-fields of the message
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(+pass-get-secret "mail/gmail/personal/username"))
+                     (user-full-name    . "Cyneox")
+                     (smtpmail-smtp-user . ,(+pass-get-secret "mail/gmail/personal/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Cyneox via Gmail")
+                     (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                     (mu4e-sent-folder  . "/[Gmail]/sent")
+                     (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                     (mu4e-trash-folder  . "/[Gmail]/bin")))
+           ,(make-mu4e-context
+             :name "variomedia"
+             :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(+pass-get-secret "mail/personal/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(+pass-get-secret "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Victor via Emacs")
+                     (mu4e-drafts-folder  . "/variomedia/drafts")
+                     (mu4e-sent-folder  . "/variomedia/sent")
+                     (mu4e-trash-folder  . "/variomedia/bin")))
+           ,(make-mu4e-context
+             :name "cashlink"
+             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(+pass-get-secret "mail/gmail/work/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(+pass-get-secret "mail/gmail/work/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-drafts-folder  . "/cashlink/drafts")
+                     (mu4e-sent-folder  . "/cashlink/sent")
+                     (mu4e-trash-folder  . "/cashlink/bin")
+                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                     ))))
+  )
+
+#+end_src
+
+#+RESULTS:
+: dorneanu/set-mu4e-contexts
 
 * Browsers
 ** xwidget-webkit
