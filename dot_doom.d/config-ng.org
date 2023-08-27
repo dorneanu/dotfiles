@@ -6,7 +6,8 @@
 * Still to fix
 ** TODO org-clock doesn't start automatically when marking item as STARTED
 ** TODO add elfeed
-** TODO add mu4e
+** WIP add mu4e
+- [ ] Implement trashing (esp. for gmail accounts)
 ** TODO function for embark to open url in xwidget
 ** TODO review org-roam-capture-templates
 * Basics
@@ -978,6 +979,7 @@ I start to like the modeline:
   :config
   (setq doom-modeline-buffer-encoding t
         ;; doom-modeline-persp-name t
+        doom-modeline-mu4e nil
         doom-modeline-modal-icon t))
 #+end_src
 ** solaire
@@ -1473,26 +1475,33 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 
 (use-package! mu4e
   :commands (mu4e)
-  ;; Open mu4e with the 'Mail' key (if your keyboard has one)
   :bind (("C-c a m" . mu4e)
          :map mu4e-main-mode-map
          ("U" . mu4e-update-mail-and-index-background)
          :map mu4e-headers-mode-map
          ("TAB" . mu4e-headers-next-unread)
+         ("j" . mu4e-view-headers-next)
+         ("k" . mu4e-view-headers-prev)
+         ("J" . mu4e-search-maildir)
          ;; ("j" . mu4e-move-to-junk)
-         ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+         ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
          :map mu4e-view-mode-map
          ("A" . mu4e-view-attachment-action)
          ("M-o" . ace-link-mu4e)
          ("o" . ace-link-mu4e)
          ("n" . mu4e-scroll-up)
          ("p" . mu4e-scroll-down)
-         ("N" . mu4e-view-headers-next)
-         ("P" . mu4e-view-headers-prev)
+         ("J" . mu4e-view-headers-next)
+         ("K" . mu4e-view-headers-prev)
          ;; ("j" . mu4e-move-to-junk)
          )
-  :hook (message-send . message-warn-if-no-attachments)
   :init
+  ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+  ;; (defun mu4e--main-action-str (name func)
+  ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
+  ;;   "mu4e-main-action")
+  ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
+
   ;; Prefer text over html/ritchtext
   (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
 
@@ -1503,6 +1512,14 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (setq mail-user-agent 'mu4e-user-agent)
 
   :config
+
+  ;; Choose which fields to show
+  (setq mu4e-headers-fields
+        '((:account    . 13)
+          (:human-date . 12)
+          (:flags      . 6)
+          (:from       . 22)
+          (:subject    . nil)))
 
   ;; Refresh mail using isync every 10 minutes
   (setq mu4e-update-interval (* 10 60))
@@ -1520,6 +1537,9 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
   (setq message-citation-line-function 'message-insert-formatted-citation-line)
 
+  ;; Fancy stuff
+  <<mu4e-fancy-marks>>
+
   ;; And change default threading characters to some "nicer" looking chars
   (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
   (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
@@ -1528,13 +1548,13 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
 
   ;; Also change to some nicer characters for marks
-  (setq mu4e-headers-new-mark    '("N" . "📨"))
+  ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
   (setq mu4e-headers-passed-mark  '("P" . "›"))
   (setq mu4e-headers-replied-mark '("R" . "‹"))
   (setq mu4e-headers-seen-mark   '("S" . ""))
-  (setq mu4e-headers-attach-mark '("a" . "📎"))
+  ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
   (setq mu4e-headers-personal-mark '("p" . ""))
-  (setq mu4e-headers-unread-mark '("u" . "📫"))
+  ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
 
 
   ;; Set date format (header view)
@@ -1567,8 +1587,8 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
                '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
 
   (setq mu4e-maildir-shortcuts
-        '(("/private/Inbox"   . ?i)
-          ("/private/Sent"    . ?s)
+        '(("/variomedia/inbox"   . ?i)
+          ("/gmail/inbox"    . ?s)
           ("/private/Trash"   . ?t)
           ("/private/Drafts"  . ?d)
           ("/private/Junk"    . ?j)
@@ -1578,7 +1598,70 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (dorneanu/set-mu4e-contexts)
   )
 
+<<mu4e-view-mode>>
+
 #+end_src
+*** Fancy stuff
+From https://github.com/Phundrak/dotfiles
+
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
+
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+(mapconcat (lambda (line)
+             (let ((mark (car line))
+                   (flag (cadr line))
+                   (icon (caddr line)))
+               (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
+                       mark
+                       flag
+                       icon)))
+           table
+           "\n")
+#+end_src
+
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
+
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
+(setq mu4e-use-fancy-chars t
+      <<mu4e-fancy-marks-gen()>>)
+#+end_src
+
+*** View mode
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
+(add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
 *** Contexts
 Set contexts
 #+begin_src emacs-lisp
