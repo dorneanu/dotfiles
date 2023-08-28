@@ -12,7 +12,7 @@
 ** TODO org-roam
 - [ ] review org-roam-capture-templates
 ** TODO embark
-- [ ] function for embark to open url in xwidget
+- [X] function for embark to open url in xwidget
 ** TODO add elfeed
 ** WIP add mu4e
 - [ ] Implement trashing (esp. for gmail accounts)
@@ -1128,7 +1128,7 @@ position and resume whenever the same video is played again (read [[https://unix
   :after (embark)
   :config
 
-  (setq empv-invidious-instance "https://yt.artemislena.eu/")
+  (setq empv-invidious-instance "https://yewtu.be/")
   (add-to-list 'empv-mpv-args "--ytdl-format=best")
 
   (defun dorneanu/empv-play-url (url &optional _)
@@ -2050,6 +2050,22 @@ Open files either vertically or horizontally using embark:
 (define-key embark-bookmark-map     (kbd "X") (my/embark-split-action find-file split-window-right))
 #+end_src
 
+Open links also in ~xwidget-webkit~:
+
+#+begin_src emacs-lisp
+(defun dorneanu/embark-open-url-in-xwidget-webkit (url)
+  "open with xwidget"
+  (interactive "sURL: ")
+  ;; Split window and focus there
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (xwidget-webkit-browse-url url))
+
+(define-key embark-url-map "X" #'dorneanu/embark-open-url-in-xwidget-webkit)
+#+end_src
+
+
 💡: You can find more examples at https://karthinks.com/software/fifteen-ways-to-use-embark/.
 Initially I wanted to use [[https://discourse.doomemacs.org/t/open-selected-completion-candidate-in-a-split/2525/2][this]] solution but it didn't work.
 
@@ -2646,6 +2662,7 @@ ace-link
 ** Multimedia
 #+begin_src emacs-lisp
 (package! empv)
+;; (package! ytdious)
 #+end_src
 ** Searching
 #+begin_src emacs-lisp
