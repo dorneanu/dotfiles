@@ -14,6 +14,10 @@
 ** TODO embark
 - [X] function for embark to open url in xwidget
 ** TODO add elfeed
+** TODO smartparens
+- how to use it
+- 2023-08-28 ◦ [[https://xenodium.com/emacs-smartparens-auto-indent/][Emacs smartparens auto-indent]]
+- maybe use as an alternative 👉 2023-08-28 ◦ [[https://github.com/AmaiKinono/puni][GitHub - AmaiKinono/puni: Structured editing (soft deletion, expression navigating & manipulating) that supports many major modes out of the box.]]
 ** WIP add mu4e
 - [ ] Implement trashing (esp. for gmail accounts)
 * Basics
