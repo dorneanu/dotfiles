@@ -4,12 +4,18 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 
 * Still to fix
-** TODO org-clock doesn't start automatically when marking item as STARTED
+** TODO org
+- [ ] org-clock doesn't start automatically when marking item as STARTED
+- [ ] setup org-capture
+  - have a look at phundrak's template
+  - use capture templates (and tables)
+** TODO org-roam
+- [ ] review org-roam-capture-templates
+** TODO embark
+- [ ] function for embark to open url in xwidget
 ** TODO add elfeed
 ** WIP add mu4e
 - [ ] Implement trashing (esp. for gmail accounts)
-** TODO function for embark to open url in xwidget
-** TODO review org-roam-capture-templates
 * Basics
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
@@ -595,7 +601,38 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
           ))
   )
 #+end_src
+** TODO org-capture
+#+begin_src emacs-lisp
+(use-package! org-capture
+  :after org
+  :custom
+  (org-capture-templates
+   '(
+     ;; Docs
+     ;; - Elements: https://orgmode.org/manual/Template-elements.html
+     ;; - Expansion: https://orgmode.org/manual/Template-expansion.html
+     ("t" "Todo" entry (file+headline "~/work/repos/org/inbox.org" "Tasks")
+      "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n %i\n")
 
+     ("T" "Project Todo" entry (file+headline "~/work/repos/org/inbox.org" "Tasks")
+      "* TODO %^{Description}\n:PROPERTIES:\n:CREATED: %U\n:END:\nDesired outcome: %^{Desired outcome} %i\n")
+
+     ("m" "Meeting" entry (file+headline "~/work/repos/org/inbox.org" "Meetings")
+      "* MEETING %?\nSCHEDULED: %t\n:PROPERTIES:\n:CREATED: %U\n:END:\n %i\n")
+
+     ("B" "Bookmark (Clipboard)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
+      "** %(dorneanu/org-roam-insert-link-clipboard)%?"  :prepend t)
+
+     ("b" "Bookmark (Clipboard+Tiddlywiki)" entry (file+headline "~/work/repos/org/bookmarks.org" "Bookmarks")
+      "* %(dorneanu/tw5-add-link)%?"  :prepend t)
+
+     ("s" "Code Snippet" entry
+      (file+headline "~/work/repos/org/inbox.org" "Snippets")
+      "* %?\t%^g\n#+BEGIN_SRC %^{language}\n\n#+END_SRC")))
+  :bind
+  ("C-c c"  . org-capture)
+  )
+#+end_src
 ** org-modern
 
 #+begin_src emacs-lisp
@@ -914,7 +951,8 @@ Take full advantage of ~consult~
   '(("*" (bold :foreground "Orange" ))
     ("/" my-org-emphasis-italic)
     ("_" my-org-emphasis-underline)
-    ("=" (:background "maroon" :foreground "white"))
+    ;; ("=" (:background "maroon" :foreground "white"))
+    ("" org-verbatim verbatim )
     ("~" (:background "deep sky blue" :foreground "MidnightBlue"))
     ("+" (:strike-through t)))))
 
@@ -1519,6 +1557,20 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 
 (add-hook! 'terraform-mode-hook #'terraform-format-on-save-mode)
 #+end_src
+*** plantuml
+#+begin_src emacs-lisp
+(use-package! plantuml-mode
+  :defer t
+  :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
+  :init
+  (add-to-list 'org-babel-load-languages '(plantuml . t))
+  :config
+  (setq plantuml-indent-level 2))
+
+(add-hook! 'plantuml-mode-hook #'smartparens-mode)
+
+#+end_src
+
 * Email
 ** mu4e
 *** General config
@@ -1565,6 +1617,9 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (setq mail-user-agent 'mu4e-user-agent)
 
   :config
+
+  ;; Set mu binary
+  (setq mu4e-mu-binary "/usr/bin/mu")
 
   ;; Choose which fields to show
   (setq mu4e-headers-fields
@@ -1943,10 +1998,10 @@ Open buffer/files in horizontal/vertical split using ~ivy-actions~:
 Open links with MPV:
 
 #+begin_src emacs-lisp
-;; (defun dorneanu/empv-play-url (url)
-;;   (interactive "sURL: ")
-;;   (empv-toggle-video)
-;;   (empv-play url))
+(defun dorneanu/empv-play-url (url)
+  (interactive "sURL: ")
+  (empv-toggle-video)
+  (empv-play url))
 
 ;; (defvar-keymap embark-general-map
 ;;   :doc "Open URL via mpv"
@@ -2073,12 +2128,12 @@ Configure elfeed first:
       :n "q" #'+rss/quit
       :n "e" #'elfeed-update
       :n "gp" #'sqrtminusone/rdrview-elfeed-show
-      :n "r" #'elfeed-search-untag-all-unread
+      :n "R" #'elfeed-search-untag-all-unread
       :n "R" #'my/elfeed-reddit-show-commments
       :n "H" #'my/elfeed-hn-show-commments
-      :n "u" #'elfeed-search-tag-all-unread
+      :n "r" #'elfeed-search-tag-all-unread
       :n "s" #'elfeed-search-live-filter
-      :n "RET" #'elfeed-search-show-entry
+      :n "TAB" #'elfeed-search-show-entry
       :n "o" #'sqrtminusone/elfeed-search-filter-source
       :n "p" #'elfeed-show-pdf
       :n "+" #'elfeed-search-tag-all
@@ -2116,15 +2171,21 @@ Configure elfeed first:
       :nm "s" #'elfeed-show-new-live-search
       :nm "y" #'elfeed-show-yank)
 
+;; Style the search-mode layout
+(add-hook!
+ 'elfeed-search-mode-hook
+ ;; (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
+ (olivetti-mode)
+ (visual-line-mode -1)
+ )
 
 ;; Style the show-mode layout
 (add-hook!
- 'elfeed-show-mode-hook (
-                         lambda ()
-                         ;; (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
-                         (setq fill-column 50)
-                         (visual-fill-column-mode)
-                         ))
+ 'elfeed-show-mode-hook
+ ;; (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
+ (setq fill-column 50)
+ (visual-fill-column-mode)
+)
 #+end_src
 
 Custom functions:
@@ -2159,14 +2220,14 @@ Custom functions:
                                                 elfeed-goodies/feed-source-column-width
                                                 elfeed-goodies/feed-source-column-width)
                        :left))
-         (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
+         ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
          ;; (entry-authors (concatenate-authors
          ;;                 (elfeed-meta entry :authors)))
          ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
          )
     (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
         (progn
-          (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
+          ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
           (insert (propertize date 'face 'elfeed-search-date-face) " ")
           (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
           (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
@@ -2225,17 +2286,17 @@ Functions for browsing items:
     (elfeed-search-browse-url use-generic-p)))
 #+end_src
 
-Use elfeed-score:
+Don't +use+ elfeed-score:
 
 #+begin_src emacs-lisp
-(use-package! elfeed-score
-  :after elfeed
-  :custom
-  (elfeed-score-score-file (concat org-directory "/Feeds/elfeed.score"))
-  :config
-  (map! :map elfeed-search-mode-map
-        :n "=" elfeed-score-map)
-  (elfeed-score-enable))
+;; (use-package! elfeed-score
+;;   :after elfeed
+;;   :custom
+;;   (elfeed-score-score-file (concat org-directory "/Feeds/elfeed.score"))
+;;   :config
+;;   (map! :map elfeed-search-mode-map
+;;         :n "=" elfeed-score-map)
+;;   (elfeed-score-enable))
 #+end_src
 
 
@@ -2261,9 +2322,23 @@ Configure elfeed-tube:
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)
          :map elfeed-search-mode-map
-         ("M-m" . #'dorneanu/elfeed-play-with-mpv)
+         ("M-m p" . #'dorneanu/elfeed-play-with-mpv)
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)))
+
+;; https://github.com/skeeto/elfeed/issues/267
+(defun dorneanu/elfeed-play-with-mpv ()
+  "Play entry link with mpv."
+  (interactive)
+  (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
+        (quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
+
 #+end_src
 
 Open ~elfeed~ in its own workspace (from [[https://github.com/hieutkt/dotfiles/tree/main/emacs/.doom.d][here]]):
@@ -2503,7 +2578,7 @@ Different keybindings to jump to a window, character or another workspace.
 
 ;; For elfeed
 (package! elfeed-tube)
-(package! elfeed-score)
+;; (package! elfeed-score)
 (package! hnreader)
 (package! reddigg)
 
