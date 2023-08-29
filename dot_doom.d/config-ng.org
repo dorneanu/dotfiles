@@ -1444,8 +1444,8 @@ org-babel supports.
 (use-package! company-go
   :after (company go-mode)
   :config
-  (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
-  ;; (add-to-list 'company-backends 'company-go)
+  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
+  (add-to-list 'company-backends 'company-go)
   )
 
 (use-package! go-guru
@@ -1464,8 +1464,9 @@ org-babel supports.
 #+begin_src emacs-lisp
 (use-package! typescript-mode
   :after (company)
-  :config
-  (setq company-backends '(company-tabnine :separate company-tide company-capf company-yasnippet)))
+  ;;:config
+  ;; (setq company-backends '(company-tabnine :separate company-tide company-capf company-yasnippet)
+)
 #+end_src
 *** Web Programming
 [[https://emmet.io/][Emmet]] is a powerful templating engine that can generate through simple
@@ -1586,15 +1587,22 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 *** plantuml
 #+begin_src emacs-lisp
 (use-package! plantuml-mode
-  :defer t
+  :after (company)
   :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
   :init
   (add-to-list 'org-babel-load-languages '(plantuml . t))
   :config
   (setq plantuml-indent-level 2))
 
-(add-hook! 'plantuml-mode-hook #'smartparens-mode)
+;; Setup company backends
+;; (set-company-backend! 'plantuml-mode
+;;   '(:separate company-capf company-yasnippet company-dabbrev company-ispell))
+(add-hook 'plantuml-mode-hook (lambda () (setq-local company-backends '(company-tabnine))))
+;; (add-hook! plantuml-mode-hook
+;;   (make-local-variable 'company-backends)
+;;   (setq company-backends '(company-tabnine :separate company-dabbrev company-yasnippet)))
 
+;;(add-hook! 'plantuml-mode-hook #'smartparens-mode)
 #+end_src
 
 * Email
