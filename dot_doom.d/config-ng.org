@@ -1460,6 +1460,13 @@ org-babel supports.
   :hook
   (go-mode . go-eldoc-setup))
 #+end_src
+*** typescript
+#+begin_src emacs-lisp
+(use-package! typescript-mode
+  :after (company)
+  :config
+  (setq company-backends '(company-tabnine :separate company-tide company-capf company-yasnippet)))
+#+end_src
 *** Web Programming
 [[https://emmet.io/][Emmet]] is a powerful templating engine that can generate through simple
 CSS-like expression some HTML to avoid the user writing everything by
@@ -2134,7 +2141,7 @@ sure or if you don’t remember what your snippet is.
               ([tab] . company-complete-selection)
               ("C-j" . company-complete-selection))
   :config
-  (setq company-idle-delay 0.1)
+  (setq company-idle-delay 0)
   (setq company-tooltip-limit 10)
   (setq company-minimum-prefix-length 1)
   (setq company-show-numbers t)
