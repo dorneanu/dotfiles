@@ -379,36 +379,32 @@ Prefetch HTML title whenever ~org-link-insert~ (~C-c C-l~) is called:
 #+end_src
 
 *** Auto clock-in when task is started
-#+begin_src emacs-lisp :noweb-ref org-keys-setup
+#+begin_src emacs-lisp
 ;; From https://github.com/svetlyak40wt/dot-emacs/blob/master/.emacs.d/lib/org-auto-clock.el
 ;; Auto clock-in when task is marked STARTED
-(after! 'org
-  '(progn
-     (defun wicked/org-clock-in-if-starting ()
-       "Clock in when the task is marked STARTED."
-       (when (and (string= org-state "STARTED")
-                  (not (string= org-last-state org-state)))
-         (org-clock-in)))
+(defun wicked/org-clock-in-if-starting ()
+  "Clock in when the task is marked STARTED."
+  (when (and (string= org-state "STARTED")
+             (not (string= org-last-state org-state)))
+    (org-clock-in)))
 
-     (add-hook 'org-after-todo-state-change-hook 'wicked/org-clock-in-if-starting)
+(defun wicked/org-clock-out-if-waiting ()
+  "Clock out when the task is marked WAITING or WIP (Work in Progress)."
+  (when (and (or (string= org-state "WAITING")
+                 (string= org-state "WIP"))
+             (equal (marker-buffer org-clock-marker) (current-buffer))
+             (< (point) org-clock-marker)
+             (> (save-excursion (outline-next-heading) (point))
+                org-clock-marker)
+             (not (string= org-last-state org-state)))
+    (org-clock-out)))
 
+(after! org
+     (add-hook! 'org-after-todo-state-change-hook #'wicked/org-clock-in-if-starting)
      (defadvice org-clock-in (after wicked activate)
        "Set this task's status to 'STARTED'."
        (org-todo "STARTED"))
-
-
-     (defun wicked/org-clock-out-if-waiting ()
-       "Clock out when the task is marked WAITING or WIP (Work in Progress)."
-       (when (and (or (string= org-state "WAITING")
-                      (string= org-state "WIP"))
-                  (equal (marker-buffer org-clock-marker) (current-buffer))
-                  (< (point) org-clock-marker)
-                  (> (save-excursion (outline-next-heading) (point))
-                     org-clock-marker)
-                  (not (string= org-last-state org-state)))
-         (org-clock-out)))
-
-     (add-hook 'org-after-todo-state-change-hook 'wicked/org-clock-out-if-waiting)))
+     (add-hook! 'org-after-todo-state-change-hook #'wicked/org-clock-out-if-waiting))
 #+end_src
 
 *** enter clock data manually
@@ -1104,6 +1100,19 @@ I'm still testing these key bindings. From https://github.com/dakra/dmacs
   :config
   (global-unset-key (kbd "M-<down-mouse-1>"))
   (global-set-key (kbd "M-<mouse-1>") 'mc/add-cursor-on-click))
+#+end_src
+** puni
+I'll try [[https://github.com/AmaiKinono/puni][puni]] as a replacement for ~smartparens~:
+#+begin_src emacs-lisp
+;; Use puni-mode globally and disable it for term-mode.
+(use-package! puni
+  :defer t
+  :init
+  ;; The autoloads of Puni are set up so you can enable `puni-mode` or
+  ;; `puni-global-mode` before `puni` is actually loaded. Only after you press
+  ;; any key that calls Puni commands, it's loaded.
+  (puni-global-mode)
+  (add-hook 'term-mode-hook #'puni-disable-puni-mode))
 #+end_src
 * Multimedia
 ** TODO emms
@@ -2002,7 +2011,7 @@ Open buffer/files in horizontal/vertical split using ~ivy-actions~:
 Open links with MPV:
 
 #+begin_src emacs-lisp
-(defun dorneanu/empv-play-url (url)
+(defun dorneanu/empv-play-url (url &optional generic-p)
   (interactive "sURL: ")
   (empv-toggle-video)
   (empv-play url))
@@ -2128,6 +2137,7 @@ Configure elfeed first:
 #+begin_src emacs-lisp
 (use-package! elfeed
   :commands (elfeed)
+  :bind (("C-c a e" . elfeed))
   :config
   (setq elfeed-db-directory "~/.elfeed"
         elfeed-enclosure-default-dir (expand-file-name "~/Downloads")
@@ -2206,6 +2216,10 @@ Configure elfeed first:
  (setq fill-column 50)
  (visual-fill-column-mode)
 )
+
+;; Update elfeed regularly
+;; https://www.reddit.com/r/emacs/comments/bvbp92/is_there_a_simple_way_to_get_elfeed_to_update/
+(add-hook 'emacs-startup-hook (lambda () (run-at-time 5 3600 'elfeed-update)))
 #+end_src
 
 Custom functions:
@@ -2688,6 +2702,9 @@ ace-link
 ** Editing
 #+begin_src emacs-lisp
 (package! wrap-region)
+
+;; Replacement for smartparens?
+(package! puni)
 #+end_src
 ** Reading
 #+begin_src emacs-lisp
