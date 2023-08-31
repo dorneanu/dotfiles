@@ -212,6 +212,13 @@ Use ~pass~ with auth-source
     (message "Enabling auth-source-pass")
     (auth-source-pass-enable))
 #+end_src
+*** ssh-agent
+Making sure we use ~ssh-agent~:
+#+begin_src emacs-lisp
+(use-package! exec-path-from-shell)
+(exec-path-from-shell-copy-env "SSH_AGENT_PID")
+(exec-path-from-shell-copy-env "SSH_AUTH_SOCK")
+#+end_src
 ** epa-file
 
 Configure GPG assistant
@@ -428,6 +435,41 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
     :prefix ("c" . "clock")
     "m" #'dorneanu/org-clock-enter-manually)
 #+end_src
+** Exports
+*** hugo
+#+begin_src emacs-lisp
+(use-package! ox-hugo)
+
+;; Tell hugo how to deal with sidenotes
+(add-to-list 'org-hugo-special-block-type-properties '("sidenote" . (:trim-pre t :trim-post t)))
+(setq org-hugo-paired-shortcodes "%sidenote")
+
+#+end_src
+**** Functions
+#+begin_src emacs-lisp
+(defun vd/hugo-add-slug ()
+  "Adds a Hugo slug as EXPORT_FILE_NAME property"
+ (interactive)
+ (org-set-property "EXPORT_FILE_NAME"
+ (concat (format-time-string "%Y") "-" (org-hugo-slug (org-get-heading :no-tags :no-todo)))))
+
+ ;; see https://www.reddit.com/r/emacs/comments/q0nlgy/extract_link_from_org_header_and_insert_as/
+(defun dorneanu/hugo-org-replace-link-by-link-description ()
+  "Replace an org link by its description or if empty its address and adds hugo front matter as URL"
+  (interactive)
+  (if (org-in-regexp org-link-bracket-re 1)
+      (save-excursion
+        (let ((remove (list (match-beginning 0) (match-end 0)))
+              (description
+               (if (match-end 2)
+                   (org-match-string-no-properties 2)
+                 (org-match-string-no-properties 1)))
+              (url (org-match-string-no-properties 1)))
+          (apply 'delete-region remove)
+          (insert description)
+          (org-entry-put nil "EXPORT_HUGO_CUSTOM_FRONT_MATTER" (concat ":posturl " url))))))
+#+end_src
+
 ** org-agenda
 #+begin_src emacs-lisp
 (use-package! org-agenda
@@ -1114,6 +1156,12 @@ I'll try [[https://github.com/AmaiKinono/puni][puni]] as a replacement for ~smar
   (puni-global-mode)
   (add-hook 'term-mode-hook #'puni-disable-puni-mode))
 #+end_src
+** indentation
+#+begin_src emacs-lisp
+;; (use-package! aggressive-indent
+;;   :config
+;;   (global-aggressive-indent-mode 1))
+#+end_src
 * Multimedia
 ** TODO emms
 #+begin_src emacs-lisp
@@ -1399,6 +1447,10 @@ deactivate `magit-todos-mode', otherwise enable it."
   (setq magit-todos-ignore-case t))
 #+end_src
 *** forge
+*** consult-gh
+#+begin_src emacs-lisp
+(use-package! consult-gh)
+#+end_src
 ** Shells
 ** Languages
 *** Python
@@ -1587,23 +1639,28 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 *** plantuml
 #+begin_src emacs-lisp
 (use-package! plantuml-mode
-  :after (company)
+  :defer t
   :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
   :init
   (add-to-list 'org-babel-load-languages '(plantuml . t))
   :config
   (setq plantuml-indent-level 2))
 
-;; Setup company backends
-;; (set-company-backend! 'plantuml-mode
-;;   '(:separate company-capf company-yasnippet company-dabbrev company-ispell))
-(add-hook 'plantuml-mode-hook (lambda () (setq-local company-backends '(company-tabnine))))
-;; (add-hook! plantuml-mode-hook
-;;   (make-local-variable 'company-backends)
-;;   (setq company-backends '(company-tabnine :separate company-dabbrev company-yasnippet)))
+(after! plantuml-mode
+  ;; From https://www.emacswiki.org/emacs/AutoIndentation
+  ;; Enter key executes newline-and-indent
+  (defun set-newline-and-indent ()
+    "Map the return key with `newline-and-indent'"
+    (local-set-key (kbd "RET") 'newline-and-indent))
 
-;;(add-hook! 'plantuml-mode-hook #'smartparens-mode)
+  ;; Maybe this might be useful for other modes as well
+  (add-hook 'plantuml-mode-hook 'set-newline-and-indent)
+
+  ;; From https://discourse.doomemacs.org/t/how-to-turn-on-company-files/3007/3
+  (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev))
+
 #+end_src
+
 
 * Email
 ** mu4e
@@ -1885,6 +1942,20 @@ I like to open an URL directly in Emacs without having to switch to Chrome:
  "C-c x" 'kill-buffer-and-window)
 #+end_src
 
+Use the mouse to open new xwidget-webkit sessions:
+
+#+begin_src emacs-lisp
+;; https://emacs.stackexchange.com/questions/45483/browse-url-at-point-when-clicking-and-pressing-super
+(global-set-key (kbd "S-<mouse-2>")
+                (lambda (event)
+                  (interactive (list last-command-event))
+                  (posn-set-point (event-end event))
+                  (split-window-right)
+                  (balance-windows)
+                  (other-window 1)
+                  (xwidget-webkit-browse-url (thing-at-point 'url t))))
+#+end_src
+
 Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules/tools/lookup/][lookup module]] from Doom Emacs.
 
 #+begin_src emacs-lisp
@@ -2087,14 +2158,23 @@ Open files either vertically or horizontally using embark:
 Open links also in ~xwidget-webkit~:
 
 #+begin_src emacs-lisp
-(defun dorneanu/embark-open-url-in-xwidget-webkit (url)
+(defun dorneanu/embark-open-url-in-xwidget-webkit (url &rest args)
   "open with xwidget"
-  (interactive "sURL: ")
+  (message "URL: " url)
   ;; Split window and focus there
-  (split-window-right)
-  (balance-windows)
-  (other-window 1)
-  (xwidget-webkit-browse-url url))
+  (when (stringp url)
+    ;; If it's a "naked url", just try adding https: to it.
+    (unless (string-match "\\`[A-Za-z]+:" url)
+      (setq url (concat "https://" url)))
+
+    ;; Split window
+    (split-window-right)
+    (balance-windows)
+    (other-window 1)
+
+    (xwidget-webkit-new-session url)
+    (xwidget-webkit-goto-url url)
+    ))
 
 (define-key embark-url-map "X" #'dorneanu/embark-open-url-in-xwidget-webkit)
 #+end_src
@@ -2137,6 +2217,16 @@ sure or if you don’t remember what your snippet is.
   :infix "i"
   :packages 'ivy-yasnippet
   "y" #'ivy-yasnippet)
+#+end_src
+** yankpad
+#+begin_src emacs-lisp
+(use-package! yankpad
+  :bind
+  ("C-x C-y"  . yankpad-insert)
+  :config
+  (setq yankpad-file (concat org-directory "/yankpad.org"))
+  (yankpad-reload)
+  (add-to-list 'company-backends #'company-yankpad))
 #+end_src
 ** company-mode
 #+begin_src emacs-lisp
@@ -2433,12 +2523,12 @@ Configure elfeed-tube:
   :config
   (elfeed-tube-setup)
   :bind (:map elfeed-show-mode-map
-         ("M-m" . #'dorneanu/elfeed-play-with-mpv)
-         ("F" . elfeed-tube-fetch)
+         ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+         ("C-c C-x f" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)
          :map elfeed-search-mode-map
-         ("M-m p" . #'dorneanu/elfeed-play-with-mpv)
-         ("F" . elfeed-tube-fetch)
+         ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+         ("C-c C-x f" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)))
 
 ;; https://github.com/skeeto/elfeed/issues/267
@@ -2698,6 +2788,8 @@ Different keybindings to jump to a window, character or another workspace.
 (package! reddigg)
 
 (package! wakatime-mode)
+
+(package! consult-gh)
 #+end_src
 ** Auto completion
 #+begin_src emacs-lisp
@@ -2706,8 +2798,13 @@ Different keybindings to jump to a window, character or another workspace.
 (package! embark-consult)
 (package! ivy-yasnippet)
 (package! yasnippet-snippets)
+(package! yankpad)
 (package! company-tabnine)
 (package! company-terraform)
+#+end_src
+** Indentation
+#+begin_src emacs-lisp
+(package! aggressive-indent)
 #+end_src
 ** Navigation
 Dir and friends:
@@ -2735,6 +2832,7 @@ ace-link
 ** Security
 #+begin_src emacs-lisp
 (package! pinentry)
+(package! exec-path-from-shell)
 #+end_src
 
 
