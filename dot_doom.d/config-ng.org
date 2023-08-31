@@ -20,6 +20,7 @@
 - maybe use as an alternative 👉 2023-08-28 ◦ [[https://github.com/AmaiKinono/puni][GitHub - AmaiKinono/puni: Structured editing (soft deletion, expression navigating & manipulating) that supports many major modes out of the box.]]
 ** WIP add mu4e
 - [ ] Implement trashing (esp. for gmail accounts)
+** TODO annotate.el
 * Basics
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
@@ -1657,7 +1658,7 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (add-hook 'plantuml-mode-hook 'set-newline-and-indent)
 
   ;; From https://discourse.doomemacs.org/t/how-to-turn-on-company-files/3007/3
-  (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev))
+  (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev 'company-yankpad))
 
 #+end_src
 
@@ -2225,6 +2226,7 @@ sure or if you don’t remember what your snippet is.
   ("C-x C-y"  . yankpad-insert)
   :config
   (setq yankpad-file (concat org-directory "/yankpad.org"))
+  (setq yas-wrap-around-region t)
   (yankpad-reload)
   (add-to-list 'company-backends #'company-yankpad))
 #+end_src
@@ -2717,6 +2719,8 @@ My toggle keybinds are prefixed by ~t~.
 | eu  | org-emphasize-underline                 |                             |
 | ev  | org-emphasize-verbatim                  |                             |
 | lc  | dorneanu/org-insert-link-from-clipboard | Insert link from clipboard  |
+| yi  | yankpad-insert                          |                             |
+| ym  | yankpad-map                             |                             |
 
 ** Open
 
@@ -2764,7 +2768,8 @@ Different keybindings to jump to a window, character or another workspace.
   "s" #'persp-frame-switch
   "n" #'+workspace/switch-right
   "b" #'+workspace/switch-left
-  "l" #'avy-goto-line)
+  "l" #'avy-goto-line
+  "L" #'ace-link)
 #+end_src
 
 #+RESULTS:
@@ -2886,6 +2891,9 @@ ace-link
 
 ;; Replacement for smartparens?
 (package! puni)
+
+;; Annotate
+(package! annotate)
 #+end_src
 ** Reading
 #+begin_src emacs-lisp
