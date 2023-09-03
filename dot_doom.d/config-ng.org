@@ -105,7 +105,13 @@ Some helpful macro for generating keybindings out of tables:
            table
            "\n")
 #+end_src
-**
+
+Direct Yanking:
+
+#+begin_src emacs-lisp
+(map! "M-i" #'yank)
+#+end_src
+
 *** mouse
 I still use the mouse for scrolling, changing frame sizes:
 
