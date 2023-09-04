@@ -159,6 +159,36 @@ Change default Doom leaders:
   "C-x h" 'previous-buffer
   "C-x l" 'next-buffer)
 #+end_src
+*** Change from horizotanl split to vertical split
+#+begin_src emacs-lisp
+;; https://stackoverflow.com/questions/14881020/emacs-shortcut-to-switch-from-a-horizontal-split-to-a-vertical-split-in-one-move
+(defun toggle-window-split ()
+  (interactive)
+  (if (= (count-windows) 2)
+      (let* ((this-win-buffer (window-buffer))
+         (next-win-buffer (window-buffer (next-window)))
+         (this-win-edges (window-edges (selected-window)))
+         (next-win-edges (window-edges (next-window)))
+         (this-win-2nd (not (and (<= (car this-win-edges)
+                     (car next-win-edges))
+                     (<= (cadr this-win-edges)
+                     (cadr next-win-edges)))))
+         (splitter
+          (if (= (car this-win-edges)
+             (car (window-edges (next-window))))
+          'split-window-horizontally
+        'split-window-vertically)))
+    (delete-other-windows)
+    (let ((first-win (selected-window)))
+      (funcall splitter)
+      (if this-win-2nd (other-window 1))
+      (set-window-buffer (selected-window) this-win-buffer)
+      (set-window-buffer (next-window) next-win-buffer)
+      (select-window first-win)
+      (if this-win-2nd (other-window 1))))))
+
+(global-set-key (kbd "C-x |") 'toggle-window-split)
+#+end_src
 *** Hydras
 
 Zen mode for focus:
@@ -547,7 +577,7 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
   ;;             (display-line-numbers-mode 0)))
 
   ;; Add extra files to org-agenda-files
-  (add-to-list 'org-agenda-files "~/syncthing/org/brainfck.org")
+  (add-to-list 'org-agenda-files "~/syncthing/org/brainfck.org" "~/syncthing/org/0box.org")
 )
 
 #+end_src
@@ -1023,6 +1053,16 @@ Insert images easily into ORG mode files
 #+begin_src emacs-lisp
 (use-package! org-web-tools
   :after org)
+#+end_src
+** org-timeblock
+#+begin_src emacs-lisp
+(use-package! org-timeblock
+  :after (org org-agenda))
+(map! :map org-timeblock-mode-map
+    :localleader
+    "r" #'org-timeblock-redraw-buffers
+    "s" #'org-timeblock-switch-view)
+
 #+end_src
 
 * User Interface
@@ -1793,8 +1833,10 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
                '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
 
   (setq mu4e-maildir-shortcuts
-        '(("/variomedia/inbox"   . ?i)
-          ("/gmail/inbox"    . ?s)
+        '(
+          ("/variomedia/inbox"   . ?v)
+          ("/gmail/inbox"    . ?g)
+          ("/cashlink/inbox"   . ?c)
           ("/private/Trash"   . ?t)
           ("/private/Drafts"  . ?d)
           ("/private/Junk"    . ?j)
@@ -1978,7 +2020,32 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
 #+begin_src emacs-lisp
 (use-package! rg
   :config
-  (rg-enable-default-bindings))
+  (rg-enable-default-bindings)
+  ;; Not sure if I really need this
+  (rg-define-toggle "--multiline --multiline-dotall" "u")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L")
+)
+#+end_src
+
+Configure custom searches
+#+begin_src emacs-lisp
+;; search in org roam folder
+(rg-define-search my/rg-org-roam-directory
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir org-roam-directory
+  :confirm prefix)
+
+;; search in org roam folder where I have transcripts from the Huberman Lab
+(rg-define-search my/rg-org-roam-directory-huberman
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir (concat org-roam-directory "/rez/huberman-lab")
+  :confirm prefix)
+
 #+end_src
 ** dumb-jump
 #+begin_src emacs-lisp
@@ -2697,19 +2764,22 @@ My toggle keybinds are prefixed by ~t~.
 |     |                               | projects               |
 | e   | project-eshell                | Run eshell in project  |
 | r   | consult-ripgrep               | Run ripgrep in project |
+| s   | rg-project                    | Run rg.el in project   |
 | d   | projectile-dired              |                        |
 | D   | projectile-dired-other-window |                        |
 
 ** Searches
 
 #+name: keybinds-searching
-| Key | Function              | Description               |
-|-----+-----------------------+---------------------------|
-|     |                       | searches                  |
-| r   | rg                    | Run rg.el                 |
-| s   | swiper                | Run swiper                |
-| a   | swiper-all            | Run swiper-all            |
-| .   | swiper-thing-at-point | Run swiper-thing-at-point |
+| Key | Function                          | Description                  |
+|-----+-----------------------------------+------------------------------|
+|     |                                   | searches                     |
+| r   | rg                                | Run rg.el                    |
+| Ro  | my/rg-org-roam-directory          | Run rg in org-roam-directory |
+| Rh  | my/rg-org-roam-directory-huberman | Run rg in huberman lab dir  |
+| s   | swiper                            | Run swiper                   |
+| a   | swiper-all                        | Run swiper-all               |
+| .   | swiper-thing-at-point             | Run swiper-thing-at-point    |
 
 ** Inserts
 
@@ -2731,12 +2801,13 @@ My toggle keybinds are prefixed by ~t~.
 ** Open
 
 #+name: keybinds-open
-| Key | Function                  | Description                    |
-|-----+---------------------------+--------------------------------|
-|     |                           | opens                          |
-| x   | xwidget-webkit-browse-url | Opens an URL in xwidget-webkit |
-| c   | browse-url-chrome         | Open Chrome                    |
-| e   | eww-browse                | Run eww browser                |
+| Key | Function                   | Description                               |
+|-----+----------------------------+-------------------------------------------|
+|     |                            | opens                                     |
+| a   | xwidget-browse-apropos-url | browse-apropos-url (using xwidget-webkit) |
+| x   | xwidget-webkit-browse-url  | Opens an URL in xwidget-webkit            |
+| c   | browse-url-chrome          | Open Chrome                               |
+| e   | eww-browse                 | Run eww browser                           |
 
 ** Hydras
 
@@ -2864,6 +2935,10 @@ ace-link
 (package! org-super-agenda)
 (package! org-download)
 (package! org-web-tools)
+
+;; Time-blocked planning in org
+(package! org-timeblock
+  :recipe (:host github :repo "ichernyshovvv/org-timeblock"))
 #+end_src
 ** Programming
 #+begin_src emacs-lisp
@@ -2919,4 +2994,69 @@ ace-link
 #+begin_src emacs-lisp
 (package! copy-as-format)
 (package! ox-hugo)
+#+end_src
+** Playground
+#+begin_src emacs-lisp
+(package! browse-apropos-url)
+#+end_src
+* Playground
+** browse-apropos-url
+#+begin_src emacs-lisp
+(setq apropos-url-alist
+      '(("^gw?:? +\\(.*\\)" . ;; Google Web
+         "http://www.google.com/search?q=\\1")
+
+        ("^g!:? +\\(.*\\)" . ;; Google Lucky
+         "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=\\1")
+
+        ("^gl:? +\\(.*\\)" .  ;; Google Linux
+         "http://www.google.com/linux?q=\\1")
+
+        ("^gi:? +\\(.*\\)" . ;; Google Images
+         "http://images.google.com/images?sa=N&tab=wi&q=\\1")
+
+        ("^gg:? +\\(.*\\)" . ;; Google Groups
+         "http://groups.google.com/groups?q=\\1")
+
+        ("^gd:? +\\(.*\\)" . ;; Google Directory
+         "http://www.google.com/search?&sa=N&cat=gwd/Top&tab=gd&q=\\1")
+
+        ("^gn:? +\\(.*\\)" . ;; Google News
+         "http://news.google.com/news?sa=N&tab=dn&q=\\1")
+
+        ("^gt:? +\\(\\w+\\)|? *\\(\\w+\\) +\\(\\w+://.*\\)" . ;; Google Translate URL
+         "http://translate.google.com/translate?langpair=\\1|\\2&u=\\3")
+
+        ("^gt:? +\\(\\w+\\)|? *\\(\\w+\\) +\\(.*\\)" . ;; Google Translate Text
+         "http://translate.google.com/translate_t?langpair=\\1|\\2&text=\\3")
+
+        ("^/\\.$" . ;; Slashdot
+         "http://www.slashdot.org")
+
+        ("^/\\.:? +\\(.*\\)" . ;; Slashdot search
+         "http://www.osdn.com/osdnsearch.pl?site=Slashdot&query=\\1")
+
+        ("^fm$" . ;; Freshmeat
+         "http://www.freshmeat.net")
+
+        ("^ewiki:? +\\(.*\\)" . ;; Emacs Wiki Search
+         "http://www.emacswiki.org/cgi-bin/wiki?search=\\1")
+
+        ("^ewiki$" . ;; Emacs Wiki
+         "http://www.emacswiki.org")
+
+        ("^arda$" . ;; The Encyclopedia of Arda
+         "http://www.glyphweb.com/arda/")
+
+         ))
+(defun xwidget-browse-apropos-url (text &optional new-window)
+  (interactive (browse-url-interactive-arg "Location: "))
+  (let ((text (replace-regexp-in-string
+               "^ *\\| *$" ""
+               (replace-regexp-in-string "[ \t\n]+" " " text))))
+    (let ((url (assoc-default
+                text apropos-url-alist
+                '(lambda (a b) (let () (setq __braplast a) (string-match a b)))
+                text)))
+      (xwidget-webkit-browse-url (replace-regexp-in-string __braplast url text) new-window))))
 #+end_src
