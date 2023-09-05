@@ -1060,9 +1060,12 @@ Insert images easily into ORG mode files
   :after (org org-agenda))
 (map! :map org-timeblock-mode-map
     :localleader
+    "j" #'org-timeblock-jump-to-day
     "r" #'org-timeblock-redraw-buffers
     "s" #'org-timeblock-switch-view)
 
+;; Refresh timeblock when refreshing org-agenda
+;; (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers)
 #+end_src
 
 * User Interface
@@ -1689,7 +1692,7 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   :defer t
   :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
   :init
-  (add-to-list 'org-babel-load-languages '(plantuml . t))
+  (add-to-list 'org-babel-load-languages '(plantuml-mode . t))
   :config
   (setq plantuml-indent-level 2))
 
@@ -1704,8 +1707,14 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (add-hook 'plantuml-mode-hook 'set-newline-and-indent)
 
   ;; From https://discourse.doomemacs.org/t/how-to-turn-on-company-files/3007/3
-  (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev 'company-yankpad))
+  (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev 'company-yankpad)
 
+  )
+
+;; Activate plantuml for org babel
+;; (org-babel-do-load-languages
+;;  'org-babel-load-languages
+;;  '((plantuml . t)))
 #+end_src
 
 
@@ -2054,6 +2063,101 @@ Configure custom searches
   :custom
   (dumb-jump-selector 'ivy)
   (dumb-jump-prefer-searcher 'rg))
+#+end_src
+** isearch
+
+Some useful isearch keys (before starting the search):
+
+| key   | description                |
+|-------+----------------------------|
+| M-s . | isearch for thing at point |
+
+And while inside a search:
+
+| key     | description                                 |
+|---------+---------------------------------------------|
+| C-w     | add next word to search                     |
+| C-e     | add until EOL to search                     |
+| M-e     | edit search in minibuffer (commit with =RET=) |
+| M-s o   | run =occur=                                   |
+| M-s r   | toggle regexp search                        |
+| M-s .   | mark whole thing for search                 |
+| M-s h r | highlight current search (=hi-lock=)          |
+| M-%     | run =query-replace= on search term            |
+| C-M-%   | run =query-replace-regexp= on search term     |
+| C-l     | =recenter=                                    |
+
+#+begin_src emacs-lisp
+;; Mostly from https://github.com/alexpeits/emacs.d
+(use-package! isearch
+  :diminish
+  :bind (:map isearch-mode-map
+              ("C-l" . recenter)
+              ("C-SPC" . my/isearch-mark-and-exit)
+              ("<C-return>" . my/isearch-other-end)
+              ("<M-backspace>" . my/isearch-abort-dwim)
+              ("<C-backspace>" . my/isearch-abort-dwim))
+  :init
+  (setq search-whitespace-regexp ".*?"  ;; spaces match anything
+        isearch-lax-whitespace t  ;; the default
+        isearch-regex-lax-whitespace nil
+        isearch-yank-on-move 'shift
+        isearch-allow-scroll 'unlimited
+        isearch-lazy-count t  ;; show match count and current match index
+        lazy-count-prefix-format nil
+        lazy-count-suffix-format " (%s/%s)")
+  :config
+  ;; prot
+  (defun my/isearch-mark-and-exit ()
+    (interactive)
+    (push-mark isearch-other-end t 'activate)
+    (setq deactivate-mark nil)
+    (isearch-done))
+
+  (defun my/isearch-other-end ()
+    (interactive)
+    (isearch-done)
+    (when isearch-other-end
+      (goto-char isearch-other-end)))
+
+  (defun my/isearch-abort-dwim ()
+    "Delete failed `isearch' input, single char, or cancel search.
+
+This is a modified variant of `isearch-abort' that allows us to
+perform the following, based on the specifics of the case: (i)
+delete the entirety of a non-matching part, when present; (ii)
+delete a single character, when possible; (iii) exit current
+search if no character is present and go back to point where the
+search started."
+    (interactive)
+    (if (eq (length isearch-string) 0)
+        (isearch-cancel)
+      (isearch-del-char)
+      (while (or (not isearch-success) isearch-error)
+        (isearch-pop-state)))
+    (isearch-update))
+
+  ;; https://www.reddit.com/r/emacs/comments/b7yjje/isearch_region_search/
+  (defun my/isearch-region (&optional not-regexp no-recursive-edit)
+    "If a region is active, make this the isearch default search pattern."
+    (interactive "P\np")
+    (when (use-region-p)
+      (let ((search (buffer-substring-no-properties
+                     (region-beginning)
+                     (region-end))))
+        (deactivate-mark)
+        (isearch-yank-string search))))
+
+  (advice-add 'isearch-forward :after 'my/isearch-region)
+  (advice-add 'isearch-forward-regexp :after 'my/isearch-region)
+  (advice-add 'isearch-backward :after 'my/isearch-region)
+  (advice-add 'isearch-backward-regexp :after 'my/isearch-region)
+
+  (with-eval-after-load 'evil
+    (dolist (st '(normal visual))
+      (evil-global-set-key st (kbd "gs") 'isearch-forward)
+      (evil-global-set-key st (kbd "gr") 'isearch-backward)))
+  )
 #+end_src
 
 * Completion
@@ -2776,7 +2880,7 @@ My toggle keybinds are prefixed by ~t~.
 |     |                                   | searches                     |
 | r   | rg                                | Run rg.el                    |
 | Ro  | my/rg-org-roam-directory          | Run rg in org-roam-directory |
-| Rh  | my/rg-org-roam-directory-huberman | Run rg in huberman lab dir  |
+| Rh  | my/rg-org-roam-directory-huberman | Run rg in huberman lab dir   |
 | s   | swiper                            | Run swiper                   |
 | a   | swiper-all                        | Run swiper-all               |
 | .   | swiper-thing-at-point             | Run swiper-thing-at-point    |
@@ -2995,10 +3099,6 @@ ace-link
 (package! copy-as-format)
 (package! ox-hugo)
 #+end_src
-** Playground
-#+begin_src emacs-lisp
-(package! browse-apropos-url)
-#+end_src
 * Playground
 ** browse-apropos-url
 #+begin_src emacs-lisp
@@ -3009,8 +3109,8 @@ ace-link
         ("^g!:? +\\(.*\\)" . ;; Google Lucky
          "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=\\1")
 
-        ("^gl:? +\\(.*\\)" .  ;; Google Linux
-         "http://www.google.com/linux?q=\\1")
+        ;; ("^gl:? +\\(.*\\)" .  ;; Google Linux
+        ;;  "http://www.google.com/linux?q=\\1")
 
         ("^gi:? +\\(.*\\)" . ;; Google Images
          "http://images.google.com/images?sa=N&tab=wi&q=\\1")
@@ -3030,6 +3130,12 @@ ace-link
         ("^gt:? +\\(\\w+\\)|? *\\(\\w+\\) +\\(.*\\)" . ;; Google Translate Text
          "http://translate.google.com/translate_t?langpair=\\1|\\2&text=\\3")
 
+        ("^dg:? +\\(.*\\)" . ;; DuckDuck Go
+         "https://duckduckgo.com/?t=h_&q=\\1")
+
+        ("^hn:? +\\(.*\\)" . ;; HackerNews (using algolia)
+         "https://hn.algolia.com/?dateRange=all&page=0&prefix=true&query=\\1&sort=byPopularity&type=all")
+
         ("^/\\.$" . ;; Slashdot
          "http://www.slashdot.org")
 
@@ -3047,7 +3153,6 @@ ace-link
 
         ("^arda$" . ;; The Encyclopedia of Arda
          "http://www.glyphweb.com/arda/")
-
          ))
 (defun xwidget-browse-apropos-url (text &optional new-window)
   (interactive (browse-url-interactive-arg "Location: "))
