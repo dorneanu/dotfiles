@@ -1131,6 +1131,17 @@ I start to like the modeline:
   (auto-dim-other-buffers-mode t))
 
 #+end_src
+** automatically recenter text
+#+begin_src emacs-lisp
+;; move search result to center of the screen
+;; (defadvice evil-search-next
+;;     (after advice-for-evil-search-next activate)
+;; (evil-scroll-line-to-center (line-number-at-pos)))
+
+;; (defadvice evil-search-previous
+;;     (after advice-for-evil-search-previous activate)
+;; (evil-scroll-line-to-center (line-number-at-pos)))
+#+end_src
 * Editing
 ** Regions
 *** expand-region
@@ -2035,6 +2046,10 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
   (rg-define-toggle "--multiline --multiline-dotall" "u")
   (rg-define-toggle "--word-regexp" "w")
   (rg-define-toggle "--files-with-matches" "L")
+  ;; Highlight longer
+  (setq next-error-highlight-no-select t)
+  (add-hook 'next-error-hook #'recenter)
+  (add-hook 'next-error-hook #'focus-mode)
 )
 #+end_src
 
@@ -2159,6 +2174,13 @@ search started."
       (evil-global-set-key st (kbd "gs") 'isearch-forward)
       (evil-global-set-key st (kbd "gr") 'isearch-backward)))
   )
+#+end_src
+** swiper
+#+begin_src emacs-lisp
+(use-package! swiper
+  :config
+  ;; Recenter afer jump
+  (setq swiper-action-center t))
 #+end_src
 
 * Completion
