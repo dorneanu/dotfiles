@@ -3159,6 +3159,9 @@ ace-link
         ("^hn:? +\\(.*\\)" . ;; HackerNews (using algolia)
          "https://hn.algolia.com/?dateRange=all&page=0&prefix=true&query=\\1&sort=byPopularity&type=all")
 
+        ("^mh:? +\\(.*\\)" . ;; meinhans.de (used for recipes)
+         "https://www.google.de/search?q=site%3Ameinhans.de+\\1")
+
         ("^/\\.$" . ;; Slashdot
          "http://www.slashdot.org")
 
@@ -3188,3 +3191,6 @@ ace-link
                 text)))
       (xwidget-webkit-browse-url (replace-regexp-in-string __braplast url text) new-window))))
 #+end_src
+
+#+RESULTS:
+: xwidget-browse-apropos-url
