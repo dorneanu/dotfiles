@@ -1057,7 +1057,8 @@ Insert images easily into ORG mode files
 ** org-timeblock
 #+begin_src emacs-lisp
 (use-package! org-timeblock
-  :after (org org-agenda))
+  :after (org org-agenda)
+  (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers))
 (map! :map org-timeblock-mode-map
     :localleader
     "j" #'org-timeblock-jump-to-day
