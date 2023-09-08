@@ -3185,8 +3185,8 @@ ace-link
 ** browse-apropos-url
 #+begin_src emacs-lisp
 (setq apropos-url-alist
-      '(("^gw?:? +\\(.*\\)" . ;; Google Web
-         "http://www.google.com/search?q=\\1")
+      '(("^g?:? +\\(.*\\)" . ;; Google Web
+         "https://www.google.de/search?q=\\1")
 
         ("^g!:? +\\(.*\\)" . ;; Google Lucky
          "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=\\1")
