@@ -1094,10 +1094,22 @@ Insert images easily into ORG mode files
 :header-args:emacs-lisp+: :exports code :results silent :lexical t
 :END:
 ** fonts
+
+#+begin_quote
+Doom exposes five (optional) variables for controlling fonts in Doom, they are:
+
+- doom-font
+- doom-variable-pitch-font
+- doom-serif-font
+- doom-unicode-font (the fallback font for unicode symbols that your default font doesn’t support)
+- doom-big-font (used for doom-big-font-mode)
+#+end_quote
+
 #+begin_src emacs-lisp
-(setq  doom-font (font-spec :family "Source Code Pro" :size 15)
-       doom-variable-pitch-font (font-spec :family "Fira Mono" :size 15)
-       doom-unicode-font (font-spec :family "Fira Mono"))
+(setq  doom-font (font-spec :family "Iosevka" :size 18)
+       ;; doom-variable-pitch-font (font-spec :family "Fira Mono" :size 17)
+       doom-variable-pitch-font (font-spec :family "Fira Code" :size 18)
+       doom-unicode-font (font-spec :family "Noto Color Emoji"))
 #+end_src
 ** modeline modules
 I sometimes use Emacs in fullscreen, meaning my usual taskbar will be hidden.
