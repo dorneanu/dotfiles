@@ -472,6 +472,19 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
     :prefix ("c" . "clock")
     "m" #'dorneanu/org-clock-enter-manually)
 #+end_src
+*** Fix bug with org-capture-mode not being enabled
+#+begin_src emacs-lisp
+;; https://github.com/doomemacs/doomemacs/issues/5714
+(after! org
+  (defadvice! dan/+org--restart-mode-h-careful-restart (fn &rest args)
+    :around #'+org--restart-mode-h
+    (let ((old-org-capture-current-plist (and (bound-and-true-p org-capture-mode)
+                                              (bound-and-true-p org-capture-current-plist))))
+      (apply fn args)
+      (when old-org-capture-current-plist
+        (setq-local org-capture-current-plist old-org-capture-current-plist)
+        (org-capture-mode +1)))))
+#+end_src
 ** Exports
 *** hugo
 #+begin_src emacs-lisp
@@ -1057,16 +1070,22 @@ Insert images easily into ORG mode files
 ** org-timeblock
 #+begin_src emacs-lisp
 (use-package! org-timeblock
-  :after (org org-agenda)
-  (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers))
+  :after (org org-agenda))
 (map! :map org-timeblock-mode-map
-    :localleader
-    "j" #'org-timeblock-jump-to-day
-    "r" #'org-timeblock-redraw-buffers
-    "s" #'org-timeblock-switch-view)
+      :localleader
+      "j" #'org-timeblock-jump-to-day
+      "r" #'org-timeblock-redraw-buffers
+      "s" #'org-timeblock-switch-view)
 
-;; Refresh timeblock when refreshing org-agenda
-;; (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers)
+
+(defun dorneanu/setup-org-timeblock()
+  (interactive)
+  (setq org-timeblock-n-days-view 2)
+  (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (org-timeblock))
 #+end_src
 
 * User Interface
@@ -1399,6 +1418,15 @@ I love /olivetti/ mode
   :custom
   (olivetti-body-width 0.8))
 #+end_src
+** focus-mode
+#+begin_src emacs-lisp
+(use-package! focus-mode
+  :bind (:map focus-mode-map
+              ("M-n" . focus-next-thing)
+              ("M-p" . focus-prev-thing))
+  :config
+  (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph)))
+#+end_src
 ** visual-fill-column-mode
 #+begin_src emacs-lisp
 (setq visual-fill-column-center-text t
@@ -1515,6 +1543,14 @@ deactivate `magit-todos-mode', otherwise enable it."
 #+end_src
 ** Shells
 ** Languages
+*** Utilities
+#+begin_src emacs-lisp
+;; From https://www.emacswiki.org/emacs/AutoIndentation
+;; Enter key executes newline-and-indent
+(defun set-newline-and-indent ()
+  "Map the return key with `newline-and-indent'"
+  (local-set-key (kbd "RET") 'newline-and-indent))
+#+end_src
 *** Python
 First, we need to set up the main Python mode. With this, we’ll also
 add Python to the list of LSP languages and to the list of languages
@@ -1709,12 +1745,6 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (setq plantuml-indent-level 2))
 
 (after! plantuml-mode
-  ;; From https://www.emacswiki.org/emacs/AutoIndentation
-  ;; Enter key executes newline-and-indent
-  (defun set-newline-and-indent ()
-    "Map the return key with `newline-and-indent'"
-    (local-set-key (kbd "RET") 'newline-and-indent))
-
   ;; Maybe this might be useful for other modes as well
   (add-hook 'plantuml-mode-hook 'set-newline-and-indent)
 
@@ -1727,6 +1757,18 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 ;; (org-babel-do-load-languages
 ;;  'org-babel-load-languages
 ;;  '((plantuml . t)))
+#+end_src
+*** structurizr
+#+begin_src emacs-lisp
+(use-package! structurizr-mode
+  :mode ("\\.\\(dsl\\)\\'" . plantuml-mode)
+  :config
+  (setq structurizr-indent-level 2
+        structurizr-tab-width 2))
+
+(after! structurizr-mode
+  (add-hook 'structurizr-mode-hook 'set-newline-and-indent)
+  (set-company-backend!  'structurizr-mode 'company-tabnine 'company-dabbrev 'company-yankpad))
 #+end_src
 
 
@@ -2432,11 +2474,11 @@ sure or if you don’t remember what your snippet is.
 #+end_src
 ** company-mode
 #+begin_src emacs-lisp
-(use-package! Company
+(use-package! company
   :hook (((prog-mode markdown-mode) . company-mode))
   :bind (:map company-active-map
-              ([return] . nil)
-              ("RET" . nil)
+              ;; ([return] . nil)
+              ;; ("RET" . nil)
               ("TAB" . company-complete-selection)
               ([tab] . company-complete-selection)
               ("C-j" . company-complete-selection))
@@ -2469,8 +2511,8 @@ sure or if you don’t remember what your snippet is.
 (use-package! company-tng
   :after company
   :bind (:map company-active-map
-         ([return] . nil)
-         ("RET" . nil)
+         ;; ([return] . nil)
+         ;; ("RET" . nil)
          ("TAB" . company-select-next)
          ([tab] . company-select-next)
          ("S-TAB" . company-select-previous)
@@ -2588,6 +2630,8 @@ Configure elfeed first:
  ;; (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
  (setq fill-column 50)
  (visual-fill-column-mode)
+ (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph))
+ (focus-mode)
 )
 
 ;; Update elfeed regularly
@@ -3070,6 +3114,9 @@ ace-link
 ** Programming
 #+begin_src emacs-lisp
 (package! impatient-mode)
+
+;; Structurizr mode
+(package! subsonic :recipe (:local-repo "structurizr-mode"))
 #+end_src
 ** Multimedia
 #+begin_src emacs-lisp
