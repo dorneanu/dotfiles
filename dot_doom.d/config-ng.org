@@ -1106,10 +1106,26 @@ Doom exposes five (optional) variables for controlling fonts in Doom, they are:
 #+end_quote
 
 #+begin_src emacs-lisp
-(setq  doom-font (font-spec :family "Iosevka" :size 18)
+(setq  doom-font (font-spec :family "Iosevka" :size 12)
        ;; doom-variable-pitch-font (font-spec :family "Fira Mono" :size 17)
-       doom-variable-pitch-font (font-spec :family "Fira Code" :size 18)
+       doom-variable-pitch-font (font-spec :family "Fira Code" :size 12)
        doom-unicode-font (font-spec :family "Noto Color Emoji"))
+#+end_src
+
+Add some custom functions:
+
+#+begin_src emacs-lisp
+(defun dorneanu/set-fira-code-font-current-buffer ()
+  (interactive)
+  (face-remap-add-relative 'default :family "Fira Code"))
+
+(defun dorneanu/set-iosevka-font-current-buffer ()
+  (interactive)
+  (face-remap-add-relative 'default :family "Iosevka"))
+
+(defun dorneanu/set-sourcecodepro-font-current-buffer ()
+  (interactive)
+  (face-remap-add-relative 'default :family "Source Code Pro"))
 #+end_src
 ** modeline modules
 I sometimes use Emacs in fullscreen, meaning my usual taskbar will be hidden.
@@ -1172,6 +1188,36 @@ I start to like the modeline:
 ;; (defadvice evil-search-previous
 ;;     (after advice-for-evil-search-previous activate)
 ;; (evil-scroll-line-to-center (line-number-at-pos)))
+#+end_src
+** popper
+#+begin_src emacs-lisp
+(use-package! popper
+  :bind (("C-'"   . popper-toggle)
+         ("M-'"   . popper-cycle)
+         ("C-M-'" . popper-toggle-type))
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          "\\*Async Shell Command\\*"
+          "\\xwidget-webkit\\*"
+          help-mode
+          compilation-mode))
+  (popper-mode +1)
+  (popper-echo-mode +1))                ; For echo area hints
+
+(after! popper
+  ;; Match eshell, shell, term and/or vterm buffers
+  (setq popper-reference-buffers
+        (append popper-reference-buffers
+                '("^\\*eshell.*\\*$" eshell-mode ;eshell as a popup
+                  "^\\*shell.*\\*$"  shell-mode  ;shell as a popup
+                  "^\\*term.*\\*$"   term-mode   ;term as a popup
+                  "^\\*vterm.*\\*$"  vterm-mode  ;vterm as a popup
+                  )))
+
+  (setq popper-group-function #'popper-group-by-projectile)
+  )
 #+end_src
 * Editing
 ** Regions
@@ -1247,7 +1293,22 @@ I'll try [[https://github.com/AmaiKinono/puni][puni]] as a replacement for ~smar
   ;; `puni-global-mode` before `puni` is actually loaded. Only after you press
   ;; any key that calls Puni commands, it's loaded.
   (puni-global-mode)
-  (add-hook 'term-mode-hook #'puni-disable-puni-mode))
+  (add-hook 'term-mode-hook #'puni-disable-puni-mode)
+  :bind (:map puni-mode-map
+              ("M-(" . puni-wrap-round)
+              ("M-{" . puni-wrap-curly)
+              ("M-m (" . puni-mark-sexp-around-point)
+              ;; ("M-s" . puni-splice)
+              ("M-m |" . puni-split)
+              ("C-<right>" . puni-slurp-forward)
+              ("C-<left>" . puni-barf-forward)
+              ("C-M-<right>" . puni-barf-backward)
+              ("C-M-<left>" . puni-slurp-backward)
+              ("C-M-p" . puni-syntactic-backward-punct)
+              ("C-M-n" . puni-syntactic-forward-punct)
+              ("C-M-t" . puni-transpose)
+              ("M-m v" . puni-expand-region))
+)
 #+end_src
 ** indentation
 #+begin_src emacs-lisp
@@ -1435,8 +1496,9 @@ I love /olivetti/ mode
 (use-package! focus-mode
   :bind (:map focus-mode-map
               ("M-n" . focus-next-thing)
-              ("M-p" . focus-prev-thing))
-  :config
+              ("M-p" . focus-prev-thing)))
+
+(after! focus-mode
   (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph)))
 #+end_src
 ** visual-fill-column-mode
@@ -1773,7 +1835,7 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 *** structurizr
 #+begin_src emacs-lisp
 (use-package! structurizr-mode
-  :mode ("\\.\\(dsl\\)\\'" . plantuml-mode)
+  :mode ("\\.\\(dsl\\)\\'" . structurizr-mode)
   :config
   (setq structurizr-indent-level 2
         structurizr-tab-width 2))
@@ -2085,6 +2147,16 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
 #+begin_src emacs-lisp
 (setq +lookup-open-url-fn #'+lookup-xwidget-webkit-open-url-fn)
 #+end_src
+** declutter
+#+begin_src emacs-lisp
+(use-package! declutter
+  :config
+  ;; (setq declutter-engine 'lynx)     ; lynx will get and render html
+  ;; (setq declutter-engine 'rdrview)  ; rdrview will get and render html
+  (setq declutter-engine 'eww)      ; eww will get and render html
+  ;; (setq declutter-engine 'txtify)   ; txtify.it will get and render html)
+)
+#+end_src
 
 * Searching
 ** deadgrep
@@ -2144,14 +2216,14 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key     | description                                 |
-|---------+---------------------------------------------|
-| C-w     | add next word to search                     |
-| C-e     | add until EOL to search                     |
+| key     | description                                   |
+|---------+-----------------------------------------------|
+| C-w     | add next word to search                       |
+| C-e     | add until EOL to search                       |
 | M-e     | edit search in minibuffer (commit with =RET=) |
 | M-s o   | run =occur=                                   |
-| M-s r   | toggle regexp search                        |
-| M-s .   | mark whole thing for search                 |
+| M-s r   | toggle regexp search                          |
+| M-s .   | mark whole thing for search                   |
 | M-s h r | highlight current search (=hi-lock=)          |
 | M-%     | run =query-replace= on search term            |
 | C-M-%   | run =query-replace-regexp= on search term     |
@@ -2639,8 +2711,7 @@ Configure elfeed first:
 ;; Style the show-mode layout
 (add-hook!
  'elfeed-show-mode-hook
- ;; (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family "Fira Mono" :size 20))
- (setq fill-column 50)
+ (setq fill-column 90)
  (visual-fill-column-mode)
  (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph))
  (focus-mode)
@@ -2893,6 +2964,11 @@ Use hnread to show HN threads for a URL at point
   :infix "s"
   <<general-keybindings-gen(table=keybinds-searching)>>)
 
+;; Fonts
+(dorneanu/major-leader-key
+  :infix "f"
+  <<general-keybindings-gen(table=keybinds-fonts)>>)
+
 ;; Opens
 (dorneanu/major-leader-key
   :infix "o"
@@ -2963,6 +3039,17 @@ My toggle keybinds are prefixed by ~t~.
 | s   | swiper                            | Run swiper                   |
 | a   | swiper-all                        | Run swiper-all               |
 | .   | swiper-thing-at-point             | Run swiper-thing-at-point    |
+
+** Fonts
+
+#+name: keybinds-fonts
+| Key | Function                                       | Description                 |
+|-----+------------------------------------------------+-----------------------------|
+|     |                                                | Font settings               |
+| i   | dorneanu/set-iosevka-font-current-buffer       | Set iosevka as font         |
+| f   | dorneanu/set-fira-code-font-current-buffer     | Set Fira Code as font       |
+| s   | dorneanu/set-sourcecodepro-font-current-buffer | Set Source Code Pro as font |
+
 
 ** Inserts
 
@@ -3087,6 +3174,7 @@ Window management
 Buffer management
 #+begin_src emacs-lisp
 (package! bufler)
+(package! popper)
 #+end_src
 
 ace-link
@@ -3151,6 +3239,7 @@ ace-link
 ** Browsing
 #+begin_src emacs-lisp
 (package! xwwp :recipe (:host github :repo "kchanqvq/xwwp"))
+(package! declutter)
 #+end_src
 ** Editing
 #+begin_src emacs-lisp
