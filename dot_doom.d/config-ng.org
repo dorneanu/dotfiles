@@ -1106,9 +1106,9 @@ Doom exposes five (optional) variables for controlling fonts in Doom, they are:
 #+end_quote
 
 #+begin_src emacs-lisp
-(setq  doom-font (font-spec :family "Iosevka" :size 12)
+(setq  doom-font (font-spec :family "DejaVu Sans Mono" :size 14)
        ;; doom-variable-pitch-font (font-spec :family "Fira Mono" :size 17)
-       doom-variable-pitch-font (font-spec :family "Fira Code" :size 12)
+       doom-variable-pitch-font (font-spec :family "DejaVu Sans Mono" :size 16)
        doom-unicode-font (font-spec :family "Noto Color Emoji"))
 #+end_src
 
@@ -1200,7 +1200,9 @@ I start to like the modeline:
         '("\\*Messages\\*"
           "Output\\*$"
           "\\*Async Shell Command\\*"
-          "\\xwidget-webkit\\*"
+          "\\xwidget-webkit\\**"
+          "\\*Org Agenda\\*"
+          "\\*chatgpt\\**"
           help-mode
           compilation-mode))
   (popper-mode +1)
@@ -1217,6 +1219,7 @@ I start to like the modeline:
                   )))
 
   (setq popper-group-function #'popper-group-by-projectile)
+  (setq popper-display-function #'display-buffer-in-child-frame)
   )
 #+end_src
 * Editing
@@ -1315,6 +1318,25 @@ I'll try [[https://github.com/AmaiKinono/puni][puni]] as a replacement for ~smar
 ;; (use-package! aggressive-indent
 ;;   :config
 ;;   (global-aggressive-indent-mode 1))
+#+end_src
+** vundo
+#+begin_src emacs-lisp
+(use-package! vundo
+  :config
+  ;; Better contrasting highlight.
+  (custom-set-faces
+   '(vundo-node ((t (:foreground "#808080"))))
+   '(vundo-stem ((t (:foreground "#808080"))))
+   '(vundo-highlight ((t (:foreground "#FFFF00"))))))
+#+end_src
+** undo-hl
+#+begin_src emacs-lisp
+(use-package! undo-hl
+  :hook ((text-mode . undo-hl-mode)
+         (prog-mode . undo-hl-mode))
+  :custom-face
+  (undo-hl-insert ((t (:background "#FFFF00"))))
+  (undo-hl-delete ((t (:background "#FFFF00")))))
 #+end_src
 * Multimedia
 ** TODO emms
@@ -1616,6 +1638,11 @@ deactivate `magit-todos-mode', otherwise enable it."
 (use-package! consult-gh)
 #+end_src
 ** Shells
+*** eshell
+#+begin_src emacs-lisp
+(use-package! eshell)
+(add-hook 'shell-mode-hook (lambda () (company-mode -1)) 'append)
+#+end_src
 ** Languages
 *** Utilities
 #+begin_src emacs-lisp
@@ -2216,14 +2243,14 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key     | description                                   |
-|---------+-----------------------------------------------|
-| C-w     | add next word to search                       |
-| C-e     | add until EOL to search                       |
+| key     | description                                 |
+|---------+---------------------------------------------|
+| C-w     | add next word to search                     |
+| C-e     | add until EOL to search                     |
 | M-e     | edit search in minibuffer (commit with =RET=) |
 | M-s o   | run =occur=                                   |
-| M-s r   | toggle regexp search                          |
-| M-s .   | mark whole thing for search                   |
+| M-s r   | toggle regexp search                        |
+| M-s .   | mark whole thing for search                 |
 | M-s h r | highlight current search (=hi-lock=)          |
 | M-%     | run =query-replace= on search term            |
 | C-M-%   | run =query-replace-regexp= on search term     |
@@ -3250,7 +3277,12 @@ ace-link
 
 ;; Annotate
 (package! annotate)
+
+;; Undo-hl
+(package! undo-hl :recipe (:host github :repo "casouri/undo-hl"))
+
 #+end_src
+
 ** Reading
 #+begin_src emacs-lisp
 (package! olivetti)
