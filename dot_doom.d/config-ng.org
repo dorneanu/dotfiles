@@ -3249,6 +3249,9 @@ Different keybindings to jump to a window, character or another workspace.
 ;; (package! elfeed-score)
 (package! hnreader)
 (package! reddigg)
+(package! nnreddit :recipe (:host github :repo "dickmao/nnreddit"))
+;; (package! nndiscourse :recipe (:host github :repo "dickmao/nndiscourse"))
+(package! nndiscourse)
 
 (package! wakatime-mode)
 
