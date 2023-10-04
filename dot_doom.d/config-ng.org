@@ -13,7 +13,8 @@
 - [ ] review org-roam-capture-templates
 ** TODO embark
 - [X] function for embark to open url in xwidget
-** TODO add elfeed
+** DONE add elfeed
+CLOSED: [2023-09-18 Mon 20:39]
 ** TODO smartparens
 - how to use it
 - 2023-08-28 ◦ [[https://xenodium.com/emacs-smartparens-auto-indent/][Emacs smartparens auto-indent]]
@@ -2516,7 +2517,7 @@ Open buffer/files in horizontal/vertical split using ~ivy-actions~:
           ;; ("M-f m" . consult-multi-occur)
           ;; ("M-f r" . consult-ripgrep)
           ;; ("M-f u" . consult-focus-lines)
-          ;; ("M-f f" . consult-find)
+          ("M-g f" . consult-find)
           ))
   ;; :custom
   ;; (completion-in-region-function #'consult-completion-in-region)
