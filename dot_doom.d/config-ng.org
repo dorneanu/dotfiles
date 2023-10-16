@@ -2020,6 +2020,29 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 <<mu4e-view-mode>>
 
 #+end_src
+*** Bookmarks
+#+BEGIN_SRC emacs-lisp
+(setq mu4e-bookmarks
+      `(
+        ("maildir:/Sent" "Sent messages" ?s)
+        ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
+        ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
+        ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
+        ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
+        ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
+        ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
+        ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
+        ("from:jira@*" "Jira" ?j)
+        (,(s-join " "
+                  '("OR noreply@tagesspiegel.de"
+                    "OR support@lagedernation.org"
+                    "OR hello@blinkist.com"
+                    "OR newsletter@*"
+                    "OR support@xeroshoes.com"))
+         "Newletter" ?n)
+        ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
+#+END_SRC
+
 *** Fancy stuff
 From https://github.com/Phundrak/dotfiles
 
@@ -2334,14 +2357,14 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key     | description                                   |
-|---------+-----------------------------------------------|
-| C-w     | add next word to search                       |
-| C-e     | add until EOL to search                       |
+| key     | description                                 |
+|---------+---------------------------------------------|
+| C-w     | add next word to search                     |
+| C-e     | add until EOL to search                     |
 | M-e     | edit search in minibuffer (commit with =RET=) |
 | M-s o   | run =occur=                                   |
-| M-s r   | toggle regexp search                          |
-| M-s .   | mark whole thing for search                   |
+| M-s r   | toggle regexp search                        |
+| M-s .   | mark whole thing for search                 |
 | M-s h r | highlight current search (=hi-lock=)          |
 | M-%     | run =query-replace= on search term            |
 | C-M-%   | run =query-replace-regexp= on search term     |
