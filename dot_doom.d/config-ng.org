@@ -3057,8 +3057,70 @@ Use hnread to show HN threads for a URL at point
    wakatime-cli-path "/home/victor/.pyenv/versions/emacs/bin/wakatime")
   (global-wakatime-mode))
 #+end_src
-*** TODO jira
+*** WIP jira
+#+begin_src emacs-lisp
+(use-package! jiralib2
+  :commands (ejira-mode)
+  :init
+  (defun dorneanu/setup-jira ()
+    (interactive)
+    (setq jiralib2-url              (+pass-get-secret "emacs/ejira-url")
+          jiralib2-auth             'token
+          jiralib2-token             (+pass-get-secret "emacs/ejira-token")
+          jiralib2-user-login-name  (+pass-get-secret "emacs/ejira-user"))
+    )
+  )
+
+(use-package! ejira
+  :after (jiralib2)
+  :init
+  (setq
+   ;; NOTE, this directory needs to be in `org-agenda-files'`
+   ejira-org-directory       "~/work/jira"
+   ejira-projects            '("QDS" "INI")
+
+   ejira-priorities-alist    '(("Highest" . ?A)
+                               ("High"    . ?B)
+                               ("Medium"  . ?C)
+                               ("Low"     . ?D)
+                               ("Lowest"  . ?E))
+   ejira-todo-states-alist   '(("To Do"       . 1)
+                               ("In Progress" . 2)
+                               ("Done"        . 4)))
+  ;; Update my jira projects
+  (defun dorneanu/jira-update-projects ()
+    (interactive)
+    (let ((org-agenda-files nil))
+      (ejira-update-my-projects)
+      )
+    )
+  :config
+  ;; Tries to auto-set custom fields by looking into /editmeta
+  ;; of an issue and an epic.
+  (add-hook 'jiralib2-post-login-hook #'ejira-guess-epic-sprint-fields)
+
+  ;; They can also be set manually if autoconfigure is not used.
+  ;; (setq ejira-sprint-field       'customfield_10001
+  ;;       ejira-epic-field         'customfield_10002
+  ;;       ejira-epic-summary-field 'customfield_10004)
+
+  ;; (require 'ejira-agenda)
+
+  ;; Make the issues visisble in your agenda by adding `ejira-org-directory'
+  ;; into your `org-agenda-files'.
+  (add-to-list 'org-agenda-files ejira-org-directory)
+
+
+  ;; Add an agenda view to browse the issues that
+  ;; (org-add-agenda-custom-command
+  ;;  '("j" "My JIRA issues"
+  ;;    ((ejira-jql "resolution = unresolved and assignee = currentUser()"
+  ;;                ((org-agenda-overriding-header "Assigned to me"))))))
+  )
+#+end_src
 ** AI
+
+
 *** chatgpt-shell
 #+begin_src emacs-lisp
 (use-package! chatgpt-shell
@@ -3342,6 +3404,11 @@ ace-link
 
 ;; Structurizr mode
 (package! subsonic :recipe (:local-repo "structurizr-mode"))
+#+end_src
+** Productivity
+#+begin_src emacs-lisp
+(package! jiralib2 :recipe (:host github :repo "nyyManni/jiralib2"))
+(package! ejira :recipe (:host github :repo "nyyManni/ejira"))
 #+end_src
 ** Multimedia
 #+begin_src emacs-lisp
