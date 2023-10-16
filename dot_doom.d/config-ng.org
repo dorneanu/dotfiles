@@ -591,7 +591,7 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
   ;;             (display-line-numbers-mode 0)))
 
   ;; Add extra files to org-agenda-files
-  (add-to-list 'org-agenda-files "~/syncthing/org/brainfck.org" "~/syncthing/org/0box.org")
+  (add-to-list 'org-agenda-files "~/syncthing/org/2-PARA.org" "~/syncthing/org/0box.org")
 )
 
 #+end_src
@@ -626,6 +626,12 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             :scheduled today
                             :order 1)
                            (:discard (:anything))))))
+            (tags (concat "wk" (format-time-string "%V")) ((org-agenda-overriding-header  (concat "--\nToDos Week " (format-time-string "%V")))
+             (org-super-agenda-groups
+              '((:discard (:deadline t))
+                (:discard (:todo ("DONE" "CANCELED")))
+                (:discard (:not (:todo t)))
+                ))))
             (alltodo "" ((org-agenda-overriding-header "")
                          (org-agenda-prefix-format '(
                                                      (agenda . "%7c %4e %?-12t %s")
@@ -2328,14 +2334,14 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key     | description                                 |
-|---------+---------------------------------------------|
-| C-w     | add next word to search                     |
-| C-e     | add until EOL to search                     |
+| key     | description                                   |
+|---------+-----------------------------------------------|
+| C-w     | add next word to search                       |
+| C-e     | add until EOL to search                       |
 | M-e     | edit search in minibuffer (commit with =RET=) |
 | M-s o   | run =occur=                                   |
-| M-s r   | toggle regexp search                        |
-| M-s .   | mark whole thing for search                 |
+| M-s r   | toggle regexp search                          |
+| M-s .   | mark whole thing for search                   |
 | M-s h r | highlight current search (=hi-lock=)          |
 | M-%     | run =query-replace= on search term            |
 | C-M-%   | run =query-replace-regexp= on search term     |
@@ -3011,6 +3017,10 @@ Use reddigg to show reddit threads.
     (reddigg-view-comments link)))
 #+end_src
 **** hnreader
+#+begin_src emacs-lisp
+(use-package! hnreader
+  :after (elfeed))
+#+end_src
 Open in same window
 #+begin_src emacs-lisp
 (setq hnreader-view-comments-in-same-window nil)
