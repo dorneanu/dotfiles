@@ -98,7 +98,7 @@
        (eval +overlay)       ; run code, run (also, repls)
        ;;gist              ; interacting with github gists
        (lookup +offline +dictionary)  ; navigate your code and its documentation
-       lsp                            ; M-x vscode
+       (lsp +corfu)                           ; M-x vscode
        (magit +forge)                 ; a git porcelain for Emacs
        make                           ; run make tasks from Emacs
        pass                           ; password manager for nerds

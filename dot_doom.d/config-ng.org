@@ -5,7 +5,7 @@
 
 * Still to fix
 ** TODO org
-- [ ] org-clock doesn't start automatically when marking item as STARTED
+- [X] org-clock doesn't start automatically when marking item as STARTED
 - [ ] setup org-capture
   - have a look at phundrak's template
   - use capture templates (and tables)
@@ -32,6 +32,7 @@ Some defaults I'd like to use
 
 #+begin_src emacs-lisp
 (setq-default
+ frame-resize-pixelwise    t  ; fine resize
  cursor-in-non-selected-windows t                 ; Hide the cursor in inactive windows
  display-time-default-load-average nil            ; Don't display load average
  fill-column 80                                   ; Set width for automatic line breaks
@@ -56,6 +57,7 @@ Some defaults I'd like to use
 (global-hl-line-mode)                             ; Hightlight current line
 (set-default-coding-systems 'utf-8)               ; Default to utf-8 encoding
 (show-paren-mode t)                               ; Show the parent
+(setq gc-cons-threshold (* 1024 1024 1024))       ; Garbage collection
 #+end_src
 
 ** Emacs Behavior
@@ -2037,6 +2039,7 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
                   '("OR noreply@tagesspiegel.de"
                     "OR support@lagedernation.org"
                     "OR hello@blinkist.com"
+                    "OR info@smarticular.net"
                     "OR newsletter@*"
                     "OR support@xeroshoes.com"))
          "Newletter" ?n)
@@ -2298,7 +2301,10 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
   ;; (setq declutter-engine 'txtify)   ; txtify.it will get and render html)
 )
 #+end_src
-
+** eww
+#+begin_src emacs-lisp
+(setq browse-url-browser-function 'browse-url-chrome)
+#+end_src
 * Searching
 ** deadgrep
 #+begin_src emacs-lisp
@@ -2758,6 +2764,61 @@ sure or if you don’t remember what your snippet is.
   :after company
   :config
   (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet)))
+#+end_src
+** corfu
+#+begin_src emacs-lisp
+;; From https://www.patrickdelliott.com/emacs.d/
+(use-package! corfu
+  :hook
+  (eval-expression-minibuffer-setup . corfu-mode)
+  :init
+  (global-corfu-mode)
+  :custom
+  (corfu-cycle t) ;; allows cycling through candidates
+  (corfu-auto nil) ;; disables auto-completion
+  :bind
+  :general
+  (:keymaps 'corfu-map
+            "SPC" 'corfu-insert-separator)) ;;
+#+end_src
+**
+** cape
+#+begin_src emacs-lisp
+;; From https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
+(use-package! cape
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p h" . cape-history)
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p i" . cape-ispell)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p _" . cape-tex)
+         ("C-c p ^" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
 #+end_src
 ** github copilot
 #+begin_src emacs-lisp
@@ -3225,14 +3286,15 @@ My toggle keybinds are prefixed by ~t~.
 ** Projects
 
 #+name: keybinds-projects
-| Key | Function                      | Description            |
-|-----+-------------------------------+------------------------|
-|     |                               | projects               |
-| e   | project-eshell                | Run eshell in project  |
-| r   | consult-ripgrep               | Run ripgrep in project |
-| s   | rg-project                    | Run rg.el in project   |
-| d   | projectile-dired              |                        |
-| D   | projectile-dired-other-window |                        |
+| Key | Function                      | Description             |
+|-----+-------------------------------+-------------------------|
+|     |                               | projects                |
+| e   | project-eshell                | Run eshell in project   |
+| r   | consult-ripgrep               | Run ripgrep in project  |
+| s   | rg-project                    | Run rg.el in project    |
+| d   | projectile-dired              |                         |
+| D   | projectile-dired-other-window |                         |
+| P   | dirvish-side                  | Open dirvish in sidebar |
 
 ** Searches
 
@@ -3364,6 +3426,15 @@ Different keybindings to jump to a window, character or another workspace.
 (package! company-tabnine)
 (package! company-terraform)
 #+end_src
+
+Try corfu out:
+
+#+begin_src emacs-lisp
+(package! corfu)
+(package! cape)
+(package! kind-icon)
+(package! corfu-doc)
+#+end_src
 ** Indentation
 #+begin_src emacs-lisp
 (package! aggressive-indent)
@@ -3489,6 +3560,11 @@ ace-link
 #+begin_src emacs-lisp
 (package! copy-as-format)
 (package! ox-hugo)
+#+end_src
+** Disabled
+#+begin_src emacs-lisp
+;; gcmh seems to cause performance issues
+(package! gcmh :disable t)
 #+end_src
 * Playground
 ** browse-apropos-url
