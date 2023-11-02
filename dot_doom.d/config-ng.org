@@ -3362,7 +3362,8 @@ Use hnread to show HN threads for a URL at point
 (use-package! chatgpt-shell
   :commands (chatgpt-shell)
   :bind (("C-c a p" . chatgpt-shell-prompt)
-         ("C-c a s" . chatgpt-shell))
+         ("C-c a s" . chatgpt-shell)
+         ("C-c a r" . chatgpt-shell-proofread-region))
   :config
   (setq chatgpt-shell-openai-key (+pass-get-secret "emacs/chatgpt")))
 #+end_src
