@@ -2809,16 +2809,23 @@ sure or if you don’t remember what your snippet is.
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   ;;(add-to-list 'completion-at-point-functions #'cape-history)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
   ;;(add-to-list 'completion-at-point-functions #'cape-tex)
   ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
   ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
   ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
   ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
 )
+#+end_src
+** yasnippet-capf
+#+begin_src emacs-lisp
+(use-package! yasnippet-capf
+  :after cape
+  :config
+  (add-to-list 'completion-at-point-functions #'yasnippet-capf))
 #+end_src
 ** github copilot
 #+begin_src emacs-lisp
@@ -3434,6 +3441,7 @@ Try corfu out:
 (package! cape)
 (package! kind-icon)
 (package! corfu-doc)
+(package! yasnippet-capf)
 #+end_src
 ** Indentation
 #+begin_src emacs-lisp
