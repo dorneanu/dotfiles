@@ -2830,8 +2830,8 @@ sure or if you don’t remember what your snippet is.
 (use-package! corfu
   :hook
   (eval-expression-minibuffer-setup . corfu-mode)
-  :init
-  (global-corfu-mode)
+  ;; :init
+  ;; (global-corfu-mode)
   :custom
   (corfu-cycle t) ;; allows cycling through candidates
   (corfu-auto nil)
