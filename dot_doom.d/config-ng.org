@@ -392,6 +392,14 @@ Configure GPG assistant
           ("PROJ" . +org-todo-project)
           ("DONE"   . +org-todo-cancel)))
 #+end_src
+** org structure templates
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  ;; Add chatgpt queries
+  (add-to-list 'org-structure-template-alist '("ai" . "ai"))
+  (add-to-list 'org-structure-template-alist '("cs" . "chatgpt-shell")))
+
+#+end_src
 ** Custom functions
 *** Prefetch HTML title (org-link-insert)
 Prefetch HTML title whenever ~org-link-insert~ (~C-c C-l~) is called:
@@ -1095,6 +1103,35 @@ Insert images easily into ORG mode files
   (balance-windows)
   (other-window 1)
   (org-timeblock))
+#+end_src
+** Hydra
+
+From [[https://sriramkswamy.github.io/dotemacs/]]
+
+#+begin_src emacs-lisp
+(defhydra sk/hydra-org-jump (:color pink :hint nil)
+  "
+ ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
+ ^^^^^^^^^^^-------------------------------------------------------------------------------
+ ^ ^ _k_ ^ ^   ^ ^ _K_ ^ ^   ^ ^ _u_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _p_ ^ ^   ^ ^ _P_ ^ ^    _q_ quit
+ _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
+ ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
+"
+  ("j" outline-next-visible-heading)
+  ("k" outline-previous-visible-heading)
+  ("l" org-down-element)
+  ("h" org-up-element)
+  ("J" org-forward-heading-same-level)
+  ("K" org-backward-heading-same-level)
+  ("u" org-next-item)
+  ("d" org-previous-item)
+  ("f" org-table-next-field)
+  ("b" org-table-previous-field)
+  ("n" org-next-block)
+  ("p" org-previous-block)
+  ("N" org-next-link)
+  ("P" org-previous-link)
+  ("q" nil :color blue))
 #+end_src
 
 * User Interface
@@ -2653,6 +2690,27 @@ Open links also in ~xwidget-webkit~:
 (define-key embark-url-map "X" #'dorneanu/embark-open-url-in-xwidget-webkit)
 #+end_src
 
+Now open links using ~org-web-tools~:
+#+begin_src emacs-lisp
+(defun dorneanu/embark-open-url-in-org-web-tools (url &rest args)
+  "open with org-web-tools"
+  (message "URL: " url)
+  ;; Split window and focus there
+  (when (stringp url)
+    ;; If it's a "naked url", just try adding https: to it.
+    (unless (string-match "\\`[A-Za-z]+:" url)
+      (setq url (concat "https://" url)))
+
+    ;; Split window
+    (split-window-right)
+    (balance-windows)
+    (other-window 1)
+
+    (org-web-tools-read-url-as-org url)
+    ))
+(define-key embark-url-map "O" #'dorneanu/embark-open-url-in-org-web-tools)
+#+end_src
+
 
 💡: You can find more examples at https://karthinks.com/software/fifteen-ways-to-use-embark/.
 Initially I wanted to use [[https://discourse.doomemacs.org/t/open-selected-completion-candidate-in-a-split/2525/2][this]] solution but it didn't work.
@@ -2758,12 +2816,13 @@ sure or if you don’t remember what your snippet is.
 (setq company-dabbrev-other-buffers t
       company-dabbrev-ignore-case t)
 #+end_src
-*** company-tabnine
+*** company-tabnine                                       :disabled:
 #+begin_src emacs-lisp
-(use-package! company-tabnine
-  :after company
-  :config
-  (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet)))
+;; (use-package! company-tabnine
+;;   :after company
+;;   :config
+;;   ;; (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet))
+;;   )
 #+end_src
 ** corfu
 #+begin_src emacs-lisp
@@ -2775,39 +2834,52 @@ sure or if you don’t remember what your snippet is.
   (global-corfu-mode)
   :custom
   (corfu-cycle t) ;; allows cycling through candidates
-  (corfu-auto nil) ;; disables auto-completion
-  :bind
-  :general
-  (:keymaps 'corfu-map
-            "SPC" 'corfu-insert-separator)) ;;
+  (corfu-auto nil)
+  (corfu-preview-current t)
+  )
+
+(use-package emacs
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+
+  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete))
 #+end_src
-**
+
 ** cape
 #+begin_src emacs-lisp
 ;; From https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
 (use-package! cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (("C-c p p" . completion-at-point) ;; capf
-         ("C-c p t" . complete-tag)        ;; etags
-         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("C-c p h" . cape-history)
-         ("C-c p f" . cape-file)
-         ("C-c p k" . cape-keyword)
-         ("C-c p s" . cape-symbol)
-         ("C-c p a" . cape-abbrev)
-         ("C-c p i" . cape-ispell)
-         ("C-c p l" . cape-line)
-         ("C-c p w" . cape-dict)
-         ("C-c p \\" . cape-tex)
-         ("C-c p _" . cape-tex)
-         ("C-c p ^" . cape-tex)
-         ("C-c p &" . cape-sgml)
-         ("C-c p r" . cape-rfc1345))
+  :bind (("M-p p" . completion-at-point) ;; capf
+         ("M-p t" . complete-tag)        ;; etags
+         ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("M-p h" . cape-history)
+         ("M-p f" . cape-file)
+         ("M-p k" . cape-keyword)
+         ("M-p s" . cape-symbol)
+         ("M-p a" . cape-abbrev)
+         ;; ("M-p i" . cape-ispell)
+         ("M-p l" . cape-line)
+         ("M-p w" . cape-dict)
+         ("M-p \\" . cape-tex)
+         ("M-p _" . cape-tex)
+         ("M-p ^" . cape-tex)
+         ("M-p &" . cape-sgml)
+         ("M-p r" . cape-rfc1345))
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
   ;;(add-to-list 'completion-at-point-functions #'cape-history)
   ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
   ;;(add-to-list 'completion-at-point-functions #'cape-tex)
@@ -2836,6 +2908,79 @@ sure or if you don’t remember what your snippet is.
               ("TAB" . 'copilot-accept-completion)
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
+#+end_src
+** tabnine
+#+begin_src emacs-lisp
+(use-package! tabnine
+  :hook ((prog-mode . tabnine-mode)
+         ;; (text-mode . tabnine-mode)
+         (kill-emacs . tabnine-kill-process))
+  :bind (:map  tabnine-completion-map
+               ("TAB" . nil)
+               ("<tab>" . nil))
+  :init
+  (setq tabnine-minimum-prefix-length 0)
+  :config
+  (tabnine-start-process))
+#+end_src
+** codeium                                                 :disabled:
+#+begin_src emacs-lisp
+;; (use-package! codeium
+;;     :init
+;;     ;; use globally
+;;     (add-to-list 'completion-at-point-functions #'codeium-completion-at-point)
+;;     ;; or on a hook
+;;     ;; (add-hook 'python-mode-hook
+;;     ;;     (lambda ()
+;;     ;;         (setq-local completion-at-point-functions '(codeium-completion-at-point))))
+
+;;     ;; if you want multiple completion backends, use cape (https://github.com/minad/cape):
+;;     ;; (add-hook 'python-mode-hook
+;;     ;;     (lambda ()
+;;     ;;         (setq-local completion-at-point-functions
+;;     ;;             (list (cape-super-capf #'codeium-completion-at-point #'lsp-completion-at-point)))))
+;;     ;; an async company-backend is coming soon!
+
+;;     ;; codeium-completion-at-point is autoloaded, but you can
+;;     ;; optionally set a timer, which might speed up things as the
+;;     ;; codeium local language server takes ~0.2s to start up
+;;     (add-hook 'emacs-startup-hook
+;;      (lambda () (run-with-timer 0.1 nil #'codeium-init)))
+
+;;     ;; :defer t ;; lazy loading, if you want
+;;     :config
+;;     (setq use-dialog-box nil) ;; do not use popup boxes
+
+;;     ;; if you don't want to use customize to save the api-key
+;;     ;; (setq codeium/metadata/api_key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+
+;;     ;; get codeium status in the modeline
+;;     (setq codeium-mode-line-enable
+;;         (lambda (api) (not (memq api '(CancelRequest Heartbeat AcceptCompletion)))))
+;;     (add-to-list 'mode-line-format '(:eval (car-safe codeium-mode-line)) t)
+;;     ;; alternatively for a more extensive mode-line
+;;     ;; (add-to-list 'mode-line-format '(-50 "" codeium-mode-line) t)
+
+;;     ;; use M-x codeium-diagnose to see apis/fields that would be sent to the local language server
+;;     (setq codeium-api-enabled
+;;         (lambda (api)
+;;             (memq api '(GetCompletions Heartbeat CancelRequest GetAuthToken RegisterUser auth-redirect AcceptCompletion))))
+;;     ;; you can also set a config for a single buffer like this:
+;;     ;; (add-hook 'python-mode-hook
+;;     ;;     (lambda ()
+;;     ;;         (setq-local codeium/editor_options/tab_size 4)))
+
+;;     ;; You can overwrite all the codeium configs!
+;;     ;; for example, we recommend limiting the string sent to codeium for better performance
+;;     (defun my-codeium/document/text ()
+;;         (buffer-substring-no-properties (max (- (point) 3000) (point-min)) (min (+ (point) 1000) (point-max))))
+;;     ;; if you change the text, you should also change the cursor_offset
+;;     ;; warning: this is measured by UTF-8 encoded bytes
+;;     (defun my-codeium/document/cursor_offset ()
+;;         (codeium-utf8-byte-length
+;;             (buffer-substring-no-properties (max (- (point) 3000) (point-min)) (point))))
+;;     (setq codeium/document/text 'my-codeium/document/text)
+;;     (setq codeium/document/cursor_offset 'my-codeium/document/cursor_offset))
 #+end_src
 * Applications
 ** RSS
@@ -3430,7 +3575,8 @@ Different keybindings to jump to a window, character or another workspace.
 (package! ivy-yasnippet)
 (package! yasnippet-snippets)
 (package! yankpad)
-(package! company-tabnine)
+;; (package! company-tabnine)
+(package! tabnine)
 (package! company-terraform)
 #+end_src
 
@@ -3443,6 +3589,13 @@ Try corfu out:
 (package! corfu-doc)
 (package! yasnippet-capf)
 #+end_src
+
+Use codeium as an alternative to Github Co-pilot and TabNine:
+
+#+begin_src emacs-lisp
+(package! codeium :recipe (:host github :repo "Exafunction/codeium.el"))
+#+end_src
+
 ** Indentation
 #+begin_src emacs-lisp
 (package! aggressive-indent)
@@ -3572,7 +3725,7 @@ ace-link
 ** Disabled
 #+begin_src emacs-lisp
 ;; gcmh seems to cause performance issues
-(package! gcmh :disable t)
+;; (package! gcmh :disable t)
 #+end_src
 * Playground
 ** browse-apropos-url
