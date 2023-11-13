@@ -2400,18 +2400,18 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key     | description                                 |
-|---------+---------------------------------------------|
-| C-w     | add next word to search                     |
-| C-e     | add until EOL to search                     |
-| M-e     | edit search in minibuffer (commit with =RET=) |
-| M-s o   | run =occur=                                   |
-| M-s r   | toggle regexp search                        |
-| M-s .   | mark whole thing for search                 |
-| M-s h r | highlight current search (=hi-lock=)          |
-| M-%     | run =query-replace= on search term            |
-| C-M-%   | run =query-replace-regexp= on search term     |
-| C-l     | =recenter=                                    |
+| key   | description                                 |
+|-------+---------------------------------------------|
+| C-w   | add next word to search                     |
+| C-e   | add until EOL to search                     |
+| M-e   | edit search in minibuffer (commit with =RET=) |
+| M-s o | run =occur=                                   |
+| M-s r | toggle regexp search                        |
+| M-s . | mark whole thing for search                 |
+f M-s h r | highlight current search (=hi-lock=)          |
+| M-%   | run =query-replace= on search term        |
+| C-M-% | run =query-replace-regexp= on search term |
+| C-l   | =recenter=                                |
 
 #+begin_src emacs-lisp
 ;; Mostly from https://github.com/alexpeits/emacs.d
@@ -2606,7 +2606,7 @@ Open buffer/files in horizontal/vertical split using ~ivy-actions~:
 (use-package! embark-consult)
 
 (use-package! embark
-  :bind (("C-;" . embark-act)
+  :bind (("C-." . embark-act)
          ("M-o" . embark-act)
          ("M-O" . embark-dwim)))
 #+end_src
@@ -2761,54 +2761,54 @@ sure or if you don’t remember what your snippet is.
   (yankpad-reload)
   (add-to-list 'company-backends #'company-yankpad))
 #+end_src
-** company-mode
+** company-mode                                            :disabled:
 #+begin_src emacs-lisp
-(use-package! company
-  :hook (((prog-mode markdown-mode) . company-mode))
-  :bind (:map company-active-map
-              ;; ([return] . nil)
-              ;; ("RET" . nil)
-              ("TAB" . company-complete-selection)
-              ([tab] . company-complete-selection)
-              ("C-j" . company-complete-selection))
-  :config
-  (setq company-idle-delay 0)
-  (setq company-tooltip-limit 10)
-  (setq company-minimum-prefix-length 1)
-  (setq company-show-numbers t)
+;; (use-package! company
+;;   :hook (((prog-mode markdown-mode) . company-mode))
+;;   :bind (:map company-active-map
+;;               ;; ([return] . nil)
+;;               ;; ("RET" . nil)
+;;               ("TAB" . company-complete-selection)
+;;               ([tab] . company-complete-selection)
+;;               ("C-j" . company-complete-selection))
+;;   :config
+;;   (setq company-idle-delay 0)
+;;   (setq company-tooltip-limit 10)
+;;   (setq company-minimum-prefix-length 1)
+;;   (setq company-show-numbers t)
 
-  ;; Don't display icons
-  (setq company-format-margin-function nil)
+;;   ;; Don't display icons
+;;   (setq company-format-margin-function nil)
 
-  (setq
-   company-tooltip-align-annotations t  ; Aligns annotation to the right hand side
-   company-frontends
-   '(company-pseudo-tooltip-frontend    ; always show candidates in overlay tooltip
-     company-echo-metadata-frontend)    ; show selected candidate docs in echo area
-   )
+;;   (setq
+;;    company-tooltip-align-annotations t  ; Aligns annotation to the right hand side
+;;    company-frontends
+;;    '(company-pseudo-tooltip-frontend    ; always show candidates in overlay tooltip
+;;      company-echo-metadata-frontend)    ; show selected candidate docs in echo area
+;;    )
 
-  ;; dabbrev stuff
-  (setq company-dabbrev-other-buffers t
-        company-dabbrev-ignore-case t))
+;;   ;; dabbrev stuff
+;;   (setq company-dabbrev-other-buffers t
+;;         company-dabbrev-ignore-case t))
 
-;; Add yasnippet support for all company backends
-(defvar company-mode/enable-yas t
-  "Enable yasnippet for all backends.")
+;; ;; Add yasnippet support for all company backends
+;; (defvar company-mode/enable-yas t
+;;   "Enable yasnippet for all backends.")
 #+end_src
-*** company-tng
+*** company-tng                                           :disabled:
 #+BEGIN_SRC emacs-lisp
-(use-package! company-tng
-  :after company
-  :bind (:map company-active-map
-         ;; ([return] . nil)
-         ;; ("RET" . nil)
-         ("TAB" . company-select-next)
-         ([tab] . company-select-next)
-         ("S-TAB" . company-select-previous)
-         ([backtab] . company-select-previous)
-         ("C-j" . company-complete-selection))
-  :config
-  (company-tng-mode))
+;; (use-package! company-tng
+;;   :after company
+;;   :bind (:map company-active-map
+;;          ;; ([return] . nil)
+;;          ;; ("RET" . nil)
+;;          ("TAB" . company-select-next)
+;;          ([tab] . company-select-next)
+;;          ("S-TAB" . company-select-previous)
+;;          ([backtab] . company-select-previous)
+;;          ("C-j" . company-complete-selection))
+;;   :config
+;;   (company-tng-mode))
 #+END_SRC
 *** company-dict
 *** company-dabbrev
@@ -2833,26 +2833,55 @@ sure or if you don’t remember what your snippet is.
   ;; :init
   ;; (global-corfu-mode)
   :custom
-  (corfu-cycle t) ;; allows cycling through candidates
+    ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
+  ;; want to perform completion
+  (tab-always-indent 'complete)
+  (completion-cycle-threshold nil)      ; Always show candidates in menu
+
   (corfu-auto nil)
-  (corfu-preview-current t)
-  )
+  (corfu-auto-prefix 2)
+  (corfu-auto-delay 0.25)
 
-(use-package emacs
-  :init
-  ;; TAB cycle if there are only few candidates
-  (setq completion-cycle-threshold 3)
+  (corfu-min-width 80)
+  (corfu-max-width corfu-min-width)     ; Always have the same width
+  (corfu-count 14)
+  (corfu-scroll-margin 4)
+  (corfu-cycle nil)
 
-  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-  ;; (setq read-extended-command-predicate
-  ;;       #'command-completion-default-include-p)
+  ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
+  ;; `corfu-quit-at-boundary' = nil behavior. Set this to separator if using
+  ;; `corfu-auto' = `t' workflow (in that case, make sure you also set up
+  ;; `corfu-separator' and a keybind for `corfu-insert-separator', which my
+  ;; configuration already has pre-prepared). Necessary for manual corfu usage with
+  ;; orderless, otherwise first component is ignored, unless `corfu-separator'
+  ;; is inserted.
+  (corfu-quit-at-boundary nil)
+  (corfu-separator ?\s)            ; Use space
+  (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
+  (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
+  (corfu-preselect-first t)        ; Preselect first candidate?
 
-  ;; Enable indentation+completion using the TAB key.
-  ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  ;; Other
+  (corfu-echo-documentation nil)        ; Already use corfu-doc
+  ;; (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
+  :config
+  (general-add-advice '(corfu--setup corfu--teardown) :after 'evil-normalize-keymaps)
+  (evil-make-overriding-map corfu-map)
+  :bind
+  :general
+  (:keymaps 'corfu-map
+   :states 'insert
+   "C-n" #'corfu-next
+   "C-p" #'corfu-previous
+   "<escape>" #'corfu-quit
+   "<return>" #'corfu-insert
+   "H-SPC" #'corfu-insert-separator
+   ;; "SPC" #'corfu-insert-separator ; Use when `corfu-quit-at-boundary' is non-nil
+   "M-d" #'corfu-show-documentation
+   "C-g" #'corfu-quit
+   "M-l" #'corfu-show-location)
+  ) ;;
 #+end_src
-
 ** cape
 #+begin_src emacs-lisp
 ;; From https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
@@ -2877,7 +2906,7 @@ sure or if you don’t remember what your snippet is.
          ("M-p r" . cape-rfc1345))
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
+  ;; (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
   ;;(add-to-list 'completion-at-point-functions #'cape-history)
@@ -2892,10 +2921,12 @@ sure or if you don’t remember what your snippet is.
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
 )
 #+end_src
+
 ** yasnippet-capf
 #+begin_src emacs-lisp
 (use-package! yasnippet-capf
   :after cape
+  :bind (("C-x C-s" . yasnippet-capf))
   :config
   (add-to-list 'completion-at-point-functions #'yasnippet-capf))
 #+end_src
