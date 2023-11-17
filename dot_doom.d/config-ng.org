@@ -1749,12 +1749,12 @@ org-babel supports.
       (setenv "GOPATH" (expand-file-name "~/go")))
   (setenv "PATH" (concat (getenv "GOPATH") "/bin" ":" (getenv "PATH"))))
 
-(use-package! company-go
-  :after (company go-mode)
-  :config
-  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
-  (add-to-list 'company-backends 'company-go)
-  )
+;; (use-package! company-go
+;;   :after (company go-mode)
+;;   :config
+;;   ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
+;;   (add-to-list 'company-backends 'company-go)
+;;   )
 
 (use-package! go-guru
   :hook
@@ -1954,9 +1954,18 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 #+end_src
 *** eglot
 #+begin_src emacs-lisp
-;; (use-package! eglot
-;;   :init (setq completion-category-overrides '((eglot (styles orderless))))
-;;   :commands eglot)
+(use-package! eglot
+  :init (setq completion-category-overrides '((eglot (styles orderless))))
+  :commands eglot)
+
+(when (fboundp #'tabnine-completion-at-point)
+    (add-hook 'eglot-managed-mode-hook
+              (defun eglot-capf ()
+                (remove-hook 'completion-at-point-functions #'eglot-completion-at-point t)
+                (add-hook 'completion-at-point-functions
+                          (cape-super-capf
+                           #'eglot-completion-at-point
+                           #'tabnine-completion-at-point) nil t))))
 #+end_src
 
 * Email
@@ -2892,17 +2901,17 @@ sure or if you don’t remember what your snippet is.
   ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
   ;; want to perform completion
   (tab-always-indent 'complete)
-  (completion-cycle-threshold nil)      ; Always show candidates in menu
+  ;; (completion-cycle-threshold nil)      ; Always show candidates in menu
 
   (corfu-auto t)
-  (corfu-auto-prefix 2)
-  (corfu-auto-delay 0.25)
+  (corfu-auto-prefix 1)
+  (corfu-auto-delay 0.20)
 
-  (corfu-min-width 80)
-  (corfu-max-width corfu-min-width)     ; Always have the same width
-  (corfu-count 14)
-  (corfu-scroll-margin 4)
-  (corfu-cycle nil)
+  ;; (corfu-min-width 80)
+  ;; (corfu-max-width corfu-min-width)     ; Always have the same width
+  ;; (corfu-count 14)
+  ;; (corfu-scroll-margin 4)
+  (corfu-cycle t)
 
   ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
   ;; `corfu-quit-at-boundary' = nil behavior. Set this to separator if using
@@ -2911,9 +2920,9 @@ sure or if you don’t remember what your snippet is.
   ;; configuration already has pre-prepared). Necessary for manual corfu usage with
   ;; orderless, otherwise first component is ignored, unless `corfu-separator'
   ;; is inserted.
-  (corfu-quit-at-boundary nil)
-  (corfu-separator ?\s)            ; Use space
-  (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
+  ;; (corfu-quit-at-boundary nil)
+  ;; (corfu-separator ?\s)            ; Use space
+  ;; (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
   (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
   (corfu-preselect-first t)        ; Preselect first candidate?
 
@@ -2925,19 +2934,12 @@ sure or if you don’t remember what your snippet is.
   (general-add-advice '(corfu--setup corfu--teardown) :after 'evil-normalize-keymaps)
   (evil-make-overriding-map corfu-map)
 
-  :bind
-  :general
-  (:keymaps 'corfu-map
-   :states 'insert
-   "C-n" #'corfu-next
-   "C-p" #'corfu-previous
-   "<escape>" #'corfu-quit
-   "<return>" #'corfu-insert
-   "H-SPC" #'corfu-insert-separator
-   ;; "SPC" #'corfu-insert-separator ; Use when `corfu-quit-at-boundary' is non-nil
-   "M-d" #'corfu-show-documentation
-   "C-g" #'corfu-quit
-   "M-l" #'corfu-show-location)
+  :bind (nil
+         :map corfu-map
+         ("TAB" . corfu-insert)
+         ("<escape>" . corfu-quit)
+         ("<return>" . corfu-insert)
+         ("<tab>" . corfu-insert))
   )
 #+end_src
 
@@ -2983,7 +2985,8 @@ From https://kristofferbalintona.me/posts/202202270056/
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
   :hook ((prog-mode . dorneanu/set-basic-capf)
-         (text-mode . dorneanu/set-basic-capf))
+         (text-mode . dorneanu/set-basic-capf)
+         (lsp-completion-mode . dorneanu/set-lsp-capf))
   :bind (("M-p p" . completion-at-point) ;; capf
          ("M-p t" . complete-tag)        ;; etags
          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
@@ -3002,6 +3005,7 @@ From https://kristofferbalintona.me/posts/202202270056/
          ("M-p r" . cape-rfc1345))
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
@@ -3016,19 +3020,29 @@ From https://kristofferbalintona.me/posts/202202270056/
   (add-to-list 'completion-at-point-functions #'cape-symbol)
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
   :config
-  (defun dorneanu/convert-super-capf (arg-capf)
-    (list (cape-capf-noninterruptible
-           (cape-capf-accept-all
-            (cape-capf-buster
-             (cape-super-capf arg-capf
-                              #'yasnippet-capf
-                              #'tabnine-completion-at-point
-                              #'cape-dabbrev))))
-          #'cape-file))
+  ;; (defun dorneanu/convert-super-capf (arg-capf)
+  ;;   (list (cape-capf-noninterruptible
+  ;;          (cape-capf-accept-all
+  ;;           (cape-capf-buster
+  ;;            (cape-super-capf arg-capf
+  ;;                             #'tabnine-completion-at-point
+  ;;                             ;;#'yasnippet-capf
+  ;;                             #'cape-dabbrev))))
+  ;;         #'cape-file))
 
   (defun dorneanu/set-basic-capf ()
-    (setq-local completion-at-point-functions (dorneanu/convert-super-capf (car completion-at-point-functions))))
-)
+    ;; (setq-local completion-at-point-functions (dorneanu/convert-super-capf (car completion-at-point-functions)))
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'tabnine-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
+    )
+
+  (defun dorneanu/set-lsp-capf ()
+    ;; (setq-local completion-at-point-functions (dorneanu/convert-super-capf #'lsp-completion-at-point))
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'tabnine-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
+    )
+  )
+
 #+end_src
 
 ** yasnippet-capf
@@ -3049,19 +3063,39 @@ From https://kristofferbalintona.me/posts/202202270056/
 ;;               ("C-TAB" . 'copilot-accept-completion-by-word)
 ;;               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 #+end_src
-** tabnine                                                 :disabled:
+** tabnine
 #+begin_src emacs-lisp
 (use-package! tabnine
   :hook ((prog-mode . tabnine-mode)
-         (text-mode . tabnine-mode)
-         (kill-emacs . tabnine-kill-process))
-  :bind (:map  tabnine-completion-map
-               ("TAB" . nil)
-               ("<tab>" . nil))
+	 (kill-emacs . tabnine-kill-process))
   :init
-  (setq tabnine-minimum-prefix-length 0)
+  (message "Init tabnine")
+  (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point t)
+  (add-to-list 'kind-icon-mapping '(tabnine "ai" :icon "cloud" :face shadow) t)
   :config
-  (tabnine-start-process))
+  ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
+  (tabnine-start-process)
+  :custom
+  (tabnine-wait 1)
+  (tabnine-idle-delay 0.5)
+  (tabnine-minimum-prefix-length 3)
+  :bind
+  (:map  tabnine-completion-map
+	 ("<tab>" . tabnine-accept-completion)
+	 ("TAB" . tabnine-accept-completion)
+	 ("M-f" . tabnine-accept-completion-by-word)
+	 ("M-<return>" . tabnine-accept-completion-by-line)
+	 ("C-g" . tabnine-clear-overlay)
+	 ("M-[" . tabnine-previous-completion)
+	 ("M-]" . tabnine-next-completion)))
+#+end_src
+** tabnine-capf
+#+begin_src emacs-lisp
+;; (use-package! tabnine-capf
+;;   :after cape
+;;   :hook (kill-emacs . tabnine-capf-kill-process)
+;;   :config
+;;   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point))
 #+end_src
 ** codeium                                                 :disabled:
 #+begin_src emacs-lisp
@@ -3876,7 +3910,9 @@ Different keybindings to jump to a window, character or another workspace.
 (package! yasnippet-snippets)
 (package! yankpad)
 ;; (package! company-tabnine)
-(package! tabnine)
+;; (package! tabnine)
+(package! tabnine :recipe (:host github :repo "shuxiao9058/tabnine"))
+(package! tabine-capf :recipe (:host github :repo "50ways2sayhard/tabnine-capf"))
 (package! company-terraform)
 #+end_src
 
