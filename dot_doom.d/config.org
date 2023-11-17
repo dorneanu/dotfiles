@@ -35,6 +35,7 @@
       auto-save-timeout 20       ; Number of seconds between auto-save
       auto-save-interval 200)    ; Number of keystrokes between auto-saves
 #+end_src
+
 ** Variables
 #+begin_src emacs-lisp
 ;; General stuff

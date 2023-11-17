@@ -929,7 +929,8 @@ management system based on org-mode.
   :defer t
   :custom
   (org-roam-directory "/cs/priv/repos/roam/org")
-  (org-roam-completion-everywhere t)
+  (org-roam-completion-everywhere nil)
+  (org-roam-completion-functions nil)
   :config
   (org-roam-db-autosync-mode 1))
 #+end_src
@@ -1132,6 +1133,16 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   ("N" org-next-link)
   ("P" org-previous-link)
   ("q" nil :color blue))
+#+end_src
+** Auto-Completion
+
+We're using corfu and cape:
+
+#+begin_src emacs-lisp
+(defun dorneanu/org-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-super-capf #'cape-dabbrev #'yasnippet-capf ))))
+(add-hook 'org-mode-hook #'dorneanu/org-capf)
 #+end_src
 
 * User Interface
@@ -2446,14 +2457,14 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key   | description                                   |
-|-------+-----------------------------------------------|
-| C-w   | add next word to search                       |
-| C-e   | add until EOL to search                       |
+| key   | description                                 |
+|-------+---------------------------------------------|
+| C-w   | add next word to search                     |
+| C-e   | add until EOL to search                     |
 | M-e   | edit search in minibuffer (commit with =RET=) |
 | M-s o | run =occur=                                   |
-| M-s r | toggle regexp search                          |
-| M-s . | mark whole thing for search                   |
+| M-s r | toggle regexp search                        |
+| M-s . | mark whole thing for search                 |
 f M-s h r | highlight current search (=hi-lock=)          |
 | M-%   | run =query-replace= on search term        |
 | C-M-% | run =query-replace-regexp= on search term |
@@ -2964,12 +2975,15 @@ From https://kristofferbalintona.me/posts/202202270056/
         completion-category-defaults nil
         completion-category-overrides nil))
 #+end_src
+
 ** cape
 #+begin_src emacs-lisp
 ;; From https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
 (use-package! cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :hook ((prog-mode . dorneanu/set-basic-capf)
+         (text-mode . dorneanu/set-basic-capf))
   :bind (("M-p p" . completion-at-point) ;; capf
          ("M-p t" . complete-tag)        ;; etags
          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
@@ -2999,8 +3013,21 @@ From https://kristofferbalintona.me/posts/202202270056/
   ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
   ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
   ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
+  :config
+  (defun dorneanu/convert-super-capf (arg-capf)
+    (list (cape-capf-noninterruptible
+           (cape-capf-accept-all
+            (cape-capf-buster
+             (cape-super-capf arg-capf
+                              #'yasnippet-capf
+                              #'tabnine-completion-at-point
+                              #'cape-dabbrev))))
+          #'cape-file))
+
+  (defun dorneanu/set-basic-capf ()
+    (setq-local completion-at-point-functions (dorneanu/convert-super-capf (car completion-at-point-functions))))
 )
 #+end_src
 
@@ -3024,17 +3051,17 @@ From https://kristofferbalintona.me/posts/202202270056/
 #+end_src
 ** tabnine                                                 :disabled:
 #+begin_src emacs-lisp
-;; (use-package! tabnine
-;;   :hook ((prog-mode . tabnine-mode)
-;;          ;; (text-mode . tabnine-mode)
-;;          (kill-emacs . tabnine-kill-process))
-;;   :bind (:map  tabnine-completion-map
-;;                ("TAB" . nil)
-;;                ("<tab>" . nil))
-;;   :init
-;;   (setq tabnine-minimum-prefix-length 0)
-;;   :config
-;;   (tabnine-start-process))
+(use-package! tabnine
+  :hook ((prog-mode . tabnine-mode)
+         (text-mode . tabnine-mode)
+         (kill-emacs . tabnine-kill-process))
+  :bind (:map  tabnine-completion-map
+               ("TAB" . nil)
+               ("<tab>" . nil))
+  :init
+  (setq tabnine-minimum-prefix-length 0)
+  :config
+  (tabnine-start-process))
 #+end_src
 ** codeium                                                 :disabled:
 #+begin_src emacs-lisp
