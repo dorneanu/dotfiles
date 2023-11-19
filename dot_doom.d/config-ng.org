@@ -1139,10 +1139,10 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
 We're using corfu and cape:
 
 #+begin_src emacs-lisp
-(defun dorneanu/org-capf ()
-  (setq-local completion-at-point-functions
-              (list (cape-super-capf #'cape-dabbrev #'yasnippet-capf ))))
-(add-hook 'org-mode-hook #'dorneanu/org-capf)
+;; (defun dorneanu/org-capf ()
+;;   (setq-local completion-at-point-functions
+;;               (list (cape-super-capf #'cape-dabbrev #'yasnippet-capf ))))
+;; (add-hook 'org-mode-hook #'dorneanu/org-capf)
 #+end_src
 
 * User Interface
@@ -1931,26 +1931,26 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 ** Language Servers
 *** lsp-mode
 #+begin_src emacs-lisp
-(use-package! lsp-mode
-  :custom
-  (lsp-completion-provider :none) ;; we use Corfu!
+;; (use-package! lsp-mode
+;;   :custom
+;;   (lsp-completion-provider :none) ;; we use Corfu!
 
-  :init
-  (defun my/orderless-dispatch-flex-first (_pattern index _total)
-    (and (eq index 0) 'orderless-flex))
+;;   :init
+;;   (defun my/orderless-dispatch-flex-first (_pattern index _total)
+;;     (and (eq index 0) 'orderless-flex))
 
-  (defun my/lsp-mode-setup-completion ()
-    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-          '(orderless)))
+;;   (defun my/lsp-mode-setup-completion ()
+;;     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+;;           '(orderless)))
 
-  ;; Optionally configure the first word as flex filtered.
-  (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+;;   ;; Optionally configure the first word as flex filtered.
+;;   (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
 
-  ;; Optionally configure the cape-capf-buster.
-  (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+;;   ;; Optionally configure the cape-capf-buster.
+;;   (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
 
-  :hook
-  (lsp-completion-mode . my/lsp-mode-setup-completion))
+;;   :hook
+;;   (lsp-completion-mode . my/lsp-mode-setup-completion))
 #+end_src
 *** eglot
 #+begin_src emacs-lisp
@@ -2829,52 +2829,52 @@ sure or if you don’t remember what your snippet is.
 #+end_src
 ** company-mode                                            :disabled:
 #+begin_src emacs-lisp
-;; (use-package! company
-;;   :hook (((prog-mode markdown-mode) . company-mode))
-;;   :bind (:map company-active-map
-;;               ;; ([return] . nil)
-;;               ;; ("RET" . nil)
-;;               ("TAB" . company-complete-selection)
-;;               ([tab] . company-complete-selection)
-;;               ("C-j" . company-complete-selection))
-;;   :config
-;;   (setq company-idle-delay 0)
-;;   (setq company-tooltip-limit 10)
-;;   (setq company-minimum-prefix-length 1)
-;;   (setq company-show-numbers t)
+(use-package! company
+  :hook (((prog-mode markdown-mode) . company-mode))
+  :bind (:map company-active-map
+              ;; ([return] . nil)
+              ;; ("RET" . nil)
+              ("TAB" . company-complete-selection)
+              ([tab] . company-complete-selection)
+              ("C-j" . company-complete-selection))
+  :config
+  (setq company-idle-delay 0.2)
+  (setq company-tooltip-limit 10)
+  (setq company-minimum-prefix-length 2)
+  (setq company-show-numbers t)
 
-;;   ;; Don't display icons
-;;   (setq company-format-margin-function nil)
+  ;; Don't display icons
+  ;; (setq company-format-margin-function nil)
 
-;;   (setq
-;;    company-tooltip-align-annotations t  ; Aligns annotation to the right hand side
-;;    company-frontends
-;;    '(company-pseudo-tooltip-frontend    ; always show candidates in overlay tooltip
-;;      company-echo-metadata-frontend)    ; show selected candidate docs in echo area
-;;    )
+  (setq
+   company-tooltip-align-annotations t  ; Aligns annotation to the right hand side
+   company-frontends
+   '(company-pseudo-tooltip-frontend    ; always show candidates in overlay tooltip
+     company-echo-metadata-frontend)    ; show selected candidate docs in echo area
+   )
 
-;;   ;; dabbrev stuff
-;;   (setq company-dabbrev-other-buffers t
-;;         company-dabbrev-ignore-case t))
+  ;; dabbrev stuff
+  (setq company-dabbrev-other-buffers t
+        company-dabbrev-ignore-case t))
 
-;; ;; Add yasnippet support for all company backends
-;; (defvar company-mode/enable-yas t
-;;   "Enable yasnippet for all backends.")
+;; Add yasnippet support for all company backends
+(defvar company-mode/enable-yas t
+  "Enable yasnippet for all backends.")
 #+end_src
 *** company-tng                                           :disabled:
 #+BEGIN_SRC emacs-lisp
-;; (use-package! company-tng
-;;   :after company
-;;   :bind (:map company-active-map
-;;          ;; ([return] . nil)
-;;          ;; ("RET" . nil)
-;;          ("TAB" . company-select-next)
-;;          ([tab] . company-select-next)
-;;          ("S-TAB" . company-select-previous)
-;;          ([backtab] . company-select-previous)
-;;          ("C-j" . company-complete-selection))
-;;   :config
-;;   (company-tng-mode))
+(use-package! company-tng
+  :after company
+  :bind (:map company-active-map
+         ;; ([return] . nil)
+         ;; ("RET" . nil)
+         ("TAB" . company-select-next)
+         ([tab] . company-select-next)
+         ("S-TAB" . company-select-previous)
+         ([backtab] . company-select-previous)
+         ("C-j" . company-complete-selection))
+  :config
+  (company-tng-mode))
 #+END_SRC
 *** company-dict
 *** company-dabbrev
@@ -2884,88 +2884,88 @@ sure or if you don’t remember what your snippet is.
 #+end_src
 *** company-tabnine                                       :disabled:
 #+begin_src emacs-lisp
-;; (use-package! company-tabnine
-;;   :after company
-;;   :config
-;;   ;; (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet))
-;;   )
+(use-package! company-tabnine
+  :after company
+  :config
+  (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet))
+  )
 #+end_src
 ** corfu
 #+begin_src emacs-lisp
-(use-package! corfu
-  :hook
-  (eval-expression-minibuffer-setup . corfu-mode)
-  :init
-  (global-corfu-mode)
-  :custom
-  ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
-  ;; want to perform completion
-  (tab-always-indent 'complete)
-  ;; (completion-cycle-threshold nil)      ; Always show candidates in menu
+;; (use-package! corfu
+;;   :hook
+;;   (eval-expression-minibuffer-setup . corfu-mode)
+;;   :init
+;;   (global-corfu-mode)
+;;   :custom
+;;   ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
+;;   ;; want to perform completion
+;;   (tab-always-indent 'complete)
+;;   ;; (completion-cycle-threshold nil)      ; Always show candidates in menu
 
-  (corfu-auto t)
-  (corfu-auto-prefix 1)
-  (corfu-auto-delay 0.20)
+;;   (corfu-auto t)
+;;   (corfu-auto-prefix 1)
+;;   (corfu-auto-delay 0.20)
 
-  ;; (corfu-min-width 80)
-  ;; (corfu-max-width corfu-min-width)     ; Always have the same width
-  ;; (corfu-count 14)
-  ;; (corfu-scroll-margin 4)
-  (corfu-cycle t)
+;;   ;; (corfu-min-width 80)
+;;   ;; (corfu-max-width corfu-min-width)     ; Always have the same width
+;;   ;; (corfu-count 14)
+;;   ;; (corfu-scroll-margin 4)
+;;   (corfu-cycle t)
 
-  ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
-  ;; `corfu-quit-at-boundary' = nil behavior. Set this to separator if using
-  ;; `corfu-auto' = `t' workflow (in that case, make sure you also set up
-  ;; `corfu-separator' and a keybind for `corfu-insert-separator', which my
-  ;; configuration already has pre-prepared). Necessary for manual corfu usage with
-  ;; orderless, otherwise first component is ignored, unless `corfu-separator'
-  ;; is inserted.
-  ;; (corfu-quit-at-boundary nil)
-  ;; (corfu-separator ?\s)            ; Use space
-  ;; (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
-  (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
-  (corfu-preselect-first t)        ; Preselect first candidate?
+;;   ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
+;;   ;; `corfu-quit-at-boundary' = nil behavior. Set this to separator if using
+;;   ;; `corfu-auto' = `t' workflow (in that case, make sure you also set up
+;;   ;; `corfu-separator' and a keybind for `corfu-insert-separator', which my
+;;   ;; configuration already has pre-prepared). Necessary for manual corfu usage with
+;;   ;; orderless, otherwise first component is ignored, unless `corfu-separator'
+;;   ;; is inserted.
+;;   ;; (corfu-quit-at-boundary nil)
+;;   ;; (corfu-separator ?\s)            ; Use space
+;;   ;; (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
+;;   (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
+;;   (corfu-preselect-first t)        ; Preselect first candidate?
 
-  ;; Other
-  ;; (corfu-echo-documentation nil)        ; Already use corfu-doc
-  ;; (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
+;;   ;; Other
+;;   ;; (corfu-echo-documentation nil)        ; Already use corfu-doc
+;;   ;; (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
 
-  :config
-  (general-add-advice '(corfu--setup corfu--teardown) :after 'evil-normalize-keymaps)
-  (evil-make-overriding-map corfu-map)
+;;   :config
+;;   (general-add-advice '(corfu--setup corfu--teardown) :after 'evil-normalize-keymaps)
+;;   (evil-make-overriding-map corfu-map)
 
-  :bind (nil
-         :map corfu-map
-         ("TAB" . corfu-insert)
-         ("<escape>" . corfu-quit)
-         ("<return>" . corfu-insert)
-         ("<tab>" . corfu-insert))
-  )
+;;   :bind (nil
+;;          :map corfu-map
+;;          ("TAB" . corfu-insert)
+;;          ("<escape>" . corfu-quit)
+;;          ("<return>" . corfu-insert)
+;;          ("<tab>" . corfu-insert))
+;;   )
 #+end_src
 
 ** kind-icon
 From https://kristofferbalintona.me/posts/202202270056/
 
 #+begin_src emacs-lisp
-(use-package! kind-icon
-  :after corfu
-  :custom
-  (kind-icon-use-icons t)
-  (kind-icon-default-face 'corfu-default) ; Have background color be the same as `corfu' face background
-  (kind-icon-blend-background nil)  ; Use midpoint color between foreground and background colors ("blended")?
-  (kind-icon-blend-frac 0.08)
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter) ; Enable `kind-icon'
+;; (use-package! kind-icon
+;;   :after corfu
+;;   :custom
+;;   (kind-icon-use-icons t)
+;;   (kind-icon-default-face 'corfu-default) ; Have background color be the same as `corfu' face background
+;;   (kind-icon-blend-background nil)  ; Use midpoint color between foreground and background colors ("blended")?
+;;   (kind-icon-blend-frac 0.08)
+;;   :config
+;;   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter) ; Enable `kind-icon'
 
-  ;; Add hook to reset cache so the icon colors match my theme
-  ;; NOTE 2022-02-05: This is a hook which resets the cache whenever I switch
-  ;; the theme using my custom defined command for switching themes. If I don't
-  ;; do this, then the backgound color will remain the same, meaning it will not
-  ;; match the background color corresponding to the current theme. Important
-  ;; since I have a light theme and dark theme I switch between. This has no
-  ;; function unless you use something similar
-  ;; (add-hook 'kb/themes-hooks #'(lambda () (interactive) (kind-icon-reset-cache)))
-)
+;;   ;; Add hook to reset cache so the icon colors match my theme
+;;   ;; NOTE 2022-02-05: This is a hook which resets the cache whenever I switch
+;;   ;; the theme using my custom defined command for switching themes. If I don't
+;;   ;; do this, then the backgound color will remain the same, meaning it will not
+;;   ;; match the background color corresponding to the current theme. Important
+;;   ;; since I have a light theme and dark theme I switch between. This has no
+;;   ;; function unless you use something similar
+;;   ;; (add-hook 'kb/themes-hooks #'(lambda () (interactive) (kind-icon-reset-cache)))
+;; )
 #+end_src
 ** orderless
 #+begin_src emacs-lisp
@@ -2981,67 +2981,67 @@ From https://kristofferbalintona.me/posts/202202270056/
 ** cape
 #+begin_src emacs-lisp
 ;; From https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
-(use-package! cape
-  ;; Bind dedicated completion commands
-  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :hook ((prog-mode . dorneanu/set-basic-capf)
-         (text-mode . dorneanu/set-basic-capf)
-         (lsp-completion-mode . dorneanu/set-lsp-capf))
-  :bind (("M-p p" . completion-at-point) ;; capf
-         ("M-p t" . complete-tag)        ;; etags
-         ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("M-p h" . cape-history)
-         ("M-p f" . cape-file)
-         ("M-p k" . cape-keyword)
-         ("M-p s" . cape-symbol)
-         ("M-p a" . cape-abbrev)
-         ;; ("M-p i" . cape-ispell)
-         ("M-p l" . cape-line)
-         ("M-p w" . cape-dict)
-         ("M-p \\" . cape-tex)
-         ("M-p _" . cape-tex)
-         ("M-p ^" . cape-tex)
-         ("M-p &" . cape-sgml)
-         ("M-p r" . cape-rfc1345))
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
-  ;;(add-to-list 'completion-at-point-functions #'cape-history)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
-  :config
-  ;; (defun dorneanu/convert-super-capf (arg-capf)
-  ;;   (list (cape-capf-noninterruptible
-  ;;          (cape-capf-accept-all
-  ;;           (cape-capf-buster
-  ;;            (cape-super-capf arg-capf
-  ;;                             #'tabnine-completion-at-point
-  ;;                             ;;#'yasnippet-capf
-  ;;                             #'cape-dabbrev))))
-  ;;         #'cape-file))
+;; (use-package! cape
+;;   ;; Bind dedicated completion commands
+;;   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+;;   :hook ((prog-mode . dorneanu/set-basic-capf)
+;;          (text-mode . dorneanu/set-basic-capf)
+;;          (lsp-completion-mode . dorneanu/set-lsp-capf))
+;;   :bind (("M-p p" . completion-at-point) ;; capf
+;;          ("M-p t" . complete-tag)        ;; etags
+;;          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
+;;          ("M-p h" . cape-history)
+;;          ("M-p f" . cape-file)
+;;          ("M-p k" . cape-keyword)
+;;          ("M-p s" . cape-symbol)
+;;          ("M-p a" . cape-abbrev)
+;;          ;; ("M-p i" . cape-ispell)
+;;          ("M-p l" . cape-line)
+;;          ("M-p w" . cape-dict)
+;;          ("M-p \\" . cape-tex)
+;;          ("M-p _" . cape-tex)
+;;          ("M-p ^" . cape-tex)
+;;          ("M-p &" . cape-sgml)
+;;          ("M-p r" . cape-rfc1345))
+;;   :init
+;;   ;; Add `completion-at-point-functions', used by `completion-at-point'.
+;;   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
+;;   (add-to-list 'completion-at-point-functions #'cape-file)
+;;   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+;;   ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
+;;   ;;(add-to-list 'completion-at-point-functions #'cape-history)
+;;   (add-to-list 'completion-at-point-functions #'cape-keyword)
+;;   ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+;;   ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+;;   ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+;;   ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
+;;   ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
+;;   ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+;;   (add-to-list 'completion-at-point-functions #'cape-symbol)
+;;   ;;(add-to-list 'completion-at-point-functions #'cape-line)
+;;   :config
+;;   ;; (defun dorneanu/convert-super-capf (arg-capf)
+;;   ;;   (list (cape-capf-noninterruptible
+;;   ;;          (cape-capf-accept-all
+;;   ;;           (cape-capf-buster
+;;   ;;            (cape-super-capf arg-capf
+;;   ;;                             #'tabnine-completion-at-point
+;;   ;;                             ;;#'yasnippet-capf
+;;   ;;                             #'cape-dabbrev))))
+;;   ;;         #'cape-file))
 
-  (defun dorneanu/set-basic-capf ()
-    ;; (setq-local completion-at-point-functions (dorneanu/convert-super-capf (car completion-at-point-functions)))
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super #'tabnine-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
-    )
+;;   (defun dorneanu/set-basic-capf ()
+;;     ;; (setq-local completion-at-point-functions (dorneanu/convert-super-capf (car completion-at-point-functions)))
+;;     (setq-local completion-at-point-functions
+;;                 (list (cape-capf-super #'tabnine-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
+;;     )
 
-  (defun dorneanu/set-lsp-capf ()
-    ;; (setq-local completion-at-point-functions (dorneanu/convert-super-capf #'lsp-completion-at-point))
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super #'tabnine-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
-    )
-  )
+;;   (defun dorneanu/set-lsp-capf ()
+;;     ;; (setq-local completion-at-point-functions (dorneanu/convert-super-capf #'lsp-completion-at-point))
+;;     (setq-local completion-at-point-functions
+;;                 (list (cape-capf-super #'tabnine-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
+;;     )
+;;   )
 
 #+end_src
 
@@ -3071,7 +3071,7 @@ From https://kristofferbalintona.me/posts/202202270056/
   :init
   (message "Init tabnine")
   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point t)
-  (add-to-list 'kind-icon-mapping '(tabnine "ai" :icon "cloud" :face shadow) t)
+  ;; (add-to-list 'kind-icon-mapping '(tabnine "ai" :icon "cloud" :face shadow) t)
   :config
   ;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
   (tabnine-start-process)
@@ -3909,7 +3909,7 @@ Different keybindings to jump to a window, character or another workspace.
 (package! ivy-yasnippet)
 (package! yasnippet-snippets)
 (package! yankpad)
-;; (package! company-tabnine)
+(package! company-tabnine)
 ;; (package! tabnine)
 (package! tabnine :recipe (:host github :repo "shuxiao9058/tabnine"))
 (package! tabine-capf :recipe (:host github :repo "50ways2sayhard/tabnine-capf"))
