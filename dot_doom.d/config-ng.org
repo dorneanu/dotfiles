@@ -1698,7 +1698,7 @@ deactivate `magit-todos-mode', otherwise enable it."
 *** eshell
 #+begin_src emacs-lisp
 (use-package! eshell)
-(add-hook 'shell-mode-hook (lambda () (company-mode -1)) 'append)
+;; (add-hook 'shell-mode-hook (lambda () (company-mode -1)) 'append)
 #+end_src
 ** Languages
 *** Utilities
@@ -1770,11 +1770,11 @@ org-babel supports.
 #+end_src
 *** typescript
 #+begin_src emacs-lisp
-(use-package! typescript-mode
-  :after (company)
-  ;;:config
-  ;; (setq company-backends '(company-tabnine :separate company-tide company-capf company-yasnippet)
-)
+;; (use-package! typescript-mode
+;;   :after (company)
+;;   ;;:config
+;;   ;; (setq company-backends '(company-tabnine :separate company-tide company-capf company-yasnippet)
+;; )
 #+end_src
 *** Web Programming
 [[https://emmet.io/][Emmet]] is a powerful templating engine that can generate through simple
@@ -1873,9 +1873,9 @@ languages in the same buffer, mainly HTML, CSS, and Javascript.
 Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
 
 #+begin_src emacs-lisp
-(use-package company-web
-  :defer t
-  :after (emmet-mode web-mode))
+;; (use-package company-web
+;;   :defer t
+;;   :after (emmet-mode web-mode))
 #+end_src
 *** terraform
 #+begin_src emacs-lisp
@@ -1907,7 +1907,7 @@ Auto-completion for ~emmet-mode~, ~html-mode~, and ~web-mode~.
   (add-hook 'plantuml-mode-hook 'set-newline-and-indent)
 
   ;; From https://discourse.doomemacs.org/t/how-to-turn-on-company-files/3007/3
-  (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev 'company-yankpad)
+  ;; (set-company-backend!  'plantuml-mode 'company-tabnine 'company-dabbrev 'company-yankpad)
 
   )
 
@@ -2825,71 +2825,58 @@ sure or if you don’t remember what your snippet is.
   (setq yankpad-file (concat org-directory "/yankpad.org"))
   (setq yas-wrap-around-region t)
   (yankpad-reload)
-  (add-to-list 'company-backends #'company-yankpad))
+  ;; (add-to-list 'company-backends #'company-yankpad)
+  )
 #+end_src
 ** company-mode                                            :disabled:
 #+begin_src emacs-lisp
-(use-package! company
-  :hook (((prog-mode markdown-mode) . company-mode))
-  :bind (:map company-active-map
-              ;; ([return] . nil)
-              ;; ("RET" . nil)
-              ("TAB" . company-complete-selection)
-              ([tab] . company-complete-selection)
-              ("C-j" . company-complete-selection))
-  :config
-  (setq company-idle-delay 0.2)
-  (setq company-tooltip-limit 10)
-  (setq company-minimum-prefix-length 2)
-  (setq company-show-numbers t)
+;; (use-package! company
+;;   :hook (((prog-mode markdown-mode) . company-mode))
+;;   :bind (:map company-active-map
+;;               ;; ([return] . nil)
+;;               ;; ("RET" . nil)
+;;               ("TAB" . company-complete-selection)
+;;               ([tab] . company-complete-selection)
+;;               ("C-j" . company-complete-selection))
+;;   :config
+;;   (setq company-idle-delay 0.2)
+;;   (setq company-tooltip-limit 10)
+;;   (setq company-minimum-prefix-length 2)
+;;   (setq company-show-numbers t)
 
-  ;; Don't display icons
-  ;; (setq company-format-margin-function nil)
+;;   ;; Don't display icons
+;;   ;; (setq company-format-margin-function nil)
 
-  (setq
-   company-tooltip-align-annotations t  ; Aligns annotation to the right hand side
-   company-frontends
-   '(company-pseudo-tooltip-frontend    ; always show candidates in overlay tooltip
-     company-echo-metadata-frontend)    ; show selected candidate docs in echo area
-   )
+;;   (setq
+;;    company-tooltip-align-annotations t  ; Aligns annotation to the right hand side
+;;    company-frontends
+;;    '(company-pseudo-tooltip-frontend    ; always show candidates in overlay tooltip
+;;      company-echo-metadata-frontend)    ; show selected candidate docs in echo area
+;;    )
 
-  ;; dabbrev stuff
-  (setq company-dabbrev-other-buffers t
-        company-dabbrev-ignore-case t))
+;;   ;; dabbrev stuff
+;;   (setq company-dabbrev-other-buffers t
+;;         company-dabbrev-ignore-case t))
 
-;; Add yasnippet support for all company backends
-(defvar company-mode/enable-yas t
-  "Enable yasnippet for all backends.")
+;; ;; Add yasnippet support for all company backends
+;; (defvar company-mode/enable-yas t
+;;   "Enable yasnippet for all backends.")
 #+end_src
 *** company-tng                                           :disabled:
 #+BEGIN_SRC emacs-lisp
-(use-package! company-tng
-  :after company
-  :bind (:map company-active-map
-         ;; ([return] . nil)
-         ;; ("RET" . nil)
-         ("TAB" . company-select-next)
-         ([tab] . company-select-next)
-         ("S-TAB" . company-select-previous)
-         ([backtab] . company-select-previous)
-         ("C-j" . company-complete-selection))
-  :config
-  (company-tng-mode))
+;; (use-package! company-tng
+;;   :after company
+;;   :bind (:map company-active-map
+;;          ;; ([return] . nil)
+;;          ;; ("RET" . nil)
+;;          ("TAB" . company-select-next)
+;;          ([tab] . company-select-next)
+;;          ("S-TAB" . company-select-previous)
+;;          ([backtab] . company-select-previous)
+;;          ("C-j" . company-complete-selection))
+;;   :config
+;;   (company-tng-mode))
 #+END_SRC
-*** company-dict
-*** company-dabbrev
-#+begin_src emacs-lisp
-(setq company-dabbrev-other-buffers t
-      company-dabbrev-ignore-case t)
-#+end_src
-*** company-tabnine                                       :disabled:
-#+begin_src emacs-lisp
-(use-package! company-tabnine
-  :after company
-  :config
-  (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet))
-  )
-#+end_src
 ** corfu
 #+begin_src emacs-lisp
 ;; (use-package! corfu
@@ -3069,7 +3056,6 @@ From https://kristofferbalintona.me/posts/202202270056/
   :hook ((prog-mode . tabnine-mode)
 	 (kill-emacs . tabnine-kill-process))
   :init
-  (message "Init tabnine")
   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point t)
   ;; (add-to-list 'kind-icon-mapping '(tabnine "ai" :icon "cloud" :face shadow) t)
   :config
@@ -3089,13 +3075,21 @@ From https://kristofferbalintona.me/posts/202202270056/
 	 ("M-[" . tabnine-previous-completion)
 	 ("M-]" . tabnine-next-completion)))
 #+end_src
-** tabnine-capf
+*** company-tabnine                                       :disabled:
 #+begin_src emacs-lisp
-;; (use-package! tabnine-capf
-;;   :after cape
-;;   :hook (kill-emacs . tabnine-capf-kill-process)
+;; (use-package! company-tabnine
+;;   :after company
 ;;   :config
-;;   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point))
+;;   (setq +lsp-company-backends '(company-tabnine :separate company-capf company-yasnippet))
+;;   )
+#+end_src
+*** tabnine-capf
+#+begin_src emacs-lisp
+(use-package! tabnine-capf
+  :after cape
+  :hook (kill-emacs . tabnine-capf-kill-process)
+  :config
+  (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point))
 #+end_src
 ** codeium                                                 :disabled:
 #+begin_src emacs-lisp
@@ -3909,7 +3903,7 @@ Different keybindings to jump to a window, character or another workspace.
 (package! ivy-yasnippet)
 (package! yasnippet-snippets)
 (package! yankpad)
-(package! company-tabnine)
+;; (package! company-tabnine)
 ;; (package! tabnine)
 (package! tabnine :recipe (:host github :repo "shuxiao9058/tabnine"))
 (package! tabine-capf :recipe (:host github :repo "50ways2sayhard/tabnine-capf"))
