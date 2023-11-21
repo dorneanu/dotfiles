@@ -3189,6 +3189,7 @@ Configure elfeed first:
       :n "R" #'elfeed-search-untag-all-unread
       :n "R" #'my/elfeed-reddit-show-commments
       :n "H" #'my/elfeed-hn-show-commments
+      :n "x" #'elfeed-search-untag-all-unread
       :n "r" #'elfeed-search-tag-all-unread
       :n "s" #'elfeed-search-live-filter
       :n "TAB" #'elfeed-search-show-entry
@@ -3243,7 +3244,7 @@ Configure elfeed first:
  (setq fill-column 90)
  (visual-fill-column-mode)
  ;; (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph))
- (focus-mode)
+ ;; (focus-mode)
 )
 
 ;; Update elfeed regularly
