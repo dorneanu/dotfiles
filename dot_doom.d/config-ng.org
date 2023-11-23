@@ -1596,6 +1596,18 @@ I love /olivetti/ mode
                   prog-mode-hook) #'flyspell-mode)
 )
 #+end_src
+** epub
+#+begin_src emacs-lisp
+(use-package! nov
+  :config
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode)))
+
+(use-package! nov-xwidget
+  :after nov
+  :config
+  (define-key nov-mode-map (kbd "o") 'nov-xwidget-view)
+  (add-hook 'nov-mode-hook 'nov-xwidget-inject-all-files))
+#+end_src
 * Documentation
 ** google-translate
 #+begin_src emacs-lisp
@@ -2349,6 +2361,13 @@ Set contexts
 * Browsers
 ** xwidget-webkit
 
+#+begin_src emacs-lisp
+(use-package! xwidget-webkit
+  :bind
+  (:map xwidget-webkit-mode-map
+        ("M-w" . xwidget-webkit-copy-selection-as-kill)))
+
+#+end_src
 I like to open an URL directly in Emacs without having to switch to Chrome:
 
 #+begin_src emacs-lisp
@@ -4042,6 +4061,8 @@ ace-link
 #+begin_src emacs-lisp
 (package! olivetti)
 (package! focus)
+(package! nov)
+(package! nov-xwidget :recipe (:host github :repo "chenyanming/nov-xwidget"))
 #+end_src
 ** Themes
 #+begin_src emacs-lisp
