@@ -27,7 +27,7 @@ CLOSED: [2023-09-18 Mon 20:39]
 :header-args:emacs-lisp: :tangle ~/.config/doom-config/config.el :mkdirp yes
 :header-args:emacs-lisp+: :exports code :results silent :lexical t
 :END:
-** Defaults
+** COMMENT Defaults
 Some defaults I'd like to use
 
 #+begin_src emacs-lisp
@@ -391,6 +391,12 @@ Configure GPG assistant
           ("CANCELED" . +org-archived)
           ("PROJ" . +org-todo-project)
           ("DONE"   . +org-todo-cancel)))
+#+end_src
+** Tags
+Use counsel-org-tag (I couldn't find any alternative for consult):
+
+#+begin_src emacs-lisp
+(global-set-key [remap org-set-tags-command] #'counsel-org-tag)
 #+end_src
 ** org structure templates
 #+begin_src emacs-lisp
@@ -782,6 +788,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 (add-hook! 'org-agenda-finalize #'org-modern-agenda)
 #+end_src
 
+** svg-tag-mode
 I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs-config/):
 
 #+begin_src emacs-lisp
@@ -825,11 +832,11 @@ I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs
                                             (svg-progress-count (substring tag 1 -1)))))
           ;; Task priority e.g. [#A], [#B], or [#C]
           ("\\[#A\\]" . ((lambda (tag) (svg-tag-make tag :face 'error :inverse t :height .85
-                                                :beg 2 :end -1 :margin 0 :radius 10))))
+                                                     :beg 2 :end -1 :margin 0 :radius 10))))
           ("\\[#B\\]" . ((lambda (tag) (svg-tag-make tag :face 'warning :inverse t :height .85
-                                                :beg 2 :end -1 :margin 0 :radius 10))))
+                                                     :beg 2 :end -1 :margin 0 :radius 10))))
           ("\\[#C\\]" . ((lambda (tag) (svg-tag-make tag :face 'org-todo :inverse t :height .85
-                                                :beg 2 :end -1 :margin 0 :radius 10))))
+                                                     :beg 2 :end -1 :margin 0 :radius 10))))
           ;; Keywords
           ("TODO" . ((lambda (tag) (svg-tag-make tag :inverse t :height .95 :face 'org-todo))))
           ("WAITING" . ((lambda (tag) (svg-tag-make tag :height .95 :face 'org-warning))))
@@ -842,6 +849,21 @@ I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs
 
   :hook (org-mode . svg-tag-mode)
   )
+
+;; Also show svg tags in org-agenda
+(defun org-agenda-show-svg ()
+  (let* ((case-fold-search nil)
+         (keywords (mapcar #'svg-tag--build-keywords svg-tag--active-tags))
+         (keyword (car keywords)))
+    (while keyword
+      (save-excursion
+        (while (re-search-forward (nth 0 keyword) nil t)
+          (overlay-put (make-overlay
+                        (match-beginning 0) (match-end 0))
+                       'display  (nth 3 (eval (nth 2 keyword)))) ))
+      (pop keywords)
+      (setq keyword (car keywords)))))
+(add-hook 'org-agenda-finalize-hook #'org-agenda-show-svg)
 #+end_src
 ** org-babel
 Some org-babel specific configuration:
@@ -856,7 +878,7 @@ Some org-babel specific configuration:
       org-src-preserve-indentation t)
 #+end_src
 
-** Visual configuration
+** COMMENT Visual configuration
 While most modes of Emacs are dedicated to development, and therefore are much
 more comfortable with a fixed-pitch font, more literary modes such as org-mode
 are much more enjoyable if you have a variable pitch font enabled. *BUT*, these
@@ -916,7 +938,38 @@ Use pretty symbols
               (add-to-list 'prettify-symbols-alist pair))
             (prettify-symbols-mode)))
 #+end_src
-*** org-roam
+** emphasis alist
+#+begin_src emacs-lisp
+(after! org
+
+  ;; Nice inspiration from https://protesilaos.com/codelog/2022-01-05-custom-face-org-emphasis-alist/
+  (defface my-org-emphasis-italic
+    '((default :inherit italic)
+      (((class color) (min-colors 88) (background light))
+       :foreground "#005e00")
+      (((class color) (min-colors 88) (background dark))
+       :foreground "#44bc44"))
+    "My italic emphasis for Org.")
+
+  (defface my-org-emphasis-underline
+    '((default :inherit underline)
+      (((class color) (min-colors 88) (background light))
+       :foreground "#813e00")
+      (((class color) (min-colors 88) (background dark))
+       :foreground "#d0bc00"))
+    "My underline emphasis for Org.")
+
+  (setq org-emphasis-alist
+        '(("*" (bold :foreground "Orange" ))
+          ("/" my-org-emphasis-italic)
+          ("_" my-org-emphasis-underline)
+          ;; ("=" (:background "maroon" :foreground "white"))
+          ("" org-verbatim verbatim )
+          ("~" (:background "deep sky blue" :foreground "MidnightBlue"))
+          ("+" (:strike-through t)))))
+
+#+end_src
+** org-roam
 
 
 After hearing *about* it for so many years and thinking I really should
@@ -1018,7 +1071,7 @@ Take full advantage of ~consult~
    ("C-c n r" . consult-org-roam-search))
 #+end_src
 
-**** org-roam-dailies
+*** org-roam-dailies
 #+begin_src emacs-lisp
 (after! org-roam-dailies
   (setq org-roam-dailies-directory "journal/")
@@ -1036,37 +1089,6 @@ Take full advantage of ~consult~
          :desc "Yesterday"      "y" #'org-roam-dailies-goto-yesterday))
 #+end_src
 
-*** emphasize test
-#+begin_src emacs-lisp
-(after! org
-
-;; Nice inspiration from https://protesilaos.com/codelog/2022-01-05-custom-face-org-emphasis-alist/
-(defface my-org-emphasis-italic
-  '((default :inherit italic)
-    (((class color) (min-colors 88) (background light))
-     :foreground "#005e00")
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#44bc44"))
-  "My italic emphasis for Org.")
-
-(defface my-org-emphasis-underline
-  '((default :inherit underline)
-    (((class color) (min-colors 88) (background light))
-     :foreground "#813e00")
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#d0bc00"))
-  "My underline emphasis for Org.")
-
-(setq org-emphasis-alist
-  '(("*" (bold :foreground "Orange" ))
-    ("/" my-org-emphasis-italic)
-    ("_" my-org-emphasis-underline)
-    ;; ("=" (:background "maroon" :foreground "white"))
-    ("" org-verbatim verbatim )
-    ("~" (:background "deep sky blue" :foreground "MidnightBlue"))
-    ("+" (:strike-through t)))))
-
-#+end_src
 ** TODO org-tempo
 ** org-download
 
@@ -1085,7 +1107,7 @@ Insert images easily into ORG mode files
 (use-package! org-web-tools
   :after org)
 #+end_src
-** org-timeblock
+** COMMENT org-timeblock
 #+begin_src emacs-lisp
 (use-package! org-timeblock
   :after (org org-agenda))
@@ -1184,7 +1206,7 @@ Add some custom functions:
   (interactive)
   (face-remap-add-relative 'default :family "Source Code Pro"))
 #+end_src
-** modeline modules
+** COMMENT modeline modules
 I sometimes use Emacs in fullscreen, meaning my usual taskbar will be hidden.
 This is why I want the current date and time to be displayed, in an ISO-8601
 style, although not exactly ISO-8601 (this is the best time format, fight me).
@@ -1217,7 +1239,7 @@ I start to like the modeline:
         doom-modeline-mu4e nil
         doom-modeline-modal-icon t))
 #+end_src
-** solaire
+** COMMENT solaire
 
 #+begin_src emacs-lisp
 (use-package! solaire-mode
@@ -1227,7 +1249,7 @@ I start to like the modeline:
   :custom
   (solaire-mode-remap-fringe t))
 #+end_src
-** auto-dim-other-buffers
+** COMMENT auto-dim-other-buffers
 #+begin_src emacs-lisp
 (use-package! auto-dim-other-buffers
   :if (display-graphic-p)
@@ -1235,7 +1257,7 @@ I start to like the modeline:
   (auto-dim-other-buffers-mode t))
 
 #+end_src
-** automatically recenter text
+** COMMENT automatically recenter text
 #+begin_src emacs-lisp
 ;; move search result to center of the screen
 ;; (defadvice evil-search-next
@@ -1246,7 +1268,7 @@ I start to like the modeline:
 ;;     (after advice-for-evil-search-previous activate)
 ;; (evil-scroll-line-to-center (line-number-at-pos)))
 #+end_src
-** popper
+** COMMENT popper
 #+begin_src emacs-lisp
 (use-package! popper
   :bind (("C-'"   . popper-toggle)
@@ -1397,7 +1419,7 @@ I'll try [[https://github.com/AmaiKinono/puni][puni]] as a replacement for ~smar
   (undo-hl-delete ((t (:background "#FFFF00")))))
 #+end_src
 * Multimedia
-** TODO emms
+** TODO COMMENT emms
 #+begin_src emacs-lisp
 ;; From https://panadestein.github.io/emacsd/
 ;; (use-package! emms
@@ -1549,7 +1571,7 @@ Switch between windows using ~switch-window~
 #+begin_src emacs-lisp
 (use-package! switch-window)
 #+end_src
-** tabs :disabled:
+** COMMENT centaur-tabs
 Let's configure ~centaur-tabs~
 
 #+begin_src emacs-lisp
@@ -1578,8 +1600,8 @@ I love /olivetti/ mode
               ("M-n" . focus-next-thing)
               ("M-p" . focus-prev-thing)))
 
-(after! focus-mode
-  (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph)))
+;; (after! focus-mode
+;;   (add-to-list 'focus-mode-to-thing '(elfeed-show-mode . paragraph)))
 #+end_src
 ** visual-fill-column-mode
 #+begin_src emacs-lisp
@@ -1613,6 +1635,7 @@ I love /olivetti/ mode
 #+begin_src emacs-lisp
 ;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
 (use-package! google-translate
+  :defer t
   :custom
   (google-translate-backend-method 'curl)
   :config
@@ -1633,14 +1656,16 @@ I love /olivetti/ mode
 #+end_src
 ** dict.cc
 #+begin_src emacs-lisp
-(use-package! dictcc)
+(use-package! dictcc
+  :defer t)
 (map! :leader
       :prefix "ml"
       "d" #'dictcc)
 #+end_src
 ** leo
 #+begin_src emacs-lisp
-(use-package! leo)
+(use-package! leo
+  :defer t)
 (add-hook! 'leo-mode-hook #'turn-off-evil-mode)
 (map! :leader
       :prefix "ml"
@@ -1649,6 +1674,7 @@ I love /olivetti/ mode
 ** wordreference
 #+begin_src emacs-lisp
 (use-package! wordreference
+  :defer t
   :bind (:map wordreference-mode-map
               ("S" . wordreference-switch-source-target-and-search))
   :config
@@ -1664,7 +1690,7 @@ I love /olivetti/ mode
 #+end_src
 * Programming
 ** Version Control
-*** magit
+*** COMMENT magit-todos
 
 [[https://github.com/alphapapa][Alphapapa]] also created an awesome package for Magit: magit-todos which display
 in the Magit buffer a list of TODOs found in the current project to remind you
@@ -1702,8 +1728,7 @@ deactivate `magit-todos-mode', otherwise enable it."
   :config
   (setq magit-todos-ignore-case t))
 #+end_src
-*** forge
-*** consult-gh
+*** COMMENT consult-gh
 #+begin_src emacs-lisp
 (use-package! consult-gh)
 #+end_src
@@ -1828,6 +1853,7 @@ Web mode is a sort of hybrid major mode that allows editing several
 languages in the same buffer, mainly HTML, CSS, and Javascript.
 #+begin_src emacs-lisp
 (use-package! web-mode
+  :defer t
   :hook html-mode
   ;; :hook (web-mode . prettier-js-mode)
   :hook (web-mode . lsp-deferred)
@@ -2273,7 +2299,7 @@ Set contexts
 
 #+RESULTS:
 : dorneanu/set-mu4e-contexts
-** gnus
+** COMMENT gnus
 #+begin_src emacs-lisp
 (use-package! gnus
   :config
@@ -2421,6 +2447,8 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
 : t
 
 ** eww
+Set default browser to chrome:
+
 #+begin_src emacs-lisp
 (setq browse-url-browser-function 'browse-url-chrome)
 #+end_src
@@ -2429,9 +2457,9 @@ Make sure to open xwidget when using [[https://docs.doomemacs.org/latest/modules
 : browse-url-chrome
 
 * Searching
-** deadgrep
+** COMMENT deadgrep
 #+begin_src emacs-lisp
-;; (use-package! deadgrep)
+(use-package! deadgrep)
 #+end_src
 ** rg.el
 #+begin_src emacs-lisp
@@ -2486,14 +2514,14 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key   | description                                 |
-|-------+---------------------------------------------|
-| C-w   | add next word to search                     |
-| C-e   | add until EOL to search                     |
+| key   | description                                   |
+|-------+-----------------------------------------------|
+| C-w   | add next word to search                       |
+| C-e   | add until EOL to search                       |
 | M-e   | edit search in minibuffer (commit with =RET=) |
 | M-s o | run =occur=                                   |
-| M-s r | toggle regexp search                        |
-| M-s . | mark whole thing for search                 |
+| M-s r | toggle regexp search                          |
+| M-s . | mark whole thing for search                   |
 f M-s h r | highlight current search (=hi-lock=)          |
 | M-%   | run =query-replace= on search term        |
 | C-M-% | run =query-replace-regexp= on search term |
@@ -2580,7 +2608,7 @@ search started."
 #+end_src
 
 * Completion
-** ivy
+** COMMENT ivy
 Currently I use ~vertico~, ~consult~ and ~marginalia~. But I'll let this here for "historical" reasons.
 
 *** ivy-posframe
@@ -2848,7 +2876,7 @@ sure or if you don’t remember what your snippet is.
   ;; (add-to-list 'company-backends #'company-yankpad)
   )
 #+end_src
-** company-mode                                            :disabled:
+** COMMENT company-mode                                            :disabled:
 #+begin_src emacs-lisp
 ;; (use-package! company
 ;;   :hook (((prog-mode markdown-mode) . company-mode))
@@ -2882,7 +2910,7 @@ sure or if you don’t remember what your snippet is.
 ;; (defvar company-mode/enable-yas t
 ;;   "Enable yasnippet for all backends.")
 #+end_src
-*** company-tng                                           :disabled:
+*** COMMENT company-tng                                           :disabled:
 #+BEGIN_SRC emacs-lisp
 ;; (use-package! company-tng
 ;;   :after company
@@ -3098,7 +3126,7 @@ From https://kristofferbalintona.me/posts/202202270056/
 	 ("M-[" . tabnine-previous-completion)
 	 ("M-]" . tabnine-next-completion)))
 #+end_src
-*** company-tabnine                                       :disabled:
+*** COMMENT company-tabnine                                       :disabled:
 #+begin_src emacs-lisp
 ;; (use-package! company-tabnine
 ;;   :after company
@@ -3114,7 +3142,7 @@ From https://kristofferbalintona.me/posts/202202270056/
   :config
   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point))
 #+end_src
-** codeium                                                 :disabled:
+** COMMENT codeium                                                 :disabled:
 #+begin_src emacs-lisp
 ;; (use-package! codeium
 ;;     :init
@@ -3477,163 +3505,6 @@ Use hnread to show HN threads for a URL at point
   (setq-local hnreader-view-comments-in-same-window t)
   (hnreader-comment (format "%s" (url-get-url-at-point))))
 #+end_src
-**** hydra
-From https://github.com/alphapapa/unpackaged.el#elfeed
-
-#+begin_src emacs-lisp
-(defvar elfeed-search-filter)
-
-(cl-defmacro unpackaged/elfeed-search-view-hydra-define (name body views)
-  "Define a pretty hydra named NAME with BODY and VIEWS.
-VIEWS is a plist: in it, each property is a string which becomes
-a column header in the hydra, and each value is a list of lists
-in this format: (KEY COMPONENT &optional LABEL).
-
-The KEY is a key sequence passed to `kbd', like \"s\" or \"S
-TAB\".  The COMPONENT is an Elfeed filter component, which may
-begin with \"+\" or \"=\", and in which spaces are automatically
-escaped as required by Elfeed.  The LABEL, if present, is a
-string displayed next to the KEY; if absent, COMPONENT is
-displayed.
-
-In the resulting hydra, when KEY is pressed, the COMPONENT is
-toggled in `elfeed-search-filter'.  It is toggled between three
-states: normal, inverse, and absent.  For example, the component
-\"+tag\" cycles between three states in the filter: \"+tag\",
-\"-tag\", and \"\".  The appropriate inverse prefix is used
-according to the component's prefix (i.e. for \"=\", the inverse
-is \"~\", and for \"\" (a plain regexp), \"!\" is used).
-
-These special components may be used to read choices from the
-Elfeed database with completion and toggle them:
-
-  :complete-age   Completes and sets the age token.
-  :complete-feed  Completes and toggles a feed token.
-  :complete-tag   Completes and toggles a tag token.
-  nil             Sets default filter.
-
-A complete example:
-
-  (unpackaged/elfeed-search-view-hydra-define my/elfeed-search-view-hydra
-    (:foreign-keys warn)
-    (\"Views\"
-     ((\"@\" :complete-age \"Date\")
-      (\"d\" nil))
-     \"Status\"
-     ((\"su\" \"+unread\"))
-     \"Feed\"
-     ((\"f TAB\" :complete-feed \"Choose\")
-      (\"fE\" \"=Planet Emacslife\" \"Planet Emacslife\"))
-     \"Tags\"
-     ((\"t TAB\" :complete-tag \"Choose\")
-      (\"te\" \"+Emacs\"))
-     \"\"
-     ((\"tn\" \"+news\"))))"
-  (declare (indent defun))
-  (cl-labels ((escape-spaces (string)
-                             ;; Return STRING with spaces escaped with "\s-".  Necessary
-                             ;; because Elfeed treats all literal spaces as separating tokens.
-                             (replace-regexp-in-string (rx space) "\\s-" string t t)))
-    (let* ((completion-fns
-            (list (cons :complete-age
-                        (lambda ()
-                          (interactive)
-                          (save-match-data
-                            (let* ((date-regexp (rx (group (or bos blank) "@" (1+ digit) (1+ (not blank)))))
-                                   (date-tag (when (string-match date-regexp elfeed-search-filter)
-                                               (match-string 1 elfeed-search-filter))))
-                              (elfeed-search-set-filter
-                               (replace-regexp-in-string date-regexp (read-string "Date: " date-tag)
-                                                         elfeed-search-filter t t))))))
-                  (cons :complete-feed
-                        '(concat "=" (replace-regexp-in-string
-                                      (rx space) "\\s-"
-                                      (->> (hash-table-values elfeed-db-feeds)
-                                           (--map (elfeed-meta it :title))
-                                           (completing-read "Feed: ")
-                                           regexp-quote) t t)))
-                  (cons :complete-tag
-                        '(concat "+" (completing-read "Tag: " (elfeed-db-get-all-tags))))))
-           (body (append '(:title elfeed-search-filter :color pink :hint t :quit-key "q")
-                         body))
-           (heads (cl-loop for (heading views) on views by #'cddr
-                           collect heading
-                           collect (cl-loop for (key component label) in views
-                                            collect
-                                            `(,key
-                                              ,(cl-typecase component
-                                                 ((and function (not null))
-                                                  ;; I don't understand why nil matches
-                                                  ;; (or lambda function), but it does,
-                                                  ;; so we have to account for it.  See
-                                                  ;; (info-lookup-symbol 'cl-typep).
-                                                  `(funcall ,component))
-                                                 (string
-                                                  `(elfeed-search-set-filter
-                                                    (unpackaged/elfeed-search-filter-toggle-component
-                                                     elfeed-search-filter ,(escape-spaces component))))
-                                                 (otherwise
-                                                  `(elfeed-search-set-filter
-                                                    ,(when component
-                                                       `(unpackaged/elfeed-search-filter-toggle-component
-                                                         elfeed-search-filter ,component)))))
-                                              ,(or label component "Default"))))))
-      ;; I am so glad I discovered `cl-sublis'.  I tried several variations of `cl-labels' and
-      ;; `cl-macrolet' and `cl-symbol-macrolet', but this is the only way that has worked.
-      (setf heads (cl-sublis completion-fns heads))
-      `(pretty-hydra-define ,name ,body
-         ,heads))))
-
-(cl-defun unpackaged/elfeed-search-filter-toggle-component (string component)
-  "Return STRING (which should be `elfeed-search-filter') having toggled COMPONENT.
-Tries to intelligently handle components based on their prefix:
-+tag, =feed, regexp."
-  (save-match-data
-    (cl-labels ((toggle (component +prefix -prefix string)
-                        (let ((+pat (rx-to-string `(seq (or bos blank)
-                                                        (group ,+prefix ,component)
-                                                        (or eos blank))))
-                              (-pat (rx-to-string `(seq (group (or bos (1+ blank)) ,-prefix ,component)
-                                                        (or eos blank)))))
-                          ;; TODO: In newer Emacs versions, the `rx' pattern `literal'
-                          ;; evaluates at runtime in `pcase' expressions.
-                          (pcase string
-                            ((pred (string-match +pat)) (rm (concat -prefix component) string))
-                            ((pred (string-match -pat)) (rm "" string))
-                            (_ (concat string " " +prefix component)))))
-                (rm (new string) (replace-match new t t string 1)))
-      (pcase component
-        ((rx bos "+" (group (1+ anything)))
-         (toggle (match-string 1 component) "+" "-" string))
-        ((rx bos "=" (group (1+ anything)))
-         (toggle (match-string 1 component) "=" "~" string))
-        (_ (toggle component "" "!" string))))))
-#+end_src
-
-Here you define your own hydra:
-
-#+begin_src emacs-lisp
-(unpackaged/elfeed-search-view-hydra-define my/elfeed-search-view-hydra
-  (:foreign-keys warn)
-  ("Views"
-   (("@" :complete-age "Date")
-    ("d" "+daily"))
-   "Status"
-   (("su" "+unread"))
-   "Feed"
-   (("f TAB" :complete-feed "Choose")
-    )
-   "Tags"
-   (("t TAB" :complete-tag "Choose")
-    ("th" "+hn+points")
-    ("tb" "+blog")
-    ("tt" "+top")
-    ("ty" "+youtube")
-    ("te" "+emacs"))
-   ""
-   (("tn" "+news"))))
-#+end_src
-
 ** Productivity
 *** wakatime
 #+begin_src emacs-lisp
@@ -3706,8 +3577,6 @@ Here you define your own hydra:
   )
 #+end_src
 ** AI
-
-
 *** chatgpt-shell
 #+begin_src emacs-lisp
 (use-package! chatgpt-shell
@@ -4006,6 +3875,9 @@ ace-link
 ;; Time-blocked planning in org
 (package! org-timeblock
   :recipe (:host github :repo "ichernyshovvv/org-timeblock"))
+
+;; There is no alternative for consult (counsel-org-tag)
+(package! counsel)
 #+end_src
 ** Programming
 #+begin_src emacs-lisp
