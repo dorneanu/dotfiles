@@ -392,6 +392,21 @@ Configure GPG assistant
           ("PROJ" . +org-todo-project)
           ("DONE"   . +org-todo-cancel)))
 #+end_src
+** COMMENT jit-lock
+Found at https://www.reddit.com/r/emacs/comments/14c4l8j/way_to_make_emacs_feel_smoother/:
+
+#+begin_src emacs-lisp
+(setq jit-lock-stealth-time 1.25
+      jit-lock-stealth-nice 0.5
+      jit-lock-chunk-size 4096
+      jit-lock-defer-time 0.25)
+;; Defaults
+(setq jit-lock-stealth-time nil
+      jit-lock-stealth-nice 0.5
+      jit-lock-chunk-size 4096
+      jit-lock-defer-time nil)
+
+#+end_src
 ** Tags
 Use counsel-org-tag (I couldn't find any alternative for consult):
 
