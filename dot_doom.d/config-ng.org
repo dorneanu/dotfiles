@@ -369,19 +369,19 @@ Configure GPG assistant
            "TODO(t)"
            "STARTED(s)"
            "NEXT(n)"
-           "WIP(i)"
+           "WIP(p)"
            "WAITING(w!)"
            "|"
            "DONE(d)"
-           "CANCELED(c)")
+           "CANCELED(l)")
           (sequence
            "PROJ(p)"
            "MEETING(m)"
            "REVIEW(r)"
            "IDEA(i)"
-           "|"
-           "STOP(c)"
-           "EVENT(m)"
+           ;; "|"
+           ;; "STOP(c)"
+           ;; "EVENT(m)"
            ))
         org-todo-keyword-faces
         '(("[-]"  . +org-todo-active)
