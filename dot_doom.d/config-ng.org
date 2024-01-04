@@ -660,7 +660,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
             (tags (concat "wk" (format-time-string "%V")) ((org-agenda-overriding-header  (concat "--\nToDos Week " (format-time-string "%V")))
              (org-super-agenda-groups
               '((:discard (:deadline t))
-                (:discard (:todo ("DONE" "CANCELED")))
+                (:discard (:todo ("DONE" "CANCELED" "WAITING")))
                 (:discard (:not (:todo t)))
                 ))))
             (alltodo "" ((org-agenda-overriding-header "")
@@ -1241,7 +1241,7 @@ enabled only if I am on a laptop or if a battery is available.
               (string-match-p (regexp-quote "N/A") battery-str))
     (display-battery-mode 1)))
 #+end_src
-** doom-modeline
+** COMMENT doom-modeline
 
 I start to like the modeline:
 
@@ -1250,7 +1250,7 @@ I start to like the modeline:
   :hook (after-init . doom-modeline-mode)
   :config
   (setq doom-modeline-buffer-encoding t
-        ;; doom-modeline-persp-name t
+        doom-modeline-persp-name t
         doom-modeline-mu4e nil
         doom-modeline-modal-icon t))
 #+end_src
@@ -2314,6 +2314,24 @@ Set contexts
 
 #+RESULTS:
 : dorneanu/set-mu4e-contexts
+*** Reply
+I often want to reply without the original message:
+#+begin_src emacs-lisp
+;; From https://github.com/djcb/mu/issues/2345
+(defun dorneanu/mu4e-delete-citation ()
+  (delete-region (point) (point-max)))
+
+(defun dorneanu/mu4e-reply (prefix)
+  (interactive "P")
+  (setq mu4e-compose-cite-function (if prefix
+                                       #'dorneanu/mu4e-delete-citation
+                                     #'message-cite-original-without-signature))
+  (mu4e-compose-reply))
+
+(define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+(define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+#+end_src
+
 ** COMMENT gnus
 #+begin_src emacs-lisp
 (use-package! gnus
@@ -3045,6 +3063,7 @@ From https://kristofferbalintona.me/posts/202202270056/
          ("M-p t" . complete-tag)        ;; etags
          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
          ("M-p h" . cape-history)
+         ("M-p i" . yankpad-insert)
          ("M-p f" . cape-file)
          ("M-p k" . cape-keyword)
          ("M-p s" . cape-symbol)
@@ -3959,6 +3978,13 @@ ace-link
 (package! kaolin-themes)
 
 (package! auto-dim-other-buffers)
+#+end_src
+
+Modelines:
+
+#+begin_src emacs-lisp
+;; (package! timu-line :recipe (:host gitlab :repo "aimebertrand/timu-line"))
+
 #+end_src
 ** Exports
 #+begin_src emacs-lisp
