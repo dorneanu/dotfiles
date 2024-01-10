@@ -2318,18 +2318,20 @@ Set contexts
 I often want to reply without the original message:
 #+begin_src emacs-lisp
 ;; From https://github.com/djcb/mu/issues/2345
-(defun dorneanu/mu4e-delete-citation ()
-  (delete-region (point) (point-max)))
+(after! mu4e
+  (defun dorneanu/mu4e-delete-citation ()
+    (delete-region (point) (point-max)))
 
-(defun dorneanu/mu4e-reply (prefix)
-  (interactive "P")
-  (setq mu4e-compose-cite-function (if prefix
-                                       #'dorneanu/mu4e-delete-citation
-                                     #'message-cite-original-without-signature))
-  (mu4e-compose-reply))
+  (defun dorneanu/mu4e-reply (prefix)
+    (interactive "P")
+    (setq mu4e-compose-cite-function (if prefix
+                                         #'dorneanu/mu4e-delete-citation
+                                       #'message-cite-original-without-signature))
+    (mu4e-compose-reply))
 
-(define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
-(define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+  (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+  (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+  )
 #+end_src
 
 ** COMMENT gnus
