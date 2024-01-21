@@ -47,9 +47,9 @@
                                 (straight-pull-all)
                                 (straight-rebuild-all)))))))
 
-  (setq dashboard-items '((recents  . 15)
-                          (agenda   . 10)
-                          (projects . 10)))
+  ;; (setq dashboard-items '((recents  . 15)
+  ;;                         (agenda   . 10)
+  ;;                         (projects . 10)))
   (dashboard-setup-startup-hook)
   :init
   (add-hook 'after-init-hook 'dashboard-refresh-buffer))
