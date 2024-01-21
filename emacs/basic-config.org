@@ -327,7 +327,7 @@ don’t. I prefer [[https://github.com/microsoft/cascadia-code][Cascadia Code]],
 ;;                         :height phundrak/default-font-size)))
 
 
-(set-face-attribute 'default nil :font "Iosevka")
+(set-face-attribute 'default nil :font "Iosevka-14")
 (set-face-attribute 'fixed-pitch nil :font "Iosevka")
 (set-face-attribute 'variable-pitch nil :font "DejaVu Sans Mono" :height 120)
 
@@ -339,12 +339,13 @@ don’t. I prefer [[https://github.com/microsoft/cascadia-code][Cascadia Code]],
 ;; (set-face-attribute 'org-code nil :inherit 'fixed-pitch)
 ;; (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
 
-(use-package mixed-pitch
- :hook ((org-mode      . mixed-pitch-mode)
-        (org-roam-mode . mixed-pitch-mode)
-        (LaTeX-mode    . mixed-pitch-mode))
- :config
- (setq mixed-pitch-set-height nil))
+;; (use-package mixed-pitch
+;;   :hook ((org-mode      . mixed-pitch-mode)
+;;          (org-roam-mode . mixed-pitch-mode)
+;;          (LaTeX-mode    . mixed-pitch-mode))
+;;  :config
+;;  (setq mixed-pitch-set-height nil)
+ ;; )
 
 
 ;; (my/set-font)

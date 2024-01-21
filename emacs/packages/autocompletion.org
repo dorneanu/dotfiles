@@ -31,6 +31,7 @@ and it is one of the most popular if not /the/ most popular.
         company-dabbrev-downcase    nil))
 #+end_src
 
+*** company-dict
 This package is a backend for company. It emulates
 ~ac-source-dictionary~ by proposing text related to the current
 major-mode.
@@ -42,6 +43,7 @@ major-mode.
   (setq company-dict-dir (expand-file-name "dicts" user-emacs-directory)))
 #+end_src
 
+*** company-box
 On the other hand, ~company-box~ is a Company front-end which offers
 colours, icons, documentation and so on. Very nice.
 
@@ -146,108 +148,24 @@ with an org-table.
             <<gen-company-box-icons()>>))))
 #+end_src
 
-** COMMENT Ivy
-My main menu package is =ivy= which I use as much as possible –I’ve
-noticed =helm= can be slow, very slow in comparison to =ivy=, so I’ll use
-the latter as much as possible. Actually, only =ivy= is installed for
-now. I could have used =ido= too, but I find it to be a bit too
-restricted in terms of features compared to =ivy=.
+*** COMMENT company-tabnine                                      :disabled:
+A company-mode backend for TabNine, the all-language autocompleter:
 #+begin_src emacs-lisp
-;; (use-package ivy
-;;   :straight t
-;;   :defer t
-;;   :diminish
-;;   :bind (("C-s" . swiper)
-;;          :map ivy-minibuffer-map
-;;          ("TAB" . ivy-alt-done)
-;;          ("C-l" . ivy-alt-done)
-;;          ("C-t" . ivy-next-line)
-;;          ("C-s" . ivy-previous-line)
-;;          ("C-u" . ivy-scroll-up-command)
-;;          ("C-d" . ivy-scroll-down-command)
-;;          :map ivy-switch-buffer-map
-;;          ("C-t" . ivy-next-line)
-;;          ("C-s" . ivy-previous-line)
-;;          ("C-l" . ivy-done)
-;;          ("C-d" . ivy-switch-buffer-kill)
-;;          :map ivy-reverse-i-search-map
-;;          ("C-t" . ivy-next-line)
-;;          ("C-s" . ivy-previous-line)
-;;          ("C-d" . ivy-reverse-i-search-kill))
-;;   :config
-;;   (ivy-mode 1)
-;;   (setq ivy-wrap                        t
-;;         ivy-height                      17
-;;         ivy-sort-max-size               50000
-;;         ivy-fixed-height-minibuffer     t
-;;         ivy-read-action-functions       #'ivy-hydra-read-action
-;;         ivy-read-action-format-function #'ivy-read-action-format-columns
-;;         projectile-completion-system    'vertico
-;;         ivy-on-del-error-function       #'ignore
-;;         ivy-use-selectable-prompt       t))
+(use-package company-tabnine
+  :ensure t
+  :config
+  (add-to-list 'company-backends #'company-tabnine))
+#+end_src
+*** company-go
+#+begin_src emacs-lisp
+(use-package company-go
+  :after (company go-mode)
+  :config
+  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
+  (add-to-list 'company-backends 'company-go))
 #+end_src
 
-There is also [[https://github.com/raxod502/prescient.el][~prescient.el~]] that offers some nice features when
-coupled with ~ivy~, guess what was born out of it? ~ivy-prescient~, of
-course!
-#+begin_src emacs-lisp
-;; (use-package ivy-prescient
-;;   :after ivy
-;;   :straight (:build t))
-#+end_src
-
-I warned you I’d use too much ~all-the-icons~, I did!
-#+begin_src emacs-lisp
-(use-package all-the-icons-ivy
-  :straight (:build t)
-  :after (ivy all-the-icons)
-  :init (all-the-icons-ivy-setup)
-  :hook (after-init . all-the-icons-ivy-setup))
-(all-the-icons-ivy-setup)
-#+end_src
-
-A buffer popping at the bottom of the screen is nice and all, but have
-you considered a floating buffer in the centre of your frame?
-#+begin_src emacs-lisp
-;; (use-package ivy-posframe
-;;   :defer t
-;;   :after (:any ivy helpful)
-;;   :hook (ivy-mode . ivy-posframe-mode)
-;;   :straight (:build t)
-;;   :init
-;;   (ivy-posframe-mode 1)
-;;   :config
-;;   (setq ivy-fixed-height-minibuffer nil
-;;         ivy-posframe-border-width   10
-;;         ivy-posframe-parameters
-;;         `((min-width  . 90)
-          ;; (min-height . ,ivy-height))))
-#+end_src
-
-Something that can be missing sometimes in Ivy is the ability to
-select multiple entries at once. For instance, when programming in
-Java, LPS can offer you to automatically generate the methods ~equals~
-and ~hashCode~ based on selected members, but with vanilla Ivy, you can
-only select one. Not really useful. ~ivy-hydra~ is a package that offers
-a Hydra interface when in Ivy which allows you to select multiple
-choices among other things.
-#+begin_src emacs-lisp
-(use-package ivy-hydra
-  :requires (ivy hydra)
-  :after ivy
-  :straight (:build t))
-#+end_src
-
-Finally, let’s make ~ivy~ richer:
-#+begin_src emacs-lisp
-;; (use-package ivy-rich
-;;   :straight (:build t)
-;;   :after ivy
-;;   :init
-;;   (ivy-rich-mode 1))
-#+end_src
-
-** Counsel
+** counsel
 I could almost merge this chapter with the previous one since counsel
 is a package that provides loads of completion functions for ivy. The
 ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
@@ -255,7 +173,6 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 (use-package counsel
   :straight t
   :after recentf
-  :after ivy
   :bind (("M-x"     . counsel-M-x)
          ("C-x b"   . counsel-ibuffer)
          ("C-x C-f" . counsel-find-file)
@@ -294,15 +211,15 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
           ;; ("M-f r" . consult-ripgrep)
           ;; ("M-f u" . consult-focus-lines)
           ("M-g f" . consult-find)
-          ))
-  ;; :custom
-  ;; (completion-in-region-function #'consult-completion-in-region)
-  ;; (consult-narrow-key "<")
-  ;; (consult-project-root-function #'projectile-project-root)
-  ;; ;; Provides consistent display for both `consult-register' and the register
-  ;; ;; preview when editing registers.
-  ;; (register-preview-delay 0)
-  ;; (register-preview-function #'consult-register-preview))
+          )
+  :custom
+  (completion-in-region-function #'consult-completion-in-region)
+  (consult-narrow-key "<")
+  (consult-project-root-function #'projectile-project-root)
+  ;; Provides consistent display for both `consult-register' and the register
+  ;; preview when editing registers.
+  (register-preview-delay 0)
+  (register-preview-function #'consult-register-preview))
 #+end_src
 ** Minibuffer completion
 *** vertico
@@ -430,6 +347,9 @@ without having to go through =dired=.
 (use-package embark
   :straight t
   :bind ("C-." . embark-act))
+
+(use-package embark-consult
+  :straight t)
 #+end_src
 
 ** Yasnippet
@@ -464,16 +384,15 @@ That’s still yasnippet by the way.
   :straight (:build t))
 #+end_src
 
-And finally, with ivy you can choose your snippets from a menu if
-you’re not sure or if you don’t remember what your snippet is.
+Use ~consult-yasnippet~:
 #+begin_src emacs-lisp
-(use-package ivy-yasnippet
+(use-package consult-yasnippet
   :defer t
-  :after (ivy yasnippet)
+  :after (consult yasnippet)
   :straight (:build t)
   :general
   (phundrak/leader-key
     :infix "i"
-    :packages 'ivy-yasnippet
-    "y" #'ivy-yasnippet))
+    :packages 'consult-yasnippet
+    "y" #'consult-yasnippet))
 #+end_src

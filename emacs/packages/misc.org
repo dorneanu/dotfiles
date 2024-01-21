@@ -270,6 +270,13 @@ just going to the frame above, then left, left, and up.
   :init (winum-mode))
 #+end_src
 
+** explain-pause-mode
+#+begin_src emacs-lisp
+(use-package explain-pause-mode
+  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode")
+  :config
+  (explain-pause-mode))
+#+end_src
 ** COMMENT Ytplay
 ~ytplay~ is a small package I’ve written with which you can choose at
 which resolution to play a YouTube video in an external video player.

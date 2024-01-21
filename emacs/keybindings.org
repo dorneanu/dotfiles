@@ -183,6 +183,7 @@ My keybinds for file manipulation are prefixed by ~f~.
 | Key | Function          | Description |
 |-----+-------------------+-------------|
 |     |                   | files       |
+| .   | find-file         |             |
 | f   | counsel-find-file |             |
 | F   | quick-find-files  |             |
 | h   | hexl-find-file    |             |
@@ -263,11 +264,11 @@ My keybinds for my projects are prefixed by ~p~.
 | !   | projectile-run-shell-command-in-root       |             |
 | &   | projectile-run-async-shell-command-in-root |             |
 | a   | projectile-add-known-project               |             |
-| b   | counsel-projectile-switch-to-buffer        |             |
+| b   | consult-project-buffer                     |             |
 | c   | counsel-projectile                         |             |
 | d   | counsel-projectile-find-dir                |             |
 | e   | projectile-edit-dir-locals                 |             |
-| f   | counsel-projectile-find-file               |             |
+| f   | projectile--find-file                      |             |
 | g   | projectile-find-tag                        |             |
 | k   | project-kill-buffers                       |             |
 | p   | counsel-projectile-switch-project          |             |

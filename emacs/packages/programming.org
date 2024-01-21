@@ -5,6 +5,12 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 
 * Programming
+** Visual Config
+*** truncate-lines
+Disable truncating lines
+#+begin_src emacs-lisp
+(add-hook 'prog-mode-hook (lambda () (setq truncate-lines t)))
+#+end_src
 ** Tools
 *** Treesitter
 Treesit is a native Emacs [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] implementation which provides a
@@ -352,7 +358,7 @@ that currently, ~dap-firefox~ and ~dap-chrome~ don’t work correctly due to
   :straight t
   :defer t
   :custom
-  (dumb-jump-selector 'ivy)
+  ;; (dumb-jump-selector 'vertico)
   (dumb-jump-prefer-searcher 'rg))
 (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 #+end_src
@@ -1101,13 +1107,14 @@ package.
   :straight t
   :defer t
   :bind
+  :mode ("\\.go\\'" . go-mode)
   ;; (:map go-mode-map
   ;;       ("M-." . godef-jump)
   ;;       ("M-]" . next-error)
   ;;       ("M-[" . previous-error))
   :hook
   (before-save . gofmt-before-save)
-  (go-mode     . lsp-deferred)
+  (go-mode     . lsp-mode)
   :custom
   (gofmt-command "goimports")
   :init
@@ -1115,13 +1122,6 @@ package.
   (or (getenv "GOPATH")
       (setenv "GOPATH" (expand-file-name "~/go")))
   (setenv "PATH" (concat (getenv "GOPATH") "/bin" ":" (getenv "PATH"))))
-
-(use-package company-go
-  :after (company go-mode)
-  :config
-  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
-  (add-to-list 'company-backends 'company-go)
-  )
 
 (use-package go-guru
   :straight t
@@ -1417,7 +1417,6 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
 ;; Show references
 (setq lsp-terraform-ls-enable-show-reference t)
 #+end_src
-
 
 *** Rust
 Rust is a general programming language, akin to C++ in some ways, but

@@ -21,32 +21,6 @@
         dashboard-set-file-icons    t
         initial-buffer-choice       (lambda () (get-buffer "*dashboard*"))
         dashboard-projects-switch-function 'counsel-projectile-switch-project-by-name)
-  (setq dashboard-navigator-buttons
-        `(((,(all-the-icons-faicon "language" :height 1.1 :v-adjust 0.0)
-            "Linguistics Website"
-            ""
-            (lambda (&rest _) (browse-url "https://langue.phundrak.com")))
-
-           (,(all-the-icons-faicon "firefox" :height 1.1 :v-adjust 0.0)
-            "Config Website"
-            ""
-            (lambda (&rest _) (browse-url "https://config.phundrak.com"))))
-
-          ((,(all-the-icons-octicon "git-branch" :height 1.1 :v-adjust 0.0)
-            "Dotfiles Sources"
-            ""
-            (lambda (&rest _) (browse-url "https://labs.phundrak.com/phundrak/dotfiles")))
-           ("!" "Issues" "Show issues" (lambda (&rest _)
-                                         (browse-url "https://labs.phundrak.com/phundrak/dotfiles/issues"))
-            warning))
-          ((,(all-the-icons-faicon "level-up" :height 1.1 :v-adjust 0.0)
-            "Update Packages"
-            ""
-            (lambda (&rest _) (progn
-                                (require 'straight)
-                                (straight-pull-all)
-                                (straight-rebuild-all)))))))
-
   ;; (setq dashboard-items '((recents  . 15)
   ;;                         (agenda   . 10)
   ;;                         (projects . 10)))
@@ -181,7 +155,7 @@ The DoomEmacs modeline looks nice in my opinion, let’s use it.
   )
 #+end_src
 
-** Pixel-perfect alignment of Markdown and org-mode tables
+** COMMENT Pixel-perfect alignment of Markdown and org-mode tables
 Usually, I have no issue with the alignment of the tables I write in
 org-mode and (more rarely) Markdown. However, there are occurrences
 where I’ll use a character that does not exactly respect my monospace
@@ -201,18 +175,6 @@ once it is fixed.
   :after (org markdown-mode)
   ;; :hook ((org-mode markdown-mode) . valign-mode)
   :custom ((valign-fancy-bar t)))
-#+end_src
-
-** Secret mode
-Sometimes, I want to hide the text displayed by Emacs but not lock
-altogether my computer. In this case, ~secret-mode~ comes in handy.
-#+begin_src emacs-lisp
-;; (use-package secret-mode
-;;   :defer t
-;;   :straight (secret-mode :build t
-;;                          :type git
-;;                          :host github
-;;                          :repo "bkaestner/secret-mode.el"))
 #+end_src
 
 ** Solaire: Incandescent Emacs
@@ -241,7 +203,16 @@ personal preference.
 (use-package doom-themes
   :straight (:build t)
   :defer t
-  :init (load-theme 'doom-nord-aurora t))
+  ;; :init (load-theme 'doom-nord-aurora t)
+ )
+
+;; Install kaolin themes
+(use-package kaolin-themes
+  :straight (:build t)
+  :defer t)
+
+;; Load theme
+(load-theme 'modus-operandi t)
 #+end_src
 
 ** Rainbow Delimiters
@@ -254,7 +225,7 @@ for any language that has delimiters like brackets too.
   :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
-** Y’all want some more /COLOURS/?
+** COMMENT Y’all want some more /COLOURS/?
 It is possible to make info buffers much more colourful (and, in my
 opinion, easier to read) with this simple package:
 #+begin_src emacs-lisp
