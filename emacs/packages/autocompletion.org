@@ -170,21 +170,21 @@ I could almost merge this chapter with the previous one since counsel
 is a package that provides loads of completion functions for ivy. The
 ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 #+begin_src emacs-lisp
-(use-package counsel
-  :straight t
-  :after recentf
-  :bind (("M-x"     . counsel-M-x)
-         ("C-x b"   . counsel-ibuffer)
-         ("C-x C-f" . counsel-find-file)
-         :map minibuffer-local-map
-         ("C-r" . 'counsel-minibuffer-history)))
+;; (use-package counsel
+;;   :straight t
+;;   :after recentf
+;;   :bind (("M-x"     . counsel-M-x)
+;;          ("C-x b"   . counsel-ibuffer)
+;;          ("C-x C-f" . counsel-find-file)
+;;          :map minibuffer-local-map
+;;          ("C-r" . 'counsel-minibuffer-history)))
 #+end_src
 
 ** consult
 #+begin_src emacs-lisp
 (use-package consult
   :straight t
-  :defer t
+  :after projectile
   :bind  (;; Related to the control commands.
           ("<help> a" . consult-apropos)
           ;; ("C-x b" . consult-buffer)
@@ -210,8 +210,8 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
           ;; ("M-f m" . consult-multi-occur)
           ;; ("M-f r" . consult-ripgrep)
           ;; ("M-f u" . consult-focus-lines)
-          ("M-g f" . consult-find)
-          )
+          ("M-g f" . consult-find))
+
   :custom
   (completion-in-region-function #'consult-completion-in-region)
   (consult-narrow-key "<")
@@ -220,6 +220,13 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
   ;; preview when editing registers.
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview))
+
+(use-package consult-projectile
+  :after (consult projectile)
+  :straight (consult-projectile :type git :host gitlab :repo
+                                "OlMon/consult-projectile" :branch "master")
+  :commands (consult-projectile))
+
 #+end_src
 ** Minibuffer completion
 *** vertico
@@ -346,10 +353,12 @@ without having to go through =dired=.
 #+begin_src emacs-lisp
 (use-package embark
   :straight t
-  :bind ("C-." . embark-act))
+  :after projectile
+  :bind ("C-;" . embark-act))
 
 (use-package embark-consult
-  :straight t)
+  :straight t
+  :after (consult embark))
 #+end_src
 
 ** Yasnippet

@@ -306,13 +306,13 @@ the user."
 
 Now, let’s automate the call to this function in order to apply the
 modifications to the modeline each time we open a new file.
+
 #+begin_src emacs-lisp
 (add-hook 'after-change-major-mode-hook #'modeline-contitional-buffer-encoding)
 #+end_src
 
 *** Fonts
-I don’t like the default font I usually have on my machines, I really
-don’t. I prefer [[https://github.com/microsoft/cascadia-code][Cascadia Code]], as it also somewhat supports the [[https://www.internationalphoneticassociation.org/][IPA]].
+
 #+begin_src emacs-lisp
 ;; (defvar phundrak/default-font-size 14
 ;;   "Default font size.")
@@ -327,9 +327,9 @@ don’t. I prefer [[https://github.com/microsoft/cascadia-code][Cascadia Code]],
 ;;                         :height phundrak/default-font-size)))
 
 
-(set-face-attribute 'default nil :font "Iosevka-14")
-(set-face-attribute 'fixed-pitch nil :font "Iosevka")
-(set-face-attribute 'variable-pitch nil :font "DejaVu Sans Mono" :height 120)
+(set-face-attribute 'default nil :font "Iosevka-11")
+(set-face-attribute 'fixed-pitch nil :font "Iosevka" :height 1.0)
+(set-face-attribute 'variable-pitch nil :font "Iosevka")
 
 ;; Set for unicode fonts
 (set-fontset-font "fontset-default" nil (font-spec :family "Noto Color Emoji"))

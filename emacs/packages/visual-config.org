@@ -150,9 +150,10 @@ The DoomEmacs modeline looks nice in my opinion, let’s use it.
   (doom-modeline-enable-word-count t)
   (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
   (doom-modeline-mu4e t)
+  (doom-modeline-project-detection 'auto)
   (doom-modeline-env-version t)
-  (doom-modeline-buffer-file-name-style 'truncate-upto-project)
-  )
+  (doom-modeline-buffer-file-name-style 'truncate-upto-project))
+
 #+end_src
 
 ** COMMENT Pixel-perfect alignment of Markdown and org-mode tables
@@ -242,7 +243,7 @@ opinion, easier to read) with this simple package:
   :hook (after-init . persp-mode)
   :bind (("M-N" . persp-next)
          ("M-P" . persp-prev)
-         ("M-J" . persp-switch))
+         ("M-O" . persp-switch))
   :init
   (setq persp-mode-prefix-key (kbd "M-g ."))
   :config
@@ -262,4 +263,11 @@ opinion, easier to read) with this simple package:
 (use-package persp-projectile
   :ensure t
   :after (perspective projectile))
+#+end_src
+** focus-mode
+#+begin_src emacs-lisp
+(use-package focus
+  :straight t
+  :config
+  (add-to-list 'focus-mode-to-thing '((prog-mode . defun) (text-mode . sentence))))
 #+end_src

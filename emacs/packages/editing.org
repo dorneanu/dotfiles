@@ -156,7 +156,7 @@ escaping your strings!
   :straight (:build t))
 #+end_src
 
-** Writeroom
+** writeroom
 On the other hand, ~writeroom~ allows the user to enter a
 distraction-free mode of Emacs, and I like that! But the default width
 is a bit too small for me, and I prefer not to go full-screen.
@@ -181,4 +181,62 @@ I love /olivetti/ mode
   :straight t
   :custom
   (olivetti-body-width 0.8))
+#+end_src
+
+** vundo
+#+begin_src emacs-lisp
+(use-package vundo
+  :straight t
+  :config
+  ;; Better contrasting highlight.
+  (custom-set-faces
+   '(vundo-node ((t (:foreground "#808080"))))
+   '(vundo-stem ((t (:foreground "#808080"))))
+   '(vundo-highlight ((t (:foreground "#FFFF00"))))))
+#+end_src
+** undo-hl
+#+begin_src emacs-lisp
+(use-package undo-hl
+  :straight (undo-hl :build t
+                           :type git
+                           :host github
+                           :repo "casouri/undo-hl")
+  :hook ((text-mode . undo-hl-mode)
+         (prog-mode . undo-hl-mode))
+  :custom-face
+  (undo-hl-insert ((t (:background "#FFFF00"))))
+  (undo-hl-delete ((t (:background "#FFFF00")))))
+#+end_src
+
+** expand-region
+Use expand-region
+
+#+begin_src emacs-lisp
+(use-package expand-region
+  :straight t
+  :bind
+  (("M-g =" . er/expand-region)
+   ("M-g - " . er/contract-region)
+   :map mode-specific-map
+   :prefix-map region-prefix-map
+   :prefix "r"
+   ("(" . er/mark-inside-pairs)
+   (")" . er/mark-outside-pairs)
+   ("'" . er/mark-inside-quotes)
+   ([34] . er/mark-outside-quotes) ; it's just a quotation mark
+   ("o" . er/mark-org-parent)
+   ("u" . er/mark-url)
+   ("b" . er/mark-org-code-block)
+   ("." . er/mark-method-call)
+   (">" . er/mark-next-accessor)
+   ("w" . er/mark-word)
+   ("d" . er/mark-defun)
+   ("e" . er/mark-email)
+   ("," . er/mark-symbol)
+   ("<" . er/mark-symbol-with-prefix)
+   (";" . er/mark-comment)
+   ("s" . er/mark-sentence)
+   ("S" . er/mark-text-sentence)
+   ("p" . er/mark-paragraph)
+   ("P" . er/mark-text-paragraph)))
 #+end_src

@@ -126,23 +126,23 @@ standard keybindings.
 Keyfreq is a package that records all the commands I call from Emacs
 and builds a heatmap out of it.
 #+begin_src emacs-lisp
-(use-package keyfreq
-  :straight (:build t)
-  :init
-  (keyfreq-mode 1)
-  (keyfreq-autosave-mode 1)
-  :custom
-  (keyfreq-file (expand-file-name "keyfreq.el" user-emacs-directory))
-  (keyfreq-file-lock (expand-file-name "keyfreq.lock" user-emacs-directory))
-  (keyfreq-excluded-commands '(self-insert-command org-self-insert-command
-                               evil-previous-visual-line evil-next-visual-line
-                               ivy-next-line evil-backward-char evil-forward-char
-                               evil-next-line evil-previous-line evil-normal-state
-                               text-scale-pinch lsp-ui-doc--handle-mouse-movement
-                               vterm--self-insert evil-mouse-drag-region
-                               mouse-set-point mouse-drag-region mwheel-scroll
-                               pdf-util-image-map-mouse-event-proxy
-                               mouse-set-region)))
+;; (use-package keyfreq
+;;   :straight (:build t)
+;;   :init
+;;   (keyfreq-mode 1)
+;;   (keyfreq-autosave-mode 1)
+;;   :custom
+;;   (keyfreq-file (expand-file-name "keyfreq.el" user-emacs-directory))
+;;   (keyfreq-file-lock (expand-file-name "keyfreq.lock" user-emacs-directory))
+;;   (keyfreq-excluded-commands '(self-insert-command org-self-insert-command
+;;                                evil-previous-visual-line evil-next-visual-line
+;;                                ivy-next-line evil-backward-char evil-forward-char
+;;                                evil-next-line evil-previous-line evil-normal-state
+;;                                text-scale-pinch lsp-ui-doc--handle-mouse-movement
+;;                                vterm--self-insert evil-mouse-drag-region
+;;                                mouse-set-point mouse-drag-region mwheel-scroll
+;;                                pdf-util-image-map-mouse-event-proxy
+;;                                mouse-set-region)))
 #+end_src
 
 ** COMMENT Mastodon
@@ -274,8 +274,29 @@ just going to the frame above, then left, left, and up.
 #+begin_src emacs-lisp
 (use-package explain-pause-mode
   :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode")
+  ;; :config
+  ;; (explain-pause-mode)
+ )
+#+end_src
+** epa-file
+Configure GPG assistant
+
+#+begin_src emacs-lisp
+(use-package epa-file
+  :ensure nil
   :config
-  (explain-pause-mode))
+  (setq
+   epa-file-encrypt-to '("BF2828095372F24D")
+   password-cache nil
+   password-cache-expiry nil
+   epa-pinentry-mode 'ask)
+  :custom
+  (epa-file-select-keys 'silent))
+#+end_src
+** pass
+#+begin_src emacs-lisp
+(use-package pass
+  :straight t)
 #+end_src
 ** COMMENT Ytplay
 ~ytplay~ is a small package I’ve written with which you can choose at

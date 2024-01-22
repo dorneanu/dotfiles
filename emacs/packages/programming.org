@@ -205,17 +205,17 @@ Spell Commands^^           Add To Dictionary^^              Other
 #+end_src
 
 #+begin_src emacs-lisp
-(use-package flyspell-correct
-  :defer t
-  :straight (:build t)
-  :general ([remap ispell-word] #'flyspell-correct-at-point)
-  :config
-  (require 'flyspell-correct-ivy nil t))
+;; (use-package flyspell-correct
+;;   :defer t
+;;   :straight (:build t)
+;;   :general ([remap ispell-word] #'flyspell-correct-at-point)
+;;   :config
+;;   (require 'flyspell-correct-ivy nil t))
 
-(use-package flyspell-correct-ivy
-  :defer t
-  :straight (:build t)
-  :after flyspell-correct)
+;; (use-package flyspell-correct-ivy
+;;   :defer t
+;;   :straight (:build t)
+;;   :after flyspell-correct)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -286,11 +286,11 @@ I also want all the visual enhancements LSP can provide.
 
 And let’s enable some integration with ~ivy~.
 #+begin_src emacs-lisp
-(use-package lsp-ivy
-  :straight (:build t)
-  :defer t
-  :after lsp
-  :commands lsp-ivy-workspace-symbol)
+;; (use-package lsp-ivy
+;;   :straight (:build t)
+;;   :defer t
+;;   :after lsp
+;;   :commands lsp-ivy-workspace-symbol)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -416,7 +416,6 @@ document.
   :hook (prog-mode . highlight-indent-guides-mode)
   :custom (highlight-indent-guides-method 'character))
 #+end_src
-
 
 ** DSLs
 DSLs, or /Domain Specific Languages/, are languages dedicated to some

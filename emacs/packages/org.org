@@ -83,6 +83,7 @@ extended however we like!
         org-src-fontify-natively           t
         org-src-tab-acts-natively          t
         org-src-preserve-indentation       t
+        org-adapt-indentation              nil
         org-log-done                       'time
 
         org-directory                      "~/work/repos/org/"
@@ -284,7 +285,6 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 (use-package org-super-agenda
   :straight t
   :after org-agenda
-  :defer t
   :config
   ;; Toogle org links display
   ;; (org-toggle-link-display)
@@ -973,19 +973,23 @@ prefixed with a comma ~,~ in normal mode.
 | '         | org-edit-special    |             |
 | -         | org-ctrl-c-minus    |             |
 | a         | org-agenda          |             |
-| c         | org-capture         |             |
+| c         | nil                 | ORG clock   |
+| ci        | org-clock-in        |             |
+| co        | org-clock-out       |             |
+| cr        | org-clock-report    |             |
 | C         | org-columns         |             |
 | e         | org-export-dispatch |             |
 | l         | org-store-link      |             |
 | p         | org-priority        |             |
 | r         | org-reload          |             |
+| s         | org-sort            |             |
 
 I then have a couple of babel-related functions.
 #+name: org-keybinds-babel
 | Key chord | Function                            | Description |
 |-----------+-------------------------------------+-------------|
 | b         | nil                                 | babel       |
-| b.        | org-babel-transient/body            |             |
+| b         | org-babel-transient/body            |             |
 | bb        | org-babel-execute-buffer            |             |
 | bc        | org-babel-check-src-block           |             |
 | bC        | org-babel-tangle-clean              |             |
@@ -1576,7 +1580,6 @@ tables, source blocks, and tags, and it applies settings similar to
                      (42 . "↪")))
  (global-org-modern-mode))
 
-
 (add-hook 'org-mode-hook #'org-modern-mode)
 (add-hook 'org-agenda-finalize #'org-modern-agenda)
 #+end_src
@@ -1598,6 +1601,7 @@ tables, source blocks, and tags, and it applies settings similar to
     "O" #'org-ol-tree))
 #+end_src
 
+*** prettify symbols
 #+name: org-mode-visual-prettify-symbols
 #+begin_src emacs-lisp
 (add-hook 'org-mode-hook

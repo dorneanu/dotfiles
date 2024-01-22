@@ -116,10 +116,20 @@ bépo layout, many keybindings available by default or through
     "M"   #'calendar-other-month))
 #+end_src
 
-** chatgpt
+** AI
+*** chatgpt-shell
 #+begin_src emacs-lisp
-
+(use-package chatgpt-shell
+  :straight t
+  :after (password-store)
+  :commands (chatgpt-shell)
+  :bind (("C-c a p" . chatgpt-shell-prompt)
+         ("C-c a s" . chatgpt-shell)
+         ("C-c a r" . chatgpt-shell-proofread-region))
+  :config
+  (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt")))
 #+end_src
+
 ** Docker
 Docker is an awesome tool for reproducible development environments.
 Due to this, I absolutely need a mode for editing Dockerfiles.
@@ -1596,12 +1606,18 @@ to projectile.
 (use-package projectile
   :straight t
   :diminish projectile-mode
-  :custom ((projectile-completion-system 'default))
-  :init
-  (setq projectile-switch-project-action #'projectile-dired)
+  ;; :custom ((projectile-completion-system 'default))
   :config
   (projectile-mode)
+  ;; (setq projectile-completion-system 'default)
+  ;; (setq projectile-switch-project-action #'projectile-dired)
+
   (add-to-list 'projectile-ignored-projects "~/")
+  (add-to-list 'projectile-globally-ignored-files "node_modules")
+  (add-to-list 'projectile-globally-ignored-files ".cache")
+  (add-to-list 'projectile-globally-ignored-files "_cache")
+  (add-to-list 'projectile-globally-ignored-files "~")
+  (add-to-list 'projectile-globally-ignored-files "#")
   (add-to-list 'projectile-globally-ignored-directories "^node_modules$")
   :general
   (phundrak/leader-key
@@ -1610,10 +1626,10 @@ to projectile.
 
 And of course, there is a counsel package dedicated to projectile.
 #+begin_src emacs-lisp
-(use-package counsel-projectile
-  :straight (:build t)
-  :after (counsel projectile)
-  :config (counsel-projectile-mode))
+;; (use-package counsel-projectile
+;;   :straight (:build t)
+;;   :after (counsel projectile)
+;;   :config (counsel-projectile-mode))
 #+end_src
 
 *** Recentf
@@ -1645,6 +1661,60 @@ excluded files.
                           (* any)))))
 #+end_src
 
+*** ejira
+Still not convinced, but let's activate it:
+
+#+begin_src emacs-lisp
+(use-package jiralib2
+  :straight t
+  :commands (ejira-mode)
+  :init
+  (defun dorneanu/setup-jira ()
+    (interactive)
+    (setq jiralib2-url              (password-store-get "emacs/ejira-url")
+          jiralib2-auth             'token
+          jiralib2-token             (password-store-get "emacs/ejira-token")
+          jiralib2-user-login-name  (password-store-get "emacs/ejira-user"))))
+
+
+
+(use-package ejira
+  :straight (ejira :build t
+                      :type git
+                      :host github
+                      :repo "nyyManni/ejira")
+  :after (jiralib2)
+  :init
+  (setq
+   ;; NOTE, this directory needs to be in `org-agenda-files'`
+   ejira-org-directory       "~/work/jira"
+   ejira-projects            '("QDS" "INI")
+
+   ejira-priorities-alist    '(("Highest" . ?A)
+                               ("High"    . ?B)
+                               ("Medium"  . ?C)
+                               ("Low"     . ?D)
+                               ("Lowest"  . ?E))
+   ejira-todo-states-alist   '(("To Do"       . 1)
+                               ("In Progress" . 2)
+                               ("Done"        . 4)))
+  ;; Update my jira projects
+  (defun dorneanu/jira-update-projects ()
+    (interactive)
+    (let ((org-agenda-files nil))
+      (ejira-update-my-projects)))
+
+
+  :config
+  ;; Tries to auto-set custom fields by looking into /editmeta
+  ;; of an issue and an epic.
+  (add-hook 'jiralib2-post-login-hook #'ejira-guess-epic-sprint-fields)
+
+  ;; Make the issues visisble in your agenda by adding `ejira-org-directory'
+  ;; into your `org-agenda-files'.
+  (add-to-list 'org-agenda-files ejira-org-directory))
+
+#+end_src
 ** Screenshot
 ~screenshot.el~ is a nice utility package made by TEC. It allows the
 user to take a screenshot of a specific area of a buffer and make it

@@ -266,12 +266,12 @@ My keybinds for my projects are prefixed by ~p~.
 | a   | projectile-add-known-project               |             |
 | b   | consult-project-buffer                     |             |
 | c   | counsel-projectile                         |             |
-| d   | counsel-projectile-find-dir                |             |
+| d   | consult-projectile-find-dir                |             |
 | e   | projectile-edit-dir-locals                 |             |
 | f   | projectile--find-file                      |             |
 | g   | projectile-find-tag                        |             |
 | k   | project-kill-buffers                       |             |
-| p   | counsel-projectile-switch-project          |             |
+| p   | consult-projectile-switch-project          |             |
 | S   | dirvish-side                               |             |
 | t   | ivy-magit-todos                            |             |
 | v   | projectile-vc                              |             |
@@ -364,10 +364,11 @@ My toggle keybinds are prefixed by ~t~.
 |     |                                       | toggles      |
 | TAB | tab-bar-mode                          |              |
 | t   | my/modify-frame-alpha-background/body |              |
-| T   | counsel-load-theme                    |              |
+| T   | consult-theme                         |              |
 | d   |                                       | debug        |
 | de  | toggle-debug-on-error                 |              |
 | dq  | toggle-debug-on-quit                  |              |
+| f   | focus-mode                            | focus-mode   |
 | i   |                                       | input method |
 | it  | toggle-input-method                   |              |
 | is  | set-input-method                      |              |
