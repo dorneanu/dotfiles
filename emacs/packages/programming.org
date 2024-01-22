@@ -1104,7 +1104,6 @@ package.
 #+begin_src emacs-lisp
 (use-package go-mode
   :straight t
-  :defer t
   :bind
   :mode ("\\.go\\'" . go-mode)
   ;; (:map go-mode-map
@@ -1113,14 +1112,9 @@ package.
   ;;       ("M-[" . previous-error))
   :hook
   (before-save . gofmt-before-save)
-  (go-mode     . lsp-mode)
+  ;; (go-mode     . lsp-mode)
   :custom
-  (gofmt-command "goimports")
-  :init
-  (setenv "GO111MODULE" "on")
-  (or (getenv "GOPATH")
-      (setenv "GOPATH" (expand-file-name "~/go")))
-  (setenv "PATH" (concat (getenv "GOPATH") "/bin" ":" (getenv "PATH"))))
+  (gofmt-command "goimports"))
 
 (use-package go-guru
   :straight t
