@@ -1645,6 +1645,12 @@ I love /olivetti/ mode
   (define-key nov-mode-map (kbd "o") 'nov-xwidget-view)
   (add-hook 'nov-mode-hook 'nov-xwidget-inject-all-files))
 #+end_src
+* Presentations
+** revealJS
+Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
+#+begin_src emacs-lisp
+(use-package! org-re-reveal)
+#+end_src
 * Documentation
 ** google-translate
 #+begin_src emacs-lisp
@@ -2557,7 +2563,7 @@ And while inside a search:
 | M-s o | run =occur=                                   |
 | M-s r | toggle regexp search                          |
 | M-s . | mark whole thing for search                   |
-f M-s h r | highlight current search (=hi-lock=)          |
+| M-s h r | highlight current search (=hi-lock=)          |
 | M-%   | run =query-replace= on search term        |
 | C-M-% | run =query-replace-regexp= on search term |
 | C-l   | =recenter=                                |
@@ -3914,6 +3920,10 @@ ace-link
 
 ;; There is no alternative for consult (counsel-org-tag)
 (package! counsel)
+#+end_src
+** Presentations
+#+begin_src emacs-lisp
+(package! org-re-reveal)
 #+end_src
 ** Programming
 #+begin_src emacs-lisp
