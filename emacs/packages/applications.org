@@ -130,7 +130,7 @@ bépo layout, many keybindings available by default or through
   (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt")))
 #+end_src
 
-** Docker
+** COMMENT Docker
 Docker is an awesome tool for reproducible development environments.
 Due to this, I absolutely need a mode for editing Dockerfiles.
 #+begin_src emacs-lisp
