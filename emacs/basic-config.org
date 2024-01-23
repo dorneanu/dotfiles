@@ -360,13 +360,35 @@ modifications to the modeline each time we open a new file.
 This is straight-up copied from [[https://tecosaur.github.io/emacs-config/config.html#window-title][TEC]]’s configuration. See their comment
 on the matter.
 #+begin_src emacs-lisp
-;; (setq frame-title-format
-;;       '(""
-;;         "%b"
-;;         (:eval
-;;          (let ((project-name (projectile-project-name)))
-;;            (unless (string= "-" project-name)
-;;              (format (if (buffer-modified-p) " ◉ %s" "  ●  %s - Emacs") project-name))))))
+(setq frame-title-format
+      '(""
+        "%b"
+        (:eval
+         (let ((project-name (projectile-project-name)))
+           (unless (string= "-" project-name)
+             (format (if (buffer-modified-p) " ◉ %s" "  ●  %s - Emacs") project-name))))))
+#+end_src
+
+*** mouse
+I still use the mouse for scrolling, changing frame sizes:
+
+#+begin_src emacs-lisp
+(unless (display-graphic-p)
+  (xterm-mouse-mode 1))
+
+;; Automatically focus frame
+(setq mouse-autoselect-window t)
+
+;; Some keybindings
+(global-set-key (kbd "C-S-<wheel-up>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-<wheel-up>") 'enlarge-window)
+(global-set-key (kbd "C-S-<mouse-4>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-<mouse-4>") 'enlarge-window)
+
+(global-set-key (kbd "C-S-<wheel-down>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-<wheel-down>") 'shrink-window)
+(global-set-key (kbd "C-S-<mouse-5>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-<mouse-5>") 'shrink-window)
 #+end_src
 
 ** A better custom variable setter

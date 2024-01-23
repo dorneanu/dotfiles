@@ -52,7 +52,8 @@ Undefining some stuff to make keybind prefixes work correctly.
 
 (phundrak/leader-key
   "SPC" '(counsel-M-x :wk "M-x")
-  "S"   #'swiper
+  "s"   #'swiper
+  "S"   #'swiper-all
   "'"   #'shell-pop
 
   <<general-keybindings-gen(table=keybinds-tabs, prefix="TAB ")>>
@@ -77,6 +78,7 @@ Undefining some stuff to make keybind prefixes work correctly.
   "iu"  #'counsel-unicode-char
 
   <<general-keybindings-gen(table=keybinds-jump, prefix="j")>>
+  <<general-keybindings-gen(table=keybinds-lookup, prefix="l")>>
 
   <<general-keybindings-gen(table=keybinds-toggle, prefix="t ")>>
 
@@ -245,6 +247,17 @@ My keybinds for help are prefixed by ~h~.
 | ds  | helpful-symbol           |             |
 | dv  | helpful-variable         |             |
 
+** Lookup
+Keybindings for looking up things (prefixed by ~l~).
+#+name: keybinds-lookup
+| Key | Function                         | Description |
+|-----+----------------------------------+-------------|
+|     |                                  | lookup      |
+| d   | dictcc                           |             |
+| l   | leo-translate-word               |             |
+| w   | wordreference-search             |             |
+| g   | google-translate-query-translate |             |
+
 ** Jump
 My keybinds for jumping around are prefixed by ~j~.
 #+name: keybinds-jump
@@ -254,6 +267,7 @@ My keybinds for jumping around are prefixed by ~j~.
 | f   | counsel-file-jump       |             |
 | d   | dirvish-dwim            |             |
 | D   | dired-jump-other-window |             |
+| w   | ace-window              |             |
 
 ** Project
 My keybinds for my projects are prefixed by ~p~.

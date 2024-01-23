@@ -1617,7 +1617,7 @@ to projectile.
   (add-to-list 'projectile-globally-ignored-files ".cache")
   (add-to-list 'projectile-globally-ignored-files "_cache")
   (add-to-list 'projectile-globally-ignored-files "~")
-  (add-to-list 'projectile-globally-ignored-files "#")
+  (add-to-list 'projectile-globally-ignored-files "^#")
   (add-to-list 'projectile-globally-ignored-directories "^node_modules$")
   :general
   (phundrak/leader-key

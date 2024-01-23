@@ -394,7 +394,7 @@ in quite a few languages.
   :general
   (phundrak/leader-key
     :packages 'langtool
-    :infix "l"
+    :infix "L"
     ""  '(:ignore t :which-key "LangTool")
     "B" #'langtool-correct-buffer
     "b" #'langtool-check-buffer

@@ -82,6 +82,14 @@ enhances a couple of built-in functions from Emacs, namely:
   :straight t
   :defer t)
 #+end_src
+** leo
+
+#+begin_src emacs-lisp
+(use-package leo
+  :straight t
+  :defer t)
+#+end_src
+
 ** TODO wordreference
 #+begin_src emacs-lisp
 (use-package wordreference

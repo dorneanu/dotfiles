@@ -14,13 +14,13 @@ Use a minimalistic dashboard:
                       :repo "konrad1977/welcome-dashboard"
                       :build t)
   :config
-  (setq welcome-latitude 56.7365
-        welcome-longitude 16.2981
+  (setq welcome-latitude 52.520008
+        welcome-longitude 13.404954
         welcome-path-max-length 75
         welcome-min-left-padding 10
-        ;; welcome-image-file "~/.c"
-        ;; welcome-image-width 200
-        ;; welcome-image-height 169
+        welcome-image-file (concat user-emacs-directory "straight/repos/evil/doc/logo.png")
+        welcome-image-width 200
+        welcome-image-height 169
         welcome-title "Welcome Victor. Have a great day!")
   (welcome-dashboard-create-welcome-hook))
 #+end_src
@@ -209,9 +209,32 @@ personal preference.
   :defer t)
 
 ;; Load theme
-(load-theme 'modus-operandi t)
+(load-theme 'doom-monokai-octagon t)
 #+end_src
 
+** COMMENT mini-modeline
+#+begin_src emacs-lisp
+(use-package mini-modeline
+  :straight t
+  :after smart-mode-line
+  :config
+  (mini-modeline-mode t))
+#+end_src
+
+** feebleline
+#+begin_src emacs-lisp
+(use-package feebleline
+  :ensure t
+  :config (setq feebleline-msg-functions
+                '((feebleline-line-number         :post "" :fmt "%5s")
+                  (feebleline-column-number       :pre ":" :fmt "%-2s")
+                  (feebleline-file-directory      :face feebleline-dir-face :post "")
+                  (feebleline-file-or-buffer-name :face font-lock-keyword-face :post "")
+                  (feebleline-file-modified-star  :face font-lock-warning-face :post "")
+                  (feebleline-git-branch          :face feebleline-git-face :pre " : ")
+                  (feebleline-project-name        :align right)))
+  (feebleline-mode 1))
+#+end_src
 ** Rainbow Delimiters
 This makes Lisp especially more readable, but it’s also nice to have
 for any language that has delimiters like brackets too.
