@@ -11,6 +11,10 @@ Disable truncating lines
 #+begin_src emacs-lisp
 (add-hook 'prog-mode-hook (lambda () (setq truncate-lines t)))
 #+end_src
+*** tab-width
+#+begin_src emacs-lisp
+(setq-default tab-width 4) ;; Set width for tabs
+#+end_src
 ** Tools
 *** Treesitter
 Treesit is a native Emacs [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] implementation which provides a
@@ -87,6 +91,13 @@ it is.
          appwrite-devel t))
 #+end_src
 
+*** apheleia-mode
+Like black (for Python) or Prettier (for JS related):
+
+#+begin_src emacs-lisp
+(use-package apheleia
+  :straight t)
+#+end_src
 *** Databases
 A really cool tool in Emacs for manipulating databases is ~emacsql~.
 It’s able to manipulate SQLite databases by default, but it’s also
@@ -242,7 +253,6 @@ awesome!
         read-process-output-max (* 3 1024 1024))
   :hook ((c-mode          . lsp-deferred)
          (c++-mode        . lsp-deferred)
-         (go-mode         . lsp-deferred)
          (html-mode       . lsp-deferred)
          (sh-mode         . lsp-deferred)
          (terraform-mode  . lsp-deferred)
@@ -1102,24 +1112,45 @@ package.
 #+end_src
 *** Golang
 #+begin_src emacs-lisp
+(use-package go-ts-mode
+  :hook
+  (go-ts-mode . lsp-deferred)
+  (go-ts-mode . apheleia-mode)
+  :bind (:map go-ts-mode-map
+         ("M-?" . godoc-at-point)
+         ("M-." . godef-jump)
+         ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+         ("C-c m r" . go-run))
+  :config
+  (setq go-ts-mode-indent-offset 4))
+
 (use-package go-mode
   :straight t
-  :bind
-  :mode ("\\.go\\'" . go-mode)
-  ;; (:map go-mode-map
-  ;;       ("M-." . godef-jump)
-  ;;       ("M-]" . next-error)
-  ;;       ("M-[" . previous-error))
+  :mode "\\.go\\'"
   :hook
-  (before-save . gofmt-before-save)
+  ;; (before-save . gofmt-before-save)
+  (go-mode . apheleia-mode)
   ;; (go-mode     . lsp-mode)
+  :bind (:map go-mode-map
+          ("M-?" . godoc-at-point)
+          ("M-." . godef-jump)
+          ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+          ("C-c m r" . go-run))
   :custom
   (gofmt-command "goimports"))
+
+(use-package gotest
+  :straight t
+  :after go-mode)
 
 (use-package go-guru
   :straight t
   :hook
   (go-mode . go-guru-hl-identifier-mode))
+
+(use-package go-projectile
+  :straight t
+  :after (projectile go-mode))
 
 (use-package flycheck-golangci-lint
   :straight t
@@ -1385,11 +1416,11 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
 (use-package terraform-mode
   :straight t
   :defer t
+  :hook
+  (terraform-mode . apheleia-mode)
   :config
   (setq terraform-indent-level 2
         terraform-format-on-save t))
-
-(add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
 
 ;; Configure company
 (use-package company-terraform
