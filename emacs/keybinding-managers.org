@@ -175,7 +175,7 @@ globally enable its mode.
   (global-undo-tree-mode)
   :config
   <<undo-tree-ignore-text-properties>>
-  <<undo-tree-compress-files>>
+  ;; <<undo-tree-compress-files>>
   (setq undo-tree-visualizer-diff       t
         undo-tree-visualizer-timestamps t
         undo-tree-auto-save-history     t

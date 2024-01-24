@@ -1505,6 +1505,14 @@ which is really nice! However, most of my configuration will be stolen
 ;;          (org-present-mode-quit . my/org-present-quit)))
 #+end_src
 
+** org-re-reveal
+
+Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
+#+begin_src emacs-lisp
+(use-package org-re-reveal
+   :straight t)
+#+end_src
+
 ** Visual Configuration
 *** mixed-pitch
 While most modes of Emacs are dedicated to development, and therefore
@@ -1729,3 +1737,27 @@ I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs
 ;;     "s" #'org-tree-slide-move-previous-tree
 ;;     "u" #'org-tree-slide-content))
 #+end_src
+
+*** org-download
+
+Insert images easily into ORG mode files
+
+#+begin_src emacs-lisp
+(use-package org-download
+  :straight t
+  :after org
+  :hook (org-mode . org-download-enable))
+
+;; Drag-and-drop to `dired`
+(add-hook 'dired-mode-hook 'org-download-enable)
+#+end_src
+*** org-web-tools
+#+begin_src emacs-lisp
+(use-package org-web-tools
+  :straight t
+  :after org)
+#+end_src
+
+# Local Variables:
+# org-confirm-babel-evaluate: nil
+# End:

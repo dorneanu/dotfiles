@@ -1319,6 +1319,30 @@ minibuffer, both separated by a single space."
   ("q" nil :exit t))
 #+end_src
 
+** empv
+Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
+position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
+
+#+begin_src emacs-lisp
+(use-package empv
+  :straight t
+  :after (embark browse-url)
+  :config
+
+  (setq empv-invidious-instance "https://yewtu.be/")
+  (add-to-list 'empv-mpv-args "--ytdl-format=best")
+
+  (defun dorneanu/empv-play-url (url &optional _)
+    (interactive)
+    (empv-toggle-video)
+    (empv-play url)))
+
+;; Handle youtube links using mpv
+(with-eval-after-load 'browse-url
+  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
+
+#+end_src
+
 ** COMMENT Nov
 Nov is a major-mode for reading EPUB files within Emacs. Since I have
 it, I don’t need any other Epub reader on my computer! Plus this one

@@ -3,6 +3,7 @@
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :tangle ~/.config/emacs/lisp/keybindings.el
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
+#+property: header-args :eval yes
 
 * Keybindings
 Undefining some stuff to make keybind prefixes work correctly.
@@ -190,6 +191,7 @@ My keybinds for file manipulation are prefixed by ~f~.
 | F   | quick-find-files  |             |
 | h   | hexl-find-file    |             |
 | r   | counsel-recentf   |             |
+| R   | rename-file       |             |
 | s   | save-buffer       |             |
 
 I also have some keybinds dedicated to opening specific files.
@@ -383,6 +385,7 @@ My toggle keybinds are prefixed by ~t~.
 | de  | toggle-debug-on-error                 |              |
 | dq  | toggle-debug-on-quit                  |              |
 | f   | focus-mode                            | focus-mode   |
+| h   | highlight-indent-guides-mode          |              |
 | i   |                                       | input method |
 | it  | toggle-input-method                   |              |
 | is  | set-input-method                      |              |
@@ -429,3 +432,7 @@ Why would I ever use any of these keybinds? They are prefixed with ~q~.
 | f   | delete-frame               |             |
 | q   | save-buffers-kill-terminal |             |
 | Q   | kill-emacs                 |             |
+* Local variables
+# Local Variables:
+# org-confirm-babel-evaluate: nil
+# End:
