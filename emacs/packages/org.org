@@ -977,6 +977,7 @@ prefixed with a comma ~,~ in normal mode.
 | ci        | org-clock-in        |             |
 | co        | org-clock-out       |             |
 | cr        | org-clock-report    |             |
+| cn        | org-clock-goto      |             |
 | C         | org-columns         |             |
 | e         | org-export-dispatch |             |
 | l         | org-store-link      |             |

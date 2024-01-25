@@ -93,14 +93,7 @@ compatibility package that adds states for iedit.
    "q" #'evil-iedit-state/quit-iedit-mode))
 #+end_src
 
-** Smartparens
-#+begin_src emacs-lisp
-(use-package smartparens
-  :straight (:build t)
-  :defer t)
-#+end_src
-
-** Parinfer
+** COMMENT Parinfer
 Don’t let the name of the package fool you! ~parinfer-rust-mode~ is not
 a ~parinfer~ mode for ~rust-mode~, but a mode for ~parinfer-rust~. ~parinfer~
 was a project for handling parenthesis and other double markers in a
@@ -143,7 +136,43 @@ so on.
                          :type git
                          :host github
                          :repo "Fuco1/smartparens")
-  :hook (prog-mode . smartparens-mode))
+  :bind
+  ;; Not sure about the bindings here.
+  (:map smartparens-mode-map
+        ("C-M-f" . sp-forward-sexp)
+        ("C-M-b" . sp-backward-sexp)
+        ("C-M-a" . sp-backward-down-sexp)
+        ("C-M-e" . sp-up-sexp)
+        ("C-M-w" . sp-copy-sexp)
+        ("C-M-k" . sp-change-enclosing)
+        ("M-k" . sp-kill-sexp)
+        ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
+        ("C-S-<backspace>" . sp-splice-sexp-killing-around)
+        ("C-]" . sp-select-next-thing-exchange))
+  :hook
+  (prog-mode . smartparens-mode)
+  (org-mode . smartparens-mode))
+
+;; Some customizations for ORG mode
+(with-eval-after-load 'smartparens
+  (sp-local-pair 'org-mode "=" "=")
+  (sp-local-pair 'org-mode "'" "'" :actions '(rem))
+  (sp-local-pair 'org-mode "\"" "\"" :actions '(rem)))
+
+;; Wrap regions/words
+;; Create keybindings to wrap symbol/region in pairs
+;; From https://github.com/dakra/dmacs/blob/nil/init.org
+(defun prelude-wrap-with (s)
+  "Create a wrapper function for smartparens using S."
+  `(lambda (&optional arg)
+     (interactive "P")
+     (sp-wrap-with-pair ,s)))
+(define-key prog-mode-map (kbd "M-(") (prelude-wrap-with "("))
+(define-key prog-mode-map (kbd "M-[") (prelude-wrap-with "["))
+(define-key prog-mode-map (kbd "M-{") (prelude-wrap-with "{"))
+(define-key prog-mode-map (kbd "M-\"") (prelude-wrap-with "\""))
+(define-key prog-mode-map (kbd "M-'") (prelude-wrap-with "'"))
+(define-key prog-mode-map (kbd "M-`") (prelude-wrap-with "`"))
 #+end_src
 
 ** ~string-edit~
@@ -183,19 +212,25 @@ I love /olivetti/ mode
   (olivetti-body-width 0.8))
 #+end_src
 
-** vundo
+** undo
 #+begin_src emacs-lisp
+(use-package undo-fu-session
+  :straight t
+  :hook (after-init . undo-fu-session-global-mode)
+  :config
+  (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'")))
+
 (use-package vundo
   :straight t
   :config
-  ;; Better contrasting highlight.
+    ;; Better contrasting highlight.
   (custom-set-faces
    '(vundo-node ((t (:foreground "#808080"))))
    '(vundo-stem ((t (:foreground "#808080"))))
-   '(vundo-highlight ((t (:foreground "#FFFF00"))))))
-#+end_src
-** undo-hl
-#+begin_src emacs-lisp
+   '(vundo-highlight ((t (:foreground "#FFFF00")))))
+  (setq vundo-compact-display t)
+  (setq vundo-glyph-alist vundo-unicode-symbols))
+
 (use-package undo-hl
   :straight (undo-hl :build t
                            :type git
@@ -206,7 +241,7 @@ I love /olivetti/ mode
   :custom-face
   (undo-hl-insert ((t (:background "#FFFF00"))))
   (undo-hl-delete ((t (:background "#FFFF00")))))
-#+end_src
+#+END_SRC
 
 ** expand-region
 Use expand-region
@@ -240,3 +275,21 @@ Use expand-region
    ("p" . er/mark-paragraph)
    ("P" . er/mark-text-paragraph)))
 #+end_src
+
+** hippie-exp: Expand by fuzzy matching text in open buffers
+#+BEGIN_SRC emacs-lisp
+(use-package hippie-exp
+  :ensure nil
+  :bind (("M-/" . hippie-expand))
+  :config
+  (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                           try-expand-dabbrev-all-buffers
+                                           try-expand-dabbrev-from-kill
+                                           try-complete-file-name-partially
+                                           try-complete-file-name
+                                           try-expand-all-abbrevs
+                                           try-expand-list
+                                           try-expand-line
+                                           try-complete-lisp-symbol-partially
+                                           try-complete-lisp-symbol)))
+#+END_SRC

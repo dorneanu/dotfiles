@@ -155,3 +155,11 @@ APPEND and COMPARE-FN, see `add-to-list'."
   (interactive)
   (load-file "~/.config/emacs/init.el"))
 #+end_src
+** Visual
+Change default font size
+#+begin_src emacs-lisp
+(defun dorneanu/set-font-size (size)
+  "Set the font size to SIZE, specified in tenths of a point."
+  (interactive "nEnter the font size: ")
+  (set-face-attribute 'default nil :height size))
+#+end_src

@@ -147,6 +147,7 @@ My buffer-related keybinds are all prefixed by ~b~.
 | c   | clone-indirect-buffer              |             |
 | C   | clone-indirect-buffer-other-window |             |
 | l   | bufler                             |             |
+| i   | ibuffer                            |             |
 | d   | kill-this-buffer                   |             |
 | D   | kill-buffer                        |             |
 | h   | dashboard-refresh-buffer           |             |
