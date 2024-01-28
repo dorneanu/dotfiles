@@ -25,9 +25,77 @@ loaded, speeding Emacs up a bit.
 (set-fringe-mode 10)               ; give some breathing room
 (menu-bar-mode -1)                 ; disable menubar
 (blink-cursor-mode 0)              ; disable blinking cursor
-(setq gc-cons-threshold (* 1024 1024 1024))
+;; (setq gc-cons-threshold (* 1024 1024 1024))
+#+end_src
+*** Unset =file-name-handler-alist=
+Every file opened and loaded by Emacs will run through this list to check for a proper handler for the file, but during startup, it won’t need any of them.
+
+#+begin_src emacs-lisp
+(defvar file-name-handler-alist-original file-name-handler-alist)
+(setq file-name-handler-alist nil)
+#+end_src
+*** Disable =site-run-file=
+#+begin_src emacs-lisp
+(setq site-run-file nil)
+#+end_src
+*** Defer garbage collection
+Defer garbage collection further back in the startup process, according to [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][hlissner]].
+
+#+BEGIN_QUOTE
+The GC eats up quite a bit of time, easily doubling startup time. The trick is to turn up the memory threshold as early as possible.
+#+END_QUOTE
+
+#+begin_src emacs-lisp
+(setq gc-cons-threshold 100000000)
 #+end_src
 
+** Garbage Collection
+*** Set =gc-cons-threshold= Smaller for Interactive Use
+A large =gc-cons-threshold= may cause freezing and stuttering during long-term interactive use.
+If you experience freezing, decrease this amount, if you experience stuttering, increase this amount.
+
+#+begin_src emacs-lisp
+(defvar better-gc-cons-threshold 134217728 ; 128mb
+  "The default value to use for `gc-cons-threshold'.
+
+If you experience freezing, decrease this.  If you experience stuttering, increase this.")
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold better-gc-cons-threshold)
+            (setq file-name-handler-alist file-name-handler-alist-original)
+            (makunbound 'file-name-handler-alist-original)))
+#+end_src
+
+Garbage Collect when Emacs is out of focus and avoid garbage collection when using minibuffer.
+
+#+begin_src emacs-lisp
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (if (boundp 'after-focus-change-function)
+                (add-function :after after-focus-change-function
+                              (lambda ()
+                                (unless (frame-focus-state)
+                                  (garbage-collect))))
+              (add-hook 'after-focus-change-function 'garbage-collect))
+            (defun gc-minibuffer-setup-hook ()
+              (setq gc-cons-threshold (* better-gc-cons-threshold 2)))
+
+            (defun gc-minibuffer-exit-hook ()
+              (garbage-collect)
+              (setq gc-cons-threshold better-gc-cons-threshold))
+
+            (add-hook 'minibuffer-setup-hook #'gc-minibuffer-setup-hook)
+            (add-hook 'minibuffer-exit-hook #'gc-minibuffer-exit-hook)))
+#+end_src
+
+** Personal Information
+#+begin_src emacs-lisp
+(setq user-full-name       "Victor Dorneanu"
+      user-real-login-name "Victor Dorneanu"
+      user-login-name      "dorneanu"
+      user-mail-address    "victor __at__ dornea <<-.--> nu")
+#+end_src
 ** Emacs Behavior
 *** Editing Text in Emacs
 I *never* want to keep trailing spaces in my files, which is why I’m
@@ -48,14 +116,6 @@ Emacs usually considers a word can be understood as several words, as
 in camelCase words, and allows us to jump words on this finer level.
 #+begin_src emacs-lisp
 (global-subword-mode 1)
-#+end_src
-
-Changing half my screen each time my cursor goes too high or too low
-is not exactly ideal. Fortunately, if we set ~scroll-conservatively~
-high enough we can have the cursor stay on top or at the bottom of the
-screen while the text scrolls progressively.
-#+begin_src emacs-lisp
-(setq scroll-conservatively 1000)
 #+end_src
 
 Lastly, I want the default mode for Emacs to be Emacs Lisp.
@@ -216,19 +276,6 @@ files by default.
 #+begin_src emacs-lisp
 (setq window-combination-resize t) ; take new window space from all other windows
 #+end_src
-
-** Personal Information
-Emacs needs to know its master! For various reasons by the way, some
-packages rely on these variables to know who it is talking to or
-dealing with, such as ~mu4e~ which will guess who you are if you haven’t
-set it up correctly.
-#+begin_src emacs-lisp
-(setq user-full-name       "Lucien Cartier-Tilet"
-      user-real-login-name "Lucien Cartier-Tilet"
-      user-login-name      "phundrak"
-      user-mail-address    "lucien@phundrak.com")
-#+end_src
-
 ** Visual Configuration
 The first visual setting in this section will activate the visible
 bell. What it does is I get a visual feedback each time I do something
@@ -311,51 +358,55 @@ modifications to the modeline each time we open a new file.
 (add-hook 'after-change-major-mode-hook #'modeline-contitional-buffer-encoding)
 #+end_src
 
+*** utf-8 coding system
+#+begin_src emacs-lisp
+(set-selection-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+(set-language-environment "UTF-8")
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(setq locale-coding-system 'utf-8)
+
+;; Treat clipboard input as UTF-8 string first; compound text next, etc.
+(when (display-graphic-p)
+  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
+#+end_src
 *** Fonts
 
 #+begin_src emacs-lisp
-;; (defvar phundrak/default-font-size 14
-;;   "Default font size.")
-
-;; (defvar phundrak/default-font-name "DejaVu Sans Mono"
-;;   "Default font.")
-
-;; (defun my/set-font ()
-;;   (when (find-font (font-spec :name phundrak/default-font-name))
-;;     (set-face-attribute 'default nil
-;;                         :font phundrak/default-font-name
-;;                         :height phundrak/default-font-size)))
-
-
 (set-face-attribute 'default nil :font "Iosevka-11")
 (set-face-attribute 'fixed-pitch nil :font "Iosevka" :height 1.0)
 (set-face-attribute 'variable-pitch nil :font "Iosevka")
 
 ;; Set for unicode fonts
 (set-fontset-font "fontset-default" nil (font-spec :family "Noto Color Emoji"))
-
-;; Set for org-table
-;; (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-;; (set-face-attribute 'org-code nil :inherit 'fixed-pitch)
-;; (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
-
-;; (use-package mixed-pitch
-;;   :hook ((org-mode      . mixed-pitch-mode)
-;;          (org-roam-mode . mixed-pitch-mode)
-;;          (LaTeX-mode    . mixed-pitch-mode))
-;;  :config
-;;  (setq mixed-pitch-set-height nil)
- ;; )
-
-
-;; (my/set-font)
-;; (add-hook 'server-after-make-frame-hook #'my/set-font)
-
-;; Resources
-;; https://xiangji.me/2015/07/13/a-few-of-my-org-mode-customizations/
-;; For tables
 #+end_src
+**** Change font
+From https://github.com/MatthewZMD/.emacs.d/blob/master/elisp/init-fonts.el
 
+#+begin_src emacs-lisp
+(defvar font-list '(("Source Code Pro" . 11) ("DejaVu Sans" . 12) ("DejaVu Sans Mono" . 12) ("Iosevka" . 12))
+  "List of fonts and sizes.")
+
+(defun dorneanu/change-font ()
+  "Interactively change a font from a list a available fonts."
+  (interactive)
+  (let* (available-fonts font-name font-size font-setting)
+    (dolist (font font-list (setq available-fonts (nreverse available-fonts)))
+      (when (member (car font) (font-family-list))
+        (push font available-fonts)))
+    (if (not available-fonts)
+        (message "No fonts from the chosen set are available")
+      (if (called-interactively-p 'interactive)
+          (let* ((chosen (assoc-string (completing-read "What font to use? " available-fonts nil t) available-fonts)))
+            (setq font-name (car chosen) font-size (read-number "Font size: " (cdr chosen))))
+        (setq font-name (caar available-fonts) font-size (cdar available-fonts)))
+      (setq font-setting (format "%s-%d" font-name font-size))
+      (set-frame-font font-setting nil t)
+      (add-to-list 'default-frame-alist (cons 'font font-setting)))))
+
+#+end_src
 *** Frame Title
 This is straight-up copied from [[https://tecosaur.github.io/emacs-config/config.html#window-title][TEC]]’s configuration. See their comment
 on the matter.
@@ -389,6 +440,45 @@ I still use the mouse for scrolling, changing frame sizes:
 (global-set-key (kbd "S-<wheel-down>") 'shrink-window)
 (global-set-key (kbd "C-S-<mouse-5>") 'shrink-window-horizontally)
 (global-set-key (kbd "S-<mouse-5>") 'shrink-window)
+#+end_src
+
+*** scrolling
+#+begin_src emacs-lisp
+(setq scroll-step 1)
+(setq scroll-margin 1)
+(setq scroll-conservatively 101)
+(setq scroll-up-aggressively 0.01)
+(setq scroll-down-aggressively 0.01)
+(setq auto-window-vscroll nil)
+(setq fast-but-imprecise-scrolling nil)
+(setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
+(setq mouse-wheel-progressive-speed nil)
+
+;; Horizontal Scroll
+(setq hscroll-step 1)
+(setq hscroll-margin 1)
+#+end_src
+** Global functionalities
+*** crux
+#+begin_src emacs-lisp
+(use-package crux
+  :straight t
+  :bind
+  (("C-a" . crux-move-beginning-of-line)
+   ("C-x 4 t" . crux-transpose-windows)
+   ("C-x K" . crux-kill-other-buffers)
+   ("C-k" . crux-smart-kill-line))
+  :config
+  (crux-with-region-or-buffer indent-region)
+  (crux-with-region-or-buffer untabify)
+  (crux-with-region-or-point-to-eol kill-ring-save)
+  (defalias 'rename-file-and-buffer #'crux-rename-file-and-buffer))
+
+#+end_src
+*** discover-my-major
+#+begin_src emacs-lisp
+(use-package discover-my-major
+  :bind ("C-h C-m" . discover-my-major))
 #+end_src
 
 ** A better custom variable setter

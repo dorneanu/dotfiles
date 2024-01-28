@@ -84,6 +84,7 @@ extended however we like!
         org-src-tab-acts-natively          t
         org-src-preserve-indentation       t
         org-adapt-indentation              nil
+
         org-log-done                       'time
 
         org-directory                      "~/work/repos/org/"
@@ -119,6 +120,11 @@ extended however we like!
           ("CANCELED" . +org-archived)
           ("PROJ" . +org-todo-project)
           ("DONE"   . +org-todo-cancel)))
+
+    ;; No blank lines before new entries
+    (setq org-blank-before-new-entry
+          '((heading . nil)
+            (plain-list-item . nil)))
 
   <<org-agenda-files>>
   <<org-behavior-electric>>

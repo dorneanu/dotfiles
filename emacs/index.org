@@ -80,12 +80,12 @@ block.
 ** Loading All Configuration Modules
 
 #+name: emacs-modules
-| Module Name                | Config Page                      |
-|----------------------------+----------------------------------|
-| =basic-config.el=          | [[file:./basic-config.org][Basic Configuration]]              |
-| =custom-elisp.el=          | [[file:./custom-elisp.org][Custom Elisp]]                     |
-| =package-manager.el=       | [[file:./package-manager.org][Package Manager]]                  |
-| =keybinding-managemers.el= | [[file:./keybinding-managemers.org][Keybinding Managers]]              |
+| Module Name              | Config Page                       |
+|--------------------------+-----------------------------------|
+| =basic-config.el=          | [[file:./basic-config.org][Basic Configuration]]               |
+| =custom-elisp.el=          | [[file:./custom-elisp.org][Custom Elisp]]                      |
+| =package-manager.el=       | [[file:./package-manager.org][Package Manager]]                   |
+| =keybinding-managemers.el= | [[file:./keybinding-managemers.org][Keybinding Managers]]               |
 | =applications.el=          | [[file:./packages/applications.org][Packages — Applications]]          |
 | =autocompletion.el=        | [[file:./packages/autocompletion.org][Packages — Autocompletion]]        |
 | =editing.el=               | [[file:./packages/editing.org][Packages — Editing]]               |
@@ -96,7 +96,7 @@ block.
 | =org.el=                   | [[file:./packages/org.org][Packages — Org Mode]]              |
 | =programming.el=           | [[file:./packages/programming.org][Packages — Programming]]           |
 | =visual-config.el=         | [[file:./packages/visual-config.org][Packages — Visual Configuration]]  |
-| =keybindings.el=           | [[file:./keybindings.org][Keybindings]]                      |
+| =keybindings.el=           | [[file:./keybindings.org][Keybindings]]                       |
 
 #+name: generate-modules
 #+begin_src emacs-lisp :tangle no :cache yes :var modules=emacs-modules :exports none
@@ -114,11 +114,3 @@ block.
   (load (expand-file-name module
                           (expand-file-name "lisp" user-emacs-directory))))
 #+end_src
-
-* TODOs                                                            :noexport:
-** TODO advise ~evil-insert~ in eshell
-Advise ~evil-insert~ to go to the end of the buffer while in
-~eshell-mode~.
-
-** DONE Get started with org-roam
-CLOSED: [2023-06-17 Sat 13:38]

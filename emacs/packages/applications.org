@@ -408,22 +408,22 @@ will directly launch the function.
 Same thing, different mode, here are my keybinds for
 ~elfeed-search-mode~.
 #+name: elfeed-keybinds-search-mode
-| Key | Function                            | Comment |
-|-----+-------------------------------------+---------|
-| «   | elfeed-search-first-entry           |         |
-| »   | elfeed-search-last-entry            |         |
-| b   | elfeed-search-browse-url            |         |
-| f   |                                     | filter  |
-| fc  | elfeed-search-clear-filter          |         |
-| fl  | elfeed-search-live-filter           |         |
-| fs  | elfeed-search-set-filter            |         |
-| u   |                                     | update  |
-| us  | elfeed-search-fetch                 |         |
-| uS  | elfeed-search-update                |         |
-| uu  | elfeed-update                       |         |
-| uU  | elfeed-search-update--force         |         |
-| y   | elfeed-search-yank                  |         |
-| x   | elfeed-search-untag-all-unread      |         |
+| Key | Function                       | Comment |
+|-----+--------------------------------+---------|
+| «   | elfeed-search-first-entry      |         |
+| »   | elfeed-search-last-entry       |         |
+| b   | elfeed-search-browse-url       |         |
+| f   |                                | filter  |
+| fc  | elfeed-search-clear-filter     |         |
+| fl  | elfeed-search-live-filter      |         |
+| fs  | elfeed-search-set-filter       |         |
+| u   |                                | update  |
+| us  | elfeed-search-fetch            |         |
+| uS  | elfeed-search-update           |         |
+| uu  | elfeed-update                  |         |
+| uU  | elfeed-search-update--force    |         |
+| y   | elfeed-search-yank             |         |
+| x   | elfeed-search-untag-all-unread |         |
 
 I have some additional keybinds for ~elfeed-search-mode~, but these one
 are prefixed with ~,~ (and ~M-m~).
