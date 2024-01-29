@@ -377,20 +377,22 @@ The prefix here is ~T~.
 ** Toggles
 My toggle keybinds are prefixed by ~t~.
 #+name: keybinds-toggle
-| Key | Function                              | Description  |
-|-----+---------------------------------------+--------------|
-|     |                                       | toggles      |
-| TAB | tab-bar-mode                          |              |
-| t   | my/modify-frame-alpha-background/body |              |
-| T   | consult-theme                         |              |
-| d   |                                       | debug        |
-| de  | toggle-debug-on-error                 |              |
-| dq  | toggle-debug-on-quit                  |              |
-| f   | focus-mode                            | focus-mode   |
-| h   | highlight-indent-guides-mode          |              |
-| i   |                                       | input method |
-| it  | toggle-input-method                   |              |
-| is  | set-input-method                      |              |
+| Key | Function                              | Description   |
+|-----+---------------------------------------+---------------|
+|     |                                       | toggles       |
+| TAB | tab-bar-mode                          |               |
+| t   | my/modify-frame-alpha-background/body |               |
+| T   | consult-theme                         |               |
+| d   |                                       | debug         |
+| de  | toggle-debug-on-error                 |               |
+| dq  | toggle-debug-on-quit                  |               |
+| f   | focus-mode                            | focus-mode    |
+| h   | highlight-indent-guides-mode          |               |
+| i   |                                       | input method  |
+| it  | toggle-input-method                   |               |
+| is  | set-input-method                      |               |
+| o   | olivetti-mode                         | olivetti mode |
+| v   | visual-fill-column-mode               |               |
 
 ** Windows
 A couple of keybinds are hidden from which-key, otherwise there’s not
@@ -434,6 +436,7 @@ Why would I ever use any of these keybinds? They are prefixed with ~q~.
 |-----+----------------------------+-------------|
 |     |                            | quit        |
 | f   | delete-frame               |             |
+| r   | restart-emacs              |             |
 | q   | save-buffers-kill-terminal |             |
 | Q   | kill-emacs                 |             |
 * Local variables

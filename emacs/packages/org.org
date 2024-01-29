@@ -684,8 +684,8 @@ The capture templates are set like so:
         <<org-capture-shortcuts-gen()>>))
 #+end_src
 
-** Custom functions
-*** Emphasize text
+*** Custom functions
+**** Emphasize text
 Sometimes, I want to emphasize some text in my org-mode documents.
 It’s very possible to just go to the beginning of the chosen text, add
 the marker, then go to the end of the text than needs emphasis and add
@@ -754,7 +754,7 @@ selected text is quite easy.
 
 You can find the keybinds for these functions [[file:./org#keybindings][here]].
 
-*** ~phundrak/toggle-org-src-window-split~
+**** ~phundrak/toggle-org-src-window-split~
 #+begin_src emacs-lisp
 (defun phundrak/toggle-org-src-window-split ()
   "This function allows the user to toggle the behavior of

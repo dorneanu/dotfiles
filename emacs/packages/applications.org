@@ -173,6 +173,16 @@ docker-compose from Emacs.
   :defer t
   :straight (:build t))
 #+end_src
+** Debugging
+*** COMMENT esup
+Debug emacs init startup time
+Run ~M-x esup~ to see where the time is spend during emacs startup.
+
+#+BEGIN_SRC emacs-lisp
+(use-package esup
+  :straight t
+  :defer t)
+#+END_SRC
 
 ** rg.el
 #+begin_src emacs-lisp
