@@ -127,7 +127,25 @@ bépo layout, many keybindings available by default or through
          ("C-c a s" . chatgpt-shell)
          ("C-c a r" . chatgpt-shell-proofread-region))
   :config
-  (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt")))
+  (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt"))
+  :custom
+  ;; From https://github.com/jwiegley/dot-emacs/blob/master/init.org
+  ;; I might need to change these
+  (chatgpt-shell-system-prompts
+   '(("English" .
+      "I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in English. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level English words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("Spanish" .
+      "I want you to act as an Latin-American Spanish translator, spelling corrector and improver. I will speak to you in English, and you will translate it and answer in the corrected and improved version of my text, in Latin-American Spanish. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level Latin-American  Spanish words and sentences. Keep the meaning same, but make them more literary and clear. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("Persian" .
+      "I want you to act as an Farsi translator, spelling corrector and improver. I will speak to you in English, and you will translate it and answer in the corrected and improved version of my text, in Farsi. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level Farsi words and sentences. Keep the meaning same, but make them more literary and clear. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("General" .
+      "You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels.")
+     ("Programming" .
+      "The user is a programmer with very limited time. You treat their time as precious. You do not repeat obvious things, including their query. You are as concise as possible in responses. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
+     ("Positive Programming" .
+      "Your goal is to help the user become an amazing computer programmer. You are positive and encouraging. You love see them learn. You do not repeat obvious things, including their query. You are as concise in responses. You always guide the user go one level deeper and help them see patterns. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
+     ("Travel Guide" .
+      "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location."))))
 #+end_src
 
 ** COMMENT Docker
@@ -192,7 +210,7 @@ Configure custom searches
   :confirm prefix)
 #+end_src
 
-** Elfeed
+** elfeed
 
 Elfeed is a nice Atom and RSS reader for Emacs. The only thing I want
 to change for now is the default search filter: I want to see not only
@@ -288,7 +306,7 @@ A future improvement to be made is to let the user chose the
 resolution of the video before it is launched. I may not always have
 the best internet connection, and viewing 4K videos on a 1080p display
 is not something very useful.
-
+*** elfeed-goodies
 Elfeed-goodies is a package which enhances the Elfeed experience.
 Aside from running its setup command as soon as possible, I also set
 in this code block all my keybinds for Elfeed here.
@@ -325,6 +343,7 @@ in this code block all my keybinds for Elfeed here.
     <<general-keybindings-gen(table=elfeed-keybinds-search-mode-prefixed)>>))
 #+end_src
 
+*** elfeed-org
 Last but not least, my Elfeed configuration is stored in an org file
 thanks to ~elfeed-org~.
 #+begin_src emacs-lisp
@@ -384,7 +403,7 @@ Use hnread to show HN threads for a URL at point
   (hnreader-comment (format "%s" (url-get-url-at-point))))
 #+end_src
 
-*** Keybinds
+*** Keybindings
 First, here are the keybinds for Elfeed’s ~elfeed-show-mode~. They
 aren’t prefixed by ~SPC~ like most of my keybinds, a direct keypress
 will directly launch the function.
@@ -424,6 +443,7 @@ Same thing, different mode, here are my keybinds for
 | uU  | elfeed-search-update--force    |         |
 | y   | elfeed-search-yank             |         |
 | x   | elfeed-search-untag-all-unread |         |
+| TAB | elfeed-search-show-entry       |         |
 
 I have some additional keybinds for ~elfeed-search-mode~, but these one
 are prefixed with ~,~ (and ~M-m~).
@@ -667,31 +687,6 @@ Terminal=false
 Categories=Network;Email;TextEditor
 StartupWMClass=Gnus
 Keywords=Text;Editor;
-#+end_src
-
-**** Interact with iCalendar events
-Something that has always bugged me was how to properly with iCalendar
-events shared with me on my personal mailbox. The answer is actually
-[[https://www.djcbsoftware.nl/code/mu/mu4e/iCalendar.html][dead simple]].
-#+name: mu4e-ical-setup
-#+begin_src emacs-lisp
-;; (require 'mu4e-icalendar)
-;; (mu4e-icalendar-setup)
-#+end_src
-
-I’ll just configure a couple of things regarding these events, namely
-converting them to org-mode and add them to my =~/org/notes.org= file,
-and delete the email once I answered to the event.
-#+name: mu4e-ical-config
-#+begin_src emacs-lisp
-;; (setq mu4e-icalendar-trash-after-reply t)
-#+end_src
-
-#+name: mu4e-ical-init-config
-#+begin_src emacs-lisp
-;; (setq gnus-icalendar-org-capture-file "~/org/notes.org"
-;;       gnus-icalendar-org-capture-headline '("Calendar"))
-;; (gnus-icalendar-org-setup)
 #+end_src
 
 **** Basic configuration
@@ -1241,186 +1236,318 @@ notification system, and I’ll activate the modeline notification.
   :config
   (setq mu4e-alert-interesting-mail-query "flag:unread"))
 #+end_src
-
-** COMMENT EMMS and Media
-EMMS, also known as the /Emacs MultiMedia System/, allows the user to
-interact through Emacs with multimedia elements such as music and
-videos. My main use for it will be for music with MPD (see its
-configuration [[file:mpd.org][here]]).
+** Email
+*** mu4e
+**** General config
 #+begin_src emacs-lisp
-(use-package emms
-  :defer t
-  :after all-the-icons
-  :straight (:build t)
+;; Make sure we find the mu4e package
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+(use-package mu4e
+  :ensure nil
+  :commands (mu4e)
+  :bind (("C-c a m" . mu4e)
+         :map mu4e-main-mode-map
+         ("U" . mu4e-update-mail-and-index-background)
+         :map mu4e-headers-mode-map
+         ("TAB" . mu4e-headers-next-unread)
+         ("j" . mu4e-view-headers-next)
+         ("k" . mu4e-view-headers-prev)
+         ("J" . mu4e-search-maildir)
+         ;; ("j" . mu4e-move-to-junk)
+         ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+         :map mu4e-view-mode-map
+         ("A" . mu4e-view-attachment-action)
+         ("M-o" . ace-link-mu4e)
+         ("o" . ace-link-mu4e)
+         ("n" . mu4e-scroll-up)
+         ("p" . mu4e-scroll-down)
+         ("J" . mu4e-view-headers-next)
+         ("K" . mu4e-view-headers-prev)
+         ;; ("j" . mu4e-move-to-junk)
+         )
   :init
-  (require 'emms-setup)
-  (require 'emms-mark)
-  (emms-all)
-  (add-to-list 'emms-info-functions 'emms-info-mpd)
-  (add-to-list 'emms-player-list    'emms-player-mpd)
-  (emms-player-mpd-sync-from-mpd)
-  (emms-player-mpd-connect)
+  ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+  ;; (defun mu4e--main-action-str (name func)
+  ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
+  ;;   "mu4e-main-action")
+  ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
 
-  <<emms-fd-name>>
-  <<emms-fd-function>>
-  <<emms-search-set-variable>>
+  ;; Prefer text over html/ritchtext
+  (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
 
-  <<emms-media-hydra>>
-  (defun emms-player-toggle-pause ()
-    (interactive)
-    (shell-command-and-echo "mpc toggle"))
-  :custom
-  ((emms-source-file-default-directory (expand-file-name "~/Music"))
-   (emms-player-mpd-server-name "localhost")
-   (emms-player-mpd-server-port "6600")
-   (emms-player-mpd-music-directory (expand-file-name "~/Music"))
-   (emms-browser-thumbnail-small-size 64)
-   (emms-browser-thumbnail-medium-size 128)
-   (emms-browser-covers #'emms-browser-cache-thumbnail-async)
-   (emms-playlist-default-major-mode 'emms-mark-mode))
-  :general
-  (phundrak/undefine
-    :keymaps 'emms-browser-mode-map
-    :packages 'emms
-    "s"   nil
-    "r"   nil)
-  (phundrak/evil
-    :keymaps 'emms-browser-mode-map
-    :packages 'emms
-    "a"  #'emms-browser-add-tracks
-    "A"  #'emms-browser-add-tracks-and-play
-    "b"  '(:ignore t :which-key "browse by")
-    "bA" #'emms-browse-by-album
-    "ba" #'emms-browse-by-artist
-    "bg" #'emms-browse-by-genre
-    "bs" #'emms-smart-browse
-    "by" #'emms-browse-by-year
-    "c"  #'emms-browser-clear-playlist
-    "S"  '(:ignore t :which-key "search")
-    "SA" '(emms-browser-search-by-album  :which-key "by album")
-    "Sa" '(emms-browser-search-by-artist :which-key "by artist")
-    "Ss" '(emms-browser-search-by-names  :which-key "by name")
-    "St" '(emms-browser-search-by-names  :which-key "by title")
-    "q"  #'kill-this-buffer)
-  (phundrak/evil
-    :keymaps 'emms-playlist-mode-map
-    :packages 'emms
-    "d" #'emms-playlist-mode-kill-track
-    "p" #'emms-playlist-mode-play-smart
-    "q" #'kill-this-buffer)
-  (phundrak/leader-key
-    :infix "m"
-    :packages 'emms
-    ""   '(:ignore t :which-key "media")
-    "."  #'hydra-media/body
-    "«"  #'emms-player-mpd-previous
-    "»"  #'emms-player-mpd-next
-    "c"  #'emms-player-mpd-clear
-    "e"  '(:ignore t :which-key "emms")
-    "eb" #'emms-browser
-    "ep" #'emms-playlist-mode-go
-    "es" #'emms-player-mpd-show
-    "p"  '((lambda ()
-             (interactive)
-             (shell-command-and-echo "mpc toggle"))
-           :which-key "mpc toggle")
-    "s"  #'emms-stop
-    "u"  '(:ignore t :which-key "update")
-    "um" #'emms-player-mpd-update-all
-    "uc" #'emms-cache-set-from-mpd-all))
+  ;; Use completing-read (which is ivy) instead of ido
+  (setq mu4e-completing-read-function 'completing-read)
+
+  ;; set mu4e as default mail client
+  (setq mail-user-agent 'mu4e-user-agent)
+
+  :config
+
+  ;; Set mu binary
+  (setq mu4e-mu-binary "/usr/bin/mu")
+
+  ;; Choose which fields to show
+  (setq mu4e-headers-fields
+        '(
+          (:maildir    . 13)
+          (:human-date . 12)
+          (:flags      . 6)
+          (:from       . 22)
+          (:subject    . nil)))
+
+  ;; Refresh mail using isync every 10 minutes
+  (setq mu4e-update-interval (* 10 60))
+
+  ;; Command used to retrieve new mails
+  (setq mu4e-get-mail-command "mbsync -a")
+
+  ;; Defaults
+  (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
+  (setq-default mu4e-drafts-folder "/private/Drafts")
+  (setq-default mu4e-sent-folder   "/private/Sent")
+  (setq-default mu4e-trash-folder  "/private/Trash")
+
+  ;; Set citation settings
+  (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+  ;; Fancy stuff
+  <<mu4e-fancy-marks>>
+
+  ;; And change default threading characters to some "nicer" looking chars
+  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+  ;; Also change to some nicer characters for marks
+  ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
+  (setq mu4e-headers-passed-mark  '("P" . "›"))
+  (setq mu4e-headers-replied-mark '("R" . "‹"))
+  (setq mu4e-headers-seen-mark   '("S" . ""))
+  ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
+  (setq mu4e-headers-personal-mark '("p" . ""))
+  ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
+
+
+  ;; Set date format (header view)
+  (setq mu4e-headers-date-format "%F")
+
+  ;; How should html context be converted
+  ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+  (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
+
+  ;; Improve rendering of rich-text messages (html)
+  (setq shr-color-visible-luminance-min 80)
+
+  ;; Show email address as well and not only the name
+  (setq-default mu4e-view-show-addresses t)
+
+  ;; Don't reply to self
+  (setq mu4e-compose-dont-reply-to-self t)
+
+  ;; Setup some handy shortcuts
+  ;; you can quickly switch to your Inbox -- press ``ji''
+  ;; then, when you want archive some messages, move them to
+  ;; the 'All Mail' folder by pressing ``ma''.
+
+  ;; View mail in browser with "a V"
+  (add-to-list 'mu4e-view-actions
+               '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+  (add-to-list 'mu4e-view-actions
+               '("fViewInChrome" . mu4e-action-view-in-chrome) t)
+  (add-to-list 'mu4e-view-actions
+               '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
+
+  (setq mu4e-maildir-shortcuts
+        '(
+          ("/variomedia/inbox"   . ?v)
+          ("/gmail/inbox"    . ?g)
+          ("/cashlink/inbox"   . ?c)
+          ("/private/Trash"   . ?t)
+          ("/private/Drafts"  . ?d)
+          ("/private/Junk"    . ?j)
+          ("/private/Archive" . ?a)))
+
+  ;; Set contexts
+  (dorneanu/set-mu4e-contexts)
+  )
+
+<<mu4e-view-mode>>
+
+#+end_src
+**** Bookmarks
+#+BEGIN_SRC emacs-lisp
+(setq mu4e-bookmarks
+      `(
+        ("maildir:/Sent" "Sent messages" ?s)
+        ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
+        ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
+        ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
+        ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
+        ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
+        ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
+        ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
+        ("from:jira@*" "Jira" ?j)
+        ;; (,(s-join " "
+        ;;           '("OR noreply@tagesspiegel.de"
+        ;;             "OR support@lagedernation.org"
+        ;;             "OR hello@blinkist.com"
+        ;;             "OR info@smarticular.net"
+        ;;             "OR newsletter@*"
+        ;;             "OR support@xeroshoes.com"))
+        ;;  "Newletter" ?n)
+        ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
+#+END_SRC
+
+**** Fancy stuff
+From https://github.com/Phundrak/dotfiles
+
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
+
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+(mapconcat (lambda (line)
+             (let ((mark (car line))
+                   (flag (cadr line))
+                   (icon (caddr line)))
+               (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
+                       mark
+                       flag
+                       icon)))
+           table
+           "\n")
 #+end_src
 
-*** Finding files from EMMS
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle no
-:END:
-EMMS has two default ways of finding files: either a built-in function
-relatively slow but portable, or with ~find~ which is arguably faster
-but less portable. Honestly, I don’t care about portability, I’ll
-always use this Emacs config on Linux, but I don’t want to use ~find~
-either since there is something even faster: ~fd~.
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
 
-First we’ll declare a variable that can hold the path to the ~fd~
-executable:
-#+name: emms-fd-name
-#+begin_src emacs-lisp
-(defvar emms-source-file-fd (executable-find "fd"))
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
+(setq mu4e-use-fancy-chars t
+      <<mu4e-fancy-marks-gen()>>)
 #+end_src
 
-Then, we need to declare a new function that will use ~fd~ to find
-files. The function, as specified by the documentation of
-~emms-source-file-directory-tree-function~, receives two arguments ~dir~
-and ~regex~. We can work with that!
-#+name: emms-fd-function
-#+begin_src emacs-lisp
-(defun emms-source-file-directory-tree-fd (dir regex)
-  "Return a list of all files under DIR that match REGEX.
-This function uses the external fd utility. The name for fd may
-be supplied using `emms-source-file-fd'."
-  (with-temp-buffer
-    (call-process emms-source-file-fd
-                  nil t nil
-                  "-L" ; follow symlinks
-                  regex
-                  "-t f"
-                  (expand-file-name dir))
-    (delete ""
-            (split-string (buffer-substring (point-min)
-                                          (point-max))
-                          "\n"))))
+**** View mode
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
+(add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
 #+end_src
 
-We can finally set this function as our search function.
-#+name: emms-search-set-variable
+**** Contexts
+Set contexts
 #+begin_src emacs-lisp
-(setq emms-source-file-directory-tree-function #'emms-source-file-directory-tree-fd)
+(defun dorneanu/set-mu4e-contexts ()
+  "Set mail contexts for mu4e"
+  (interactive)
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "gmail"
+             :enter-func (lambda () (mu4e-message "Entering gmail context"))
+             :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+             ;; we match based on the contact-fields of the message
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/personal/username"))
+                     (user-full-name    . "Cyneox")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Cyneox via Gmail")
+                     (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                     (mu4e-sent-folder  . "/[Gmail]/sent")
+                     (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                     (mu4e-trash-folder  . "/[Gmail]/bin")))
+           ,(make-mu4e-context
+             :name "variomedia"
+             :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+             :match-func
+            (lambda (msg)
+               (when msg
+                 (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Victor via Emacs")
+                     (mu4e-drafts-folder  . "/variomedia/drafts")
+                     (mu4e-sent-folder  . "/variomedia/sent")
+                     (mu4e-trash-folder  . "/variomedia/bin")))
+           ,(make-mu4e-context
+             :name "cashlink"
+             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-drafts-folder  . "/cashlink/drafts")
+                     (mu4e-sent-folder  . "/cashlink/sent")
+                     (mu4e-trash-folder  . "/cashlink/bin")
+                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                     ))))
+  )
+
 #+end_src
 
-*** Keybinds
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle no
-:END:
-I also want to create a small hydra for manipulating MPD:
-#+name: emms-media-hydra
+#+RESULTS:
+: dorneanu/set-mu4e-contexts
+**** Reply
+I often want to reply without the original message:
 #+begin_src emacs-lisp
-(defun shell-command-and-echo (command &optional echo prefix)
-  "Run COMMAND and display the result of ECHO prefixed by PREFIX.
+;; From https://github.com/djcb/mu/issues/2345
+;; (after! mu4e
+;;   (defun dorneanu/mu4e-delete-citation ()
+;;     (delete-region (point) (point-max)))
 
-Run COMMAND as a shell command.
+;;   (defun dorneanu/mu4e-reply (prefix)
+;;     (interactive "P")
+;;     (setq mu4e-compose-cite-function (if prefix
+;;                                          #'dorneanu/mu4e-delete-citation
+;;                                        #'message-cite-original-without-signature))
+;;     (mu4e-compose-reply))
 
-If ECHO is non nil, display the result of its execution as a
-shell command to the minibuffer through `MESSAGE'.
-
-If PREFIX is non nil, it will prefix the output of ECHO in the
-minibuffer, both separated by a single space."
-  (progn
-    (with-temp-buffer
-      (shell-command command
-                     (current-buffer)
-                     (current-buffer))
-      (when echo
-        (message "%s%s"
-                 (if prefix
-                     (concat prefix " ")
-                   "")
-                 (string-trim
-                  (shell-command-to-string "mpc volume")))))))
-
-(defhydra hydra-media (:hint nil)
-  "
-     %s(all-the-icons-material \"volume_up\" :height 1.0 :v-adjust -0.2)
-     [_s_]
-« [_c_] _p_ [_r_] » [_S_] %s(all-the-icons-material \"stop\")
-     [_t_]
-     %s(all-the-icons-material \"volume_down\" :height 1.0 :v-adjust -0.2)
-"
-  ("c" emms-player-mpd-previous)
-  ("r" emms-player-mpd-next)
-  ("t" (shell-command-and-echo "mpc volume -2" "mpc volume" "mpc"))
-  ("s" (shell-command-and-echo "mpc volume +2" "mpc volume" "mpc"))
-  ("p" (shell-command-and-echo "mpc toggle"))
-  ("S" emms-player-mpd-stop)
-  ("q" nil :exit t))
+;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+;;   )
 #+end_src
 
 ** empv

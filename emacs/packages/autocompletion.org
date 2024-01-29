@@ -253,9 +253,16 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 (use-package consult
   :straight t
   :after projectile
+  :init
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
   :bind  (;; Related to the control commands.
           ("<help> a" . consult-apropos)
-          ;; ("C-x b" . consult-buffer)
+          ("C-x b" . consult-buffer)
+          ("C-c h"   . consult-history)
+          ("C-c K"   . consult-kmacro)
+          ("C-c i"   . consult-info)
           ("C-x M-:" . consult-complex-command)
           ("C-c k" . consult-kmacro)
           ;; Related to the navigation.
@@ -264,11 +271,12 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
           ("M-g g" . consult-goto-line)
           ("M-g h" . consult-org-heading)
           ("M-g i" . consult-imenu)
+          ("M-g I" . consult-imenu-multi)
           ("M-g k" . consult-global-mark)
           ("M-g l" . consult-line)
           ("M-g m" . consult-mark)
           ("M-g o" . consult-outline)
-          ("M-g I" . consult-project-imenu)
+          ("M-g P" . consult-project-imenu)
           ("M-g y" . consult-yank-from-kill-ring)
           ;; Related to the search and selection.
           ;; ("M-f G" . consult-git-grep)
@@ -278,8 +286,19 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
           ;; ("M-f m" . consult-multi-occur)
           ("M-g r" . consult-ripgrep)
           ;; ("M-f u" . consult-focus-lines)
-          ("M-g f" . consult-find))
-
+          ("M-g f" . consult-find)
+          ;; Isearch integration
+          ("M-s e"   . consult-isearch-history)
+          :map isearch-mode-map
+          ("M-e"     . consult-isearch-history)
+          ("M-s e"   . consult-isearch-history)
+          ("M-s l"   . consult-line)
+          ("M-s L"   . consult-line-multi)
+          :map minibuffer-local-map
+          ("M-s"     . consult-history)
+          ("M-r"     . consult-history)
+          ;; Other custom bindings
+          ("M-y"     . consult-yank-pop))
   :custom
   (completion-in-region-function #'consult-completion-in-region)
   (consult-narrow-key "<")
@@ -294,7 +313,6 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
   :straight (consult-projectile :type git :host gitlab :repo
                                 "OlMon/consult-projectile" :branch "master")
   :commands (consult-projectile))
-
 #+end_src
 ** Minibuffer completion
 *** vertico
@@ -311,18 +329,18 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 (use-package vertico
   :straight t
   :bind (:map vertico-map
-         ("C-f" . mpereira/vertico-next-page)
-         ("C-b" . mpereira/vertico-previous-page)
-         ("C-S-j" . vertico-next-group)
-         ("C-S-k" . vertico-previous-group)
-         ("C-j" . vertico-next)
-         ("C-k" . vertico-previous)
-         ("C-h" . vertico-first)
-         ("C-l" . vertico-last)
-         ("C-/" . orderless-filter)
-         ;; ("<escape>" . vertico-exit-input)
-         :map minibuffer-local-map
-         ("<C-backspace>" . backward-kill-word))
+              ("C-f" . mpereira/vertico-next-page)
+              ("C-b" . mpereira/vertico-previous-page)
+              ("C-S-j" . vertico-next-group)
+              ("C-S-k" . vertico-previous-group)
+              ("C-j" . vertico-next)
+              ("C-k" . vertico-previous)
+              ("C-h" . vertico-first)
+              ("C-l" . vertico-last)
+              ("C-/" . orderless-filter)
+              ;; ("<escape>" . vertico-exit-input)
+              :map minibuffer-local-map
+              ("<C-backspace>" . backward-kill-word))
   :hook (minibuffer-setup-hook . vertico-repeat-save)
   :custom
   (vertico-cycle t)
@@ -332,14 +350,45 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 
 (use-package vertico-posframe
   :straight t
+  :demand t
   :config
-  ;; NOTE: using `vertico-multiform-mode' as a workaround to conditionally
-  ;; disable posframe for `consult-line'.
-  (vertico-multiform-mode 1)
-  (setq vertico-multiform-commands
-        '((consult-line (:not posframe))
-          (consult-ripgrep (:not posframe))
-          (t posframe))))
+  (vertico-posframe-mode))
+
+(use-package vertico-repeat
+  :ensure nil
+  :demand t)
+
+(use-package vertico-directory
+  :ensure nil
+  :demand t
+  :bind (:map vertico-map
+              ("<backspace>"   . vertico-directory-delete-char)
+              ("C-w"           . vertico-directory-delete-word)
+              ("C-<backspace>" . vertico-directory-delete-word)
+              ;; ("RET" .           vertico-directory-enter)
+              ))
+(use-package vertico-multiform
+  :ensure nil
+  :demand t
+  :bind (:map vertico-map
+              ("C-i"   . vertico-multiform-vertical)
+              ("<tab>" . vertico-insert))
+  :config
+  (vertico-multiform-mode 1))
+;;   :custom
+;;   (vertico-multiform-commands
+;;    '((consult-imenu buffer)
+;;      (consult-line buffer)
+;;      (consult-grep buffer)
+;;      (consult-git-grep buffer)
+;;      (consult-ripgrep buffer)
+;;      (consult-yank-pop)
+;;      (embark-bindings buffer)
+;;      (xref-find-references buffer)))
+;;   (vertico-multiform-categories
+;;    '((t unobtrusive)))
+;;   :config
+;;   (vertico-multiform-mode 1))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist

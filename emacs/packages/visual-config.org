@@ -175,7 +175,35 @@ The DoomEmacs modeline looks nice in my opinion, let’s use it.
 ;;                   (feebleline-project-name        :align right)))
 ;;   (feebleline-mode 1))
 #+end_src
+*** COMMENT moody modeline
+#+begin_src emacs-lisp
+(use-package moody
+  :straight t
+  ;; :disabled t
+  :unless noninteractive
+  ;; :defer 1
+  ;;:init
+  ;;(set-background-color "black")
+  ;;(set-foreground-color "white")
+  ;; If you use the default Emacs black theme (no external theme loaded) you have to specify
+  ;; a different color for mode-line-buffer-id or it will be the same as the background
+  ;;(set-face-attribute 'mode-line-buffer-id nil :foreground "light sky blue" :weight 'bold)
+  ;;(let ((line (face-attribute 'mode-line :underline)))
+  ;;  (set-face-attribute 'mode-line nil :overline line)
+  ;;  (set-face-attribute 'mode-line-inactive nil :overline line)
+  ;;  (set-face-attribute 'mode-line-inactive nil :underline line)
+  ;;  (set-face-attribute 'mode-line nil :box nil)
+  ;;  (set-face-attribute 'mode-line-inactive nil :box nil))
+  :config
+  (setq x-underline-at-descent-line t)
+  (setq moody-mode-line-height nil)
+  ;; moody buffer-identification doesn't work with modus themes and
+  ;; the following line needs to be commented out first or emacs hangs!
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode)
+  (moody-replace-eldoc-minibuffer-message-function))
 
+#+end_src
 ** COMMENT Pixel-perfect alignment of Markdown and org-mode tables
 Usually, I have no issue with the alignment of the tables I write in
 org-mode and (more rarely) Markdown. However, there are occurrences
@@ -232,6 +260,10 @@ personal preference.
   :straight (:build t)
   :defer t)
 
+;; Install moe-theme
+(use-package moe-theme
+  :straight t)
+
 ;; Load theme
 (load-theme 'doom-monokai-octagon t)
 #+end_src
@@ -245,7 +277,10 @@ for any language that has delimiters like brackets too.
   :defer t
   :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
-
+** highlight lines
+#+begin_src emacs-lisp
+(global-hl-line-mode 1)
+#+end_src
 ** COMMENT Y’all want some more /COLOURS/?
 It is possible to make info buffers much more colourful (and, in my
 opinion, easier to read) with this simple package:
@@ -293,4 +328,23 @@ I use ~perspective~:
   :straight t
   :config
   (add-to-list 'focus-mode-to-thing '((prog-mode . defun) (text-mode . sentence))))
+#+end_src
+** winner
+#+begin_src emacs-lisp
+(use-package winner
+  :ensure nil
+  :custom
+  (winner-boring-buffers
+   '("*Completions*"
+     "*Compile-Log*"
+     "*inferior-lisp*"
+     "*Fuzzy Completions*"
+     "*Apropos*"
+     "*Help*"
+     "*cvs*"
+     "*Buffer List*"
+     "*Ibuffer*"
+     "*esh command on file*"))
+  :config
+  (winner-mode 1))
 #+end_src

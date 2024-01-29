@@ -19,24 +19,6 @@ editing text.
  "M-\"" #'insert-pair)
 #+end_src
 
-** Atomic Chrome
-Why write in your browser when you could write with Emacs? Despite its
-name, this package isn’t only geared towards Chrome/Chromium-based
-browsers but also towards Firefox since its 2.0 version. I find it a
-bit unfortunate Chrome’s name stuck in the package’s name though.
-#+begin_src emacs-lisp
-(use-package atomic-chrome
-  :straight (:build t)
-  :init
-  (atomic-chrome-start-server)
-  :config
-  (setq atomic-chrome-default-major-mode 'markdown-mode
-        atomic-chrome-url-major-mode-alist `(("github\\.com"          . gfm-mode)
-                                             ("gitlab\\.com"          . gfm-mode)
-                                             ("labs\\.phundrak\\.com" . markdown-mode)
-                                             ("reddit\\.com"          . markdown-mode))))
-#+end_src
-
 ** Editorconfig
 Editorconfig is a unified way of passing to your text editor settings
 everyone working in a repo need to follow. ~.editorconfig~ files work
@@ -93,36 +75,6 @@ compatibility package that adds states for iedit.
    "q" #'evil-iedit-state/quit-iedit-mode))
 #+end_src
 
-** COMMENT Parinfer
-Don’t let the name of the package fool you! ~parinfer-rust-mode~ is not
-a ~parinfer~ mode for ~rust-mode~, but a mode for ~parinfer-rust~. ~parinfer~
-was a project for handling parenthesis and other double markers in a
-much more intuitive way when writing Lisp code. However, it is now out
-of date (last commit was on January 2nd, 2019) and the repository has
-since been archived. New implementations then appeared, one of them is
-[[https://github.com/eraserhd/parinfer-rust][~parinfer-rust~]], obviously written in Rust, around which
-~parinfer-rust-mode~ is built. Enabling ~parinfer-rust-mode~ should also
-automatically disable ~smartparens-mode~ in order to avoid conflicting
-behavior.
-#+begin_src emacs-lisp
-(use-package parinfer-rust-mode
-  :defer t
-  :straight (:build t)
-  :diminish parinfer-rust-mode
-  :hook emacs-lisp-mode common-lisp-mode scheme-mode
-  :init
-  (setq parinfer-rust-auto-download     t
-        parinfer-rust-library-directory (concat user-emacs-directory
-                                                "parinfer-rust/"))
-  (add-hook 'parinfer-rust-mode-hook
-            (lambda () (smartparens-mode -1)))
-  :general
-  (phundrak/major-leader-key
-    :keymaps 'parinfer-rust-mode-map
-    "m" #'parinfer-rust-switch-mode
-    "M" #'parinfer-rust-toggle-disable))
-#+end_src
-
 ** Smartparens
 ~smartparens~ is a package similar to ~parinfer~, but while the latter is
 more specialized for Lisp dialects, ~smartparens~ works better with
@@ -136,22 +88,38 @@ so on.
                          :type git
                          :host github
                          :repo "Fuco1/smartparens")
-  :bind
   ;; Not sure about the bindings here.
-  (:map smartparens-mode-map
-        ("C-M-f" . sp-forward-sexp)
-        ("C-M-b" . sp-backward-sexp)
-        ("C-M-a" . sp-backward-down-sexp)
-        ("C-M-e" . sp-up-sexp)
-        ("C-M-w" . sp-copy-sexp)
-        ("C-M-k" . sp-change-enclosing)
-        ("M-k" . sp-kill-sexp)
-        ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
-        ("C-S-<backspace>" . sp-splice-sexp-killing-around)
-        ("C-]" . sp-select-next-thing-exchange))
+  ;; From https://github.com/dakra/dmacs/blob/nil/init.org
+  ;; :bind (:map smartparens-mode-map
+  ;;             ;; This is the paredit mode map minus a few key bindings
+  ;;             ;; that I use in other modes (e.g. M-?)
+  ;;             ("C-M-f" . sp-forward-sexp) ;; navigation
+  ;;             ("C-M-b" . sp-backward-sexp)
+  ;;             ("C-M-u" . sp-backward-up-sexp)
+  ;;             ("C-M-d" . sp-down-sexp)
+  ;;             ("C-M-p" . sp-backward-down-sexp)
+  ;;             ("C-M-n" . sp-up-sexp)
+  ;;             ("C-w" . whole-line-or-region-sp-kill-region)
+  ;;             ("M-s" . sp-splice-sexp) ;; depth-changing commands
+  ;;             ("M-r" . sp-splice-sexp-killing-around)
+  ;;             ("M-(" . sp-wrap-round)
+  ;;             ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
+  ;;             ("C-<right>" . sp-forward-slurp-sexp)
+  ;;             ("C-}" . sp-forward-barf-sexp)
+  ;;             ("C-<left>" . sp-forward-barf-sexp)
+  ;;             ("C-(" . sp-backward-slurp-sexp)
+  ;;             ("C-M-<left>" . sp-backward-slurp-sexp)
+  ;;             ("C-{" . sp-backward-barf-sexp)
+  ;;             ("C-M-<right>" . sp-backward-barf-sexp)
+  ;;             ("M-S" . sp-split-sexp) ;; misc
+  ;;             ("M-j" . sp-join-sexp))
   :hook
   (prog-mode . smartparens-mode)
-  (org-mode . smartparens-mode))
+  (org-mode . smartparens-mode)
+  :config
+  ;; Always highlight matching parens
+  (show-smartparens-global-mode +1)
+  (setq blink-matching-paren nil))
 
 ;; Some customizations for ORG mode
 (with-eval-after-load 'smartparens
@@ -174,7 +142,14 @@ so on.
 (define-key prog-mode-map (kbd "M-'") (prelude-wrap-with "'"))
 (define-key prog-mode-map (kbd "M-`") (prelude-wrap-with "`"))
 #+end_src
-
+*** evil-smartparens
+I still don't use it that often. Will stay here for a while till I decide to drop it.
+#+begin_src emacs-lisp
+(use-package evil-smartparens
+  :straight t
+  :config
+  (add-hook 'smartparens-enabled-hook #'evil-smartparens-mode))
+#+end_src
 ** ~string-edit~
 ~string-edit~ is a cool package that allows the user to write naturally
 a string and get it automatically escaped for you. No more manually
@@ -184,7 +159,6 @@ escaping your strings!
   :defer t
   :straight (:build t))
 #+end_src
-
 ** writeroom
 On the other hand, ~writeroom~ allows the user to enter a
 distraction-free mode of Emacs, and I like that! But the default width
@@ -245,7 +219,6 @@ I love /olivetti/ mode
 
 ** expand-region
 Use expand-region
-
 #+begin_src emacs-lisp
 (use-package expand-region
   :straight t

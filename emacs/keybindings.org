@@ -270,6 +270,7 @@ My keybinds for jumping around are prefixed by ~j~.
 | f   | counsel-file-jump       |             |
 | d   | dirvish-dwim            |             |
 | D   | dired-jump-other-window |             |
+| TAB | persp-switch-last       |             |
 | w   | ace-window              |             |
 
 ** Project
@@ -423,6 +424,8 @@ much to say. The prefix here is ~w~.
 | w   |                               | writeroom   |
 | w.  | writeroom-buffer-width/body   |             |
 | ww  | writeroom-mode                |             |
+| u   | winner-undo                   |             |
+| r   | winner-redo                   |             |
 
 ** Quit
 Why would I ever use any of these keybinds? They are prefixed with ~q~.

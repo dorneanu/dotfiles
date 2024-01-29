@@ -34,6 +34,11 @@ Every file opened and loaded by Emacs will run through this list to check for a 
 (defvar file-name-handler-alist-original file-name-handler-alist)
 (setq file-name-handler-alist nil)
 #+end_src
+*** Disable tool- and menubar
+#+BEGIN_src emacs-lisp
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(menu-bar-lines . 0) default-frame-alist)
+#+END_src
 *** Disable =site-run-file=
 #+begin_src emacs-lisp
 (setq site-run-file nil)
@@ -178,16 +183,6 @@ of indentation (Python, why…?). The minor-mode that enables that is
 #+end_src
 
 *** Stay Clean, Emacs!
-As nice as Emacs is, it isn’t very polite or clean by default: open a
-file, and it will create backup files in the same directory. But then,
-when you open your directory with your favourite file manager and see
-almost all of your files duplicated with a =~= appended to the filename,
-it looks really uncomfortable! This is why I prefer to tell Emacs to
-keep its backup files to itself in a directory it only will access.
-#+begin_src emacs-lisp
-(setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
-                                                         user-emacs-directory))))
-#+end_src
 
 It also loves to litter its ~init.el~ with custom variables here and
 there, but the thing is: I regenerate my ~init.el~ each time I tangle
@@ -443,11 +438,58 @@ I still use the mouse for scrolling, changing frame sizes:
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
 #+end_src
+** Small configs
+Mostly from https://github.com/MatthewZMD/.emacs.d
+
+#+begin_src emacs-lisp
+;; Move the backup fies to user-emacs-directory/.backup
+(setq backup-directory-alist `(("." . ,(expand-file-name ".backup" user-emacs-directory))))
+
+;; Ask before killing emacs
+(setq confirm-kill-emacs 'y-or-n-p)
+
+;; Automatically kill all active processes when closing Emacs
+(setq confirm-kill-processes nil)
+
+;; Turn Off Cursor Alarms
+(setq ring-bell-function 'ignore)
+
+;; Show Keystrokes in Progress Instantly
+(setq echo-keystrokes 0.1)
+
+;; Don't Lock Files
+(setq-default create-lockfiles nil)
+
+;; Better Compilation
+(setq-default compilation-always-kill t) ; kill compilation process before starting another
+
+(setq-default compilation-ask-about-save nil) ; save all buffers on `compile'
+
+(setq-default compilation-scroll-output t)
+
+;; ad-handle-definition warnings are generated when functions are redefined with `defadvice',
+;; they are not helpful.
+(setq ad-redefinition-action 'accept)
+
+;; Move Custom-Set-Variables to Different File
+(setq custom-file (concat user-emacs-directory "custom-set-variables.el"))
+(load custom-file 'noerror)
+
+;; So Long mitigates slowness due to extremely long lines.
+;; Currently available in Emacs master branch *only*!
+(when (fboundp 'global-so-long-mode)
+  (global-so-long-mode))
+
+;; Add a newline automatically at the end of the file upon save.
+(setq require-final-newline t)
+
+;; Enable `erase-buffer' function
+(put 'erase-buffer 'disabled nil)
+#+end_src
 ** Global functionalities
 *** crux
 #+begin_src emacs-lisp
 (use-package crux
-  :straight t
   :bind
   (("C-a" . crux-move-beginning-of-line)
    ("C-x 4 t" . crux-transpose-windows)
