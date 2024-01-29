@@ -133,37 +133,6 @@ disable them:
 (add-hook 'prog-mode-hook (lambda () (setq indent-tabs-mode nil)))
 #+end_src
 
-Just to go on a little tangent here: I don’t exactly /hate/ tabs, but I
-find them really annoying when your text editor knows only them. Sure,
-for indentation they work great, and they allow different people
-getting different settings in their text editor depending on their
-preferred tastes —some may prefer 2 spaces tabs, some may prefer 4
-spaces tabs, some deranged people prefer 8 spaces tabs, and some
-monsters prefer 3!
-
-But the thing is, once you indented your code, and then you need
-alignment, tabs don’t work any more! Or they may on *your* text editor
-but not on your coworker’s! (He’s the one using 3 spaces tabs by the
-way).
-
-So, is the answer to use spaces instead of tabs, and screw peoples’
-preferences in terms of tabs width? No, I say the answer is more
-moderate than that, and it might frighten or anger some of you at
-first: use both spaces and tabs. Now, before you lynch me on the main
-avenue in front of everyone, let me tell you absolutely no one should
-ever be mixing spaces and tabs for indentation, that would be
-absolutely terrible and would bring the worst of both worlds. What’s
-the best of both worlds then?
-#+begin_center
-/Tabs for indentation/
-
-/Spaces for alignment/
-#+end_center
-
-I haven’t found a way to automate that in Emacs yet aside from
-formatters’ config file, and tabs look bat in EmacsLisp anyway, so
-I’ll stick with spaces by default and change it where needed.
-
 *** GPG pinentry
 I’d like Emacs to be responsible for decrypting my GPG encrypted files
 when in Emacs. This can be done with the following line.
@@ -276,6 +245,19 @@ files by default.
 #+begin_src emacs-lisp
 (setq window-combination-resize t) ; take new window space from all other windows
 #+end_src
+
+** Personal Information
+Emacs needs to know its master! For various reasons by the way, some
+packages rely on these variables to know who it is talking to or
+dealing with, such as ~mu4e~ which will guess who you are if you haven’t
+set it up correctly.
+#+begin_src emacs-lisp
+(setq user-full-name       "Victor Dorneanu"
+      user-real-login-name "Victor Dorneanu"
+      user-login-name      "dorneanu"
+      user-mail-address    "no - spam __ dornea <dot> nu")
+#+end_src
+
 ** Visual Configuration
 The first visual setting in this section will activate the visible
 bell. What it does is I get a visual feedback each time I do something
@@ -292,7 +274,6 @@ It is nicer to see a cursor cover the actual space of a character.
 
 When text is ellipsed, I want the ellipsis marker to be a single
 character of three dots. Let’s make it so:
-blasa alla kles
 #+begin_src emacs-lisp
 (with-eval-after-load 'mule-util
  (setq truncate-string-ellipsis "…"))
@@ -381,6 +362,10 @@ modifications to the modeline each time we open a new file.
 
 ;; Set for unicode fonts
 (set-fontset-font "fontset-default" nil (font-spec :family "Noto Color Emoji"))
+
+;; Resources
+;; https://xiangji.me/2015/07/13/a-few-of-my-org-mode-customizations/
+;; For tables
 #+end_src
 **** Change font
 From https://github.com/MatthewZMD/.emacs.d/blob/master/elisp/init-fonts.el

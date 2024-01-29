@@ -270,13 +270,14 @@ just going to the frame above, then left, left, and up.
   :init (winum-mode))
 #+end_src
 
-** COMMENT explain-pause-mode
+** explain-pause-mode
 #+begin_src emacs-lisp
 (use-package explain-pause-mode
-  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode")
+  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode"))
+  :straight t
   ;; :config
   ;; (explain-pause-mode)
- )
+
 #+end_src
 ** epa-file
 Configure GPG assistant
