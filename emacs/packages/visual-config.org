@@ -18,6 +18,7 @@ Use a minimalistic dashboard:
         welcome-longitude 13.404954
         welcome-path-max-length 75
         welcome-min-left-padding 10
+        ;; TODO: Fix the welcome image
         welcome-image-file (concat user-emacs-directory "straight/repos/evil/doc/logo.png")
         welcome-image-width 200
         welcome-image-height 169
@@ -151,6 +152,29 @@ The DoomEmacs modeline looks nice in my opinion, let’s use it.
   (doom-modeline-buffer-file-name-style 'truncate-upto-project))
 
 #+end_src
+*** COMMENT mini-modeline
+#+begin_src emacs-lisp
+(use-package mini-modeline
+  :straight t
+  :after smart-mode-line
+  :config
+  (mini-modeline-mode t))
+#+end_src
+
+*** COMMENT feebleline
+#+begin_src emacs-lisp
+;; (use-package feebleline
+;;   :ensure t
+;;   :config (setq feebleline-msg-functions
+;;                 '((feebleline-line-number         :post "" :fmt "%5s")
+;;                   (feebleline-column-number       :pre ":" :fmt "%-2s")
+;;                   (feebleline-file-directory      :face feebleline-dir-face :post "")
+;;                   (feebleline-file-or-buffer-name :face font-lock-keyword-face :post "")
+;;                   (feebleline-file-modified-star  :face font-lock-warning-face :post "")
+;;                   (feebleline-git-branch          :face feebleline-git-face :pre " : ")
+;;                   (feebleline-project-name        :align right)))
+;;   (feebleline-mode 1))
+#+end_src
 
 ** COMMENT Pixel-perfect alignment of Markdown and org-mode tables
 Usually, I have no issue with the alignment of the tables I write in
@@ -174,7 +198,7 @@ once it is fixed.
   :custom ((valign-fancy-bar t)))
 #+end_src
 
-** Solaire: Incandescent Emacs
+** COMMENT Solaire: Incandescent Emacs
 A common issue when you have a lot of windows opened in Emacs is
 sometimes there’s just too much. Is the first window source code? Is
 the other one just an open email? Oh, let’s not forget the ~*Messages*~
@@ -190,8 +214,8 @@ slightly darker background? I’m not sure.)
   :straight (:build t)
   :init (solaire-global-mode +1))
 #+end_src
-
 ** Theme
+
 You may have noticed I use the Nord theme pretty much everywhere on my
 computer, why not Emacs? In my opinion, its aurora variant is nicer
 than the default Nord theme since it is richer in colours --- just a
@@ -212,29 +236,6 @@ personal preference.
 (load-theme 'doom-monokai-octagon t)
 #+end_src
 
-** COMMENT mini-modeline
-#+begin_src emacs-lisp
-(use-package mini-modeline
-  :straight t
-  :after smart-mode-line
-  :config
-  (mini-modeline-mode t))
-#+end_src
-
-** COMMENT feebleline
-#+begin_src emacs-lisp
-;; (use-package feebleline
-;;   :ensure t
-;;   :config (setq feebleline-msg-functions
-;;                 '((feebleline-line-number         :post "" :fmt "%5s")
-;;                   (feebleline-column-number       :pre ":" :fmt "%-2s")
-;;                   (feebleline-file-directory      :face feebleline-dir-face :post "")
-;;                   (feebleline-file-or-buffer-name :face font-lock-keyword-face :post "")
-;;                   (feebleline-file-modified-star  :face font-lock-warning-face :post "")
-;;                   (feebleline-git-branch          :face feebleline-git-face :pre " : ")
-;;                   (feebleline-project-name        :align right)))
-;;   (feebleline-mode 1))
-#+end_src
 ** Rainbow Delimiters
 This makes Lisp especially more readable, but it’s also nice to have
 for any language that has delimiters like brackets too.
@@ -256,6 +257,8 @@ opinion, easier to read) with this simple package:
   :hook (Info-mode      . mixed-pitch-mode))
 #+end_src
 ** Perspective
+I use ~perspective~:
+
 #+begin_src emacs-lisp
 (use-package perspective
   :ensure t
@@ -280,6 +283,7 @@ opinion, easier to read) with this simple package:
           (:eval (when persp-mode (format "[%s]" (persp-name (persp-curr))))))))
 
 (use-package persp-projectile
+  :straight t
   :ensure t
   :after (perspective projectile))
 #+end_src
