@@ -1,4 +1,4 @@
-#+title: Emacs — Packages — Org Mode
+    #+title: Emacs — Packages — Org Mode
 #+setupfile: ../../headers
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :tangle ~/.config/emacs/lisp/org.el
@@ -699,12 +699,12 @@ selected text is quite easy.
 #+name: org-emphasis-character
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
-| bold           | ~*~       |             42 |
-| italic         | ~/~       |             47 |
-| underline      | ~_~       |             95 |
-| verbatim       | ~=~       |             61 |
-| code           | ~~~       |            126 |
-| strike-through | ~+~       |             43 |
+| bold           | ~*~         |             42 |
+| italic         | ~/~         |             47 |
+| underline      | ~_~         |             95 |
+| verbatim       | ~=~         |             61 |
+| code           | ~~~         |            126 |
+| strike-through | ~+~         |             43 |
 
 #+name: org-create-emphasis-functions
 #+header: :tangle no :exports results :cache yes
@@ -1455,65 +1455,116 @@ management system based on org-mode.
     "m" #'ivy-bibtex))
 #+end_src
 
-** COMMENT Org-present
+** Org-present
 ~org-present~ allows its user to create presentations through ~org-mode~,
 which is really nice! However, most of my configuration will be stolen
 [[https://config.daviwil.com/emacs#org-present][from Daviwil’s]] with minor changes.
 #+begin_src emacs-lisp
-;; (defun my/org-present-prepare-slide ()
-;;   (org-overview)
-;;   (org-show-entry)
-;;   (org-show-children)
-;;   (org-present-hide-cursor))
+ ;; (defun my/org-present-prepare-slide ()
+ ;;   (org-overview)
+ ;;   (org-show-entry)
+ ;;  (org-show-children)
+ ;;   (org-present-hide-cursor))
 
-;; (defun my/org-present-init ()
-;;   (setq header-line-format " ")
-;;   (org-display-inline-images)
-;;   (my/org-present-prepare-slide))
+ ;; (defun my/org-present-init ()
+ ;;   (setq header-line-format " ")
+ ;;   (org-display-inline-images)
+ ;;   (my/org-present-prepare-slide))
 
-;; (defun my/org-present-quit ()
-;;   (setq header-line-format nil)
-;;   (org-present-small)
-;;   (org-present-show-cursor))
+ ;; (defun my/org-present-quit ()
+ ;;   (setq header-line-format nil)
+ ;;   (org-present-small)
+ ;;   (org-present-show-cursor))
 
-;; (defun my/org-present-prev ()
-;;   (interactive)
-;;   (org-present-prev)
-;;   (my/org-present-prepare-slide))
+ ;; (defun my/org-present-prev ()
+ ;;   (interactive)
+ ;;   (org-present-prev)
+ ;;   (my/org-present-prepare-slide))
 
-;; (defun my/org-present-next ()
-;;   (interactive)
-;;   (org-present-next)
-;;   (my/org-present-prepare-slide))
+ ;; (defun my/org-present-next ()
+ ;;   (interactive)
+ ;;   (org-present-next)
+ ;;   (my/org-present-prepare-slide))
 
-;; (use-package org-present
-;;   :after org
-;;   :defer t
-;;   :straight (:build t)
-;;   :general
-;;   (phundrak/major-leader-key
-;;     :packages 'org-present
-;;     :keymaps 'org-mode-map
-;;     "P" #'org-present)
-;;   (phundrak/evil
-;;     :states 'normal
-;;     :packages 'org-present
-;;     :keymaps 'org-present-mode-keymap
-;;     "+" #'org-present-big
-;;     "-" #'org-present-small
-;;     "<" #'org-present-beginning
-;;     ">" #'org-present-end
-;;     "«" #'org-present-beginning
-;;     "»" #'org-present-end
-;;     "c" #'org-present-hide-cursor
-;;     "C" #'org-present-show-cursor
-;;     "n" #'org-present-next
-;;     "p" #'org-present-prev
-;;     "r" #'org-present-read-only
-;;     "w" #'org-present-read-write
-;;     "q" #'org-present-quit)
-;;   :hook ((org-present-mode      . my/org-present-init)
-;;          (org-present-mode-quit . my/org-present-quit)))
+ ;; (use-package org-present
+ ;;   :after org
+ ;;   :defer t
+ ;;   :straight (:build t)
+ ;;   :general
+ ;;   (phundrak/major-leader-key
+ ;;     :packages 'org-present
+ ;;     :keymaps 'org-mode-map
+ ;;     "P" #'org-present)
+ ;;   (phundrak/evil
+ ;;     :states 'normal
+ ;;     :packages 'org-present
+ ;;     :keymaps 'org-present-mode-keymap
+ ;;     "+" #'org-present-big
+ ;;     "-" #'org-present-small
+ ;;     "<" #'org-present-beginning
+ ;;     ">" #'org-present-end
+ ;;     "«" #'org-present-beginning
+ ;;     "»" #'org-present-end
+ ;;     "c" #'org-present-hide-cursor
+ ;;     "C" #'org-present-show-cursor
+ ;;     "n" #'org-present-next
+ ;;     "p" #'org-present-prev
+ ;;     "r" #'org-present-read-only
+ ;;     "w" #'org-present-read-write
+ ;;     "q" #'org-present-quit)
+ ;;   :hook ((org-present-mode      . my/org-present-init)
+ ;;          (org-present-mode-quit . my/org-present-quit)))
+ ;; (use-package hide-mode-line
+ ;;   :straight t
+ ;;   :after (org-present))
+
+ ;; (defun my/present-next-with-latex ()
+ ;;   (interactive)
+ ;;   (org-present-next)
+ ;;   (org-latex-preview '(16)))
+
+ ;; (defun my/present-prev-with-latex ()
+ ;;   (interactive)
+ ;;   (org-present-prev)
+ ;;   (org-latex-preview '(16)))
+
+ ;; (use-package org-present
+ ;;   :straight t
+ ;;   :commands (org-present)
+ ;;   :config
+ ;;   (general-define-key
+ ;;    :keymaps 'org-present-mode-keymap
+ ;;    "<next>" 'my/present-next-with-latex
+ ;;    "<prior>" 'my/present-prev-with-latex)
+ ;;   (setq org-present-mode-hook
+ ;;         (list (lambda ()
+ ;;                 (blink-cursor-mode 0)
+ ;;                 (org-present-big)
+ ;;                 (org-bars-mode -1)
+ ;;                 ;; (org-display-inline-images)
+ ;;                 (org-present-hide-cursor)
+ ;;                 (org-present-read-only)
+ ;;                 (display-line-numbers-mode 0)
+ ;;                 (hide-mode-line-mode +1)
+ ;;                 ;; (org-latex-preview '(16))
+ ;;                 ;; TODO ^somehow this stucks at running LaTeX^
+ ;;                 (setq-local olivetti-body-width 60)
+ ;;                 (olivetti-mode 1))))
+ ;;   (setq org-present-mode-quit-hook
+ ;;         (list (lambda ()
+ ;;                 (blink-cursor-mode 1)
+ ;;                 (org-present-small)
+ ;;                 (org-bars-mode 1)
+ ;;                 ;; (org-remove-inline-images)
+ ;;                 (org-present-show-cursor)
+ ;;                 (org-present-read-write)
+ ;;                 (display-line-numbers-mode 1)
+ ;;                 (hide-mode-line-mode 0)
+ ;;                 (org-latex-preview '(64))
+ ;;                 (olivetti-mode -1)
+ ;;                 (setq-local olivetti-body-width (default-value 'olivetti-body-width))))))
+ #+end_src
+
 #+end_src
 
 ** org-re-reveal
@@ -1523,7 +1574,6 @@ Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating present
 (use-package org-re-reveal
    :straight t)
 #+end_src
-
 ** Visual Configuration
 *** mixed-pitch
 While most modes of Emacs are dedicated to development, and therefore
@@ -1537,7 +1587,7 @@ org-mode. ~mixed-pitch~ comes to the rescue!
   :after org
   :straight (:build t)
   :hook
-  (org-mode           . mixed-pitch-mode)
+  ;; (org-mode           . mixed-pitch-mode)
   (emms-browser-mode  . mixed-pitch-mode)
   (emms-playlist-mode . mixed-pitch-mode)
   :config

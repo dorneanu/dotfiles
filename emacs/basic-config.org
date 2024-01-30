@@ -375,9 +375,9 @@ modifications to the modeline each time we open a new file.
 *** Fonts
 
 #+begin_src emacs-lisp
-(set-face-attribute 'default nil :font "Iosevka-11")
-(set-face-attribute 'fixed-pitch nil :font "Iosevka" :height 1.0)
-(set-face-attribute 'variable-pitch nil :font "Iosevka")
+(set-face-attribute 'default nil :font "Iosevka-14:slant=normal:weight=regular:width=normal")
+(set-face-attribute 'variable-pitch nil :family "Source Code Pro" :height 1.0)
+(set-face-attribute 'fixed-pitch nil :font "Iosevka-14")
 
 ;; Set for unicode fonts
 (set-fontset-font "fontset-default" nil (font-spec :family "Noto Color Emoji"))
@@ -386,7 +386,7 @@ modifications to the modeline each time we open a new file.
 From https://github.com/MatthewZMD/.emacs.d/blob/master/elisp/init-fonts.el
 
 #+begin_src emacs-lisp
-(defvar font-list '(("Source Code Pro" . 11) ("DejaVu Sans" . 12) ("DejaVu Sans Mono" . 12) ("Iosevka" . 12.5))
+(defvar font-list '(("Source Code Pro" . 14) ("DejaVu Sans" . 14) ("DejaVu Sans Mono" . 14) ("Iosevka" . 14))
   "List of fonts and sizes.")
 
 (defun dorneanu/change-font ()

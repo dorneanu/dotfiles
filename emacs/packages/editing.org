@@ -41,7 +41,20 @@ enough for me.
   :after evil
   :straight (:build t))
 #+end_src
-
+** evil-surround
+#+begin_src emacs-lisp
+(use-package evil-surround
+  :straight t
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
+** evil-multiedit
+#+begin_src emacs-lisp
+(use-package evil-multiedit
+  :straight t
+  :config
+  (evil-multiedit-default-keybinds))
+#+end_src
 ** Iedit
 Iedit is a powerful text editing tool that can be used to refactor
 code through the edition of multiple regions at once, be it in a

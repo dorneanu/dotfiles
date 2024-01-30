@@ -443,13 +443,15 @@ much to say. The prefix here is ~w~.
 ** Hydras
 
 #+name: keybinds-hydras
-| Key | Function               | Description |   |
-|-----+------------------------+-------------+---|
-|     |                        | hydras      |   |
-| oj  | sk/hydra-org-jump/body |             |   |
-| F   | flyspell-hydra/body    |             |   |
-| w   | +hydra/window-nav/body |             |   |
-| u   | dakra/insert-unicode   |             |   |
+| Key | Function                 | Description |   |
+|-----+--------------------------+-------------+---|
+|     |                          | hydras      |   |
+| oj  | sk/hydra-org-jump/body   |             |   |
+| F   | flyspell-hydra/body      |             |   |
+| m   | hydra-modeline/body      |             |   |
+| w   | +hydra/window-nav/body   |             |   |
+| W   | hydra-windows/body       |             |   |
+| u   | dakra/hydra-unicode/body |             |   |
 
 ** Quit
 Why would I ever use any of these keybinds? They are prefixed with ~q~.
