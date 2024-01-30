@@ -185,30 +185,6 @@ interfaces, so let’s install the relevant packages.
   :defer t
   :straight (:type built-in)
   :ghook 'org-mode 'markdown-mode 'TeX-mode
-  :init
-  (defhydra flyspell-hydra ()
-    "
-Spell Commands^^           Add To Dictionary^^              Other
---------------^^---------- -----------------^^------------- -----^^---------------------------
-[_b_] check whole buffer   [_B_] add word to dict (buffer)  [_t_] toggle spell check
-[_r_] check region         [_G_] add word to dict (global)  [_q_] exit
-[_d_] change dictionary    [_S_] add word to dict (session) [_Q_] exit and disable spell check
-[_n_] next error
-[_c_] correct before point
-[_s_] correct at point
-"
-    ("B" nil)
-    ("b" flyspell-buffer)
-    ("r" flyspell-region)
-    ("d" ispell-change-dictionary)
-    ("G" nil)
-    ("n" flyspell-goto-next-error)
-    ("c" flyspell-correct-wrapper)
-    ("Q" flyspell-mode :exit t)
-    ("q" nil :exit t)
-    ("S" nil)
-    ("s" flyspell-correct-at-point)
-    ("t" nil))
   :config
   (provide 'ispell) ;; force loading ispell
   (setq flyspell-issue-welcome-flag nil

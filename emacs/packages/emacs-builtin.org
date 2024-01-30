@@ -622,46 +622,32 @@ Let’s define some more intuitive keybinds for ~info-mode~.
 #+end_src
 
 ** Tramp
-Tramp is an Emacs built-in package that allows the user to connect to
-various hosts using various protocols, such as ~ssh~ and
-~rsync~. However, I have some use-case for Tramp which are not
-supported natively. I will describe them here.
+
 #+begin_src emacs-lisp
-;; (use-package tramp
-;;   :straight (tramp :type built-in :build t)
-;;   :config
-;;   <<tramp-add-yadm>>
-;;   (csetq tramp-ssh-controlmaster-options nil
-;;          tramp-verbose 0
-;;          tramp-auto-save-directory (locate-user-emacs-file "tramp/")
-;;          tramp-chunksize 2000)
-;;   (add-to-list 'backup-directory-alist ; deactivate auto-save with TRAMP
-;;                (cons tramp-file-name-regexp nil)))
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
+
 (use-package tramp
-  :straight (tramp :type built-in :build t))
-#+end_src
+  :defer t
+  :custom
+  (tramp-default-method "ssh")
+  (tramp-auto-save-directory "~/.cache/emacs/backups")
+  :config
+  ;; (add-to-list 'tramp-remote-path (expand-file-name "~/.nix-profile/bin"))
 
-*** Yadm
-[[https://yadm.io/][~yadm~]] is a git wrapper made to easily manage your dotfiles. It has
-loads of features I don’t use (the main one I like but don’t use is
-its [[https://yadm.io/docs/templates][Jinja-like host and OS-aware syntax]]), but unfortunately Magit
-doesn’t play nice with it. Tramp to the rescue, and this page explains
-how! Let’s just insert in my config this code snippet:
-#+name: tramp-add-yadm
-#+begin_src emacs-lisp :tangle no
-(add-to-list 'tramp-methods
-                   '("yadm"
-                     (tramp-login-program "yadm")
-                     (tramp-login-args (("enter")))
-                     (tramp-login-env (("SHELL") ("/bin/sh")))
-                     (tramp-remote-shell "/bin/sh")
-                     (tramp-remote-shell-args ("-c"))))
-#+end_src
+  ;; jww (2018-02-20): Without this change, tramp ends up sending hundreds of
+  ;; shell commands to the remote side to ask what the temporary directory is.
+  (put 'temporary-file-directory 'standard-value '("/tmp"))
 
-I’ll also create a fuction for connecting to this new Tramp protocol:
-#+begin_src emacs-lisp
-(defun my/yadm ()
-  "Manage my dotfiles through TRAMP."
-  (interactive)
-  (magit-status "/yadm::"))
+  ;; Setting this with `:custom' does not take effect.
+  ;; (setq tramp-persistency-file-name (user-data "tramp"))
+)
+
+;; Change default shell to bash
+(eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
+
+;; Ignore "Remote file error: Forbidden reentrant call of Tramp"
+(setq debug-ignored-errors
+      (cons 'remote-file-error debug-ignored-errors))
 #+end_src

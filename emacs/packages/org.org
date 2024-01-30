@@ -968,6 +968,9 @@ servers on my repos though.
 #+end_src
 
 ** Keybindings
+:PROPERTIES:
+:ID:       fbdd75ee-506e-4287-895a-1c18bc585b2d
+:END:
 Be prepared, I have a lot of keybindings for org-mode! They are all
 prefixed with a comma ~,~ in normal mode.
 #+name: org-keybinds-various
@@ -1120,6 +1123,7 @@ Finally, let’s make enabling and disabling stuff accessible:
 | Ts        | phundrak/toggle-org-src-window-split |             |
 | Tt        | org-show-todo-tree                   |             |
 | TT        | org-todo                             |             |
+|           |                                      |             |
 
 ** COMMENT LaTeX formats
 :PROPERTIES:
@@ -1768,3 +1772,4 @@ Insert images easily into ORG mode files
 # Local Variables:
 # org-confirm-babel-evaluate: nil
 # End:
+** Auto-Completion
