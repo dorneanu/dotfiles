@@ -2406,8 +2406,8 @@ I often want to reply without the original message:
 ;; Primary Mailbox
 (setq gnus-select-method
       '(nnmaildir "Local"
-	(directory "~/Maildir")
-	(nnir-search-engine notmuch)
+        (directory "~/Maildir")
+        (nnir-search-engine notmuch)
         ))
 
 (setq gnus-asynchronous t)
@@ -2555,18 +2555,18 @@ Some useful isearch keys (before starting the search):
 
 And while inside a search:
 
-| key   | description                                   |
-|-------+-----------------------------------------------|
-| C-w   | add next word to search                       |
-| C-e   | add until EOL to search                       |
-| M-e   | edit search in minibuffer (commit with =RET=) |
-| M-s o | run =occur=                                   |
-| M-s r | toggle regexp search                          |
-| M-s . | mark whole thing for search                   |
+| key     | description                                 |
+|---------+---------------------------------------------|
+| C-w     | add next word to search                     |
+| C-e     | add until EOL to search                     |
+| M-e     | edit search in minibuffer (commit with =RET=) |
+| M-s o   | run =occur=                                   |
+| M-s r   | toggle regexp search                        |
+| M-s .   | mark whole thing for search                 |
 | M-s h r | highlight current search (=hi-lock=)          |
-| M-%   | run =query-replace= on search term        |
-| C-M-% | run =query-replace-regexp= on search term |
-| C-l   | =recenter=                                |
+| M-%     | run =query-replace= on search term            |
+| C-M-%   | run =query-replace-regexp= on search term     |
+| C-l     | =recenter=                                    |
 
 #+begin_src emacs-lisp
 ;; Mostly from https://github.com/alexpeits/emacs.d
@@ -3147,7 +3147,7 @@ From https://kristofferbalintona.me/posts/202202270056/
 #+begin_src emacs-lisp
 (use-package! tabnine
   :hook ((prog-mode . tabnine-mode)
-	 (kill-emacs . tabnine-kill-process))
+         (kill-emacs . tabnine-kill-process))
   :init
   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point t)
   (add-to-list 'kind-icon-mapping '(tabnine "ai" :icon "cloud" :face shadow) t)
@@ -3160,13 +3160,13 @@ From https://kristofferbalintona.me/posts/202202270056/
   (tabnine-minimum-prefix-length 3)
   :bind
   (:map  tabnine-completion-map
-	 ("<tab>" . tabnine-accept-completion)
-	 ("TAB" . tabnine-accept-completion)
-	 ("M-f" . tabnine-accept-completion-by-word)
-	 ("M-<return>" . tabnine-accept-completion-by-line)
-	 ("C-g" . tabnine-clear-overlay)
-	 ("M-[" . tabnine-previous-completion)
-	 ("M-]" . tabnine-next-completion)))
+         ("<tab>" . tabnine-accept-completion)
+         ("TAB" . tabnine-accept-completion)
+         ("M-f" . tabnine-accept-completion-by-word)
+         ("M-<return>" . tabnine-accept-completion-by-line)
+         ("C-g" . tabnine-clear-overlay)
+         ("M-[" . tabnine-previous-completion)
+         ("M-]" . tabnine-next-completion)))
 #+end_src
 *** COMMENT company-tabnine                                       :disabled:
 #+begin_src emacs-lisp
