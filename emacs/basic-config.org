@@ -373,39 +373,13 @@ modifications to the modeline each time we open a new file.
   (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
 #+end_src
 *** Fonts
-
 #+begin_src emacs-lisp
-(set-face-attribute 'default nil :font "Iosevka-14:slant=normal:weight=regular:width=normal")
-(set-face-attribute 'variable-pitch nil :family "Source Code Pro" :height 1.0)
-(set-face-attribute 'fixed-pitch nil :font "Iosevka-14")
+(set-face-attribute 'default nil :font "JetBrains Mono-12:spacing=100")
+;; (set-face-attribute 'variable-pitch nil :family "JetBrains Mono-12" :height 1.0)
+;; (set-face-attribute 'fixed-pitch nil :font "JetBrains Mono-12")
 
 ;; Set for unicode fonts
 (set-fontset-font "fontset-default" nil (font-spec :family "Noto Color Emoji"))
-#+end_src
-**** Change font
-From https://github.com/MatthewZMD/.emacs.d/blob/master/elisp/init-fonts.el
-
-#+begin_src emacs-lisp
-(defvar font-list '(("Source Code Pro" . 14) ("DejaVu Sans" . 14) ("DejaVu Sans Mono" . 14) ("Iosevka" . 14))
-  "List of fonts and sizes.")
-
-(defun dorneanu/change-font ()
-  "Interactively change a font from a list a available fonts."
-  (interactive)
-  (let* (available-fonts font-name font-size font-setting)
-    (dolist (font font-list (setq available-fonts (nreverse available-fonts)))
-      (when (member (car font) (font-family-list))
-        (push font available-fonts)))
-    (if (not available-fonts)
-        (message "No fonts from the chosen set are available")
-      (if (called-interactively-p 'interactive)
-          (let* ((chosen (assoc-string (completing-read "What font to use? " available-fonts nil t) available-fonts)))
-            (setq font-name (car chosen) font-size (read-number "Font size: " (cdr chosen))))
-        (setq font-name (caar available-fonts) font-size (cdar available-fonts)))
-      (setq font-setting (format "%s-%d" font-name font-size))
-      (set-frame-font font-setting nil t)
-      (add-to-list 'default-frame-alist (cons 'font font-setting)))))
-
 #+end_src
 *** Frame Title
 This is straight-up copied from [[https://tecosaur.github.io/emacs-config/config.html#window-title][TEC]]’s configuration. See their comment

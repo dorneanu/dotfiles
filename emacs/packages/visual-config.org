@@ -97,7 +97,40 @@ of our symbols when the cursor is on it.
 #+begin_src emacs-lisp
 (setq prettify-symbols-unprettify-at-point t)
 #+end_src
+** Fonts
+*** default-font-presets
+#+begin_src emacs-lisp
+(use-package default-font-presets
+  :straight t
+  :demand t
+  :commands
+  (default-font-presets-forward
+   default-font-presets-backward
+   default-font-presets-choose
+   default-font-presets-scale-increase
+   default-font-presets-scale-decrease
+   default-font-presets-scale-fit
+   default-font-presets-scale-reset)
+  :config
+  (setq default-font-presets-list
+    (list
+      "JetBrains Mono-12:spacing=100"
+      "Source Code Pro 12"
+      "Iosevka 12")))
 
+;; Typical key bindings:
+
+(global-set-key (kbd "C-=") 'default-font-presets-scale-increase)
+(global-set-key (kbd "C--") 'default-font-presets-scale-decrease)
+(global-set-key (kbd "C-0") 'default-font-presets-scale-reset)
+
+(global-set-key (kbd "<C-mouse-4>") 'default-font-presets-scale-increase)
+(global-set-key (kbd "<C-mouse-5>") 'default-font-presets-scale-decrease)
+
+;; Alt-PageUp, Alt-PageDown.
+(define-key global-map (kbd "<M-prior>") 'default-font-presets-forward)
+(define-key global-map (kbd "<M-next>") 'default-font-presets-backward)
+#+end_src
 ** Ligatures
 The font I’m using supports ligatures, but Emacs in GUI mode does not.
 And of course, there’s a package for that.

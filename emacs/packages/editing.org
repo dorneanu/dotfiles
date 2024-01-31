@@ -48,7 +48,7 @@ enough for me.
   :config
   (global-evil-surround-mode 1))
 #+end_src
-** evil-multiedit
+** COMMENT evil-multiedit
 #+begin_src emacs-lisp
 (use-package evil-multiedit
   :straight t
@@ -196,7 +196,7 @@ I love /olivetti/ mode
 (use-package olivetti
   :straight t
   :custom
-  (olivetti-body-width 0.8))
+  (olivetti-body-width 0.6))
 #+end_src
 
 ** undo

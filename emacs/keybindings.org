@@ -248,6 +248,7 @@ My keybinds for help are prefixed by ~h~.
 | i   | info                     |             |
 | I   | info-display-manual      |             |
 | d   |                          | describe    |
+| d.  | describe-keymap          |             |
 | dc  | describe-char            |             |
 | dC  | helpful-command          |             |
 | df  | helpful-callable         |             |
@@ -402,7 +403,8 @@ My toggle keybinds are prefixed by ~t~.
 | it  | toggle-input-method                   |               |
 | is  | set-input-method                      |               |
 | o   | olivetti-mode                         | olivetti mode |
-| v   | visual-fill-column-mode               |               |
+| vc  | visual-fill-column-mode               |               |
+| vp  | vertico-posframe-mode                 |               |
 
 ** Windows
 A couple of keybinds are hidden from which-key, otherwise there’s not
@@ -443,15 +445,21 @@ much to say. The prefix here is ~w~.
 ** Hydras
 
 #+name: keybinds-hydras
-| Key | Function                 | Description |   |
-|-----+--------------------------+-------------+---|
-|     |                          | hydras      |   |
-| oj  | sk/hydra-org-jump/body   |             |   |
-| F   | flyspell-hydra/body      |             |   |
-| m   | hydra-modeline/body      |             |   |
-| w   | +hydra/window-nav/body   |             |   |
-| W   | hydra-windows/body       |             |   |
-| u   | dakra/hydra-unicode/body |             |   |
+| Key | Function                            | Description |   |
+|-----+-------------------------------------+-------------+---|
+|     |                                     | hydras      |   |
+| oj  | sk/hydra-org-jump/body              |             |   |
+| ob  | org-babel-transient/body            |             |   |
+| F   | flyspell-hydra/body                 |             |   |
+| fb  | default-font-presets-backward       |             |   |
+| ff  | default-font-presets-forward        |             |   |
+| fc  | default-font-presets-choose         |             |   |
+| f+  | default-font-presets-scale-increase |             |   |
+| f-  | default-font-presets-scale-decrease |             |   |
+| m   | hydra-modeline/body                 |             |   |
+| w   | +hydra/window-nav/body              |             |   |
+| W   | hydra-windows/body                  |             |   |
+| u   | dakra/hydra-unicode/body            |             |   |
 
 ** Quit
 Why would I ever use any of these keybinds? They are prefixed with ~q~.

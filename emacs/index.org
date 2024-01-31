@@ -80,23 +80,23 @@ block.
 ** Loading All Configuration Modules
 
 #+name: emacs-modules
-| Module Name                | Config Page                      |
-|----------------------------+----------------------------------|
-| =basic-config.el=          | [[file:./basic-config.org][Basic Configuration]]              |
-| =custom-elisp.el=          | [[file:./custom-elisp.org][Custom Elisp]]                     |
-| =package-manager.el=       | [[file:./package-manager.org][Package Manager]]                  |
-| =keybinding-managemers.el= | [[file:./keybinding-managemers.org][Keybinding Managers]]              |
-| =applications.el=          | [[file:./packages/applications.org][Packages — Applications]]          |
-| =autocompletion.el=        | [[file:./packages/autocompletion.org][Packages — Autocompletion]]        |
-| =editing.el=               | [[file:./packages/editing.org][Packages — Editing]]               |
-| =emacs-builtin.el=         | [[file:./packages/emacs-builtin.org][Packages — Emacs Built-ins]]       |
-| =helpful.el=               | [[file:./packages/helpful.org][Packages — Making My Life Easier]] |
-| =latex.el=                 | [[file:./packages/latex.org][Packages — LaTeX]]                 |
-| =misc.el=                  | [[file:./packages/misc.org][Packages — Misc]]                  |
-| =org.el=                   | [[file:./packages/org.org][Packages — Org Mode]]              |
-| =programming.el=           | [[file:./packages/programming.org][Packages — Programming]]           |
-| =visual-config.el=         | [[file:./packages/visual-config.org][Packages — Visual Configuration]]  |
-| =keybindings.el=           | [[file:./keybindings.org][Keybindings]]                      |
+| Module Name              | Config Page                      |
+|--------------------------+----------------------------------|
+| =basic-config.el=        | [[file:./basic-config.org][Basic Configuration]]              |
+| =custom-elisp.el=        | [[file:./custom-elisp.org][Custom Elisp]]                     |
+| =package-manager.el=     | [[file:./package-manager.org][Package Manager]]                  |
+| =keybinding-managers.el= | [[file:./keybinding-managemers.org][Keybinding Managers]]              |
+| =applications.el=        | [[file:./packages/applications.org][Packages — Applications]]          |
+| =autocompletion.el=      | [[file:./packages/autocompletion.org][Packages — Autocompletion]]        |
+| =editing.el=             | [[file:./packages/editing.org][Packages — Editing]]               |
+| =emacs-builtin.el=       | [[file:./packages/emacs-builtin.org][Packages — Emacs Built-ins]]       |
+| =helpful.el=             | [[file:./packages/helpful.org][Packages — Making My Life Easier]] |
+| =latex.el=               | [[file:./packages/latex.org][Packages — LaTeX]]                 |
+| =misc.el=                | [[file:./packages/misc.org][Packages — Misc]]                  |
+| =org.el=                 | [[file:./packages/org.org][Packages — Org Mode]]              |
+| =programming.el=         | [[file:./packages/programming.org][Packages — Programming]]           |
+| =visual-config.el=       | [[file:./packages/visual-config.org][Packages — Visual Configuration]]  |
+| =keybindings.el=         | [[file:./keybindings.org][Keybindings]]                      |
 
 #+name: generate-modules
 #+begin_src emacs-lisp :tangle no :cache yes :var modules=emacs-modules :exports none
@@ -106,8 +106,8 @@ block.
            " ")
 #+end_src
 
-#+RESULTS[f76449860408293997e174ff94c743d46951835b]: generate-modules
-: "basic-config.el" "custom-elisp.el" "package-manager.el" "keybinding-managemers.el" "applications.el" "autocompletion.el" "editing.el" "emacs-builtin.el" "exwm.el" "helpful.el" "latex.el" "misc.el" "org.el" "programming.el" "visual-config.el" "keybindings.el"
+#+RESULTS[2a67bc55567bb1bde5119d573d78acfee4850920]: generate-modules
+: "basic-config.el" "custom-elisp.el" "package-manager.el" "keybinding-managers.el" "applications.el" "autocompletion.el" "editing.el" "emacs-builtin.el" "helpful.el" "latex.el" "misc.el" "org.el" "programming.el" "visual-config.el" "keybindings.el"
 
 #+begin_src emacs-lisp :noweb yes
 (dolist (module '(<<generate-modules()>>))

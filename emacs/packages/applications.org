@@ -1714,6 +1714,24 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   ("P" org-previous-link)
   ("q" nil :color blue))
 #+end_src
+**** hydra-org-babel-transient
+#+begin_src emacs-lisp :tangle no
+(defhydra org-babel-transient ()
+  "
+^Navigate^                    ^Interact
+^^^^^^^^^^^------------------------------------------
+[_t_/_s_] navigate src blocs  [_x_] execute src block
+[_g_]^^   goto named block    [_'_] edit src block
+[_z_]^^   recenter screen     [_q_] quit
+"
+  ("q" nil :exit t)
+  ("t" org-babel-next-src-block)
+  ("s" org-babel-previous-src-block)
+  ("g" org-babel-goto-named-src-block)
+  ("z" recenter-top-bottom)
+  ("x" org-babel-execute-maybe)
+  ("'" org-edit-special :exit t))
+#+end_src
 *** Hydra / merge
 Group Merge commands.
 

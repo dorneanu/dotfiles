@@ -163,3 +163,14 @@ Change default font size
   (interactive "nEnter the font size: ")
   (set-face-attribute 'default nil :height size))
 #+end_src
+** ORG
+*** Create ORG heading from clipboard link
+#+begin_src emacs-lisp
+(cl-defun dorneanu/org-insert-link-from-clipboard (&optional (url (org-web-tools--get-first-url)))
+  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+  (interactive)
+  (if-let ((dom (plz 'get url :as (lambda ()
+                                    (libxml-parse-html-region (point-min) (point-max)))))
+           (title (cl-caddr (car (dom-by-tag dom 'title)))))
+      (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url (org-web-tools--cleanup-title title)))))
+#+end_src
