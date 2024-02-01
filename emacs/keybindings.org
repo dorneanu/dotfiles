@@ -241,24 +241,28 @@ My keybinds for searches are prefixed by ~s~.
 ** Help
 My keybinds for help are prefixed by ~h~.
 #+name: keybinds-help
-| Key | Function                 | Description |
-|-----+--------------------------+-------------|
-|     |                          | help        |
-| k   | which-key-show-top-level |             |
-| i   | info                     |             |
-| I   | info-display-manual      |             |
-| d   |                          | describe    |
-| d.  | describe-keymap          |             |
-| dc  | describe-char            |             |
-| dC  | helpful-command          |             |
-| df  | helpful-callable         |             |
-| di  | describe-input-method    |             |
-| dk  | helpful-key              |             |
-| dm  | helpful-macro            |             |
-| dM  | helpful-mode             |             |
-| dp  | describe-package         |             |
-| ds  | helpful-symbol           |             |
-| dv  | helpful-variable         |             |
+| Key | Function                  | Description |
+|-----+---------------------------+-------------|
+|     |                           | help        |
+| k   | which-key-show-top-level  |             |
+| i   | info                      |             |
+| I   | info-display-manual       |             |
+| d   |                           | describe    |
+| d.  | describe-keymap           |             |
+| db  | describe-bindings         |             |
+| dc  | describe-char             |             |
+| dC  | helpful-command           |             |
+| df  | helpful-callable          |             |
+| di  | describe-input-method     |             |
+| dk  | helpful-key               |             |
+| dm  | helpful-macro             |             |
+| dM  | helpful-mode              |             |
+| dp  | describe-package          |             |
+| ds  | helpful-symbol            |             |
+| dv  | helpful-variable          |             |
+| f   | describe-face             |             |
+| wk  | which-key-show-keymap     |             |
+| wm  | which-key-show-major-mode |             |
 
 ** Lookup
 Keybindings for looking up things (prefixed by ~l~).

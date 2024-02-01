@@ -2502,6 +2502,129 @@ issue.
     "n" #'multi-vterm-next
     "p" #'multi-vterm-prev))
 #+end_src
+** To be tested
+Some packages I would like to test first
+*** engine-mode
+
+#+begin_src emacs-lisp
+(use-package engine-mode
+  :straight
+  :config
+  (defengine google "https://www.google.com/search?q=%s"
+             :keybinding "/")
+  (engine-mode 1))
+#+end_src
+*** google-this
+
+#+begin_src emacs-lisp
+(use-package google-this
+  :straight t
+  :bind-keymap ("C-c /" . google-this-mode-submap)
+  :bind* ("M-SPC" . google-this-search)
+  :bind (:map google-this-mode-map
+              ("/" . google-this-search)))
+#+end_src
+*** isearch
+
+#+begin_src emacs-lisp
+(use-package isearch
+  :ensure nil
+  :bind (("C-M-r" . isearch-backward-other-window)
+         ("C-M-s" . isearch-forward-other-window))
+  :bind (:map isearch-mode-map
+              ("C-c" . isearch-toggle-case-fold)
+              ("C-t" . isearch-toggle-regexp)
+              ("C-^" . isearch-edit-string)
+              ("C-i" . isearch-complete))
+  :preface
+  (defun isearch-backward-other-window ()
+    (interactive)
+    (split-window-vertically)
+    (other-window 1)
+    (call-interactively 'isearch-backward))
+
+  (defun isearch-forward-other-window ()
+    (interactive)
+    (split-window-vertically)
+    (other-window 1)
+    (call-interactively 'isearch-forward)))
+#+end_src
+
+*** multi-term
+
+#+begin_src emacs-lisp
+(use-package multi-term
+  :straight t
+  :bind (("C-c t" . multi-term-next)
+         ("C-c T" . multi-term))
+  :custom
+  (multi-term-program "tmux")
+  (multi-term-program-switches "-CC")
+  (multi-term-scroll-show-maximum-output t)
+  (term-bind-key-alist
+   '(("C-c C-c" . term-interrupt-subjob)
+     ("C-b"     . my-term-send-raw-at-prompt)
+     ("C-f"     . my-term-send-raw-at-prompt)
+     ("C-a"     . my-term-send-raw-at-prompt)
+     ("C-e"     . my-term-send-raw-at-prompt)
+     ("C-p"     . previous-line)
+     ("C-n"     . next-line)
+     ("C-s"     . isearch-forward)
+     ("C-r"     . isearch-backward)
+     ("C-m"     . term-send-raw)
+     ("M-f"     . term-send-forward-word)
+     ("M-b"     . term-send-backward-word)
+     ("M->"     . my-term-end-of-buffer)
+     ("M-o"     . term-send-backspace)
+     ("M-p"     . term-send-up)
+     ("M-n"     . term-send-down)
+     ("M-d"     . term-send-forward-kill-word)
+     ("M-DEL"   . term-send-backward-kill-word)
+     ("M-r"     . term-send-reverse-search-history)
+     ("M-,"     . term-send-input)
+     ("M-/"     . comint-dynamic-complete)
+     ("C-y"     . term-paste)))
+  :init
+  (defun screen ()
+    (interactive)
+    (let ((term-buffer
+           (let ((multi-term-program (executable-find "screen"))
+                 (multi-term-program-switches "-DR"))
+             (multi-term-get-buffer))))
+      (set-buffer term-buffer)
+      (multi-term-internal)
+      (switch-to-buffer term-buffer)))
+
+  :config
+  (require 'term)
+
+  (defalias 'my-term-send-raw-at-prompt 'term-send-raw)
+
+  (defun my-term-end-of-buffer ()
+    (interactive)
+    (call-interactively #'end-of-buffer)
+    (if (and (eobp) (bolp))
+        (delete-char -1)))
+
+  (defadvice term-process-pager (after term-process-rebind-keys activate)
+    (define-key term-pager-break-map  "\177" 'term-pager-back-page)))
+#+end_src
+
+*** zoom
+
+#+begin_src emacs-lisp
+(use-package zoom
+  :straight t
+  :bind ("C-x +" . zoom)
+  :custom
+  (zoom-size 'size-callback)
+  :preface
+  (defun size-callback ()
+    (cond ((> (frame-pixel-width) 1280) '(90 . 0.75))
+          (t '(0.5 . 0.5)))))
+#+end_src
+
+
 
 ** COMMENT XWidgets Webkit Browser
 I used to use the xwidgets webkit browser in order to view or preview

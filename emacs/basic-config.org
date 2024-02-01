@@ -26,6 +26,8 @@ loaded, speeding Emacs up a bit.
 (menu-bar-mode -1)                 ; disable menubar
 (blink-cursor-mode 0)              ; disable blinking cursor
 ;; (setq gc-cons-threshold (* 1024 1024 1024))
+(setq frame-inhibit-implied-resize t)
+(setq inhibit-compacting-font-caches t)
 #+end_src
 *** Unset =file-name-handler-alist=
 Every file opened and loaded by Emacs will run through this list to check for a proper handler for the file, but during startup, it won’t need any of them.
@@ -441,13 +443,14 @@ I still use the mouse for scrolling, changing frame sizes:
   (("C-a" . crux-move-beginning-of-line)
    ("C-x 4 t" . crux-transpose-windows)
    ("C-x K" . crux-kill-other-buffers)
+   ("C-x C-d" . crux-duplicate-current-line-or-region)
+   ("C-o" . crux-smart-open-line)
    ("C-k" . crux-smart-kill-line))
   :config
   (crux-with-region-or-buffer indent-region)
   (crux-with-region-or-buffer untabify)
   (crux-with-region-or-point-to-eol kill-ring-save)
   (defalias 'rename-file-and-buffer #'crux-rename-file-and-buffer))
-
 #+end_src
 *** discover-my-major
 #+begin_src emacs-lisp

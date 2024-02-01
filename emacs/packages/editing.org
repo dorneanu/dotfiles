@@ -88,6 +88,8 @@ compatibility package that adds states for iedit.
    "q" #'evil-iedit-state/quit-iedit-mode))
 #+end_src
 
+#+RESULTS:
+
 ** Smartparens
 ~smartparens~ is a package similar to ~parinfer~, but while the latter is
 more specialized for Lisp dialects, ~smartparens~ works better with

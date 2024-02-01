@@ -351,8 +351,9 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 (use-package vertico-posframe
   :straight t
   :demand t
-  :config
-  (vertico-posframe-mode))
+  ;; :config
+  ;; (vertico-posframe-mode))
+  )
 
 (use-package vertico-repeat
   :ensure nil
@@ -458,8 +459,12 @@ use [[https://github.com/oantolin/orderless][orderless]] (or [[https://github.co
   :straight t
   :custom
   (completion-category-defaults nil)
-  (completion-category-overrides '((file (styles . (partial-completion)))))
-  (completion-styles '(orderless)))
+  ;; (completion-category-overrides '((file (styles . (partial-completion)))))
+  ;; (completion-styles '(orderless)))
+  (completion-styles '(orderless basic))
+  (completion-category-overrides
+   '((file (styles basic partial-completion)))))
+
 #+end_src
 *** embark
 
