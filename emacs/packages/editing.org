@@ -97,37 +97,71 @@ other programming languages that still uses parenthesis, but not as
 much as Lisp dialects; think for example C, C++, Rust, JavaScript, and
 so on.
 #+begin_src emacs-lisp
+(use-package smartparens-config
+  :ensure nil
+  :after smartparens
+  :config
+  ;; don't create a pair with single quote in minibuffer
+  (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
+
+  ;; indent after inserting any kinds of parens
+  (defun my/smartparens-pair-newline-and-indent (id action context)
+    (save-excursion
+      (newline)
+      (indent-according-to-mode))
+    (indent-according-to-mode))
+  (sp-pair "(" nil :post-handlers
+           '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  (sp-pair "{" nil :post-handlers
+           '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  (sp-pair "[" nil :post-handlers
+           '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  )
+
 (use-package smartparens
-  :defer t
   :straight (smartparens :build t
                          :type git
                          :host github
                          :repo "Fuco1/smartparens")
-  ;; Not sure about the bindings here.
-  ;; From https://github.com/dakra/dmacs/blob/nil/init.org
-  ;; :bind (:map smartparens-mode-map
-  ;;             ;; This is the paredit mode map minus a few key bindings
-  ;;             ;; that I use in other modes (e.g. M-?)
-  ;;             ("C-M-f" . sp-forward-sexp) ;; navigation
-  ;;             ("C-M-b" . sp-backward-sexp)
-  ;;             ("C-M-u" . sp-backward-up-sexp)
-  ;;             ("C-M-d" . sp-down-sexp)
-  ;;             ("C-M-p" . sp-backward-down-sexp)
-  ;;             ("C-M-n" . sp-up-sexp)
-  ;;             ("C-w" . whole-line-or-region-sp-kill-region)
-  ;;             ("M-s" . sp-splice-sexp) ;; depth-changing commands
-  ;;             ("M-r" . sp-splice-sexp-killing-around)
-  ;;             ("M-(" . sp-wrap-round)
-  ;;             ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
-  ;;             ("C-<right>" . sp-forward-slurp-sexp)
-  ;;             ("C-}" . sp-forward-barf-sexp)
-  ;;             ("C-<left>" . sp-forward-barf-sexp)
-  ;;             ("C-(" . sp-backward-slurp-sexp)
-  ;;             ("C-M-<left>" . sp-backward-slurp-sexp)
-  ;;             ("C-{" . sp-backward-barf-sexp)
-  ;;             ("C-M-<right>" . sp-backward-barf-sexp)
-  ;;             ("M-S" . sp-split-sexp) ;; misc
-  ;;             ("M-j" . sp-join-sexp))
+  ;; From https://github.com/alexpeits/emacs.d/blob/nil/configuration.org
+  :bind (:map smartparens-mode-map
+              ;; paredit bindings
+              ("C-M-f" . sp-forward-sexp)
+              ("C-M-b" . sp-backward-sexp)
+              ("C-M-d" . sp-down-sexp)
+              ("C-M-u" . sp-backward-up-sexp)
+              ("C-M-n" . sp-up-sexp)
+              ("C-M-p" . sp-backward-down-sexp)
+              ("M-m S" . sp-splice-sexp)
+              ("M-<up>" . sp-splice-sexp-killing-backward)
+              ("M-<down>" . sp-splice-sexp-killing-forward)
+              ("M-r" . sp-splice-sexp-killing-around)
+              ("M-(" . sp-wrap-round)
+              ("M-{" . sp-wrap-curly)
+              ;; ("C-)" . sp-forward-slurp-sexp)
+              ("C-<right>" . sp-forward-slurp-sexp)
+              ;; ("C-}" . sp-forward-barf-sexp)
+              ("C-<left>" . sp-forward-barf-sexp)
+              ;; ("C-(" . sp-backward-slurp-sexp)
+              ("C-M-<left>" . sp-backward-slurp-sexp)
+              ("C-{" . sp-backward-barf-sexp)
+              ("C-M-<right>" . sp-backward-barf-sexp)
+              ("M-S" . sp-split-sexp)
+              ;; mine
+              ("C-M-k" . sp-kill-sexp)
+              ("C-M-w" . sp-copy-sexp)
+              ("M-@" . sp-mark-sexp))
+
+  :init
+  (setq sp-show-pair-delay 0.2
+        ;; avoid slowness when editing inside a comment for modes with
+        ;; parenthesized comments (e.g. coq)
+        sp-show-pair-from-inside nil
+        sp-cancel-autoskip-on-backward-movement nil
+        sp-highlight-pair-overlay nil
+        sp-highlight-wrap-overlay nil
+        sp-highlight-wrap-tag-overlay nil
+        sp-python-insert-colon-in-function-definitions nil)
   :hook
   (prog-mode . smartparens-mode)
   (org-mode . smartparens-mode)
@@ -150,6 +184,7 @@ so on.
   `(lambda (&optional arg)
      (interactive "P")
      (sp-wrap-with-pair ,s)))
+
 (define-key prog-mode-map (kbd "M-(") (prelude-wrap-with "("))
 (define-key prog-mode-map (kbd "M-[") (prelude-wrap-with "["))
 (define-key prog-mode-map (kbd "M-{") (prelude-wrap-with "{"))

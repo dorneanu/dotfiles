@@ -86,6 +86,7 @@ Undefining some stuff to make keybind prefixes work correctly.
 
   <<general-keybindings-gen(table=keybinds-windows, prefix="w")>>
 
+  <<general-keybindings-gen(table=keybinds-open, prefix="o")>>
   <<general-keybindings-gen(table=keybinds-quit, prefix="q")>>
   <<general-keybindings-gen(table=keybinds-searches, prefix="s")>>
   <<general-keybindings-gen(table=keybinds-hydras, prefix="x")>>
@@ -286,6 +287,16 @@ My keybinds for jumping around are prefixed by ~j~.
 | D   | dired-jump-other-window |             |
 | j   | persp-switch-last       |             |
 | w   | ace-window              |             |
+** Open stuff
+Keybindings for ~opening~ stuff (prefixed by ~o~)
+
+#+name: keybinds-open
+| Key | Function                      | Description |
+|-----+-------------------------------+-------------|
+|     |                               | open        |
+| ll  | link-hint-open-link           |             |
+| lc  | link-hint-copy-link           |             |
+| lm  | link-hint-open-multiple-links |             |
 
 ** Project
 My keybinds for my projects are prefixed by ~p~.
@@ -426,6 +437,7 @@ much to say. The prefix here is ~w~.
 | ,   | dorneanu/toggle-window-split  |             |   |
 | /   | split-window-right-and-focus  |             |   |
 | $   | winum-select-window-by-number |             |   |
+| =   | balance-windows               |             |   |
 | 0   | winum-select-window-0-or-10   | none        |   |
 | 1   | winum-select-window-1         | none        |   |
 | 2   | winum-select-window-2         | none        |   |

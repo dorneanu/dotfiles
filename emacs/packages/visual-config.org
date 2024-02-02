@@ -259,22 +259,15 @@ once it is fixed.
   :custom ((valign-fancy-bar t)))
 #+end_src
 
-** COMMENT Solaire: Incandescent Emacs
-A common issue when you have a lot of windows opened in Emacs is
-sometimes there’s just too much. Is the first window source code? Is
-the other one just an open email? Oh, let’s not forget the ~*Messages*~
-buffer open next to another source buffer.
-
-Solaire-mode applies a subtle but useful tweak to your current colour
-scheme: the background of programming buffers is slightly lighter than
-the background of other buffers. (Or is it other buffers that have a
-slightly darker background? I’m not sure.)
+** Solaire: Incandescent Emacs
 #+begin_src emacs-lisp
 (use-package solaire-mode
-  :defer t
-  :straight (:build t)
-  :init (solaire-global-mode +1))
+  :straight t
+  :defer 0.1
+  :custom (solaire-mode-remap-fringe t)
+  :config (solaire-global-mode))
 #+end_src
+
 ** Theme
 
 You may have noticed I use the Nord theme pretty much everywhere on my
@@ -295,6 +288,10 @@ personal preference.
 
 ;; Install moe-theme
 (use-package moe-theme
+  :straight t)
+
+;; Install moe-theme
+(use-package ef-themes
   :straight t)
 
 ;; Load theme

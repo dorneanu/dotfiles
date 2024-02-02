@@ -46,6 +46,102 @@ in order to interact with Bitwarden in Emacs with the help of the
                        :repo "https://labs.phundrak.com/phundrak/bitwarden.el"))
 #+end_src
 
+** Buffers
+*** ibuffer
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :custom
+  (ibuffer-default-display-maybe-show-predicates t)
+  (ibuffer-expert t)
+  (askjdhasdkjh)
+  (ibuffer-formats
+   '((mark modified read-only " "
+           (name 16 -1)
+           " "
+           (size 6 -1 :right)
+           " "
+           (mode 16 16)
+           " " filename)
+     (mark " "
+           (name 16 -1)
+           " " filename)))
+  (ibuffer-maybe-show-regexps nil)
+  (ibuffer-saved-filter-groups
+   '(("default"
+      ("Magit"
+       (or
+
+        (mode . magit-status-mode)
+        (mode . magit-log-mode)
+        (name . "\\*magit")
+        (name . "magit-")
+        (name . "git-monitor")))
+      ("Coq"
+       (or
+        (mode . coq-mode)
+        (name . "\\<coq\\>")
+        (name . "_CoqProject")))
+      ("Commands"
+       (or
+        (mode . shell-mode)
+        (mode . eshell-mode)
+        (mode . term-mode)
+        (mode . compilation-mode)))
+      ("Haskell"
+       (or
+        (mode . haskell-mode)
+        (mode . haskell-cabal-mode)
+        (mode . haskell-literate-mode)))
+      ("Rust"
+       (or
+        (mode . rust-mode)
+        (mode . cargo-mode)
+        (name . "\\*Cargo")
+        (name . "^\\*rls\\(::stderr\\)?\\*")
+        (name . "eglot")))
+      ("Nix"
+       (mode . nix-mode))
+      ("C++"
+       (or
+        (mode . c-mode)
+        (mode . c++-mode)))
+      ("Lisp"
+       (mode . emacs-lisp-mode))
+      ("Dired"
+       (mode . dired-mode))
+      ("Gnus"
+       (or
+        (mode . message-mode)
+        (mode . mail-mode)
+        (mode . gnus-group-mode)
+        (mode . gnus-summary-mode)
+        (mode . gnus-article-mode)
+        (name . "^\\.newsrc-dribble")
+        (name . "^\\*\\(sent\\|unsent\\|fetch\\)")
+        (name . "^ \\*\\(nnimap\\|nntp\\|nnmail\\|gnus\\|server\\|mm\\*\\)")
+        (name . "\\(Original Article\\|canonical address\\|extract address\\)")))
+      ("Org"
+       (or
+        (name . "^\\*Calendar\\*$")
+        (name . "^\\*Org Agenda")
+        (name . "^ \\*Agenda")
+        (name . "^diary$")
+        (mode . org-mode)))
+      ("Emacs"
+       (or
+        (name . "^\\*scratch\\*$")
+        (name . "^\\*Messages\\*$")
+        (name . "^\\*\\(Customize\\|Help\\)")
+        (name . "\\*\\(Echo\\|Minibuf\\)"))))))
+  (ibuffer-show-empty-filter-groups nil)
+  (ibuffer-shrink-to-minimum-size t t)
+  (ibuffer-use-other-window t)
+  :init
+  (add-hook 'ibuffer-mode-hook
+            #'(lambda ()
+                (ibuffer-switch-to-saved-filter-groups "default"))))
+#+end_src
+
 ** Calendar
 I am using the built-in calendar of Emacs, but as I use Evil and the
 bépo layout, many keybindings available by default or through
@@ -2100,6 +2196,15 @@ left it.
   (setq pdf-view-restore-filename (expand-file-name ".tmp/pdf-view-restore"
                                                     user-emacs-directory)))
 #+end_src
+** Web
+*** link-hint
+#+begin_src emacs-lisp
+(use-package link-hint
+  :straight
+  :bind (("M-o" . link-hint-open-link)
+         ("C-c l o" . link-hint-open-link)
+         ("C-c l c" . link-hint-copy-link)))
+#+end_src
 
 ** Project Management
 *** Magit
@@ -2474,7 +2579,7 @@ buffer.
   (shell-pop-cleanup-buffer-at-process-exit t))
 #+end_src
 
-*** COMMENT VTerm
+*** VTerm
 VTerm gives Emacs access to regular shells with an almost regular
 emulator. Be aware you will most likely need to hit ~C-c~ twice to send
 an interrupt signal.
@@ -2483,7 +2588,7 @@ an interrupt signal.
   :defer t
   :straight t
   :config
-  (setq vterm-shell "/usr/bin/fish"))
+  (setq vterm-shell "/usr/bin/zsh"))
 #+end_src
 
 One annoying think with vterm is it only can create one buffer, you

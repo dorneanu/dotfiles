@@ -444,6 +444,8 @@ I still use the mouse for scrolling, changing frame sizes:
    ("C-x 4 t" . crux-transpose-windows)
    ("C-x K" . crux-kill-other-buffers)
    ("C-x C-d" . crux-duplicate-current-line-or-region)
+   ("C-c f r" . crux-rename-buffer-and-file)
+   ("C-c f d" . crux-delete-file-and-buffer)
    ("C-o" . crux-smart-open-line)
    ("C-k" . crux-smart-kill-line))
   :config
