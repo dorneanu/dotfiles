@@ -161,14 +161,14 @@ so on.
         sp-highlight-pair-overlay nil
         sp-highlight-wrap-overlay nil
         sp-highlight-wrap-tag-overlay nil
+        blink-matching-paren nil
         sp-python-insert-colon-in-function-definitions nil)
   :hook
   (prog-mode . smartparens-mode)
   (org-mode . smartparens-mode)
   :config
   ;; Always highlight matching parens
-  (show-smartparens-global-mode +1)
-  (setq blink-matching-paren nil))
+  (show-smartparens-global-mode +1))
 
 ;; Some customizations for ORG mode
 (with-eval-after-load 'smartparens
@@ -299,20 +299,23 @@ Use expand-region
    ("P" . er/mark-text-paragraph)))
 #+end_src
 
-** hippie-exp: Expand by fuzzy matching text in open buffers
+** hippie-exp
+Expand by fuzzy matching text in open buffers
+
 #+BEGIN_SRC emacs-lisp
 (use-package hippie-exp
   :ensure nil
   :bind (("M-/" . hippie-expand))
   :config
-  (setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                           try-expand-dabbrev-all-buffers
-                                           try-expand-dabbrev-from-kill
-                                           try-complete-file-name-partially
-                                           try-complete-file-name
-                                           try-expand-all-abbrevs
-                                           try-expand-list
-                                           try-expand-line
-                                           try-complete-lisp-symbol-partially
-                                           try-complete-lisp-symbol)))
+  ;; (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+  ;;                                          try-expand-dabbrev-all-buffers
+  ;;                                          try-expand-dabbrev-from-kill
+  ;;                                          try-complete-file-name-partially
+  ;;                                          try-complete-file-name
+  ;;                                          try-expand-all-abbrevs
+  ;;                                          try-expand-list
+  ;;                                          try-expand-line
+  ;;                                          try-complete-lisp-symbol-partially
+  ;;                                          try-complete-lisp-symbol))
+  )
 #+END_SRC

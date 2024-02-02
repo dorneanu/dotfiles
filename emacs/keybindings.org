@@ -232,12 +232,15 @@ I also have some keybinds dedicated to opening specific files.
 ** Searches
 My keybinds for searches are prefixed by ~s~.
 #+name: keybinds-searches
-| Key | Function                  | Description |
-|-----+---------------------------+-------------|
-| q   | swiper                    |             |
-| .   | swiper-thing-at-point     |             |
-| a   | swiper-all                |             |
-| A   | swiper-all-thing-at-point |             |
+| Key | Function                          | Description                  |
+|-----+-----------------------------------+------------------------------|
+| q   | swiper                            |                              |
+| .   | swiper-thing-at-point             |                              |
+| a   | swiper-all                        |                              |
+| A   | swiper-all-thing-at-point         |                              |
+| rd  | my/rg-dotemacs                    | Seach in dotemacs repo       |
+| rh  | my/rg-org-roam-directory-huberman | Search in huberman directory |
+| ro  | my/rg-org-roam-directory          | Search in org-roam DB        |
 
 ** Help
 My keybinds for help are prefixed by ~h~.
@@ -472,6 +475,7 @@ much to say. The prefix here is ~w~.
 | fc  | default-font-presets-choose         |             |   |
 | f+  | default-font-presets-scale-increase |             |   |
 | f-  | default-font-presets-scale-decrease |             |   |
+| fs  | dorneanu/set-font-size              |             |   |
 | m   | hydra-modeline/body                 |             |   |
 | w   | +hydra/window-nav/body              |             |   |
 | W   | hydra-windows/body                  |             |   |

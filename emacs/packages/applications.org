@@ -314,6 +314,15 @@ Configure custom searches
   :files "everything"
   :dir (concat org-roam-directory "/rez/huberman-lab")
   :confirm prefix)
+
+(setq dotemacs-directory "/cs/priv/repos/dotemacs")
+(rg-define-search my/rg-dotemacs
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir dotemacs-directory
+  :confirm prefix)
+
 #+end_src
 
 ** elfeed
