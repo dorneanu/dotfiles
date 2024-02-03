@@ -2550,7 +2550,7 @@ Still not convinced, but let's activate it:
 #+end_src
 *** WIP jira
 
-** Screenshot
+** COMMENT Screenshot
 ~screenshot.el~ is a nice utility package made by TEC. It allows the
 user to take a screenshot of a specific area of a buffer and make it
 look nice.
@@ -2568,7 +2568,16 @@ look nice.
     :packages '(screenshot)
     "S" #'screenshot))
 #+end_src
-
+** Screenshots
+*** emacsshot
+From https://gitlab.com/marcowahl/emacsshot
+#+begin_src emacs-lisp
+(use-package emacsshot
+  :straight t
+  :bind(("C-x a s f" . emacsshot-snap-frame)
+        ("C-x a s w" . emacsshot-snap-window))
+  )
+#+end_src
 ** Shells
 *** Shell-pop
 Shell-pop allows the user to easily call for a new shell in a pop-up
@@ -2737,9 +2746,6 @@ Some packages I would like to test first
     (cond ((> (frame-pixel-width) 1280) '(90 . 0.75))
           (t '(0.5 . 0.5)))))
 #+end_src
-
-
-
 ** COMMENT XWidgets Webkit Browser
 I used to use the xwidgets webkit browser in order to view or preview
 HTML files from Emacs, but it seems the Cairo background transparency
