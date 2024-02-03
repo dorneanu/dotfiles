@@ -848,6 +848,7 @@ Let’s now define some keybinds for inserting stuff in our org buffer:
 | ies       | org-emphasize-strike-through            |             |
 | ieu       | org-emphasize-underline                 |             |
 | iev       | org-emphasize-verbatim                  |             |
+| idc       | org-download-clipboard                  |             |
 | iE        | org-set-effort                          |             |
 | if        | org-footnote-new                        |             |
 | ih        | org-insert-heading                      |             |
