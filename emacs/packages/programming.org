@@ -11,9 +11,10 @@ Disable truncating lines
 #+begin_src emacs-lisp
 (add-hook 'prog-mode-hook (lambda () (setq truncate-lines t)))
 #+end_src
-*** tab-width
+*** indentation
 #+begin_src emacs-lisp
-(setq-default tab-width 4) ;; Set width for tabs
+(setq-default tab-width 4
+              indent-tabs-mode nil)
 #+end_src
 ** Tools
 *** Treesitter
@@ -418,7 +419,6 @@ such as SQL.
 #+begin_src emacs-lisp
 (defun my/local-tab-indent ()
   (setq-local indent-tabs-mode 1))
-
 (add-hook 'makefile-mode-hook #'my/local-tab-indent)
 #+end_src
 

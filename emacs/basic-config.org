@@ -126,46 +126,10 @@ Lastly, I want the default mode for Emacs to be Emacs Lisp.
 #+end_src
 
 **** Indentation
-I don’t like tabs. They rarely look good, and if I need it I can
-almost always tell Emacs to use them through a ~.dir-locals.el~ file or
-through the config file of my code formatter. So by default, let’s
-disable them:
 #+begin_src emacs-lisp
 (setq-default indent-tabs-mode nil)
 (add-hook 'prog-mode-hook (lambda () (setq indent-tabs-mode nil)))
 #+end_src
-
-Just to go on a little tangent here: I don’t exactly /hate/ tabs, but I
-find them really annoying when your text editor knows only them. Sure,
-for indentation they work great, and they allow different people
-getting different settings in their text editor depending on their
-preferred tastes —some may prefer 2 spaces tabs, some may prefer 4
-spaces tabs, some deranged people prefer 8 spaces tabs, and some
-monsters prefer 3!
-
-But the thing is, once you indented your code, and then you need
-alignment, tabs don’t work any more! Or they may on *your* text editor
-but not on your coworker’s! (He’s the one using 3 spaces tabs by the
-way).
-
-So, is the answer to use spaces instead of tabs, and screw peoples’
-preferences in terms of tabs width? No, I say the answer is more
-moderate than that, and it might frighten or anger some of you at
-first: use both spaces and tabs. Now, before you lynch me on the main
-avenue in front of everyone, let me tell you absolutely no one should
-ever be mixing spaces and tabs for indentation, that would be
-absolutely terrible and would bring the worst of both worlds. What’s
-the best of both worlds then?
-#+begin_center
-/Tabs for indentation/
-
-/Spaces for alignment/
-#+end_center
-
-I haven’t found a way to automate that in Emacs yet aside from
-formatters’ config file, and tabs look bat in EmacsLisp anyway, so
-I’ll stick with spaces by default and change it where needed.
-
 *** GPG pinentry
 I’d like Emacs to be responsible for decrypting my GPG encrypted files
 when in Emacs. This can be done with the following line.
@@ -307,6 +271,34 @@ background transparent, excluding images and text.
 ;; (add-to-list 'default-frame-alist '(alpha-background . 0.2))
 #+end_src
 
+*** Some other global configs
+#+begin_src emacs-lisp
+;; https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-base.el
+(use-package simple
+  :ensure nil
+  :hook ((after-init . size-indication-mode)
+         (text-mode . visual-line-mode)
+         ((prog-mode markdown-mode conf-mode) . enable-trailing-whitespace))
+  :init
+  (setq column-number-mode t
+        line-number-mode t
+        ;; kill-whole-line t               ; Kill line including '\n'
+        line-move-visual nil
+        track-eol t                     ; Keep cursor at end of lines. Require line-move-visual is nil.
+        set-mark-command-repeat-pop t)  ; Repeating C-SPC after popping mark pops it again
+  )
+
+;; Visualize TAB, (HARD) SPACE, NEWLINE
+(setq-default show-trailing-whitespace nil) ; Don't show trailing whitespace by default
+(defun enable-trailing-whitespace ()
+  "Show trailing spaces and delete on saving."
+  (setq show-trailing-whitespace t)
+  (add-hook 'before-save-hook #'delete-trailing-whitespace nil t))
+#+end_src
+
+#+RESULTS:
+: enable-trailing-whitespace
+
 *** Modeline Modules
 I sometimes use Emacs in fullscreen, meaning my usual taskbar will be
 hidden. This is why I want the current date and time to be displayed,
@@ -433,6 +425,10 @@ I still use the mouse for scrolling, changing frame sizes:
 ;; Horizontal Scroll
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
+#+end_src
+*** fill-column
+#+begin_src emacs-lisp
+(setq-default fill-column 90)
 #+end_src
 ** Global functionalities
 *** crux

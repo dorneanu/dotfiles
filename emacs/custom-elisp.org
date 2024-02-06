@@ -174,3 +174,49 @@ Change default font size
            (title (cl-caddr (car (dom-by-tag dom 'title)))))
       (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url (org-web-tools--cleanup-title title)))))
 #+end_src
+
+*** Auto clock-in when task is started
+#+begin_src emacs-lisp
+;; From https://github.com/svetlyak40wt/dot-emacs/blob/master/.emacs.d/lib/org-auto-clock.el
+;; Auto clock-in when task is marked STARTED
+(defun wicked/org-clock-in-if-starting ()
+  "Clock in when the task is marked STARTED."
+  (when (and (string= org-state "STARTED")
+             (not (string= org-last-state org-state)))
+    (org-clock-in)))
+
+(defun wicked/org-clock-out-if-waiting ()
+  "Clock out when the task is marked WAITING or WIP (Work in Progress)."
+  (when (and (or (string= org-state "WAITING")
+                 (string= org-state "WIP"))
+             (equal (marker-buffer org-clock-marker) (current-buffer))
+             (< (point) org-clock-marker)
+             (> (save-excursion (outline-next-heading) (point))
+                org-clock-marker)
+             (not (string= org-last-state org-state)))
+    (org-clock-out)))
+
+(with-eval-after-load 'org
+  (add-hook 'org-after-todo-state-change-hook #'wicked/org-clock-in-if-starting)
+  (defadvice org-clock-in (after wicked activate)
+    "Set this task's status to 'STARTED'."
+    (org-todo "STARTED"))
+  (add-hook 'org-after-todo-state-change-hook #'wicked/org-clock-out-if-waiting))
+#+end_src
+
+*** Enter clock data manually
+From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
+
+#+begin_src emacs-lisp
+(defun dorneanu/org-clock-enter-manually (begin end)
+  "Enter a clock item manually."
+  (interactive (list (org-read-date t t) (org-read-date t t)))
+  (save-excursion
+    (org-clock-find-position nil)
+    (insert-before-markers-and-inherit "\n")
+    (backward-char 1)
+    (insert-and-inherit org-clock-string " ")
+    (org-insert-time-stamp begin t t)
+    (org-insert-time-stamp end t t "--")
+    (org-evaluate-time-range t)))
+#+end_src

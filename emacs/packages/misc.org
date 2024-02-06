@@ -78,25 +78,11 @@ Let’s give ~calc-mode~ some better defaults.
       calc-symbolic-mode t)
 #+end_src
 
-** COMMENT Elcord
-What’s the point of using Emacs if you can’t tell everyone?
-#+begin_src emacs-lisp
-(use-package elcord
-  :straight (:built t)
-  :defer t
-  :config
-  (csetq elcord-use-major-mode-as-main-icon t
-         elcord-refresh-rate                5
-         elcord-boring-buffers-regexp-list  `("^ "
-                                              ,(rx "*" (+ any) "*")
-                                              ,(rx bol (or "Re: "
-                                                           "Fwd: ")))))
-#+end_src
-
 ** Keycast
 In case I am sharing my screen with people and I want to show which
 functions are called on my keystrokes since I don’t exactly use
 standard keybindings.
+
 #+begin_src emacs-lisp
 (use-package keycast
   :defer t
@@ -109,143 +95,6 @@ standard keybindings.
         (add-hook 'pre-command-hook 'keycast--update t)
       (remove-hook 'pre-command-hook 'keycast--update)))
   (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
-#+end_src
-
-** COMMENT Keyfreq
-Keyfreq is a package that records all the commands I call from Emacs
-and builds a heatmap out of it.
-#+begin_src emacs-lisp
-;; (use-package keyfreq
-;;   :straight (:build t)
-;;   :init
-;;   (keyfreq-mode 1)
-;;   (keyfreq-autosave-mode 1)
-;;   :custom
-;;   (keyfreq-file (expand-file-name "keyfreq.el" user-emacs-directory))
-;;   (keyfreq-file-lock (expand-file-name "keyfreq.lock" user-emacs-directory))
-;;   (keyfreq-excluded-commands '(self-insert-command org-self-insert-command
-;;                                evil-previous-visual-line evil-next-visual-line
-;;                                ivy-next-line evil-backward-char evil-forward-char
-;;                                evil-next-line evil-previous-line evil-normal-state
-;;                                text-scale-pinch lsp-ui-doc--handle-mouse-movement
-;;                                vterm--self-insert evil-mouse-drag-region
-;;                                mouse-set-point mouse-drag-region mwheel-scroll
-;;                                pdf-util-image-map-mouse-event-proxy
-;;                                mouse-set-region)))
-#+end_src
-
-** COMMENT Mastodon
-#+begin_src emacs-lisp
-(use-package mastodon
-  :defer t
-  :ensure t
-  :straight (mastodon :type git
-                      :host codeberg
-                      :repo "martianh/mastodon.el")
-  :config
-  (setq mastodon-instance-url "https://emacs.ch"
-        mastodon-active-user  "phundrak")
-
-  (defun me/mastodon-toot--send-language-if-none ()
-    (unless mastodon-toot--language
-      (mastodon-toot--set-toot-language)))
-  (advice-add #'me/mastodon-toot--send-language-if-none :before #'mastodon-toot--send)
-  :general
-  (phundrak/evil
-    :packages '(mastodon)
-    :keymaps 'mastodon-mode-map
-    "]]" '(mastodon-tl--goto-next-toot :wk "Next status")
-    "[[" '(mastodon-tl--goto-prev-toot :wk "Previous status")
-    "gt" '(mastodon-tl--next-tab-item :wk "Next tab item")
-    "gs" '(mastodon-tl--previous-tab-item :wk "Previous tab item")
-    "»" '(mastodon-tl--goto-next-toot :wk "Next status")
-    "«" '(mastodon-tl--goto-prev-toot :wk "Previous status")
-    "q" #'kill-current-buffer)
-  (phundrak/major-leader-key
-    :package 'mastodon
-    :keymaps 'mastodon-mode-map
-    "#" '(mastodon-tl--get-tag-timeline :wk "Tag timeline")
-    "f" '(mastodon-tl--get-federated-timeline :wk "Federated timeline")
-    "F" '(mastoton-tl--view-filters :wk "Filters")
-    "H" '(mastodon-tl--get-local-timeline :wk "Home timeline")
-    "L" '(mastodon-tl--get-local-timeline :wk "Local timeline")
-    "N" '(mastodon-notifications-get :wk "Notifications")
-    "T" '(mastodon-tl--thread :wk "Thread")
-    "O" '(mastodon-profile--my-profile :wk "My profile")
-    "S" '(mastodon-tl--get-follow-suggestions :wk "Follow suggestions")
-    "a" '(mastodon-profile--get-toot-author :wk "Toot author")
-    "b" '(mastodon-profile--view-bookmarks :wk "Bookmarks")
-    "s" '(mastodon-search--search-query :wk "Search query")
-    "U" '(mastodon-tl--update :wk "Update")
-
-    "t"  '(nil :wk "Toots")
-    "tt" '(mastodon-toot :wk "Toot")
-    "tb" '(mastodon-toot--toggle-boost :wk "Boost")
-    "tB" '(mastodon-toot--bookmark-toot-toggle :wk "Bookmark")
-    "td" '(mastodon-toot--delete-toot :wk "Delete")
-    "tD" '(mastodon-toot--delete-and-redraft-toot :wk "Redraft")
-    "tf" '(mastodon-toot--toggle-favourite :wk "Favourite")
-    "tF" '(mastodon-profile--view-favourites :wk "View favourites")
-    "tr" '(mastodon-toot--reply :wk "Reply")
-    "tp" '(mastodon-toot--pin-toot-toggle :wk "Pin")
-    "ts" '(mastodon-tl--toggle-spoiler-text-in-toot :wk "Spoiler")
-    "tu" '(mastodon-toot--copy-toot-url :wk "Copy url")
-    "tv" '(mastodon-tl--poll-vote :wk "Vote on poll")
-
-    "f"  '(nil :wk "Follow requests")
-    "fa" '(mastodon-notifications--follow-request-accept :wk "Accept")
-    "fr" '(mastodon-notifications--follow-request-reject :wk "Reject")
-    "fv" '(mastodon-profile--view-follow-requests :wk "View follow requests")
-
-    "u"  '(nil :wk "User")
-    "uf" '(mastodon-tl--follow-user :wk "Follow")
-    "uF" '(mastodon-tl--unfollow-user :wk "Unfollow")
-    "ub" '(mastodon-tl--block-user :wk "Block")
-    "uB" '(mastodon-tl--unblock-user :wk "Unblock")
-    "um" '(mastodon-tl--mute-user :wk "Mute")
-    "uM" '(mastodon-tl--unmute-user :wk "Unmute")
-    "un" '(mastodon-profile--update-user-profile-note :wk "Update user profile note")
-    "uu" '(mastodon-profile--show-user :wk "Show user")))
-#+end_src
-
-** COMMENT Mediawiki
-#+begin_src emacs-lisp
-(use-package mediawiki
-  :defer t
-  :straight (:build t)
-  :custom
-  (mediawiki-site-alist '(("PhundrakWiki" ; Title
-                           "https://wiki.phundrak.com/" ; URL
-                           "phundrak" ; username
-                           nil ; password
-                           nil ; LDAP
-                           "Main Page")))) ; Default page
-#+end_src
-
-** COMMENT SICP
-Who would get interested in Emacs and not want to read the SICP?
-Moreover, inside Emacs?
-#+begin_src emacs-lisp
-(use-package sicp
-  :straight (:build t)
-  :defer t)
-#+end_src
-
-** COMMENT quick-find-files
-This package is a small utility package I’ve written in order to
-quickly find files across my filesystem.
-#+begin_src emacs-lisp
-(use-package quick-find-files
-  :defer t
-  :straight (quick-find-files :type git
-                              :host github
-                              :repo "phundrak/quick-find-files.el"
-                              :build t)
-  :custom
-  (quick-find-files-program 'fd)
-  (quick-find-files-dirs '((:dir "~/org" :ext "org" :ignored ("config"))
-                           (:dir "~/org/notes" :ext "md")))
-  (quick-find-files-fd-additional-options "-L"))
 #+end_src
 
 ** Winum
@@ -287,14 +136,4 @@ Configure GPG assistant
 #+begin_src emacs-lisp
 (use-package pass
   :straight t)
-#+end_src
-** COMMENT Ytplay
-~ytplay~ is a small package I’ve written with which you can choose at
-which resolution to play a YouTube video in an external video player.
-#+begin_src emacs-lisp
-(use-package ytplay
-  :defer t
-  :straight (ytplay :build t
-                    :type git
-                    :repo "https://labs.phundrak.com/phundrak/ytplay.el"))
 #+end_src

@@ -6,12 +6,7 @@
 
 * Making my life easier
 ** Bufler
-Bufler is a package that organises and lists buffers in a much better
-way than how they are usually sorted. You can easily and quickly find
-buffers by their group, not only by their name, and THIS is great
-news! Also, no ~helm~ please! And for some reason, the keybindings are
-borked by default, so let’s redefine them, and let’s also rebind ~SPC~
-to ~p~ since it would conflict with my main ~general~ prefix.
+A replacement for ~ibuffer~
 #+begin_src emacs-lisp
 (use-package bufler
   :straight (bufler :build t
@@ -35,14 +30,14 @@ to ~p~ since it would conflict with my main ~general~ prefix.
 ** Helpful
 As the name tells, ~helpful~ is a really helpful package which greatly
 enhances a couple of built-in functions from Emacs, namely:
-| Vanilla Emacs Function | Helpful Function   | Comment                                       |
-|------------------------+--------------------+-----------------------------------------------|
-| ~describe-function~    | ~helpful-callable~ | Only interactive functions                    |
-| ~describe-function~    | ~helpful-function~ | Only actual functions (including interactive) |
-| ~describe-function~    | ~helpful-macro~    |                                               |
-| ~describe-command~     | ~helpful-command~  |                                               |
-| ~describe-key~         | ~helpful-key~      |                                               |
-| ~describe-variable~    | ~helpful-variable~ |                                               |
+| Vanilla Emacs Function | Helpful Function | Comment                                       |
+|------------------------+------------------+-----------------------------------------------|
+| ~describe-function~      | ~helpful-callable~ | Only interactive functions                    |
+| ~describe-function~      | ~helpful-function~ | Only actual functions (including interactive) |
+| ~describe-function~      | ~helpful-macro~    |                                               |
+| ~describe-command~       | ~helpful-command~  |                                               |
+| ~describe-key~           | ~helpful-key~      |                                               |
+| ~describe-variable~      | ~helpful-variable~ |                                               |
 
 #+begin_src emacs-lisp
 (use-package helpful
@@ -58,7 +53,7 @@ enhances a couple of built-in functions from Emacs, namely:
   ([remap describe-key]      . helpful-key))
 #+end_src
 
-** TODO google-translate
+** google-translate
 #+begin_src emacs-lisp
 ;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
 (use-package google-translate
@@ -76,7 +71,7 @@ enhances a couple of built-in functions from Emacs, namely:
 
 ;; TODO add keybindings
 #+end_src
-** TODO dict.cc
+** dict.cc
 #+begin_src emacs-lisp
 (use-package dictcc
   :straight t
@@ -90,7 +85,7 @@ enhances a couple of built-in functions from Emacs, namely:
   :defer t)
 #+end_src
 
-** TODO wordreference
+** wordreference
 #+begin_src emacs-lisp
 (use-package wordreference
   :straight t

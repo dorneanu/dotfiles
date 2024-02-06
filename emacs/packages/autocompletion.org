@@ -348,12 +348,18 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
   :config
   (vertico-mode 1))
 
+;; (use-package vertico-posframe
+;;   :straight t
+;;   :hook (vertico-mode . vertico-posframe-mode))
+
 (use-package vertico-posframe
   :straight t
-  :demand t
-  ;; :config
-  ;; (vertico-posframe-mode))
-  )
+  :after vertico
+  :config (vertico-posframe-mode 1)
+  (setq vertico-posframe-border-width 2
+        vertico-posframe-parameters '((internal-border-width . 2)))
+  (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
+
 
 (use-package vertico-repeat
   :ensure nil

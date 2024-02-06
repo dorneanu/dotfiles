@@ -297,6 +297,30 @@ personal preference.
 ;; Load theme
 (load-theme 'doom-monokai-octagon t)
 #+end_src
+** Tabs
+*** Tab Bar
+#+begin_src emacs-lisp
+(use-package tab-bar
+  :defer t
+  :straight (:type built-in)
+  :custom
+  (tab-bar-close-button-show nil)
+  (tab-bar-new-button-show nil)
+  (tab-bar-new-tab-choice "*dashboard*")
+  :custom-face
+  (tab-bar ((t (:background "#272C36"
+                :foreground "#272C36"
+                :height 0.8
+                :box (:line-width -1)))))
+  :init
+  (advice-add #'tab-new
+              :after
+              (lambda (&rest _) (when (y-or-n-p "Rename tab? ")
+                                  (call-interactively #'tab-rename)))))
+#+end_src
+
+#+RESULTS:
+
 
 ** Rainbow Delimiters
 This makes Lisp especially more readable, but it’s also nice to have
@@ -359,6 +383,15 @@ I use ~perspective~:
   :config
   (add-to-list 'focus-mode-to-thing '((prog-mode . defun) (text-mode . sentence))))
 #+end_src
+** visual-fill-column
+#+begin_src emacs-lisp
+(use-package visual-fill-column
+  :custom
+  (visual-fill-column-width 90)
+  (visual-fill-column-center-text t)
+  :ensure t)
+#+end_src
+
 ** winner
 #+begin_src emacs-lisp
 (use-package winner

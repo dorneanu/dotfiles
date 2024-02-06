@@ -338,7 +338,7 @@ database is to be stored.
   :config
   <<elfeed-open-youtube-with-mpv>>
   :custom
-  ((elfeed-search-filter "@1-week-ago +unread")
+  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
    (elfeed-db-directory "~/.elfeed")
    (elfeed-goodies/wide-threshold 0.2)
    (elfeed-set-timeout 36000)))
@@ -574,7 +574,7 @@ are prefixed with ~,~ (and ~M-m~).
 | tT  | elfeed-search-tag-all               |         |
 | tU  | elfeed-search-untag-all             |         |
 
-** COMMENT Email
+** COMMENT Email                                                   :ARCHIVE:
 *** Basic configuration
 As seen below, I use ~org-msg~ to compose my emails, which includes by
 default my signature. Therefore, there is no need for Emacs itself to
@@ -1397,10 +1397,17 @@ notification system, and I’ll activate the modeline notification.
   ;; set mu4e as default mail client
   (setq mail-user-agent 'mu4e-user-agent)
 
-  :config
+  ;; SMTP related
+  (setq message-send-mail-function        'smtpmail-send-it
+        smtpmail-stream-type              'tls)
 
+  :config
   ;; Set mu binary
   (setq mu4e-mu-binary "/usr/bin/mu")
+
+  ;; Use passwords from password-store
+  (setq auth-sources '(password-store))
+  (setq auth-source-debug t)
 
   ;; Choose which fields to show
   (setq mu4e-headers-fields
@@ -1428,6 +1435,7 @@ notification system, and I’ll activate the modeline notification.
   (setq message-citation-line-function 'message-insert-formatted-citation-line)
 
   ;; Fancy stuff
+  (setq mu4e-use-fancy-chars t)
   <<mu4e-fancy-marks>>
 
   ;; And change default threading characters to some "nicer" looking chars
@@ -1445,7 +1453,6 @@ notification system, and I’ll activate the modeline notification.
   ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
   (setq mu4e-headers-personal-mark '("p" . ""))
   ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
-
 
   ;; Set date format (header view)
   (setq mu4e-headers-date-format "%F")
@@ -1493,6 +1500,11 @@ notification system, and I’ll activate the modeline notification.
 <<mu4e-view-mode>>
 
 #+end_src
+
+#+RESULTS:
+| closure | (t) | nil                       | (visual-fill-column-mode) |
+| lambda  | nil | (visual-fill-column-mode) |                           |
+
 **** Bookmarks
 #+BEGIN_SRC emacs-lisp
 (setq mu4e-bookmarks
@@ -1598,6 +1610,7 @@ Set contexts
                      (user-full-name    . "Cyneox")
                      (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
                      (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-default-smtp-server  . "smtp.gmail.com")
                      (smtpmail-smtp-service . 465)
                      (smtpmail-stream-type  . ssl)
                      (mu4e-compose-signature . "Cyneox via Gmail")
@@ -1609,12 +1622,13 @@ Set contexts
              :name "variomedia"
              :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
              :match-func
-            (lambda (msg)
+             (lambda (msg)
                (when msg
                  (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
              :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
                      (user-full-name    . "Victor Dorneanu")
                      (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-default-smtp-server  . "smtp.variomedia.de")
                      (smtpmail-smtp-service . 465)
                      (smtpmail-stream-type  . ssl)
                      (mu4e-compose-signature . "Victor via Emacs")
@@ -2216,6 +2230,27 @@ left it.
 #+end_src
 
 ** Project Management
+*** Version control
+**** diffs
+#+begin_src emacs-lisp
+;; From https://github.com/dakra/dmacs/blob/nil/init.org
+(use-package diff-mode
+  :config
+  ;; Shorten file headers like Magit's diff format.
+  (setq diff-font-lock-prettify t))
+
+(use-package ediff
+  :defer t
+  :config
+  ;; Always expand files before diffing (especially org files)
+  (add-hook 'ediff-prepare-buffer-hook #'outline-show-all)
+  ;; Do everything in one frame
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  ;; Split ediff windows horizontally by default
+  (setq ediff-split-window-function 'split-window-horizontally))
+
+#+end_src
+
 *** Magit
 Magit is an awesome wrapper around Git for Emacs! Very often, I go
 from disliking to really hating Git GUI clients because they often
@@ -2407,10 +2442,14 @@ pull requests, create them, and fork projects among other things.
   :ensure t
   :hook
   ((magit-post-refresh . diff-hl-magit-post-refresh)
-   (prog-mode . diff-hl-mode)
-   (org-mode . diff-hl-mode)
+   ;; (prog-mode . diff-hl-mode)
+   ;; (org-mode . diff-hl-mode)
    (dired-mode . diff-hl-dired-mode)))
 #+end_src
+
+#+RESULTS:
+| org-download-enable | diff-hl-dired-mode |
+
 *** Projectile
 First, I need to install ~ripgrep~, a faster reimplementation of ~grep~,
 which will be very useful when managing projects.

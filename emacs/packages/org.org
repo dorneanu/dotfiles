@@ -1,4 +1,4 @@
-    #+title: Emacs — Packages — Org Mode
+#+title: Emacs — Packages — Org Mode
 #+setupfile: ../../headers
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :tangle ~/.config/emacs/lisp/org.el
@@ -32,7 +32,9 @@ Let's configure ORG
 (use-package org
   :ensure nil
   :defer t
-  :hook ((org-mode . visual-line-mode))
+  :hook (
+         ;; (org-mode . visual-line-mode)
+         (org-mode . org-indent-mode))
   :config
   (require 'ox-beamer)
   (require 'org-protocol)
@@ -48,7 +50,7 @@ Let's configure ORG
         org-fontify-whole-heading-line     t
         org-fontify-done-headline          t
         org-fontify-quote-and-verse-blocks t
-        org-startup-indented               t
+        org-startup-indented               nil
         org-startup-align-all-tables       t
         org-use-property-inheritance       t
         org-list-allow-alphabetical        t
@@ -98,6 +100,7 @@ Let's configure ORG
 
   <<org-agenda-files>>
   <<org-behavior-electric>>
+  <<org-refiling>>
   <<org-create-emphasis-functions()>>
   <<org-babel-load-languages>>
   <<org-capture-keybinds>>
@@ -118,13 +121,14 @@ Let's configure ORG
     <<general-keybindings-gen(table=org-keybinds-insert)>>
     <<general-keybindings-gen(table=org-keybinds-jump)>>
     <<general-keybindings-gen(table=org-keybinds-tables)>>
+    <<general-keybindings-gen(table=org-keybinds-refiling)>>
     <<general-keybindings-gen(table=org-keybinds-toggles)>>)
   (phundrak/major-leader-key
     :packages 'org
     :keymaps 'org-src-mode-map
     "'" #'org-edit-src-exit
     "k" #'org-edit-src-abort)
-)
+  )
 #+end_src
 
 ** evil-org
@@ -136,9 +140,11 @@ Let's configure ORG
   :config
   (evil-org-set-key-theme '(textobjects navigation calendar additional shift operators))
   (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
+  (evil-org-agenda-set-keys)
+  ;; Disable SPC in org-agenda-mode
+  (evil-define-key 'motion org-agenda-mode-map
+    (kbd "SPC") nil))
 #+end_src
-
 ** org-contrib
 #+begin_src emacs-lisp
 (use-package org-contrib
@@ -458,15 +464,18 @@ Finish this:
 (use-package org-capture
   :ensure nil
   :preface
+  (defvar my/org-appointment
+    (concat "* TODO %^{Appointment} :appt:\n"
+            "SCHEDULED: %t\n") "Template for appointment task.")
   (defvar my/org-active-task-template
     (concat "* NEXT %^{Task}\n"
             ":PROPERTIES:\n"
             ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
             ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
             ":END:") "Template for basic task.")
-  (defvar my/org-appointment
-    (concat "* TODO %^{Appointment}\n"
-            "SCHEDULED: %t\n") "Template for appointment task.")
+  (defvar my/org-meeting
+    (concat "* MEETING %^{Meeting}\n"
+            "SCHEDULED: %t\n") "Template for meetings")
   (defvar my/org-basic-task-template
     (concat "* TODO %^{Task}\n"
             ":PROPERTIES:\n"
@@ -476,15 +485,24 @@ Finish this:
   :custom
   (org-capture-templates
    `(
-     ("a" "Appointment" entry (file+headline "~/.personal/agenda/people.org" "Appointments"),
+     ("a" "Appointment" entry (file+headline "inbox.org" "Appointments"),
       my/org-appointment
       :empty-lines 1)
-     ("m" "Meeting" entry (file+headline "~/.personal/agenda/people.org" "Meetings")
-      "* Meeting with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
+
+     ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
+      my/org-meeting
+      :empty-lines 1
+      :immediate-finish t)
+
+     ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
+      "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
+
      ("t" "New Task")
      ("ta" "Active" entry (file+headline "inbox.org" "Active"),
       my/org-active-task-template
       :empty-lines 1
+      :clock-in t
+      :clock-resume t
       :immediate-finish t)
      ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
       my/org-basic-task-template
@@ -517,12 +535,12 @@ selected text is quite easy.
 #+name: org-emphasis-character
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
-| bold           | ~*~       |             42 |
-| italic         | ~/~       |             47 |
-| underline      | ~_~       |             95 |
-| verbatim       | ~=~       |             61 |
-| code           | ~~~       |            126 |
-| strike-through | ~+~       |             43 |
+| bold           | ~*~         |             42 |
+| italic         | ~/~         |             47 |
+| underline      | ~_~         |             95 |
+| verbatim       | ~=~         |             61 |
+| code           | ~~~         |            126 |
+| strike-through | ~+~         |             43 |
 
 #+name: org-create-emphasis-functions
 #+header: :tangle no :exports results :cache yes
@@ -589,6 +607,107 @@ the value `split-window-right', then it will be changed to
                "vertically"
              "horizontally")))
 #+end_src
+** org-refile
+Some extras copied from Doom Emacs
+#+begin_src emacs-lisp
+(defun +org-headline-avy ()
+  "TODO"
+  (require 'avy)
+  (save-excursion
+    (when-let* ((org-reverse-note-order t)
+                (pos (avy-with avy-goto-line (avy-jump (rx bol (1+ "*") (1+ blank))))))
+      (when (integerp (car pos))
+        ;; If avy is aborted with "C-g", it returns `t', so we know it was NOT
+        ;; aborted when it returns an int. If it doesn't return an int, we
+        ;; return nil.
+        (copy-marker (car pos))))))
+
+(defun +org/goto-visible ()
+  "TODO"
+  (interactive)
+  (goto-char (+org-headline-avy)))
+#+end_src
+
+And now all the settings for ~org-refile~:
+
+#+name: org-refiling
+#+begin_src emacs-lisp
+;; Refiling
+(setq org-refile-use-cache nil)
+(setq org-refile-targets '((nil :maxlevel . 9)
+                           (org-agenda-files :maxlevel . 9)))
+
+;; Allow refile to create parent tasks with confirmation
+(setq org-refile-allow-creating-parent-nodes 'confirm)
+(setq org-refile-use-outline-path 'file)       ; Show filename for refiling
+(setq org-outline-path-complete-in-steps nil)  ; Refile in a single go
+
+;; Exclude DONE state tasks from refile targets
+(defun dorneanu/verify-refile-target ()
+  "Exclude todo keywords with a done state from refile targets."
+  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+(setq org-refile-target-verify-function 'dorneanu/verify-refile-target)
+
+;; Some custom elisp functions
+(defun dorneanu/org-refile-anywhere (&optional goto default-buffer rfloc msg)
+  "A version of `org-refile' which allows refiling to any subtree."
+  (interactive "P")
+  (let ((org-refile-target-verify-function))
+    (org-refile goto default-buffer rfloc msg)))
+
+(defun dorneanu/org-agenda-refile-anywhere (&optional goto rfloc no-update)
+  "A version of `org-agenda-refile' which allows refiling to any subtree."
+  (interactive "P")
+  (let ((org-refile-target-verify-function))
+    (org-agenda-refile goto rfloc no-update)))
+
+;; These are from Doom Emacs: https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org-refile.el
+(defun +org/refile-to-current-file (arg &optional file)
+  "Refile current heading to elsewhere in the current buffer.
+If prefix ARG, copy instead of move."
+  (interactive "P")
+  (let ((org-refile-targets `((,file :maxlevel . 10)))
+        (org-refile-use-outline-path t)
+        (org-refile-keep arg)
+        current-prefix-arg)
+    (call-interactively #'org-refile)))
+
+(defun +org/refile-to-visible ()
+  "Refile current heading as first child of visible heading selected with Avy."
+  (interactive)
+  (when-let (marker (+org-headline-avy))
+    (let* ((buffer (marker-buffer marker))
+           (filename
+            (buffer-file-name (or (buffer-base-buffer buffer)
+                                  buffer)))
+           (heading
+            (org-with-point-at marker
+              (org-get-heading 'no-tags 'no-todo)))
+           ;; Won't work with target buffers whose filename is nil
+           (rfloc (list heading filename nil marker))
+           (org-after-refile-insert-hook (cons #'org-reveal org-after-refile-insert-hook)))
+      (org-refile nil nil rfloc))))
+
+(defun +org/refile-to-last-location (arg)
+  "Refile current heading to the last node you refiled to.
+If prefix ARG, copy instead of move."
+  (interactive "P")
+  (or (assoc (plist-get org-bookmark-names-plist :last-refile)
+             bookmark-alist)
+      (user-error "No saved location to refile to"))
+  (let ((org-refile-keep arg)
+        (completing-read-function
+         (lambda (_p _coll _pred _rm _ii _h default &rest _)
+           default)))
+    (org-refile)))
+
+;; Save all buffers after refilling
+(advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers)))
+#+end_src
+
+#+RESULTS: org-refiling
+
+
 ** Exporters
 *** COMMENT Epub
 A backend for exporting files through org I like is ~ox-epub~ which, as
@@ -646,35 +765,11 @@ files.
 #+end_src
 
 *** Hugo
-I manage [[https://blog.phundrak.com][my blog]] with [[https://gohugo.io/][Hugo]]. Although it natively supports the org
-format, it’s not great compared to its markdown support. So, instead,
-let’s directly export our org files as markdown files and let Hugo do
-the rest of the job for us!
 #+begin_src emacs-lisp
 (use-package ox-hugo
   :defer t
   :after ox
   :straight t)
-#+end_src
-
-I also have a function for publishing my blog once I exported my
-articles with ~ox-hugo~. It will compile blog into a ~public/~ directory
-and copy its content over to my remote server.
-#+begin_src emacs-lisp
-(defun phundrak/blog-publish ()
-  "Publish my blog through Hugo to my remote server."
-  (interactive)
-  (let* ((default-directory (expand-file-name "~/org/blog"))
-         (public-path       (concat default-directory "/public"))
-         (target-path       "/rsync:Tilo:/home/phundrak/www/phundrak.com/blog"))
-    (compile "hugo")
-    (let ((files (mapcar (lambda (file)
-                           (f-relative file public-path))
-                         (f-files public-path nil t))))
-      (dolist (file files)
-        (copy-file (concat public-path "/" file)
-                   (concat target-path "/" file)
-                   t nil t)))))
 #+end_src
 
 *** COMMENT LaTeX
@@ -781,25 +876,26 @@ servers on my repos though.
 Be prepared, I have a lot of keybindings for org-mode! They are all
 prefixed with a comma ~,~ in normal mode.
 #+name: org-keybinds-various
-| Key chord | Function            | Description |
-|-----------+---------------------+-------------|
-| RET       | org-ctrl-c-ret      |             |
-| *         | org-ctrl-c-star     |             |
-| ,         | org-ctrl-c-ctrl-c   |             |
-| '         | org-edit-special    |             |
-| -         | org-ctrl-c-minus    |             |
-| a         | org-agenda          |             |
-| c         | nil                 | ORG clock   |
-| ci        | org-clock-in        |             |
-| co        | org-clock-out       |             |
-| cr        | org-clock-report    |             |
-| cn        | org-clock-goto      |             |
-| C         | org-columns         |             |
-| e         | org-export-dispatch |             |
-| l         | org-store-link      |             |
-| p         | org-priority        |             |
-| r         | org-reload          |             |
-| s         | org-sort            |             |
+| Key chord | Function                          | Description |
+|-----------+-----------------------------------+-------------|
+| RET       | org-ctrl-c-ret                    |             |
+| *         | org-ctrl-c-star                   |             |
+| ,         | org-ctrl-c-ctrl-c                 |             |
+| '         | org-edit-special                  |             |
+| -         | org-ctrl-c-minus                  |             |
+| a         | org-agenda                        |             |
+| c         | nil                               | ORG clock   |
+| ci        | org-clock-in                      |             |
+| co        | org-clock-out                     |             |
+| cr        | org-clock-report                  |             |
+| cn        | org-clock-goto                    |             |
+| cm        | dorneanu/org-clock-enter-manually |             |
+| C         | org-columns                       |             |
+| e         | org-export-dispatch               |             |
+| l         | org-store-link                    |             |
+| p         | org-priority                      |             |
+| r         | org-reload                        |             |
+| s         | org-sort                          |             |
 
 *** babel
 I then have a couple of babel-related functions.
@@ -876,6 +972,7 @@ Tables get a bit more love:
 | Key chord | Function                             | Description |
 |-----------+--------------------------------------+-------------|
 | t         | nil                                  | tables      |
+| t.        | org-todo                             |             |
 | tc        | org-table-move-column-left           |             |
 | tt        | org-table-move-row-down              |             |
 | ts        | org-table-move-row-up                |             |
@@ -904,6 +1001,16 @@ Tables get a bit more love:
 | tto       | org-table-toggle-coordinate-overlays |             |
 
 Finally, let’s make enabling and disabling stuff accessible:
+*** refiling
+#+name: org-keybinds-refiling
+| Key chord | Function                     | Description |
+|-----------+------------------------------+-------------|
+| r         | nil                          | toggle      |
+| rr        | org-refile                   |             |
+| ra        | dorneanu/org-refile-anywhere |             |
+| rf        | +org/refile-to-current-file  |             |
+| rl        | +org/refile-to-last-location |             |
+| rv        | +org/refile-to-visible       |             |
 
 *** toggles
 #+name: org-keybinds-toggles
@@ -1436,16 +1543,24 @@ tables, source blocks, and tags, and it applies settings similar to
    org-modern-horizontal-rule "──────────"
    org-modern-hide-stars "·"
    ;; org-modern-star ["⁖"]
+   org-modern-block-name '("" . "")
    org-modern-keyword "‣"
    org-modern-list '((43 . "•")
                      (45 . "–")
                      (42 . "↪")))
- (global-org-modern-mode))
+  ;; (global-org-modern-mode)
+)
 
 (add-hook 'org-mode-hook #'org-modern-mode)
 (add-hook 'org-agenda-finalize #'org-modern-agenda)
 #+end_src
-
+*** org-modern-indent
+#+begin_src emacs-lisp
+(use-package org-modern-indent
+  :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
+  :config
+  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
+#+end_src
 *** org-outline-tree
 /Org Outline Tree/ is a better way of managing my org files’ outline.
 #+begin_src emacs-lisp

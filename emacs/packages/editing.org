@@ -88,8 +88,6 @@ compatibility package that adds states for iedit.
    "q" #'evil-iedit-state/quit-iedit-mode))
 #+end_src
 
-#+RESULTS:
-
 ** Smartparens
 ~smartparens~ is a package similar to ~parinfer~, but while the latter is
 more specialized for Lisp dialects, ~smartparens~ works better with
@@ -210,9 +208,6 @@ escaping your strings!
   :straight (:build t))
 #+end_src
 ** writeroom
-On the other hand, ~writeroom~ allows the user to enter a
-distraction-free mode of Emacs, and I like that! But the default width
-is a bit too small for me, and I prefer not to go full-screen.
 #+begin_src emacs-lisp
 (use-package writeroom-mode
   :defer t
@@ -227,13 +222,14 @@ is a bit too small for me, and I prefer not to go full-screen.
         ))
 #+end_src
 ** olivetti
+
 I love /olivetti/ mode
 
 #+begin_src emacs-lisp
 (use-package olivetti
   :straight t
   :custom
-  (olivetti-body-width 0.6))
+  (olivetti-body-width 0.89))
 #+end_src
 
 ** undo
