@@ -346,7 +346,11 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:discard (:anything)))))))))))
 
 #+end_src
-
+** org-sidebar-tree                                                   :todo:
+#+begin_src emacs-lisp
+(use-package org-sidebar
+  :straight t)
+#+end_src
 ** Babel
 One of the amazing features of org-mode is its literary programming capacities
 by running code blocks from within Org-mode itself. But for that, only a couple
@@ -706,7 +710,6 @@ If prefix ARG, copy instead of move."
 #+end_src
 
 #+RESULTS: org-refiling
-
 
 ** Exporters
 *** COMMENT Epub

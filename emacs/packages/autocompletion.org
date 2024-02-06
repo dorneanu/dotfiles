@@ -5,15 +5,26 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 
 * Autocompletion
-** Code Autocompletion
-Company is, in my opinion, the best autocompleting engine for Emacs,
-and it is one of the most popular if not /the/ most popular.
+** Code Autocompletion                                                :todo:
+I still need to finish this:
+
 #+begin_src emacs-lisp
 (use-package company
   :straight (:build t)
   :defer t
   :hook (company-mode . evil-normalize-keymaps)
   :init (global-company-mode)
+  :bind (:map global-map
+              ("M-q" . company-complete)
+              :map company-search-map
+              ("C-n" . company-select-next)
+              ("C-p" . company-select-previous)
+              :map company-active-map
+              ("C-l" . company-show-location)
+              ("C-s" . company-filter-candidates)
+              ("C-d" . company-show-doc-buffer)
+              ("C-n" . company-select-next)
+              ("C-p" . company-select-previous))
   :config
   (setq company-minimum-prefix-length     2
         company-toolsip-limit             14
@@ -26,9 +37,15 @@ and it is one of the most popular if not /the/ most popular.
         company-backends '(company-capf)
         company-auto-commit         nil
         company-auto-complete-chars nil
-        company-dabbrev-other-buffers nil
-        company-dabbrev-ignore-case nil
-        company-dabbrev-downcase    nil))
+        company-dabbrev-other-buffers t
+        company-dabbrev-ignore-case t
+        company-dabbrev-downcase    nil)
+  ;; Default backends
+  (setq company-backends (delete 'company-dabbrev company-backends))
+  (add-to-list 'company-backends 'company-capf)
+  (add-to-list 'company-backends 'company-yasnippet)
+  ;; (add-to-list 'company-backends 'company-elisp)
+  (add-to-list 'company-backends 'company-files))
 #+end_src
 
 *** company-dict
