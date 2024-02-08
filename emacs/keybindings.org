@@ -233,7 +233,7 @@ My keybinds for inserts are prefixed by ~i~.
 | Key | Function          | Description |
 |-----+-------------------+-------------|
 |     |                   | inserts     |
-| s   | consult-yasnippet |             |
+| y   | consult-yasnippet |             |
 | f   | company-files     |             |
 | d   | company-dabbrev   |             |
 

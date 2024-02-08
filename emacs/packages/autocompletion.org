@@ -295,6 +295,8 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
           ("M-g f" . consult-find)
           ;; Isearch integration
           ("M-s e"   . consult-isearch-history)
+          ;; Bookmarks
+          ("M-s b"   . consult-bookmark)
           :map isearch-mode-map
           ("M-e"     . consult-isearch-history)
           ("M-s e"   . consult-isearch-history)
@@ -537,9 +539,5 @@ Use ~consult-yasnippet~:
   :defer t
   :after (consult yasnippet)
   :straight (:build t)
-  :general
-  (phundrak/leader-key
-    :infix "i"
-    :packages 'consult-yasnippet
-    "y" #'consult-yasnippet))
+  )
 #+end_src
