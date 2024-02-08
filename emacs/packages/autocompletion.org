@@ -530,6 +530,7 @@ That’s still yasnippet by the way.
   :straight (:build t))
 #+end_src
 
+*** consult-yasnippet
 Use ~consult-yasnippet~:
 #+begin_src emacs-lisp
 (use-package consult-yasnippet

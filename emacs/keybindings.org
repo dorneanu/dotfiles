@@ -105,6 +105,7 @@ Here are my apps keybinds. Each one of them is prefixed by ~a~.
 |-----+----------------------------+-------------+------------|
 |     |                            | apps        |            |
 | c   | calc                       |             |            |
+| cs  | chatgpt-shell              |             |            |
 | C   |                            | calendar    |            |
 | CC  | calendar                   |             |            |
 | Co  | org-agenda                 |             | org        |
@@ -116,10 +117,6 @@ Here are my apps keybinds. Each one of them is prefixed by ~a~.
 | em  | mu4e                       |             |            |
 | k   | keycast-mode               |             |            |
 | K   | keycast-log-mode           |             |            |
-| m   |                            | mastodon    |            |
-| mm  | mastodon                   |             | mastodon   |
-| mn  | mastodon-notifications-get |             | mastodon   |
-| mt  | mastodon-toot              |             | mastodon   |
 | T   | tetris                     |             |            |
 | w   | wttrin                     |             | wttrin     |
 
@@ -312,7 +309,6 @@ Keybindings for ~opening~ stuff (prefixed by ~o~)
 | ll  | link-hint-open-link           |             |
 | lc  | link-hint-copy-link           |             |
 | lm  | link-hint-open-multiple-links |             |
-
 
 ** Project
 My keybinds for my projects are prefixed by ~p~.
