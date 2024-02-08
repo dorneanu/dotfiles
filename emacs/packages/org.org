@@ -130,7 +130,8 @@ Main configuration
   )
 #+end_src
 
-** evil-org
+** Packages
+*** evil-org
 #+begin_src emacs-lisp
 (use-package evil-org
   :straight (:build t)
@@ -144,7 +145,7 @@ Main configuration
   (evil-define-key 'motion org-agenda-mode-map
     (kbd "SPC") nil))
 #+end_src
-** org-contrib
+*** org-contrib
 #+begin_src emacs-lisp
 (use-package org-contrib
   :after (org)
@@ -155,7 +156,7 @@ Main configuration
   (ox-extras-activate '(latex-header-blocks ignore-headlines)))
 #+end_src
 
-** org-agenda
+*** org-agenda
 #+name: org-agenda-files
 #+begin_src emacs-lisp :tangle no
 (setq org-agenda-files (list org-directory))
@@ -240,7 +241,7 @@ Main configuration
 #+RESULTS: org-agenda
 : t
 
-*** org-super-agenda
+**** org-super-agenda
 
 Define custom org agenda commands.
 Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
@@ -345,12 +346,12 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:discard (:anything)))))))))))
 
 #+end_src
-** org-sidebar-tree                                                   :todo:
+*** org-sidebar-tree                                                    :todo:
 #+begin_src emacs-lisp
 (use-package org-sidebar
   :straight t)
 #+end_src
-** org-timeblock
+*** org-timeblock
 #+begin_src emacs-lisp
 (use-package org-timeblock
   :straight t
@@ -384,6 +385,360 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
   (org-timeblock))
 #+end_src
 
+*** org-capture
+Finish this:
+
+#+begin_src emacs-lisp
+(use-package org-capture
+  :ensure nil
+  :preface
+  (defvar my/org-appointment
+    (concat "* TODO %^{Appointment} :appt:\n"
+            "SCHEDULED: %t\n") "Template for appointment task.")
+  (defvar my/org-active-task-template
+    (concat "* NEXT %^{Task}\n"
+            ":PROPERTIES:\n"
+            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
+            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
+            ":END:") "Template for basic task.")
+  (defvar my/org-meeting
+    (concat "* MEETING %^{Meeting}\n"
+            "SCHEDULED: %t\n") "Template for meetings")
+
+  (defvar my/org-weekly
+    (concat "* wk" (format-time-string "%V") "       " ":wk" (format-time-string "%V") ":")
+    "Template for weeklies")
+
+  (defvar my/org-basic-task-template
+    (concat "* TODO %^{Task}\n"
+            ":PROPERTIES:\n"
+            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
+            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
+            ":END:") "Template for basic task.")
+  :custom
+  (org-capture-templates
+   `(
+     ("a" "Appointment" entry (file+headline "inbox.org" "Appointments"),
+      my/org-appointment
+      :empty-lines 1)
+
+     ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
+      my/org-meeting
+      :empty-lines 1
+      :immediate-finish t)
+
+     ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
+      "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
+
+     ("t" "New Task")
+     ("ta" "Active" entry (file+headline "inbox.org" "Active"),
+      my/org-active-task-template
+      :empty-lines 1
+      :clock-in t
+      :immediate-finish t)
+     ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
+      my/org-basic-task-template
+      :empty-lines 1
+      :immediate-finish t)
+
+     ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
+      my/org-weekly
+      :empty-lines 1))))
+#+end_src
+
+*** org-emphasize
+
+#+name: org-emphasis-character
+| Emphasis       | Character | Character code |
+|----------------+-----------+----------------|
+| bold           | ~*~         |             42 |
+| italic         | ~/~         |             47 |
+| underline      | ~_~         |             95 |
+| verbatim       | ~=~         |             61 |
+| code           | ~~~         |            126 |
+| strike-through | ~+~         |             43 |
+
+#+name: org-create-emphasis-functions
+#+header: :tangle no :exports results :cache yes
+#+header: :wrap "src emacs-lisp :tangle no :exports code"
+#+begin_src emacs-lisp :var emphasis-list=org-emphasis-character
+(mapconcat (lambda (emphasis)
+             (let ((type (car emphasis))
+                   (code (nth 2 emphasis)))
+               (format "(defun org-emphasize-%s ()
+  \"Emphasize as %s the current region.\"
+  (interactive)
+  (org-emphasize %s))"
+                       type
+                       type
+                       code)))
+           emphasis-list
+           "\n")
+#+end_src
+
+#+RESULTS[dbd10cce4ae05a046838214784f0f4c16765e728]: org-create-emphasis-functions
+#+begin_src emacs-lisp :tangle no :exports code
+(defun org-emphasize-bold ()
+  "Emphasize as bold the current region."
+  (interactive)
+  (org-emphasize 42))
+(defun org-emphasize-italic ()
+  "Emphasize as italic the current region."
+  (interactive)
+  (org-emphasize 47))
+(defun org-emphasize-underline ()
+  "Emphasize as underline the current region."
+  (interactive)
+  (org-emphasize 95))
+(defun org-emphasize-verbatim ()
+  "Emphasize as verbatim the current region."
+  (interactive)
+  (org-emphasize 61))
+(defun org-emphasize-code ()
+  "Emphasize as code the current region."
+  (interactive)
+  (org-emphasize 126))
+(defun org-emphasize-strike-through ()
+  "Emphasize as strike-through the current region."
+  (interactive)
+  (org-emphasize 43))
+#+end_src
+
+You can find the keybinds for these functions [[file:./org#keybindings][here]].
+
+*** org-refile
+Some extras copied from Doom Emacs
+#+begin_src emacs-lisp
+(defun +org-headline-avy ()
+  "TODO"
+  (require 'avy)
+  (save-excursion
+    (when-let* ((org-reverse-note-order t)
+                (pos (avy-with avy-goto-line (avy-jump (rx bol (1+ "*") (1+ blank))))))
+      (when (integerp (car pos))
+        ;; If avy is aborted with "C-g", it returns `t', so we know it was NOT
+        ;; aborted when it returns an int. If it doesn't return an int, we
+        ;; return nil.
+        (copy-marker (car pos))))))
+
+(defun +org/goto-visible ()
+  "TODO"
+  (interactive)
+  (goto-char (+org-headline-avy)))
+#+end_src
+
+And now all the settings for ~org-refile~:
+
+#+name: org-refiling
+#+begin_src emacs-lisp
+;; Refiling
+(setq org-refile-use-cache nil)
+(setq org-refile-targets '((nil :maxlevel . 9)
+                           (org-agenda-files :maxlevel . 9)))
+
+;; Allow refile to create parent tasks with confirmation
+(setq org-refile-allow-creating-parent-nodes 'confirm)
+(setq org-refile-use-outline-path 'file)       ; Show filename for refiling
+(setq org-outline-path-complete-in-steps nil)  ; Refile in a single go
+
+;; Exclude DONE state tasks from refile targets
+(defun dorneanu/verify-refile-target ()
+  "Exclude todo keywords with a done state from refile targets."
+  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+(setq org-refile-target-verify-function 'dorneanu/verify-refile-target)
+
+;; Some custom elisp functions
+(defun dorneanu/org-refile-anywhere (&optional goto default-buffer rfloc msg)
+  "A version of `org-refile' which allows refiling to any subtree."
+  (interactive "P")
+  (let ((org-refile-target-verify-function))
+    (org-refile goto default-buffer rfloc msg)))
+
+(defun dorneanu/org-agenda-refile-anywhere (&optional goto rfloc no-update)
+  "A version of `org-agenda-refile' which allows refiling to any subtree."
+  (interactive "P")
+  (let ((org-refile-target-verify-function))
+    (org-agenda-refile goto rfloc no-update)))
+
+;; These are from Doom Emacs: https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org-refile.el
+(defun +org/refile-to-current-file (arg &optional file)
+  "Refile current heading to elsewhere in the current buffer.
+If prefix ARG, copy instead of move."
+  (interactive "P")
+  (let ((org-refile-targets `((,file :maxlevel . 10)))
+        (org-refile-use-outline-path t)
+        (org-refile-keep arg)
+        current-prefix-arg)
+    (call-interactively #'org-refile)))
+
+(defun +org/refile-to-visible ()
+  "Refile current heading as first child of visible heading selected with Avy."
+  (interactive)
+  (when-let (marker (+org-headline-avy))
+    (let* ((buffer (marker-buffer marker))
+           (filename
+            (buffer-file-name (or (buffer-base-buffer buffer)
+                                  buffer)))
+           (heading
+            (org-with-point-at marker
+              (org-get-heading 'no-tags 'no-todo)))
+           ;; Won't work with target buffers whose filename is nil
+           (rfloc (list heading filename nil marker))
+           (org-after-refile-insert-hook (cons #'org-reveal org-after-refile-insert-hook)))
+      (org-refile nil nil rfloc))))
+
+(defun +org/refile-to-last-location (arg)
+  "Refile current heading to the last node you refiled to.
+If prefix ARG, copy instead of move."
+  (interactive "P")
+  (or (assoc (plist-get org-bookmark-names-plist :last-refile)
+             bookmark-alist)
+      (user-error "No saved location to refile to"))
+  (let ((org-refile-keep arg)
+        (completing-read-function
+         (lambda (_p _coll _pred _rm _ii _h default &rest _)
+           default)))
+    (org-refile)))
+
+;; Save all buffers after refilling
+(advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers)))
+#+end_src
+
+#+RESULTS: org-refiling
+
+*** org-roam
+After hearing about it for so many years and thinking I really should
+install it one day, 2023 is finally the year I installed org-roam! For
+those unaware of it, org-roam is a Zettelkasten-style knowledge
+management system based on org-mode.
+
+#+begin_src emacs-lisp
+(use-package org-roam
+  :straight (:build t)
+  :defer t
+  :custom
+  (org-roam-directory "/cs/priv/repos/roam/org")
+  ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
+  ;; (org-roam-completion-everywhere t)
+  :config
+  (org-roam-db-autosync-mode 1)
+  (setq org-roam-capture-templates
+        '(("d" "default" plain
+           "%?"
+           :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("j" "Journal" plain "%?"
+           :if-new (file+head "journal/%<%Y-%m-%d>.org"
+                              "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ("b" "book" plain "%?"
+           :if-new
+           (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ;; Idea from https://daryl.wakatara.com/emacs-gtd-flow-evolved/
+          ("r" "Rez" plain "%?"
+           :target (file+head "rez/%<%Y>/${slug}.org"
+                              "#+TITLE: ${title}
+      ,#+CREATED: %u
+
+      ,* ${title}
+      :PROPERTIES:
+      :URL:
+      :END:
+
+      ,* Actions
+      ,* Quotes
+      ,* Notes
+      ") :unnarrowed t)
+          ("x" "Blog" plain "%?"
+           :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
+           :unnarrowed t)
+          ))
+
+  :general
+  (phundrak/leader-key
+    :packages '(org org-roam)
+    :infix "o"
+    "r"   '(:ignore t :which-key "roam")
+    "rb"  '(org-mark-ring-goto :which-key "back")
+    "rB"  #'org-roam-buffer-toggle
+    "rn"  '(:ignore t :which-key "nodes")
+    "rnf" #'org-roam-node-find
+    "rni" #'org-roam-node-insert
+    "rno" #'org-roam-node-open
+    "rnr" #'org-roam-node-random
+    "rnv" #'org-roam-node-visit
+    "rs"  '(:ignore t :which-key "sync")
+    "rsa" #'org-roam-db-autosync-mode
+    "rsc" #'org-roam-db-clear-all
+    "rsd" #'org-roam-db-diagnose-node
+    "rss" #'org-roam-db-sync
+    "rt" '(:ignore t :which-key "tags")
+    "rta" #'org-roam-tag-add
+    "rtd" #'org-roam-tag-remove
+    "ru"  '(:ignore t :which-key "ui")
+    "rua" #'org-roam-ui-add-to-local-graph
+    "ruo" #'org-roam-ui-open)
+  (phundrak/major-leader-key
+    :keymaps 'org-mode-map
+    :packages '(org org-roam)
+    "h"   #'org-id-get-create
+    "r"   '(:ignore t :which-key "roam")
+    "ra"  '(:ignore t :which-key "alias")
+    "raa" #'org-roam-alias-add
+    "rar" #'org-roam-alias-remove))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package org-roam-ui
+  :straight (:build t)
+  :defer t
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+#+end_src
+**** consult-org-roam
+#+begin_src emacs-lisp
+(use-package consult-org-roam
+   :straight t
+   :after org-roam
+   :init
+   (require 'consult-org-roam)
+   ;; Activate the minor mode
+   (consult-org-roam-mode 1)
+   :custom
+   ;; Use `ripgrep' for searching with `consult-org-roam-search'
+   (consult-org-roam-grep-func #'consult-ripgrep)
+   ;; Configure a custom narrow key for `consult-buffer'
+   (consult-org-roam-buffer-narrow-key ?r)
+   ;; Display org-roam buffers right after non-org-roam buffers
+   ;; in consult-buffer (and not down at the bottom)
+   (consult-org-roam-buffer-after-buffers t)
+   :config
+   ;; Eventually suppress previewing for certain functions
+   (consult-customize
+    consult-org-roam-forward-links
+    :preview-key (kbd "M-."))
+   :bind
+   ;; Define some convenient keybindings as an addition
+   ("C-c n e" . consult-org-roam-file-find)
+   ("C-c n b" . consult-org-roam-backlinks)
+   ("C-c n l" . consult-org-roam-forward-links)
+   ("C-c n r" . consult-org-roam-search))
+#+end_src
+
+*** org-re-reveal
+
+Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
+#+begin_src emacs-lisp
+(use-package org-re-reveal
+   :straight t)
+#+end_src
 ** Babel
 One of the amazing features of org-mode is its literary programming capacities
 by running code blocks from within Org-mode itself. But for that, only a couple
@@ -493,227 +848,6 @@ meaningful IDs for its headings. I actually wrote a package for this!
   :after org
   :init (add-hook 'before-save-hook #'org-unique-id-maybe))
 #+end_src
-
-** org-capture
-Finish this:
-
-#+begin_src emacs-lisp
-(use-package org-capture
-  :ensure nil
-  :preface
-  (defvar my/org-appointment
-    (concat "* TODO %^{Appointment} :appt:\n"
-            "SCHEDULED: %t\n") "Template for appointment task.")
-  (defvar my/org-active-task-template
-    (concat "* NEXT %^{Task}\n"
-            ":PROPERTIES:\n"
-            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
-            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
-            ":END:") "Template for basic task.")
-  (defvar my/org-meeting
-    (concat "* MEETING %^{Meeting}\n"
-            "SCHEDULED: %t\n") "Template for meetings")
-
-  (defvar my/org-weekly
-    (concat "* wk" (format-time-string "%V") "       " ":wk" (format-time-string "%V") ":")
-    "Template for weeklies")
-
-  (defvar my/org-basic-task-template
-    (concat "* TODO %^{Task}\n"
-            ":PROPERTIES:\n"
-            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
-            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
-            ":END:") "Template for basic task.")
-  :custom
-  (org-capture-templates
-   `(
-     ("a" "Appointment" entry (file+headline "inbox.org" "Appointments"),
-      my/org-appointment
-      :empty-lines 1)
-
-     ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
-      my/org-meeting
-      :empty-lines 1
-      :immediate-finish t)
-
-     ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
-      "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
-
-     ("t" "New Task")
-     ("ta" "Active" entry (file+headline "inbox.org" "Active"),
-      my/org-active-task-template
-      :empty-lines 1
-      :clock-in t
-      :immediate-finish t)
-     ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
-      my/org-basic-task-template
-      :empty-lines 1
-      :immediate-finish t)
-
-     ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
-      my/org-weekly
-      :empty-lines 1))))
-#+end_src
-
-** org-emphasize
-
-#+name: org-emphasis-character
-| Emphasis       | Character | Character code |
-|----------------+-----------+----------------|
-| bold           | ~*~         |             42 |
-| italic         | ~/~         |             47 |
-| underline      | ~_~         |             95 |
-| verbatim       | ~=~         |             61 |
-| code           | ~~~         |            126 |
-| strike-through | ~+~         |             43 |
-
-#+name: org-create-emphasis-functions
-#+header: :tangle no :exports results :cache yes
-#+header: :wrap "src emacs-lisp :tangle no :exports code"
-#+begin_src emacs-lisp :var emphasis-list=org-emphasis-character
-(mapconcat (lambda (emphasis)
-             (let ((type (car emphasis))
-                   (code (nth 2 emphasis)))
-               (format "(defun org-emphasize-%s ()
-  \"Emphasize as %s the current region.\"
-  (interactive)
-  (org-emphasize %s))"
-                       type
-                       type
-                       code)))
-           emphasis-list
-           "\n")
-#+end_src
-
-#+RESULTS[dbd10cce4ae05a046838214784f0f4c16765e728]: org-create-emphasis-functions
-#+begin_src emacs-lisp :tangle no :exports code
-(defun org-emphasize-bold ()
-  "Emphasize as bold the current region."
-  (interactive)
-  (org-emphasize 42))
-(defun org-emphasize-italic ()
-  "Emphasize as italic the current region."
-  (interactive)
-  (org-emphasize 47))
-(defun org-emphasize-underline ()
-  "Emphasize as underline the current region."
-  (interactive)
-  (org-emphasize 95))
-(defun org-emphasize-verbatim ()
-  "Emphasize as verbatim the current region."
-  (interactive)
-  (org-emphasize 61))
-(defun org-emphasize-code ()
-  "Emphasize as code the current region."
-  (interactive)
-  (org-emphasize 126))
-(defun org-emphasize-strike-through ()
-  "Emphasize as strike-through the current region."
-  (interactive)
-  (org-emphasize 43))
-#+end_src
-
-You can find the keybinds for these functions [[file:./org#keybindings][here]].
-
-** org-refile
-Some extras copied from Doom Emacs
-#+begin_src emacs-lisp
-(defun +org-headline-avy ()
-  "TODO"
-  (require 'avy)
-  (save-excursion
-    (when-let* ((org-reverse-note-order t)
-                (pos (avy-with avy-goto-line (avy-jump (rx bol (1+ "*") (1+ blank))))))
-      (when (integerp (car pos))
-        ;; If avy is aborted with "C-g", it returns `t', so we know it was NOT
-        ;; aborted when it returns an int. If it doesn't return an int, we
-        ;; return nil.
-        (copy-marker (car pos))))))
-
-(defun +org/goto-visible ()
-  "TODO"
-  (interactive)
-  (goto-char (+org-headline-avy)))
-#+end_src
-
-And now all the settings for ~org-refile~:
-
-#+name: org-refiling
-#+begin_src emacs-lisp
-;; Refiling
-(setq org-refile-use-cache nil)
-(setq org-refile-targets '((nil :maxlevel . 9)
-                           (org-agenda-files :maxlevel . 9)))
-
-;; Allow refile to create parent tasks with confirmation
-(setq org-refile-allow-creating-parent-nodes 'confirm)
-(setq org-refile-use-outline-path 'file)       ; Show filename for refiling
-(setq org-outline-path-complete-in-steps nil)  ; Refile in a single go
-
-;; Exclude DONE state tasks from refile targets
-(defun dorneanu/verify-refile-target ()
-  "Exclude todo keywords with a done state from refile targets."
-  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
-(setq org-refile-target-verify-function 'dorneanu/verify-refile-target)
-
-;; Some custom elisp functions
-(defun dorneanu/org-refile-anywhere (&optional goto default-buffer rfloc msg)
-  "A version of `org-refile' which allows refiling to any subtree."
-  (interactive "P")
-  (let ((org-refile-target-verify-function))
-    (org-refile goto default-buffer rfloc msg)))
-
-(defun dorneanu/org-agenda-refile-anywhere (&optional goto rfloc no-update)
-  "A version of `org-agenda-refile' which allows refiling to any subtree."
-  (interactive "P")
-  (let ((org-refile-target-verify-function))
-    (org-agenda-refile goto rfloc no-update)))
-
-;; These are from Doom Emacs: https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org-refile.el
-(defun +org/refile-to-current-file (arg &optional file)
-  "Refile current heading to elsewhere in the current buffer.
-If prefix ARG, copy instead of move."
-  (interactive "P")
-  (let ((org-refile-targets `((,file :maxlevel . 10)))
-        (org-refile-use-outline-path t)
-        (org-refile-keep arg)
-        current-prefix-arg)
-    (call-interactively #'org-refile)))
-
-(defun +org/refile-to-visible ()
-  "Refile current heading as first child of visible heading selected with Avy."
-  (interactive)
-  (when-let (marker (+org-headline-avy))
-    (let* ((buffer (marker-buffer marker))
-           (filename
-            (buffer-file-name (or (buffer-base-buffer buffer)
-                                  buffer)))
-           (heading
-            (org-with-point-at marker
-              (org-get-heading 'no-tags 'no-todo)))
-           ;; Won't work with target buffers whose filename is nil
-           (rfloc (list heading filename nil marker))
-           (org-after-refile-insert-hook (cons #'org-reveal org-after-refile-insert-hook)))
-      (org-refile nil nil rfloc))))
-
-(defun +org/refile-to-last-location (arg)
-  "Refile current heading to the last node you refiled to.
-If prefix ARG, copy instead of move."
-  (interactive "P")
-  (or (assoc (plist-get org-bookmark-names-plist :last-refile)
-             bookmark-alist)
-      (user-error "No saved location to refile to"))
-  (let ((org-refile-keep arg)
-        (completing-read-function
-         (lambda (_p _coll _pred _rm _ii _h default &rest _)
-           default)))
-    (org-refile)))
-
-;; Save all buffers after refilling
-(advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers)))
-#+end_src
-
-#+RESULTS: org-refiling
 
 ** Exporters
 *** HTML
@@ -876,614 +1010,6 @@ servers on my repos though.
   :straight (:build t))
 #+end_src
 
-** Keybindings
-:PROPERTIES:
-:ID:       fbdd75ee-506e-4287-895a-1c18bc585b2d
-:END:
-Be prepared, I have a lot of keybindings for org-mode! They are all
-prefixed with a comma ~,~ in normal mode.
-#+name: org-keybinds-various
-| Key chord | Function                          | Description |
-|-----------+-----------------------------------+-------------|
-| RET       | org-ctrl-c-ret                    |             |
-| *         | org-ctrl-c-star                   |             |
-| ,         | org-ctrl-c-ctrl-c                 |             |
-| '         | org-edit-special                  |             |
-| -         | org-ctrl-c-minus                  |             |
-| a         | org-agenda                        |             |
-| c         | nil                               | ORG clock   |
-| ci        | org-clock-in                      |             |
-| co        | org-clock-out                     |             |
-| cr        | org-clock-report                  |             |
-| cn        | org-clock-goto                    |             |
-| cm        | dorneanu/org-clock-enter-manually |             |
-| C         | org-columns                       |             |
-| e         | org-export-dispatch               |             |
-| l         | org-store-link                    |             |
-| p         | org-priority                      |             |
-| r         | org-reload                        |             |
-| s         | org-sort                          |             |
-
-*** babel
-I then have a couple of babel-related functions.
-#+name: org-keybinds-babel
-| Key chord | Function                            | Description |
-|-----------+-------------------------------------+-------------|
-| b         | nil                                 | babel       |
-| b         | org-babel-transient/body            |             |
-| bb        | org-babel-execute-buffer            |             |
-| bc        | org-babel-check-src-block           |             |
-| bC        | org-babel-tangle-clean              |             |
-| be        | org-babel-execute-maybe             |             |
-| bf        | org-babel-tangle-file               |             |
-| bn        | org-babel-next-src-block            |             |
-| bo        | org-babel-open-src-block-result     |             |
-| bp        | org-babel-previous-src-block        |             |
-| br        | org-babel-remove-result-one-or-many |             |
-| bR        | org-babel-goto-named-result         |             |
-| bt        | org-babel-tangle                    |             |
-| bi        | org-babel-view-src-block-info       |             |
-
-*** dates
-We next have keybindings related to org-mode’s agenda capabilities. We
-can schedule a todo header for some dates, or set a deadline.
-#+name: org-keybinds-dates
-| Key chord | Function                | Description |
-|-----------+-------------------------+-------------|
-| d         | nil                     | dates       |
-| dd        | org-deadline            |             |
-| ds        | org-schedule            |             |
-| dt        | org-time-stamp          |             |
-| dT        | org-time-stamp-inactive |             |
-
-*** inserts
-Let’s now define some keybinds for inserting stuff in our org buffer:
-#+name: org-keybinds-insert
-| Key chord | Function                                | Description |
-|-----------+-----------------------------------------+-------------|
-| i         | nil                                     | insert      |
-| ib        | org-insert-structure-template           |             |
-| id        | org-insert-drawer                       |             |
-| ie        | nil                                     | emphasis    |
-| ieb       | org-emphasize-bold                      |             |
-| iec       | org-emphasize-code                      |             |
-| iei       | org-emphasize-italic                    |             |
-| ies       | org-emphasize-strike-through            |             |
-| ieu       | org-emphasize-underline                 |             |
-| iev       | org-emphasize-verbatim                  |             |
-| idc       | org-download-clipboard                  |             |
-| iE        | org-set-effort                          |             |
-| if        | org-footnote-new                        |             |
-| ih        | org-insert-heading                      |             |
-| iH        | counsel-org-link                        |             |
-| ii        | org-insert-item                         |             |
-| il        | org-insert-link                         |             |
-| iL        | dorneanu/org-insert-link-from-clipboard |             |
-| in        | org-add-note                            |             |
-| ip        | org-set-property                        |             |
-| is        | org-insert-subheading                   |             |
-| iq        | counsel-org-tag                         |             |
-
-*** jumps
-There isn’t a lot of stuff I can jump to yet, but there’s still some:
-#+name: org-keybinds-jump
-| Key chord | Function             | Description |
-|-----------+----------------------+-------------|
-| j         | nil                  | jump        |
-| ja        | counsel-org-goto-all |             |
-| jh        | counsel-org-goto     |             |
-
-*** tables
-Tables get a bit more love:
-#+name: org-keybinds-tables
-| Key chord | Function                             | Description |
-|-----------+--------------------------------------+-------------|
-| t         | nil                                  | tables      |
-| t.        | org-todo                             |             |
-| tc        | org-table-move-column-left           |             |
-| tt        | org-table-move-row-down              |             |
-| ts        | org-table-move-row-up                |             |
-| tr        | org-table-move-column-right          |             |
-| ta        | org-table-align                      |             |
-| te        | org-table-eval-formula               |             |
-| tf        | org-table-field-info                 |             |
-| tF        | org-table-edit-formulas              |             |
-| th        | org-table-convert                    |             |
-| tl        | org-table-recalculate                |             |
-| tp        | org-plot/gnuplot                     |             |
-| tS        | org-table-sort-lines                 |             |
-| tw        | org-table-wrap-region                |             |
-| tx        | org-table-shrink                     |             |
-| tN        | org-table-create-with-table.el       |             |
-| td        | nil                                  | delete      |
-| tdc       | org-table-delete-column              |             |
-| tdr       | org-table-kill-row                   |             |
-| ti        | nil                                  | insert      |
-| tic       | org-table-insert-column              |             |
-| tih       | org-table-insert-hline               |             |
-| tir       | org-table-insert-row                 |             |
-| tiH       | org-table-hline-and-move             |             |
-| tt        | nil                                  | toggle      |
-| ttf       | org-table-toggle-formula-debugger    |             |
-| tto       | org-table-toggle-coordinate-overlays |             |
-
-Finally, let’s make enabling and disabling stuff accessible:
-*** refiling
-#+name: org-keybinds-refiling
-| Key chord | Function                     | Description |
-|-----------+------------------------------+-------------|
-| r         | nil                          | toggle      |
-| rr        | org-refile                   |             |
-| ra        | dorneanu/org-refile-anywhere |             |
-| rf        | +org/refile-to-current-file  |             |
-| rl        | +org/refile-to-last-location |             |
-| rv        | +org/refile-to-visible       |             |
-
-*** toggles
-#+name: org-keybinds-toggles
-| Key chord | Function                             | Description |
-|-----------+--------------------------------------+-------------|
-| T         | nil                                  | toggle      |
-| Tc        | org-toggle-checkbox                  |             |
-| Ti        | org-toggle-inline-images             |             |
-| Tl        | org-latex-preview                    |             |
-| Tn        | org-num-mode                         |             |
-| Ts        | phundrak/toggle-org-src-window-split |             |
-| Tt        | org-show-todo-tree                   |             |
-| TT        | org-todo                             |             |
-
-** COMMENT LaTeX formats
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle no :exports code :results silent
-:END:
-I currently have two custom formats for my Org-mode exports: one for
-general use (initially for my conlanging files, hence its ~conlang~
-name), and one for beamer exports.
-
-Below is the declaration of the ~conlang~ LaTeX class:
-#+NAME: org-latex-class-conlang
-#+BEGIN_SRC emacs-lisp
-'("conlang"
-  "\\documentclass{book}"
-  ("\\chapter{%s}" . "\\chapter*{%s}")
-  ("\\section{%s}" . "\\section*{%s}")
-  ("\\subsection{%s}" . "\\subsection*{%s}")
-  ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
-#+END_SRC
-
-And here is the declaration of the ~beamer~ class:
-#+NAME: org-latex-class-beamer
-#+BEGIN_SRC emacs-lisp
-`("beamer"
-  ,(concat "\\documentclass[presentation]{beamer}\n"
-           "[DEFAULT-PACKAGES]"
-           "[PACKAGES]"
-           "[EXTRA]\n")
-  ("\\section{%s}" . "\\section*{%s}")
-  ("\\subsection{%s}" . "\\subsection*{%s}")
-  ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
-#+END_SRC
-
-Both these classes have to be added to ~org-latex-classes~ like so:
-#+NAME: org-latex-classes
-#+BEGIN_SRC emacs-lisp :noweb yes
-(eval-after-load "ox-latex"
-  '(progn
-     (add-to-list 'org-latex-classes
-                  <<org-latex-class-conlang>>)
-     (add-to-list 'org-latex-classes
-                  <<org-latex-class-beamer>>)))
-#+END_SRC
-
-** COMMENT Projects
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle no :exports code :results silent
-:END:
-Another great features of Org-mode is the Org projects that allow the user to
-easily publish a bunch of org files to a remote location. Here is the current
-declaration of my projects, which will be detailed later:
-#+NAME: org-publish-projects
-#+BEGIN_SRC emacs-lisp :noweb yes :noweb-prefix no
-<<org-proj-config-setup>>
-(setq org-publish-project-alist
-      `(<<org-proj-config-html>>
-        <<org-proj-config-static>>
-        <<org-proj-config>>))
-#+END_SRC
-
-*** Configuration website
-This is my configuration for exporting my dotfiles to my website in a web format
-only. No PDFs or anything, just HTML. Please note that I do not use that often
-anymore, I much prefer the automatic script that I have which deploys through my
-Drone instance my website on git pushes.
-
-And before we get into the actual configuration, I would like to introduce a
-couple of variables. This is a bit more verbose than if I declared everything
-manually, but now I can change all three values at the same time without a
-hasle.
-#+NAME: org-proj-config-setup
-#+BEGIN_SRC emacs-lisp
-(defvar phundrak//projects-config-target
-  "/ssh:Tilo:~/www/phundrak.com/config"
-  "Points to where exported files for config.phundrak.com should be put.")
-(defvar phundrak//projects-config-source
-  "~/org/config/"
-  "Points to where the sources for config.phundrak.com are.")
-(defvar phundrak//projects-config-language
-  "en"
-  "Language of the website config.phundrak.com.")
-(defvar phundrak//projects-config-recursive
-  t
-  "Defines whether subdirectories should be parsed for config.phundrak.com.")
-#+END_SRC
-
-Now, here is my configuration. In this snippet, my org files located in my
-source directory get exported in the HTML format and published to my target
-directory on my remote server through RSYNC via TRAMP. A sitemap is
-automatically generated, which comes in handy with the online sitemap that is
-available through the navigation bar.
-#+NAME: org-proj-config-html
-#+BEGIN_SRC emacs-lisp
-("config-website-html"
- :base-directory ,phundrak//projects-config-source
- :base-extension "org"
- :publishing-directory ,phundrak//projects-config-target
- :recursive ,phundrak//projects-config-recursive
- :language ,phundrak//projects-config-language
- :publishing-function org-html-publish-to-html
- :headline-levels 5
- :auto-sitemap t
- :auto-preamble t)
-#+END_SRC
-
-We also have the component for all the static files needed to run the website
-(mostly images tbh).
-#+NAME: org-proj-config-static
-#+BEGIN_SRC emacs-lisp
-("config-website-static"
- :base-directory ,phundrak//projects-config-source
- :base-extension "png\\|jpg\\|gif\\|webp\\|svg\\|jpeg\\|ttf\\|woff\\|txt\\|epub\\|md"
- :publishing-directory ,phundrak//projects-config-target
- :recursive ,phundrak//projects-config-recursive
- :language ,phundrak//projects-config-language
- :publishing-function org-publish-attachment)
-#+END_SRC
-
-The project is then defined like so:
-#+NAME: org-proj-config
-#+BEGIN_SRC emacs-lisp
-("config-website"
- :components ("config-website-org"
-              "config-website-static"))
-#+END_SRC
-
-** org-roam
-After hearing about it for so many years and thinking I really should
-install it one day, 2023 is finally the year I installed org-roam! For
-those unaware of it, org-roam is a Zettelkasten-style knowledge
-management system based on org-mode.
-
-#+begin_src emacs-lisp
-(use-package org-roam
-  :straight (:build t)
-  :defer t
-  :custom
-  (org-roam-directory "/cs/priv/repos/roam/org")
-  ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
-  ;; (org-roam-completion-everywhere t)
-  :config
-  (org-roam-db-autosync-mode 1)
-  (setq org-roam-capture-templates
-        '(("d" "default" plain
-           "%?"
-           :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
-           :unnarrowed t)
-          ("j" "Journal" plain "%?"
-           :if-new (file+head "journal/%<%Y-%m-%d>.org"
-                              "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
-           :immediate-finish t
-           :unnarrowed t)
-          ("b" "book" plain "%?"
-           :if-new
-           (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
-           :immediate-finish t
-           :unnarrowed t)
-          ;; Idea from https://daryl.wakatara.com/emacs-gtd-flow-evolved/
-          ("r" "Rez" plain "%?"
-           :target (file+head "rez/%<%Y>/${slug}.org"
-                              "#+TITLE: ${title}
-      ,#+CREATED: %u
-
-      ,* ${title}
-      :PROPERTIES:
-      :URL:
-      :END:
-
-      ,* Actions
-      ,* Quotes
-      ,* Notes
-      ") :unnarrowed t)
-          ("x" "Blog" plain "%?"
-           :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
-           :unnarrowed t)
-          ))
-
-  :general
-  (phundrak/leader-key
-    :packages '(org org-roam)
-    :infix "o"
-    "r"   '(:ignore t :which-key "roam")
-    "rb"  '(org-mark-ring-goto :which-key "back")
-    "rB"  #'org-roam-buffer-toggle
-    "rn"  '(:ignore t :which-key "nodes")
-    "rnf" #'org-roam-node-find
-    "rni" #'org-roam-node-insert
-    "rno" #'org-roam-node-open
-    "rnr" #'org-roam-node-random
-    "rnv" #'org-roam-node-visit
-    "rs"  '(:ignore t :which-key "sync")
-    "rsa" #'org-roam-db-autosync-mode
-    "rsc" #'org-roam-db-clear-all
-    "rsd" #'org-roam-db-diagnose-node
-    "rss" #'org-roam-db-sync
-    "rt" '(:ignore t :which-key "tags")
-    "rta" #'org-roam-tag-add
-    "rtd" #'org-roam-tag-remove
-    "ru"  '(:ignore t :which-key "ui")
-    "rua" #'org-roam-ui-add-to-local-graph
-    "ruo" #'org-roam-ui-open)
-  (phundrak/major-leader-key
-    :keymaps 'org-mode-map
-    :packages '(org org-roam)
-    "h"   #'org-id-get-create
-    "r"   '(:ignore t :which-key "roam")
-    "ra"  '(:ignore t :which-key "alias")
-    "raa" #'org-roam-alias-add
-    "rar" #'org-roam-alias-remove))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package org-roam-ui
-  :straight (:build t)
-  :defer t
-  :after org-roam
-  :config
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t))
-#+end_src
-*** consult-org-roam
-#+begin_src emacs-lisp
-(use-package consult-org-roam
-   :straight t
-   :after org-roam
-   :init
-   (require 'consult-org-roam)
-   ;; Activate the minor mode
-   (consult-org-roam-mode 1)
-   :custom
-   ;; Use `ripgrep' for searching with `consult-org-roam-search'
-   (consult-org-roam-grep-func #'consult-ripgrep)
-   ;; Configure a custom narrow key for `consult-buffer'
-   (consult-org-roam-buffer-narrow-key ?r)
-   ;; Display org-roam buffers right after non-org-roam buffers
-   ;; in consult-buffer (and not down at the bottom)
-   (consult-org-roam-buffer-after-buffers t)
-   :config
-   ;; Eventually suppress previewing for certain functions
-   (consult-customize
-    consult-org-roam-forward-links
-    :preview-key (kbd "M-."))
-   :bind
-   ;; Define some convenient keybindings as an addition
-   ("C-c n e" . consult-org-roam-file-find)
-   ("C-c n b" . consult-org-roam-backlinks)
-   ("C-c n l" . consult-org-roam-forward-links)
-   ("C-c n r" . consult-org-roam-search))
-#+end_src
-
-** COMMENT Org-ref and Bibtex configuration
-#+begin_src emacs-lisp
-(use-package reftex
-  :commands turn-on-reftex
-  :init (setq reftex-default-bibliography "~/org/bibliography/references.bib"
-              reftex-plug-into-AUCTeX     t))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package org-ref
-  ;; :after (org ox-bibtex pdf-tools)
-  :after org
-  :defer t
-  :straight (:build t)
-  :custom-face
-  (org-ref-cite-face ((t (:weight bold))))
-  :init
-  (setq org-ref-completion-library    'org-ref-ivy-cite
-        org-latex-logfiles-extensions '("lof" "lot" "aux" "idx" "out" "log" "fbd_latexmk"
-                                        "toc" "nav" "snm" "vrb" "dvi" "blg" "brf" "bflsb"
-                                        "entoc" "ps" "spl" "bbl" "pygtex" "pygstyle"))
-  (add-hook 'org-mode-hook (lambda () (require 'org-ref)))
-  :config
-  (setq bibtex-completion-pdf-field    "file"
-        bibtex-completion-notes-path   "~/org/bibliography/notes/"
-        bibtex-completion-bibliography "~/org/bibliography/references.bib"
-        bibtex-completion-library-path "~/org/bibliography/bibtex-pdfs/"
-        bibtex-completion-pdf-symbol   "⌘"
-        bibtex-completion-notes-symbol "✎")
-  :general
-  (phundrak/evil
-   :keymaps 'bibtex-mode-map
-   :packages 'org-ref
-   "C-t" #'org-ref-bibtex-next-entry
-   "C-s" #'org-ref-bibtex-previous-entry
-   "gt"  #'org-ref-bibtex-next-entry
-   "gs"  #'org-ref-bibtex-previous-entry)
-  (phundrak/major-leader-key
-   :keymaps '(bibtex-mode-map)
-   :packages 'org-ref
-   ;; Navigation
-   "t" #'org-ref-bibtex-next-entry
-   "s" #'org-ref-bibtex-previous-entry
-
-   ;; Open
-   "b" #'org-ref-open-in-browser
-   "n" #'org-ref-open-bibtex-notes
-   "p" #'org-ref-open-bibtex-pdf
-
-   ;; Misc
-   "h" #'org-ref-bibtex-hydra/body
-   "i" #'org-ref-bibtex-hydra/org-ref-bibtex-new-entry/body-and-exit
-   "s" #'org-ref-sort-bibtex-entry
-
-   "l" '(:ignore t :which-key "lookup")
-   "la" #'arxiv-add-bibtex-entry
-   "lA" #'arxiv-get-pdf-add-bibtex-entry
-   "ld" #'doi-utils-add-bibtex-entry-from-doi
-   "li" #'isbn-to-bibtex
-   "lp" #'pubmed-insert-bibtex-from-pmid)
-  (phundrak/major-leader-key
-   :keymaps 'org-mode-map
-   :pakages 'org-ref
-   "ic" #'org-ref-insert-link
-   "iL" #'org-ref-insert-ref-link
-   "ir" #'org-ref-insert-link-hydra/body
-   "iB" #'org-ref-bibtex-hydra/body))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package ivy-bibtex
-  :defer t
-  :straight (:build t)
-  :config
-  (setq bibtex-completion-pdf-open-function #'find-file)
-  :general
-  (phundrak/leader-key
-    :keymaps '(bibtex-mode-map)
-    :packages 'ivy-bibtex
-    "m" #'ivy-bibtex))
-#+end_src
-
-** COMMENT Org-present
-~org-present~ allows its user to create presentations through ~org-mode~,
-which is really nice! However, most of my configuration will be stolen
-[[https://config.daviwil.com/emacs#org-present][from Daviwil’s]] with minor changes.
-#+begin_src emacs-lisp
- ;; (defun my/org-present-prepare-slide ()
- ;;   (org-overview)
- ;;   (org-show-entry)
- ;;  (org-show-children)
- ;;   (org-present-hide-cursor))
-
- ;; (defun my/org-present-init ()
- ;;   (setq header-line-format " ")
- ;;   (org-display-inline-images)
- ;;   (my/org-present-prepare-slide))
-
- ;; (defun my/org-present-quit ()
- ;;   (setq header-line-format nil)
- ;;   (org-present-small)
- ;;   (org-present-show-cursor))
-
- ;; (defun my/org-present-prev ()
- ;;   (interactive)
- ;;   (org-present-prev)
- ;;   (my/org-present-prepare-slide))
-
- ;; (defun my/org-present-next ()
- ;;   (interactive)
- ;;   (org-present-next)
- ;;   (my/org-present-prepare-slide))
-
- ;; (use-package org-present
- ;;   :after org
- ;;   :defer t
- ;;   :straight (:build t)
- ;;   :general
- ;;   (phundrak/major-leader-key
- ;;     :packages 'org-present
- ;;     :keymaps 'org-mode-map
- ;;     "P" #'org-present)
- ;;   (phundrak/evil
- ;;     :states 'normal
- ;;     :packages 'org-present
- ;;     :keymaps 'org-present-mode-keymap
- ;;     "+" #'org-present-big
- ;;     "-" #'org-present-small
- ;;     "<" #'org-present-beginning
- ;;     ">" #'org-present-end
- ;;     "«" #'org-present-beginning
- ;;     "»" #'org-present-end
- ;;     "c" #'org-present-hide-cursor
- ;;     "C" #'org-present-show-cursor
- ;;     "n" #'org-present-next
- ;;     "p" #'org-present-prev
- ;;     "r" #'org-present-read-only
- ;;     "w" #'org-present-read-write
- ;;     "q" #'org-present-quit)
- ;;   :hook ((org-present-mode      . my/org-present-init)
- ;;          (org-present-mode-quit . my/org-present-quit)))
- ;; (use-package hide-mode-line
- ;;   :straight t
- ;;   :after (org-present))
-
- ;; (defun my/present-next-with-latex ()
- ;;   (interactive)
- ;;   (org-present-next)
- ;;   (org-latex-preview '(16)))
-
- ;; (defun my/present-prev-with-latex ()
- ;;   (interactive)
- ;;   (org-present-prev)
- ;;   (org-latex-preview '(16)))
-
- ;; (use-package org-present
- ;;   :straight t
- ;;   :commands (org-present)
- ;;   :config
- ;;   (general-define-key
- ;;    :keymaps 'org-present-mode-keymap
- ;;    "<next>" 'my/present-next-with-latex
- ;;    "<prior>" 'my/present-prev-with-latex)
- ;;   (setq org-present-mode-hook
- ;;         (list (lambda ()
- ;;                 (blink-cursor-mode 0)
- ;;                 (org-present-big)
- ;;                 (org-bars-mode -1)
- ;;                 ;; (org-display-inline-images)
- ;;                 (org-present-hide-cursor)
- ;;                 (org-present-read-only)
- ;;                 (display-line-numbers-mode 0)
- ;;                 (hide-mode-line-mode +1)
- ;;                 ;; (org-latex-preview '(16))
- ;;                 ;; TODO ^somehow this stucks at running LaTeX^
- ;;                 (setq-local olivetti-body-width 60)
- ;;                 (olivetti-mode 1))))
- ;;   (setq org-present-mode-quit-hook
- ;;         (list (lambda ()
- ;;                 (blink-cursor-mode 1)
- ;;                 (org-present-small)
- ;;                 (org-bars-mode 1)
- ;;                 ;; (org-remove-inline-images)
- ;;                 (org-present-show-cursor)
- ;;                 (org-present-read-write)
- ;;                 (display-line-numbers-mode 1)
- ;;                 (hide-mode-line-mode 0)
- ;;                 (org-latex-preview '(64))
- ;;                 (olivetti-mode -1)
- ;;                 (setq-local olivetti-body-width (default-value 'olivetti-body-width))))))
- #+end_src
-
-#+end_src
-
-** org-re-reveal
-
-Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
-#+begin_src emacs-lisp
-(use-package org-re-reveal
-   :straight t)
-#+end_src
 ** Visual Configuration
 *** mixed-pitch
 While most modes of Emacs are dedicated to development, and therefore
@@ -1738,4 +1264,477 @@ Insert images easily into ORG mode files
 ;;     "u" #'org-tree-slide-content))
 #+end_src
 
-** Auto-Completion
+** Keybindings
+:PROPERTIES:
+:ID:       fbdd75ee-506e-4287-895a-1c18bc585b2d
+:END:
+Be prepared, I have a lot of keybindings for org-mode! They are all
+prefixed with a comma ~,~ in normal mode.
+#+name: org-keybinds-various
+| Key chord | Function                          | Description |
+|-----------+-----------------------------------+-------------|
+| RET       | org-ctrl-c-ret                    |             |
+| *         | org-ctrl-c-star                   |             |
+| ,         | org-ctrl-c-ctrl-c                 |             |
+| '         | org-edit-special                  |             |
+| -         | org-ctrl-c-minus                  |             |
+| a         | org-agenda                        |             |
+| c         | nil                               | ORG clock   |
+| ci        | org-clock-in                      |             |
+| co        | org-clock-out                     |             |
+| cr        | org-clock-report                  |             |
+| cn        | org-clock-goto                    |             |
+| cm        | dorneanu/org-clock-enter-manually |             |
+| C         | org-columns                       |             |
+| e         | org-export-dispatch               |             |
+| l         | org-store-link                    |             |
+| p         | org-priority                      |             |
+| r         | org-reload                        |             |
+| s         | org-sort                          |             |
+
+*** babel
+I then have a couple of babel-related functions.
+#+name: org-keybinds-babel
+| Key chord | Function                            | Description |
+|-----------+-------------------------------------+-------------|
+| b         | nil                                 | babel       |
+| b         | org-babel-transient/body            |             |
+| bb        | org-babel-execute-buffer            |             |
+| bc        | org-babel-check-src-block           |             |
+| bC        | org-babel-tangle-clean              |             |
+| be        | org-babel-execute-maybe             |             |
+| bf        | org-babel-tangle-file               |             |
+| bn        | org-babel-next-src-block            |             |
+| bo        | org-babel-open-src-block-result     |             |
+| bp        | org-babel-previous-src-block        |             |
+| br        | org-babel-remove-result-one-or-many |             |
+| bR        | org-babel-goto-named-result         |             |
+| bt        | org-babel-tangle                    |             |
+| bi        | org-babel-view-src-block-info       |             |
+
+*** dates
+We next have keybindings related to org-mode’s agenda capabilities. We
+can schedule a todo header for some dates, or set a deadline.
+#+name: org-keybinds-dates
+| Key chord | Function                | Description |
+|-----------+-------------------------+-------------|
+| d         | nil                     | dates       |
+| dd        | org-deadline            |             |
+| ds        | org-schedule            |             |
+| dt        | org-time-stamp          |             |
+| dT        | org-time-stamp-inactive |             |
+
+*** inserts
+Let’s now define some keybinds for inserting stuff in our org buffer:
+#+name: org-keybinds-insert
+| Key chord | Function                                | Description |
+|-----------+-----------------------------------------+-------------|
+| i         | nil                                     | insert      |
+| ib        | org-insert-structure-template           |             |
+| id        | org-insert-drawer                       |             |
+| ie        | nil                                     | emphasis    |
+| ieb       | org-emphasize-bold                      |             |
+| iec       | org-emphasize-code                      |             |
+| iei       | org-emphasize-italic                    |             |
+| ies       | org-emphasize-strike-through            |             |
+| ieu       | org-emphasize-underline                 |             |
+| iev       | org-emphasize-verbatim                  |             |
+| idc       | org-download-clipboard                  |             |
+| iE        | org-set-effort                          |             |
+| if        | org-footnote-new                        |             |
+| ih        | org-insert-heading                      |             |
+| iH        | counsel-org-link                        |             |
+| ii        | org-insert-item                         |             |
+| il        | org-insert-link                         |             |
+| iL        | dorneanu/org-insert-link-from-clipboard |             |
+| in        | org-add-note                            |             |
+| ip        | org-set-property                        |             |
+| is        | org-insert-subheading                   |             |
+| iq        | counsel-org-tag                         |             |
+
+*** jumps
+There isn’t a lot of stuff I can jump to yet, but there’s still some:
+#+name: org-keybinds-jump
+| Key chord | Function             | Description |
+|-----------+----------------------+-------------|
+| j         | nil                  | jump        |
+| ja        | counsel-org-goto-all |             |
+| jh        | counsel-org-goto     |             |
+
+*** tables
+Tables get a bit more love:
+#+name: org-keybinds-tables
+| Key chord | Function                             | Description |
+|-----------+--------------------------------------+-------------|
+| t         | nil                                  | tables      |
+| t.        | org-todo                             |             |
+| tc        | org-table-move-column-left           |             |
+| tt        | org-table-move-row-down              |             |
+| ts        | org-table-move-row-up                |             |
+| tr        | org-table-move-column-right          |             |
+| ta        | org-table-align                      |             |
+| te        | org-table-eval-formula               |             |
+| tf        | org-table-field-info                 |             |
+| tF        | org-table-edit-formulas              |             |
+| th        | org-table-convert                    |             |
+| tl        | org-table-recalculate                |             |
+| tp        | org-plot/gnuplot                     |             |
+| tS        | org-table-sort-lines                 |             |
+| tw        | org-table-wrap-region                |             |
+| tx        | org-table-shrink                     |             |
+| tN        | org-table-create-with-table.el       |             |
+| td        | nil                                  | delete      |
+| tdc       | org-table-delete-column              |             |
+| tdr       | org-table-kill-row                   |             |
+| ti        | nil                                  | insert      |
+| tic       | org-table-insert-column              |             |
+| tih       | org-table-insert-hline               |             |
+| tir       | org-table-insert-row                 |             |
+| tiH       | org-table-hline-and-move             |             |
+| tt        | nil                                  | toggle      |
+| ttf       | org-table-toggle-formula-debugger    |             |
+| tto       | org-table-toggle-coordinate-overlays |             |
+
+Finally, let’s make enabling and disabling stuff accessible:
+*** refiling
+#+name: org-keybinds-refiling
+| Key chord | Function                     | Description |
+|-----------+------------------------------+-------------|
+| r         | nil                          | toggle      |
+| rr        | org-refile                   |             |
+| ra        | dorneanu/org-refile-anywhere |             |
+| rf        | +org/refile-to-current-file  |             |
+| rl        | +org/refile-to-last-location |             |
+| rv        | +org/refile-to-visible       |             |
+
+*** toggles
+#+name: org-keybinds-toggles
+| Key chord | Function                             | Description |
+|-----------+--------------------------------------+-------------|
+| T         | nil                                  | toggle      |
+| Tc        | org-toggle-checkbox                  |             |
+| Ti        | org-toggle-inline-images             |             |
+| Tl        | org-latex-preview                    |             |
+| Tn        | org-num-mode                         |             |
+| Ts        | phundrak/toggle-org-src-window-split |             |
+| Tt        | org-show-todo-tree                   |             |
+| TT        | org-todo                             |             |
+** Disabled
+*** COMMENT LaTeX formats
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle no :exports code :results silent
+:END:
+I currently have two custom formats for my Org-mode exports: one for
+general use (initially for my conlanging files, hence its ~conlang~
+name), and one for beamer exports.
+
+Below is the declaration of the ~conlang~ LaTeX class:
+#+NAME: org-latex-class-conlang
+#+BEGIN_SRC emacs-lisp
+'("conlang"
+  "\\documentclass{book}"
+  ("\\chapter{%s}" . "\\chapter*{%s}")
+  ("\\section{%s}" . "\\section*{%s}")
+  ("\\subsection{%s}" . "\\subsection*{%s}")
+  ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+#+END_SRC
+
+And here is the declaration of the ~beamer~ class:
+#+NAME: org-latex-class-beamer
+#+BEGIN_SRC emacs-lisp
+`("beamer"
+  ,(concat "\\documentclass[presentation]{beamer}\n"
+           "[DEFAULT-PACKAGES]"
+           "[PACKAGES]"
+           "[EXTRA]\n")
+  ("\\section{%s}" . "\\section*{%s}")
+  ("\\subsection{%s}" . "\\subsection*{%s}")
+  ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+#+END_SRC
+
+Both these classes have to be added to ~org-latex-classes~ like so:
+#+NAME: org-latex-classes
+#+BEGIN_SRC emacs-lisp :noweb yes
+(eval-after-load "ox-latex"
+  '(progn
+     (add-to-list 'org-latex-classes
+                  <<org-latex-class-conlang>>)
+     (add-to-list 'org-latex-classes
+                  <<org-latex-class-beamer>>)))
+#+END_SRC
+
+*** COMMENT Projects
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle no :exports code :results silent
+:END:
+Another great features of Org-mode is the Org projects that allow the user to
+easily publish a bunch of org files to a remote location. Here is the current
+declaration of my projects, which will be detailed later:
+#+NAME: org-publish-projects
+#+BEGIN_SRC emacs-lisp :noweb yes :noweb-prefix no
+<<org-proj-config-setup>>
+(setq org-publish-project-alist
+      `(<<org-proj-config-html>>
+        <<org-proj-config-static>>
+        <<org-proj-config>>))
+#+END_SRC
+
+**** Configuration website
+This is my configuration for exporting my dotfiles to my website in a web format
+only. No PDFs or anything, just HTML. Please note that I do not use that often
+anymore, I much prefer the automatic script that I have which deploys through my
+Drone instance my website on git pushes.
+
+And before we get into the actual configuration, I would like to introduce a
+couple of variables. This is a bit more verbose than if I declared everything
+manually, but now I can change all three values at the same time without a
+hasle.
+#+NAME: org-proj-config-setup
+#+BEGIN_SRC emacs-lisp
+(defvar phundrak//projects-config-target
+  "/ssh:Tilo:~/www/phundrak.com/config"
+  "Points to where exported files for config.phundrak.com should be put.")
+(defvar phundrak//projects-config-source
+  "~/org/config/"
+  "Points to where the sources for config.phundrak.com are.")
+(defvar phundrak//projects-config-language
+  "en"
+  "Language of the website config.phundrak.com.")
+(defvar phundrak//projects-config-recursive
+  t
+  "Defines whether subdirectories should be parsed for config.phundrak.com.")
+#+END_SRC
+
+Now, here is my configuration. In this snippet, my org files located in my
+source directory get exported in the HTML format and published to my target
+directory on my remote server through RSYNC via TRAMP. A sitemap is
+automatically generated, which comes in handy with the online sitemap that is
+available through the navigation bar.
+#+NAME: org-proj-config-html
+#+BEGIN_SRC emacs-lisp
+("config-website-html"
+ :base-directory ,phundrak//projects-config-source
+ :base-extension "org"
+ :publishing-directory ,phundrak//projects-config-target
+ :recursive ,phundrak//projects-config-recursive
+ :language ,phundrak//projects-config-language
+ :publishing-function org-html-publish-to-html
+ :headline-levels 5
+ :auto-sitemap t
+ :auto-preamble t)
+#+END_SRC
+
+We also have the component for all the static files needed to run the website
+(mostly images tbh).
+#+NAME: org-proj-config-static
+#+BEGIN_SRC emacs-lisp
+("config-website-static"
+ :base-directory ,phundrak//projects-config-source
+ :base-extension "png\\|jpg\\|gif\\|webp\\|svg\\|jpeg\\|ttf\\|woff\\|txt\\|epub\\|md"
+ :publishing-directory ,phundrak//projects-config-target
+ :recursive ,phundrak//projects-config-recursive
+ :language ,phundrak//projects-config-language
+ :publishing-function org-publish-attachment)
+#+END_SRC
+
+The project is then defined like so:
+#+NAME: org-proj-config
+#+BEGIN_SRC emacs-lisp
+("config-website"
+ :components ("config-website-org"
+              "config-website-static"))
+#+END_SRC
+
+*** COMMENT Org-ref and Bibtex configuration
+#+begin_src emacs-lisp
+(use-package reftex
+  :commands turn-on-reftex
+  :init (setq reftex-default-bibliography "~/org/bibliography/references.bib"
+              reftex-plug-into-AUCTeX     t))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package org-ref
+  ;; :after (org ox-bibtex pdf-tools)
+  :after org
+  :defer t
+  :straight (:build t)
+  :custom-face
+  (org-ref-cite-face ((t (:weight bold))))
+  :init
+  (setq org-ref-completion-library    'org-ref-ivy-cite
+        org-latex-logfiles-extensions '("lof" "lot" "aux" "idx" "out" "log" "fbd_latexmk"
+                                        "toc" "nav" "snm" "vrb" "dvi" "blg" "brf" "bflsb"
+                                        "entoc" "ps" "spl" "bbl" "pygtex" "pygstyle"))
+  (add-hook 'org-mode-hook (lambda () (require 'org-ref)))
+  :config
+  (setq bibtex-completion-pdf-field    "file"
+        bibtex-completion-notes-path   "~/org/bibliography/notes/"
+        bibtex-completion-bibliography "~/org/bibliography/references.bib"
+        bibtex-completion-library-path "~/org/bibliography/bibtex-pdfs/"
+        bibtex-completion-pdf-symbol   "⌘"
+        bibtex-completion-notes-symbol "✎")
+  :general
+  (phundrak/evil
+   :keymaps 'bibtex-mode-map
+   :packages 'org-ref
+   "C-t" #'org-ref-bibtex-next-entry
+   "C-s" #'org-ref-bibtex-previous-entry
+   "gt"  #'org-ref-bibtex-next-entry
+   "gs"  #'org-ref-bibtex-previous-entry)
+  (phundrak/major-leader-key
+   :keymaps '(bibtex-mode-map)
+   :packages 'org-ref
+   ;; Navigation
+   "t" #'org-ref-bibtex-next-entry
+   "s" #'org-ref-bibtex-previous-entry
+
+   ;; Open
+   "b" #'org-ref-open-in-browser
+   "n" #'org-ref-open-bibtex-notes
+   "p" #'org-ref-open-bibtex-pdf
+
+   ;; Misc
+   "h" #'org-ref-bibtex-hydra/body
+   "i" #'org-ref-bibtex-hydra/org-ref-bibtex-new-entry/body-and-exit
+   "s" #'org-ref-sort-bibtex-entry
+
+   "l" '(:ignore t :which-key "lookup")
+   "la" #'arxiv-add-bibtex-entry
+   "lA" #'arxiv-get-pdf-add-bibtex-entry
+   "ld" #'doi-utils-add-bibtex-entry-from-doi
+   "li" #'isbn-to-bibtex
+   "lp" #'pubmed-insert-bibtex-from-pmid)
+  (phundrak/major-leader-key
+   :keymaps 'org-mode-map
+   :pakages 'org-ref
+   "ic" #'org-ref-insert-link
+   "iL" #'org-ref-insert-ref-link
+   "ir" #'org-ref-insert-link-hydra/body
+   "iB" #'org-ref-bibtex-hydra/body))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package ivy-bibtex
+  :defer t
+  :straight (:build t)
+  :config
+  (setq bibtex-completion-pdf-open-function #'find-file)
+  :general
+  (phundrak/leader-key
+    :keymaps '(bibtex-mode-map)
+    :packages 'ivy-bibtex
+    "m" #'ivy-bibtex))
+#+end_src
+
+*** COMMENT Org-present
+~org-present~ allows its user to create presentations through ~org-mode~,
+which is really nice! However, most of my configuration will be stolen
+[[https://config.daviwil.com/emacs#org-present][from Daviwil’s]] with minor changes.
+#+begin_src emacs-lisp
+ ;; (defun my/org-present-prepare-slide ()
+ ;;   (org-overview)
+ ;;   (org-show-entry)
+ ;;  (org-show-children)
+ ;;   (org-present-hide-cursor))
+
+ ;; (defun my/org-present-init ()
+ ;;   (setq header-line-format " ")
+ ;;   (org-display-inline-images)
+ ;;   (my/org-present-prepare-slide))
+
+ ;; (defun my/org-present-quit ()
+ ;;   (setq header-line-format nil)
+ ;;   (org-present-small)
+ ;;   (org-present-show-cursor))
+
+ ;; (defun my/org-present-prev ()
+ ;;   (interactive)
+ ;;   (org-present-prev)
+ ;;   (my/org-present-prepare-slide))
+
+ ;; (defun my/org-present-next ()
+ ;;   (interactive)
+ ;;   (org-present-next)
+ ;;   (my/org-present-prepare-slide))
+
+ ;; (use-package org-present
+ ;;   :after org
+ ;;   :defer t
+ ;;   :straight (:build t)
+ ;;   :general
+ ;;   (phundrak/major-leader-key
+ ;;     :packages 'org-present
+ ;;     :keymaps 'org-mode-map
+ ;;     "P" #'org-present)
+ ;;   (phundrak/evil
+ ;;     :states 'normal
+ ;;     :packages 'org-present
+ ;;     :keymaps 'org-present-mode-keymap
+ ;;     "+" #'org-present-big
+ ;;     "-" #'org-present-small
+ ;;     "<" #'org-present-beginning
+ ;;     ">" #'org-present-end
+ ;;     "«" #'org-present-beginning
+ ;;     "»" #'org-present-end
+ ;;     "c" #'org-present-hide-cursor
+ ;;     "C" #'org-present-show-cursor
+ ;;     "n" #'org-present-next
+ ;;     "p" #'org-present-prev
+ ;;     "r" #'org-present-read-only
+ ;;     "w" #'org-present-read-write
+ ;;     "q" #'org-present-quit)
+ ;;   :hook ((org-present-mode      . my/org-present-init)
+ ;;          (org-present-mode-quit . my/org-present-quit)))
+ ;; (use-package hide-mode-line
+ ;;   :straight t
+ ;;   :after (org-present))
+
+ ;; (defun my/present-next-with-latex ()
+ ;;   (interactive)
+ ;;   (org-present-next)
+ ;;   (org-latex-preview '(16)))
+
+ ;; (defun my/present-prev-with-latex ()
+ ;;   (interactive)
+ ;;   (org-present-prev)
+ ;;   (org-latex-preview '(16)))
+
+ ;; (use-package org-present
+ ;;   :straight t
+ ;;   :commands (org-present)
+ ;;   :config
+ ;;   (general-define-key
+ ;;    :keymaps 'org-present-mode-keymap
+ ;;    "<next>" 'my/present-next-with-latex
+ ;;    "<prior>" 'my/present-prev-with-latex)
+ ;;   (setq org-present-mode-hook
+ ;;         (list (lambda ()
+ ;;                 (blink-cursor-mode 0)
+ ;;                 (org-present-big)
+ ;;                 (org-bars-mode -1)
+ ;;                 ;; (org-display-inline-images)
+ ;;                 (org-present-hide-cursor)
+ ;;                 (org-present-read-only)
+ ;;                 (display-line-numbers-mode 0)
+ ;;                 (hide-mode-line-mode +1)
+ ;;                 ;; (org-latex-preview '(16))
+ ;;                 ;; TODO ^somehow this stucks at running LaTeX^
+ ;;                 (setq-local olivetti-body-width 60)
+ ;;                 (olivetti-mode 1))))
+ ;;   (setq org-present-mode-quit-hook
+ ;;         (list (lambda ()
+ ;;                 (blink-cursor-mode 1)
+ ;;                 (org-present-small)
+ ;;                 (org-bars-mode 1)
+ ;;                 ;; (org-remove-inline-images)
+ ;;                 (org-present-show-cursor)
+ ;;                 (org-present-read-write)
+ ;;                 (display-line-numbers-mode 1)
+ ;;                 (hide-mode-line-mode 0)
+ ;;                 (org-latex-preview '(64))
+ ;;                 (olivetti-mode -1)
+ ;;                 (setq-local olivetti-body-width (default-value 'olivetti-body-width))))))
+ #+end_src
+
+#+end_src
