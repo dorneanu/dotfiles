@@ -33,6 +33,11 @@ A replacement for ~ibuffer~
   :straight t
   :defer t)
 #+end_src
+** discover-my-major
+#+begin_src emacs-lisp
+(use-package discover-my-major
+  :bind ("C-h C-m" . discover-my-major))
+#+end_src
 ** google-translate
 #+begin_src emacs-lisp
 ;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
@@ -120,4 +125,22 @@ Let’s define some more intuitive keybinds for ~info-mode~.
    wordreference-target-lang "de"))
 
 (add-hook 'wordreference-mode-hook #'turn-off-evil-mode)
+#+end_src
+** which-key
+Which key is, I think, one of my favorite quality of life package.
+When you begin a keybind, Emacs will show you all keybinds you can
+follow the first one with in order to form a full keychord. Very
+useful when you have a lot of keybinds and don’t remember exactly what
+is what.
+#+begin_src emacs-lisp
+(use-package which-key
+  :straight (:build t)
+  :defer t
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :custom
+  (which-key-show-early-on-C-h t)
+  (which-key-idle-delay (float 10000))
+  (which-key-show-transient-maps t)
+  (which-key-idle-secondary-delay (float 0.05)))
 #+end_src

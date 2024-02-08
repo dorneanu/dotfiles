@@ -451,12 +451,12 @@ Finish this:
 #+name: org-emphasis-character
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
-| bold           | ~*~         |             42 |
-| italic         | ~/~         |             47 |
-| underline      | ~_~         |             95 |
-| verbatim       | ~=~         |             61 |
-| code           | ~~~         |            126 |
-| strike-through | ~+~         |             43 |
+| bold           | ~*~       |             42 |
+| italic         | ~/~       |             47 |
+| underline      | ~_~       |             95 |
+| verbatim       | ~=~       |             61 |
+| code           | ~~~       |            126 |
+| strike-through | ~+~       |             43 |
 
 #+name: org-create-emphasis-functions
 #+header: :tangle no :exports results :cache yes

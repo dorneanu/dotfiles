@@ -5,22 +5,6 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 
 * Keybinding Managers
-** Which-key
-Which key is, I think, one of my favorite quality of life package.
-When you begin a keybind, Emacs will show you all keybinds you can
-follow the first one with in order to form a full keychord. Very
-useful when you have a lot of keybinds and don’t remember exactly what
-is what.
-#+begin_src emacs-lisp
-(use-package which-key
-  :straight (:build t)
-  :defer t
-  :init (which-key-mode)
-  :diminish which-key-mode
-  :config
-  (setq which-key-idle-delay 1))
-#+end_src
-
 ** General
 General is an awesome package for managing keybindings. Not only is it
 oriented towards keychords by default (which I love), but it also
@@ -54,13 +38,6 @@ can still feel some influence from my Spacemacs years here.
     :prefix ","
     :global-prefix "M-m"))
 #+end_src
-** Defaults
-Some default keybindings:
-
-#+begin_src emacs-lisp
-(bind-key "C-c d" 'delete-pair)
-#+end_src
-
 ** Evil
 Evil emulates most of vim’s keybinds, because let’s be honest here,
 they are much more comfortable than Emacs’.
@@ -77,7 +54,6 @@ they are much more comfortable than Emacs’.
   (evil-set-undo-system 'undo-tree)
   :config
   <<evil-undefine-keys>>
-  <<evil-bepo>>
   (evil-mode 1)
   (setq evil-want-fine-undo t) ; more granular undo with evil
   (evil-set-initial-state 'messages-buffer-mode 'normal)
@@ -107,36 +83,7 @@ and ~C-y~.
  "C-y" nil
  "C-e" nil)
 #+end_src
-
-Something else that really bugs me is I use the bépo layout, which is
-not at all like the qwerty layout. For instance, ~hjkl~ becomes ~ctsr~.
-Thus, I need some bépo-specific changes.
-#+name: evil-bepo
-#+begin_src emacs-lisp :tangle no
-;; (dolist (key '("c" "C" "t" "T" "s" "S" "r" "R" "h" "H" "j" "J" "k" "K" "l" "L"))
-;;   (general-define-key :states 'normal key nil))
-
-;; (general-define-key
-;;  :states 'motion
-;;  "h" 'evil-replace
-;;  "H" 'evil-replace-state
-;;  "j" 'evil-find-char-to
-;;  "J" 'evil-find-char-to-backward
-;;  "k" 'evil-substitute
-;;  "K" 'evil-smart-doc-lookup
-;;  "l" 'evil-change
-;;  "L" 'evil-change-line
-
-;;  "c" 'evil-backward-char
-;;  "C" 'evil-window-top
-;;  "t" 'evil-next-visual-line
-;;  "T" 'evil-join
-;;  "s" 'evil-previous-visual-line
-;;  "S" 'evil-lookup
-;;  "r" 'evil-forward-char
-;;  "R" 'evil-window-bottom)
-#+end_src
-
+*** evil-collection
 This package enables and integrates Evil into a lot of different
 modes, such as org-mode, dired, mu4e, etc. Again, I need some
 additional code compared to most people due to the bépo layout.
@@ -145,67 +92,14 @@ additional code compared to most people due to the bépo layout.
   :after evil
   :straight (:build t)
   :config
-  ;; bépo conversion
-  ;; (defun my/bépo-rotate-evil-collection (_mode mode-keymaps &rest _rest)
-  ;;   (evil-collection-translate-key 'normal mode-keymaps
-  ;;     ;; bépo ctsr is qwerty hjkl
-  ;;     "c" "h"
-  ;;     "t" "j"
-  ;;     "s" "k"
-  ;;     "r" "l"
-  ;;     ;; add back ctsr
-  ;;     "h" "c"
-  ;;     "j" "t"
-  ;;     "k" "s"
-  ;;     "l" "r"))
-  ;; (add-hook 'evil-collection-setup-hook #'my/bépo-rotate-evil-collection)
   (evil-collection-init))
 #+end_src
 
-~undo-tree~ is my preferred way of undoing and redoing stuff. The main
-reason is it doesn’t create a linear undo/redo history, but rather a
-complete tree you can navigate to see your complete editing history.
-One of the two obvious things to do are to tell Emacs to save all its
-undo history files in a dedicated directory, otherwise we’d risk
-littering all of our directories. The second thing is to simply
-globally enable its mode.
-#+begin_src emacs-lisp
-(use-package undo-tree
-  :defer t
-  :straight (:build t)
-  :custom
-  (undo-tree-history-directory-alist
-   `(("." . ,(expand-file-name (file-name-as-directory "undo-tree-hist")
-                               user-emacs-directory))))
-  :init
-  (global-undo-tree-mode)
-  :config
-  <<undo-tree-ignore-text-properties>>
-  ;; <<undo-tree-compress-files>>
-  (setq undo-tree-visualizer-diff       t
-        undo-tree-visualizer-timestamps t
-        undo-tree-auto-save-history     t
-        undo-tree-enable-undo-in-region t
-        undo-limit        (* 800 1024)
-        undo-strong-limit (* 12 1024 1024)
-        undo-outer-limit  (* 128 1024 1024)))
-#+end_src
+** Defaults
+Some default keybindings:
 
-An interesting behaviour from DoomEmacs is to compress the history
-files with ~zstd~ when it is present on the system. Not only do we enjoy
-much smaller files (according to DoomEmacs, we get something like 80%
-file savings), Emacs can load them much faster than the regular files.
-Sure, it uses more CPU time uncompressing these files, but it’s
-insignificant, and it’s still faster than loading a heavier file.
-#+name: undo-tree-compress-files
-#+begin_src emacs-lisp :tangle no
-(when (executable-find "zstd")
-  (defun my/undo-tree-append-zst-to-filename (filename)
-    "Append .zst to the FILENAME in order to compress it."
-    (concat filename ".zst"))
-  (advice-add 'undo-tree-make-history-save-file-name
-              :filter-return
-              #'my/undo-tree-append-zst-to-filename))
+#+begin_src emacs-lisp
+(bind-key "C-c d" 'delete-pair)
 #+end_src
 
 ** Hydra
