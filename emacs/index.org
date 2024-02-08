@@ -85,7 +85,6 @@ block.
 | =basic-config.el=        | [[file:./basic-config.org][Basic Configuration]]              |
 | =custom-elisp.el=        | [[file:./custom-elisp.org][Custom Elisp]]                     |
 | =package-manager.el=     | [[file:./package-manager.org][Package Manager]]                  |
-| =keybinding-managers.el= | [[file:./keybinding-managemers.org][Keybinding Managers]]              |
 | =applications.el=        | [[file:./packages/applications.org][Packages — Applications]]          |
 | =autocompletion.el=      | [[file:./packages/autocompletion.org][Packages — Autocompletion]]        |
 | =editing.el=             | [[file:./packages/editing.org][Packages — Editing]]               |
@@ -103,8 +102,8 @@ block.
            " ")
 #+end_src
 
-#+RESULTS[5a092538a383cbb71829a978945746a474791415]: generate-modules
-: "basic-config.el" "custom-elisp.el" "package-manager.el" "keybinding-managers.el" "applications.el" "autocompletion.el" "editing.el" "helpful.el" "misc.el" "org.el" "programming.el" "visual-config.el" "keybindings.el"
+#+RESULTS[9f02d856bc0b3e11267f5c9754fbf68b1436c7bd]: generate-modules
+: "basic-config.el" "custom-elisp.el" "package-manager.el" "applications.el" "autocompletion.el" "editing.el" "helpful.el" "org.el" "programming.el" "visual-config.el" "keybindings.el"
 
 #+begin_src emacs-lisp :noweb yes
 (dolist (module '(<<generate-modules()>>))
