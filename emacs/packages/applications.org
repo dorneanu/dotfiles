@@ -65,6 +65,49 @@
       "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location."))))
 #+end_src
 
+** Browsers
+*** Eww
+Since Emacs 29, it is possible to automatically rename ~eww~ buffers to
+a more human-readable name, see [[https://protesilaos.com/codelog/2021-10-15-emacs-29-eww-rename-buffers/][Prot’s blog]] post on the matter.
+#+begin_src emacs-lisp
+(use-package eww
+  :defer t
+  :straight (:type built-in)
+  :config
+  (setq eww-auto-rename-buffer 'title))
+#+end_src
+
+Set default browser to chrome:
+#+begin_src emacs-lisp
+(setq browse-url-browser-function 'browse-url-chrome)
+#+end_src
+
+*** COMMENT XWidgets Webkit Browser
+I used to use the xwidgets webkit browser in order to view or preview
+HTML files from Emacs, but it seems the Cairo background transparency
+patch breaks it. So while this isn’t patched, I will disable Xwidgets
+in my Emacs build, and these keybinds *will not* be tangled.
+#+begin_src emacs-lisp :tangle no
+(phundrak/evil
+ :keymaps 'xwidget-webkit-mode-map
+ "<mouse-4>" #'xwidget-webkit-scroll-down-line
+ "<mouse-5>" #'xwidget-webkit-scroll-up-line
+ "c"         #'xwidget-webkit-scroll-backward
+ "t"         #'xwidget-webkit-scroll-up-line
+ "s"         #'xwidget-webkit-scroll-down-line
+ "r"         #'xwidget-webkit-scroll-forward
+ "h"         #'xwidget-webkit-goto-history
+ "C"         #'xwidget-webkit-back
+ "R"         #'xwidget-webkit-forward
+ "C-r"       #'xwidget-webkit-reload
+ "j"         nil
+ "k"         nil
+ "l"         nil
+ "H"         nil
+ "L"         nil
+ "C-d"       #'xwidget-webkit-scroll-up
+ "C-u"       #'xwidget-webkit-scroll-down)
+#+end_src
 ** Buffers
 *** ibuffer
 #+begin_src emacs-lisp
@@ -159,49 +202,6 @@
   (add-hook 'ibuffer-mode-hook
             #'(lambda ()
                 (ibuffer-switch-to-saved-filter-groups "default"))))
-#+end_src
-** Browsers
-*** Eww
-Since Emacs 29, it is possible to automatically rename ~eww~ buffers to
-a more human-readable name, see [[https://protesilaos.com/codelog/2021-10-15-emacs-29-eww-rename-buffers/][Prot’s blog]] post on the matter.
-#+begin_src emacs-lisp
-(use-package eww
-  :defer t
-  :straight (:type built-in)
-  :config
-  (setq eww-auto-rename-buffer 'title))
-#+end_src
-
-Set default browser to chrome:
-#+begin_src emacs-lisp
-(setq browse-url-browser-function 'browse-url-chrome)
-#+end_src
-
-*** COMMENT XWidgets Webkit Browser
-I used to use the xwidgets webkit browser in order to view or preview
-HTML files from Emacs, but it seems the Cairo background transparency
-patch breaks it. So while this isn’t patched, I will disable Xwidgets
-in my Emacs build, and these keybinds *will not* be tangled.
-#+begin_src emacs-lisp :tangle no
-(phundrak/evil
- :keymaps 'xwidget-webkit-mode-map
- "<mouse-4>" #'xwidget-webkit-scroll-down-line
- "<mouse-5>" #'xwidget-webkit-scroll-up-line
- "c"         #'xwidget-webkit-scroll-backward
- "t"         #'xwidget-webkit-scroll-up-line
- "s"         #'xwidget-webkit-scroll-down-line
- "r"         #'xwidget-webkit-scroll-forward
- "h"         #'xwidget-webkit-goto-history
- "C"         #'xwidget-webkit-back
- "R"         #'xwidget-webkit-forward
- "C-r"       #'xwidget-webkit-reload
- "j"         nil
- "k"         nil
- "l"         nil
- "H"         nil
- "L"         nil
- "C-d"       #'xwidget-webkit-scroll-up
- "C-u"       #'xwidget-webkit-scroll-down)
 #+end_src
 ** Calendar
 I am using the built-in calendar of Emacs, but as I use Evil and the
@@ -314,280 +314,15 @@ Run ~M-x esup~ to see where the time is spend during emacs startup.
   :defer t)
 #+END_SRC
 
-** COMMENT Docker
-Docker is an awesome tool for reproducible development environments.
-Due to this, I absolutely need a mode for editing Dockerfiles.
+*** explain-pause-mode
 #+begin_src emacs-lisp
-(use-package dockerfile-mode
-  :defer t
-  :straight (:build t)
-  :hook (dockerfile-mode . lsp-deferred)
-  :init
-  (put 'docker-image-name 'safe-local-variable #'stringp)
-  :mode "Dockerfile\\'"
-  :general
-  (phundrak/major-leader-key
-   :keymaps 'general-mode-map
-   :packages 'lsp-mode
-   "l"  '(:keymap lsp-command-map :which-key "lsp")))
-#+end_src
-
-The ~docker~ package also provides interactivity with Docker and
-docker-compose from Emacs.
-#+begin_src emacs-lisp
-(use-package docker
-  :defer t
-  :straight (:build t))
-#+end_src
-** elfeed
-
-Elfeed is a nice Atom and RSS reader for Emacs. The only thing I want
-to change for now is the default search filter: I want to see not only
-unread news but read news as well, a bit like my emails; and where the
-database is to be stored.
-#+begin_src emacs-lisp
-(use-package elfeed
-  :defer t
-  :straight (:build t)
-  :config
-  <<elfeed-open-youtube-with-mpv>>
-  :custom
-  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
-   (elfeed-db-directory "~/.elfeed")
-   (elfeed-goodies/wide-threshold 0.2)
-   (elfeed-set-timeout 36000)))
-#+end_src
-
-Custom functions:
-
-#+begin_src emacs-lisp
-(defun hp/elfeed-entry-line-draw (entry)
-  "Print ENTRY to the buffer."
-  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
-         (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
-         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
-         (feed (elfeed-entry-feed entry))
-         (feed-title
-          (when feed
-            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
-         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
-         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
-         (title-width (- (window-width) elfeed-goodies/feed-source-column-width
-                         elfeed-goodies/tag-column-width 4))
-         (title-column (elfeed-format-column
-                        title (elfeed-clamp
-                               elfeed-search-title-min-width
-                               title-width
-                               title-width)
-                        :left))
-         (tag-column (elfeed-format-column
-                      tags-str (elfeed-clamp (length tags-str)
-                                             elfeed-goodies/tag-column-width
-                                             elfeed-goodies/tag-column-width)
-                      :left))
-         (feed-column (elfeed-format-column
-                       feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
-                                                elfeed-goodies/feed-source-column-width
-                                                elfeed-goodies/feed-source-column-width)
-                       :left))
-         ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
-         ;; (entry-authors (concatenate-authors
-         ;;                 (elfeed-meta entry :authors)))
-         ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
-         )
-    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
-        (progn
-          ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
-          (insert (propertize date 'face 'elfeed-search-date-face) " ")
-          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
-          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
-          ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
-          (insert (propertize title 'face title-faces 'kbd-help title))
-          )
-      (insert (propertize title 'face title-faces 'kbd-help title))))
-  )
-
-#+end_src
-
-I don’t want YouTube videos to be open with my web browser when I
-invoke ~elfeed-show-visit~, so I’ll advise this function to make it
-possible to modify the behaviour of said function. Oh, and I already
-made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
-[[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
-
-#+name: elfeed-open-youtube-with-mpv
-#+begin_src emacs-lisp
-(defun my/elfeed-filter-youtube-videos (orig-fun &rest args)
-  "Open with mpv the video leading to PATH"
-  (let ((link (elfeed-entry-link elfeed-show-entry)))
-    (when link
-      (if (string-match-p ".*youtube\.com.*watch.*" link)
-          ;; This is a YouTube video, open it with mpv
-          (progn
-            (require 'ytplay)
-            (ytplay link))
-        (apply orig-fun args)))))
-
-(advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
-#+end_src
-
-A future improvement to be made is to let the user chose the
-resolution of the video before it is launched. I may not always have
-the best internet connection, and viewing 4K videos on a 1080p display
-is not something very useful.
-*** elfeed-goodies
-Elfeed-goodies is a package which enhances the Elfeed experience.
-Aside from running its setup command as soon as possible, I also set
-in this code block all my keybinds for Elfeed here.
-#+begin_src emacs-lisp
-(use-package elfeed-goodies
-  :defer t
-  :after elfeed
-  :commands elfeed-goodies/setup
-  :straight (:build t)
-  :init
-  (elfeed-goodies/setup)
-  :custom
-  (elfeed-goodies/feed-source-column-width 28)
-  (elfeed-goodies/tag-column-width 28)
-  :config
-  (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw)
-  :general
-  (phundrak/undefine
-    :keymaps '(elfeed-show-mode-map elfeed-search-mode-map)
-    :packages 'elfeed
-    "DEL" nil
-    "s"   nil)
-  (phundrak/evil
-    :keymaps 'elfeed-show-mode-map
-    :packages 'elfeed
-    <<general-keybindings-gen(table=elfeed-keybinds-show-mode)>>)
-  (phundrak/evil
-    :keymaps 'elfeed-search-mode-map
-    :packages 'elfeed
-    <<general-keybindings-gen(table=elfeed-keybinds-search-mode)>>)
-  (phundrak/major-leader-key
-    :keymaps 'elfeed-search-mode-map
-    :packages 'elfeed
-    <<general-keybindings-gen(table=elfeed-keybinds-search-mode-prefixed)>>))
-#+end_src
-
-*** elfeed-org
-Last but not least, my Elfeed configuration is stored in an org file
-thanks to ~elfeed-org~.
-#+begin_src emacs-lisp
-(use-package elfeed-org
-  :defer nil
-  :after elfeed
-  :straight (:build t)
-  :init
-  (elfeed-org)
-  :config
-  (setq rmh-elfeed-org-files '("~/work/repos/org/elfeed.org.gpg")))
-#+end_src
-*** reddigg
-Use reddigg to show reddit threads.
-#+begin_src emacs-lisp
-(use-package reddigg
+(use-package explain-pause-mode
+  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode"))
   :straight t
-  :after elfeed
-  :config
-  (defun my/elfeed-reddit-show-commments (&optional link)
-    (interactive)
-    (let* ((entry (if (eq major-mode 'elfeed-show-mode)
-                      elfeed-show-entry
-                    (elfeed-search-selected :ignore-region)))
-           (link (if link link (elfeed-entry-link entry))))
-      (reddigg-view-comments link))))
+  ;; :config
+  ;; (explain-pause-mode)
+
 #+end_src
-*** hnreader
-#+begin_src emacs-lisp
-(use-package hnreader
-  :straight t
-  :after (elfeed))
-#+end_src
-Open in same window
-#+begin_src emacs-lisp
-(setq hnreader-view-comments-in-same-window nil)
-#+end_src
-
-Use hnreader to show HN threads
-#+begin_src emacs-lisp
-(defun my/elfeed-hn-show-commments (&optional link)
-  (interactive)
-  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
-                    elfeed-show-entry
-                  (elfeed-search-selected :ignore-region)))
-         (link (if link link (elfeed-entry-link entry))))
-    (setq-local hnreader-view-comments-in-same-window nil)
-    (hnreader-promise-comment (format "%s" link))))
-#+end_src
-
-Use hnread to show HN threads for a URL at point
-#+begin_src emacs-lisp
-(defun my/elfeed-hn-show-comments-at-point ()
-  "Kill the url at point."
-  (interactive)
-  (setq-local hnreader-view-comments-in-same-window t)
-  (hnreader-comment (format "%s" (url-get-url-at-point))))
-#+end_src
-
-*** Keybindings
-First, here are the keybinds for Elfeed’s ~elfeed-show-mode~. They
-aren’t prefixed by ~SPC~ like most of my keybinds, a direct keypress
-will directly launch the function.
-#+name: elfeed-keybinds-show-mode
-| Key | Function                      | Comment |
-|-----+-------------------------------+---------|
-| +   | elfeed-show-tag               |         |
-| -   | elfeed-show-untag             |         |
-| «   | elfeed-show-prev              |         |
-| »   | elfeed-show-next              |         |
-| b   | elfeed-show-visit             |         |
-| C   | elfeed-kill-link-url-at-point |         |
-| d   | elfeed-show-save-enclosure    |         |
-| l   | elfeed-show-next-link         |         |
-| o   | elfeed-goodies/show-ace-link  |         |
-| q   | elfeed-kill-buffer            |         |
-| S   | elfeed-show-new-live-search   |         |
-| u   | elfeed-show-tag--unread       |         |
-| y   | elfeed-show-yank              |         |
-
-Same thing, different mode, here are my keybinds for
-~elfeed-search-mode~.
-#+name: elfeed-keybinds-search-mode
-| Key | Function                       | Comment |
-|-----+--------------------------------+---------|
-| «   | elfeed-search-first-entry      |         |
-| »   | elfeed-search-last-entry       |         |
-| b   | elfeed-search-browse-url       |         |
-| f   |                                | filter  |
-| fc  | elfeed-search-clear-filter     |         |
-| fl  | elfeed-search-live-filter      |         |
-| fs  | elfeed-search-set-filter       |         |
-| u   |                                | update  |
-| us  | elfeed-search-fetch            |         |
-| uS  | elfeed-search-update           |         |
-| uu  | elfeed-update                  |         |
-| uU  | elfeed-search-update--force    |         |
-| y   | elfeed-search-yank             |         |
-| x   | elfeed-search-untag-all-unread |         |
-| TAB | elfeed-search-show-entry       |         |
-
-I have some additional keybinds for ~elfeed-search-mode~, but these one
-are prefixed with ~,~ (and ~M-m~).
-#+name: elfeed-keybinds-search-mode-prefixed
-| Key | Function                            | Comment |
-|-----+-------------------------------------+---------|
-| c   | elfeed-db-compact                   |         |
-| t   |                                     | tag     |
-| gr  | my/elfeed-reddit-show-commments     |         |
-| gh  | my/elfeed-hn-show-comments-at-point |         |
-| tt  | elfeed-search-tag-all-unread        |         |
-| tu  | elfeed-search-untag-all-unread      |         |
-| tT  | elfeed-search-tag-all               |         |
-| tU  | elfeed-search-untag-all             |         |
-
 ** Email
 *** mu4e
 **** General config
@@ -938,6 +673,256 @@ position and resume whenever the same video is played again (read [[https://unix
   (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
 
 #+end_src
+** Feeds
+*** elfeed
+
+Elfeed is a nice Atom and RSS reader for Emacs. The only thing I want
+to change for now is the default search filter: I want to see not only
+unread news but read news as well, a bit like my emails; and where the
+database is to be stored.
+#+begin_src emacs-lisp
+(use-package elfeed
+  :defer t
+  :straight (:build t)
+  :config
+  <<elfeed-open-youtube-with-mpv>>
+  :custom
+  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
+   (elfeed-db-directory "~/.elfeed")
+   (elfeed-goodies/wide-threshold 0.2)
+   (elfeed-set-timeout 36000)))
+#+end_src
+
+Custom functions:
+
+#+begin_src emacs-lisp
+(defun hp/elfeed-entry-line-draw (entry)
+  "Print ENTRY to the buffer."
+  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+         (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+         (feed (elfeed-entry-feed entry))
+         (feed-title
+          (when feed
+            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
+         (title-width (- (window-width) elfeed-goodies/feed-source-column-width
+                         elfeed-goodies/tag-column-width 4))
+         (title-column (elfeed-format-column
+                        title (elfeed-clamp
+                               elfeed-search-title-min-width
+                               title-width
+                               title-width)
+                        :left))
+         (tag-column (elfeed-format-column
+                      tags-str (elfeed-clamp (length tags-str)
+                                             elfeed-goodies/tag-column-width
+                                             elfeed-goodies/tag-column-width)
+                      :left))
+         (feed-column (elfeed-format-column
+                       feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width)
+                       :left))
+         ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
+         ;; (entry-authors (concatenate-authors
+         ;;                 (elfeed-meta entry :authors)))
+         ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
+         )
+    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
+        (progn
+          ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize date 'face 'elfeed-search-date-face) " ")
+          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+          ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
+          (insert (propertize title 'face title-faces 'kbd-help title))
+          )
+      (insert (propertize title 'face title-faces 'kbd-help title))))
+  )
+
+#+end_src
+
+I don’t want YouTube videos to be open with my web browser when I
+invoke ~elfeed-show-visit~, so I’ll advise this function to make it
+possible to modify the behaviour of said function. Oh, and I already
+made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
+[[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
+
+#+name: elfeed-open-youtube-with-mpv
+#+begin_src emacs-lisp
+(defun my/elfeed-filter-youtube-videos (orig-fun &rest args)
+  "Open with mpv the video leading to PATH"
+  (let ((link (elfeed-entry-link elfeed-show-entry)))
+    (when link
+      (if (string-match-p ".*youtube\.com.*watch.*" link)
+          ;; This is a YouTube video, open it with mpv
+          (progn
+            (require 'ytplay)
+            (ytplay link))
+        (apply orig-fun args)))))
+
+(advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
+#+end_src
+
+A future improvement to be made is to let the user chose the
+resolution of the video before it is launched. I may not always have
+the best internet connection, and viewing 4K videos on a 1080p display
+is not something very useful.
+**** elfeed-goodies
+Elfeed-goodies is a package which enhances the Elfeed experience.
+Aside from running its setup command as soon as possible, I also set
+in this code block all my keybinds for Elfeed here.
+#+begin_src emacs-lisp
+(use-package elfeed-goodies
+  :defer t
+  :after elfeed
+  :commands elfeed-goodies/setup
+  :straight (:build t)
+  :init
+  (elfeed-goodies/setup)
+  :custom
+  (elfeed-goodies/feed-source-column-width 28)
+  (elfeed-goodies/tag-column-width 28)
+  :config
+  (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw)
+  :general
+  (phundrak/undefine
+    :keymaps '(elfeed-show-mode-map elfeed-search-mode-map)
+    :packages 'elfeed
+    "DEL" nil
+    "s"   nil)
+  (phundrak/evil
+    :keymaps 'elfeed-show-mode-map
+    :packages 'elfeed
+    <<general-keybindings-gen(table=elfeed-keybinds-show-mode)>>)
+  (phundrak/evil
+    :keymaps 'elfeed-search-mode-map
+    :packages 'elfeed
+    <<general-keybindings-gen(table=elfeed-keybinds-search-mode)>>)
+  (phundrak/major-leader-key
+    :keymaps 'elfeed-search-mode-map
+    :packages 'elfeed
+    <<general-keybindings-gen(table=elfeed-keybinds-search-mode-prefixed)>>))
+#+end_src
+
+**** elfeed-org
+Last but not least, my Elfeed configuration is stored in an org file
+thanks to ~elfeed-org~.
+#+begin_src emacs-lisp
+(use-package elfeed-org
+  :defer nil
+  :after elfeed
+  :straight (:build t)
+  :init
+  (elfeed-org)
+  :config
+  (setq rmh-elfeed-org-files '("~/work/repos/org/elfeed.org.gpg")))
+#+end_src
+**** reddigg
+Use reddigg to show reddit threads.
+#+begin_src emacs-lisp
+(use-package reddigg
+  :straight t
+  :after elfeed
+  :config
+  (defun my/elfeed-reddit-show-commments (&optional link)
+    (interactive)
+    (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                      elfeed-show-entry
+                    (elfeed-search-selected :ignore-region)))
+           (link (if link link (elfeed-entry-link entry))))
+      (reddigg-view-comments link))))
+#+end_src
+**** hnreader
+#+begin_src emacs-lisp
+(use-package hnreader
+  :straight t
+  :after (elfeed))
+#+end_src
+Open in same window
+#+begin_src emacs-lisp
+(setq hnreader-view-comments-in-same-window nil)
+#+end_src
+
+Use hnreader to show HN threads
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-commments (&optional link)
+  (interactive)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (setq-local hnreader-view-comments-in-same-window nil)
+    (hnreader-promise-comment (format "%s" link))))
+#+end_src
+
+Use hnread to show HN threads for a URL at point
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-comments-at-point ()
+  "Kill the url at point."
+  (interactive)
+  (setq-local hnreader-view-comments-in-same-window t)
+  (hnreader-comment (format "%s" (url-get-url-at-point))))
+#+end_src
+
+**** Keybindings
+First, here are the keybinds for Elfeed’s ~elfeed-show-mode~. They
+aren’t prefixed by ~SPC~ like most of my keybinds, a direct keypress
+will directly launch the function.
+#+name: elfeed-keybinds-show-mode
+| Key | Function                      | Comment |
+|-----+-------------------------------+---------|
+| +   | elfeed-show-tag               |         |
+| -   | elfeed-show-untag             |         |
+| «   | elfeed-show-prev              |         |
+| »   | elfeed-show-next              |         |
+| b   | elfeed-show-visit             |         |
+| C   | elfeed-kill-link-url-at-point |         |
+| d   | elfeed-show-save-enclosure    |         |
+| l   | elfeed-show-next-link         |         |
+| o   | elfeed-goodies/show-ace-link  |         |
+| q   | elfeed-kill-buffer            |         |
+| S   | elfeed-show-new-live-search   |         |
+| u   | elfeed-show-tag--unread       |         |
+| y   | elfeed-show-yank              |         |
+
+Same thing, different mode, here are my keybinds for
+~elfeed-search-mode~.
+#+name: elfeed-keybinds-search-mode
+| Key | Function                       | Comment |
+|-----+--------------------------------+---------|
+| «   | elfeed-search-first-entry      |         |
+| »   | elfeed-search-last-entry       |         |
+| b   | elfeed-search-browse-url       |         |
+| f   |                                | filter  |
+| fc  | elfeed-search-clear-filter     |         |
+| fl  | elfeed-search-live-filter      |         |
+| fs  | elfeed-search-set-filter       |         |
+| u   |                                | update  |
+| us  | elfeed-search-fetch            |         |
+| uS  | elfeed-search-update           |         |
+| uu  | elfeed-update                  |         |
+| uU  | elfeed-search-update--force    |         |
+| y   | elfeed-search-yank             |         |
+| x   | elfeed-search-untag-all-unread |         |
+| TAB | elfeed-search-show-entry       |         |
+
+I have some additional keybinds for ~elfeed-search-mode~, but these one
+are prefixed with ~,~ (and ~M-m~).
+#+name: elfeed-keybinds-search-mode-prefixed
+| Key | Function                            | Comment |
+|-----+-------------------------------------+---------|
+| c   | elfeed-db-compact                   |         |
+| t   |                                     | tag     |
+| gr  | my/elfeed-reddit-show-commments     |         |
+| gh  | my/elfeed-hn-show-comments-at-point |         |
+| tt  | elfeed-search-tag-all-unread        |         |
+| tu  | elfeed-search-untag-all-unread      |         |
+| tT  | elfeed-search-tag-all               |         |
+| tU  | elfeed-search-untag-all             |         |
+
 ** File Management
 *** Dired
 Dired is Emacs’ built-in file manager. It’s really great, and replaces
@@ -1533,240 +1518,92 @@ Add here circled digits like: ②
   ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
   ("m" (dakra/insert-unicode "MICRO SIGN")))
 #+end_src
-** COMMENT LaTeX
-#+begin_src emacs-lisp :noweb yes
-(use-package auctex
-  :defer t
-  :straight (:build t)
-  :hook (tex-mode . lsp-deferred)
-  :hook (latex-mode . lsp-deferred)
-  :init
-  (setq TeX-command-default   (if (executable-find "latexmk") "LatexMk" "LaTeX")
-        TeX-engine            (if (executable-find "xetex")   'xetex    'default)
-        TeX-auto-save                     t
-        TeX-parse-self                    t
-        TeX-syntactic-comment             t
-        TeX-auto-local                    ".auctex-auto"
-        TeX-style-local                   ".auctex-style"
-        TeX-source-correlate-mode         t
-        TeX-source-correlate-method       'synctex
-        TeX-source-correlate-start-server nil
-        TeX-electric-sub-and-superscript  t
-        TeX-fill-break-at-separators      nil
-        TeX-save-query                    t)
-  :config
-  <<latex-fontification>>
-  (setq TeX-master t)
-  (setcar (cdr (assoc "Check" TeX-command-list)) "chktex -v6 -H %s")
-  (add-hook 'TeX-mode-hook (lambda ()
-                             (setq ispell-parser          'tex
-                                   fill-nobreak-predicate (cons #'texmathp fill-nobreak-predicate))))
-  (add-hook 'TeX-mode-hook #'visual-line-mode)
-  (add-hook 'TeX-update-style-hook #'rainbow-delimiters-mode)
-  :general
-  (phundrak/major-leader-key
-    :packages 'lsp-mode
-    :keymaps  '(latex-mode-map LaTeX-mode-map)
-   "l"  '(:keymap lsp-command-map :which-key "lsp"))
-  (phundrak/major-leader-key
-    :packages 'auctex
-    :keymaps  '(latex-mode-map LaTeX-mode-map)
-    "v" '(TeX-view            :which-key "View")
-    "c" '(TeX-command-run-all :which-key "Compile")
-    "m" '(TeX-command-master  :which-key "Run a command")))
-#+end_src
-
-From Doom Emacs’ configuration:
-#+name: latex-fontification
-#+begin_src emacs-lisp :tangle no
-(setq font-latex-match-reference-keywords
-      '(;; BibLaTeX.
-        ("printbibliography" "[{") ("addbibresource" "[{")
-        ;; Standard commands.
-        ("cite" "[{")       ("citep" "[{")
-        ("citet" "[{")      ("Cite" "[{")
-        ("parencite" "[{")  ("Parencite" "[{")
-        ("footcite" "[{")   ("footcitetext" "[{")
-        ;; Style-specific commands.
-        ("textcite" "[{")   ("Textcite" "[{")
-        ("smartcite" "[{")  ("Smartcite" "[{")
-        ("cite*" "[{")      ("parencite*" "[{")
-        ("supercite" "[{")
-        ;; Qualified citation lists.
-        ("cites" "[{")      ("Cites" "[{")
-        ("parencites" "[{") ("Parencites" "[{")
-        ("footcites" "[{")  ("footcitetexts" "[{")
-        ("smartcites" "[{") ("Smartcites" "[{")
-        ("textcites" "[{")  ("Textcites" "[{")
-        ("supercites" "[{")
-        ;; Style-independent commands.
-        ("autocite" "[{")   ("Autocite" "[{")
-        ("autocite*" "[{")  ("Autocite*" "[{")
-        ("autocites" "[{")  ("Autocites" "[{")
-        ;; Text commands.
-        ("citeauthor" "[{") ("Citeauthor" "[{")
-        ("citetitle" "[{")  ("citetitle*" "[{")
-        ("citeyear" "[{")   ("citedate" "[{")
-        ("citeurl" "[{")
-        ;; Special commands.
-        ("fullcite" "[{")
-        ;; Cleveref.
-        ("cref" "{")          ("Cref" "{")
-        ("cpageref" "{")      ("Cpageref" "{")
-        ("cpagerefrange" "{") ("Cpagerefrange" "{")
-        ("crefrange" "{")     ("Crefrange" "{")
-        ("labelcref" "{")))
-
-(setq font-latex-match-textual-keywords
-      '(;; BibLaTeX brackets.
-        ("parentext" "{") ("brackettext" "{")
-        ("hybridblockquote" "[{")
-        ;; Auxiliary commands.
-        ("textelp" "{")   ("textelp*" "{")
-        ("textins" "{")   ("textins*" "{")
-        ;; Subcaption.
-        ("subcaption" "[{")))
-
-(setq font-latex-match-variable-keywords
-      '(;; Amsmath.
-        ("numberwithin" "{")
-        ;; Enumitem.
-        ("setlist" "[{")     ("setlist*" "[{")
-        ("newlist" "{")      ("renewlist" "{")
-        ("setlistdepth" "{") ("restartlist" "{")
-        ("crefname" "{")))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package tex-mode
-  :defer t
-  :straight (:type built-in)
-  :config
-  (setq LaTeX-section-hook '(LaTeX-section-heading
-                             LaTeX-section-title
-                             LaTeX-section-toc
-                             LaTeX-section-section
-                             LaTeX-section-label)
-        LaTeX-fill-break-at-separators nil
-        LaTeX-item-indent              0))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package preview
-  :defer t
-  :straight (:type built-in)
-  :config
-  (add-hook 'LaTeX-mode-hook #'LaTeX-preview-setup)
-  (setq-default preview-scale 1.4
-                preview-scale-function
-                (lambda () (* (/ 10.0 (preview-document-pt)) preview-scale)))
-  (setq preview-auto-cache-preamble nil)
-  (phundrak/major-leader-key
-    :packages 'auctex
-    :keymaps '(latex-mode-map LaTeX-mode-map)
-    "p" #'preview-at-point
-    "P" #'preview-clearout-at-point))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package cdlatex
-  :defer t
-  :after auctex
-  :straight (:build t)
-  :hook (LaTeX-mode . cdlatex-mode)
-  :hook (org-mode   . org-cdlatex-mode)
-  :config
-  (setq cdlatex-use-dollar-to-ensure-math nil)
-  :general
-  (phundrak/major-leader-key
-    :packages 'cdlatex
-    :keymaps 'cdlatex-mode-map
-    "$" nil
-    "(" nil
-    "{" nil
-    "[" nil
-    "|" nil
-    "<" nil
-    "^" nil
-    "_" nil
-    [(control return)] nil))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package adaptive-wrap
-  :defer t
-  :after auctex
-  :straight (:build t)
-  :hook (LaTeX-mode . adaptative-wrap-prefix-mode)
-  :init (setq-default adaptative-wrap-extra-indent 0))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package auctex-latexmk
-  :after auctex
-  :defer t
-  :straight (:build t)
-  :init
-  (setq auctex-latexmk-inherit-TeX-PDF-mode t)
-  (add-hook 'LaTeX-mode (lambda () (setq TeX-command-default "LatexMk")))
-  :config
-  (auctex-latexmk-setup))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package company-auctex
-  :defer t
-  :after (company auctex)
-  :straight (:build t)
-  :config
-  (company-auctex-init))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package company-math
-  :defer t
-  :straight (:build t)
-  :after (company auctex)
-  :config
-  (defun my-latex-mode-setup ()
-    (setq-local company-backends
-                (append '((company-math-symbols-latex company-latex-commands))
-                        company-backends)))
-  (add-hook 'TeX-mode-hook #'my-latex-mode-setup))
-#+end_src
 ** Icons
+** Misc
+*** Keycast
+In case I am sharing my screen with people and I want to show which
+functions are called on my keystrokes since I don’t exactly use
+standard keybindings.
 
-** COMMENT Nov
-Nov is a major-mode for reading EPUB files within Emacs. Since I have
-it, I don’t need any other Epub reader on my computer! Plus this one
-is customizable and programmable, why would I use any other EPUB
-reader?
 #+begin_src emacs-lisp
-(use-package nov
-  :straight (:build t)
+(use-package keycast
   :defer t
-  :mode ("\\.epub\\'" . nov-mode)
+  :straight (:build t)
+  :config
+  (define-minor-mode keycast-mode
+    "Show current command and its key binding in the mode line."
+    :global t
+    (if keycast-mode
+        (add-hook 'pre-command-hook 'keycast--update t)
+      (remove-hook 'pre-command-hook 'keycast--update)))
+  (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
+#+end_src
+** Navigation
+*** ~avy~
+~avy~ is a really convenient way of jumping around and performing
+actions on these selections, but I’ll need some configuration to make
+it bépo-compatible.
+#+begin_src emacs-lisp
+(use-package avy
+  :defer t
+  :straight t
+  :config
+  (csetq avy-keys           '(?a ?u ?i ?e ?c ?t ?s ?r ?n)
+         avy-dispatch-alist '((?x . avy-action-kill-move)
+                              (?X . avy-action-kill-stay)
+                              (?T . avy-action-teleport)
+                              (?m . avy-action-mark)
+                              (?C . avy-action-copy)
+                              (?y . avy-action-yank)
+                              (?Y . avy-action-yank-line)
+                              (?I . avy-action-ispell)
+                              (?z . avy-action-zap-to-char)))
+  (defun my/avy-goto-url ()
+    "Jump to url with avy."
+    (interactive)
+    (avy-jump "https?://"))
+  (defun my/avy-open-url ()
+    "Open url selected with avy."
+    (interactive)
+    (my/avy-goto-url)
+    (browse-url-at-point))
   :general
   (phundrak/evil
-    :keymaps 'nov-mode-map
-    :packages 'nov
-    "c"   #'nov-previous-document
-    "t"   #'nov-scroll-up
-    "C-d" #'nov-scroll-up
-    "s"   #'nov-scroll-down
-    "C-u" #'nov-scroll-down
-    "r"   #'nov-next-document
-    "gm"  #'nov-display-metadata
-    "gn"  #'nov-next-document
-    "gp"  #'nov-previous-document
-    "gr"  #'nov-render-document
-    "gt"  #'nov-goto-toc
-    "gv"  #'nov-view-source
-    "gV"  #'nov-view-content-source)
-  :config
-  (setq nov-text-width 95))
+    :pakages 'avy
+    "gc" #'evil-avy-goto-char-timer
+    "gl" #'evil-avy-goto-line)
+  (phundrak/leader-key
+    :packages 'avy
+    :infix "j"
+    "b" #'avy-pop-mark
+    "c" #'evil-avy-goto-char-timer
+    "l" #'avy-goto-line)
+  (phundrak/leader-key
+    :packages 'avy
+    :infix "A"
+    "c"  '(:ignore t :which-key "copy")
+    "cl" #'avy-copy-line
+    "cr" #'avy-copy-region
+    "k"  '(:ignore t :which-key "kill")
+    "kl" #'avy-kill-whole-line
+    "kL" #'avy-kill-ring-save-whole-line
+    "kr" #'avy-kill-region
+    "kR" #'avy-kill-ring-save-region
+    "m"  '(:ignore t :which-key "move")
+    "ml" #'avy-move-line
+    "mr" #'avy-move-region
+    "mt" #'avy-transpose-lines-in-region
+    "n"  #'avy-next
+    "p"  #'avy-prev
+    "u"  #'my/avy-goto-url
+    "U"  #'my/avy-open-url)
+  (phundrak/major-leader-key
+    :packages '(avy org)
+    :keymaps 'org-mode-map
+    "A" '(:ignore t :which-key "avy")
+    "Ar" #'avy-org-refile-as-child
+    "Ah" #'avy-org-goto-heading-timer))
 #+end_src
-
 ** PDF Tools
 ~pdf-tools~ enables PDF support for Emacs, much better than its built-in
 support with DocView. Aside from the classical settings such as
@@ -2224,24 +2061,6 @@ Configure custom searches
 
 #+end_src
 
-** COMMENT Screenshot
-~screenshot.el~ is a nice utility package made by TEC. It allows the
-user to take a screenshot of a specific area of a buffer and make it
-look nice.
-#+begin_src emacs-lisp
-(use-package screenshot
-  :defer t
-  :straight (screenshot :build t
-                        :type git
-                        :host github
-                        :repo "tecosaur/screenshot")
-  :config (load-file (locate-library "screenshot.el"))
-  :general
-  (phundrak/leader-key
-    :infix "a"
-    :packages '(screenshot)
-    "S" #'screenshot))
-#+end_src
 ** Screenshots
 *** emacsshot
 From https://gitlab.com/marcowahl/emacsshot
@@ -2266,6 +2085,26 @@ in order to interact with Bitwarden in Emacs with the help of the
                        :repo "https://labs.phundrak.com/phundrak/bitwarden.el"))
 #+end_src
 
+*** pass
+#+begin_src emacs-lisp
+(use-package pass
+  :straight t)
+#+end_src
+*** epa-file
+Configure GPG assistant
+
+#+begin_src emacs-lisp
+(use-package epa-file
+  :ensure nil
+  :config
+  (setq
+   epa-file-encrypt-to '("BF2828095372F24D")
+   password-cache nil
+   password-cache-expiry nil
+   epa-pinentry-mode 'ask)
+  :custom
+  (epa-file-select-keys 'silent))
+#+end_src
 ** Shells
 *** eshell
 #+begin_src emacs-lisp
@@ -2870,8 +2709,9 @@ search started."
          ("C-c l c" . link-hint-copy-link)))
 #+end_src
 
-** COMMENT Email                                                   :ARCHIVE:
-*** Basic configuration
+** Z - Disabled
+*** COMMENT Email                                                    :ARCHIVE:
+**** Basic configuration
 As seen below, I use ~org-msg~ to compose my emails, which includes by
 default my signature. Therefore, there is no need for Emacs itself to
 know about it since I don’t want it to include it a second time after
@@ -2880,7 +2720,7 @@ know about it since I don’t want it to include it a second time after
 (setq message-signature nil
       mail-signature    nil)
 #+end_src
-*** Gnus
+**** Gnus
 #+begin_src emacs-lisp
 (use-package gnus
   :straight (:type built-in)
@@ -2969,7 +2809,7 @@ know about it since I don’t want it to include it a second time after
     "u"  #'gnus-group-unsubscribe))
 #+end_src
 
-*** Mu4e
+**** Mu4e
 Mu4e is a very eye-pleasing email client for Emacs, built around ~mu~
 and which works well with ~mbsync~ (found in Arch’s ~isync~ package). For
 me, the main advantage of mu4e is it has a modern interface for
@@ -3100,7 +2940,7 @@ StartupWMClass=Gnus
 Keywords=Text;Editor;
 #+end_src
 
-**** Basic configuration
+***** Basic configuration
 First, let’s inform Emacs how it can send emails, using which service
 and how. In my case, I use my own mail server.
 #+name: mu4e-mail-service
@@ -3130,7 +2970,7 @@ insert my mail signature, ~org-msg~ already does that.
 (setq mu4e-compose-signature nil)
 #+end_src
 
-**** Bookmarks
+***** Bookmarks
 In mu4e, the main focus isn’t really mail directories such as your
 inbox, your sent messages and such, but instead you manipulate
 bookmarks which will show you emails depending on tags. This mean you
@@ -3333,7 +3173,7 @@ We can finally define our bookmarks! The code reads as follows:
         (:name "This Year"  :key ?y :query "date:1y..now    AND NOT flag:trashed")))
 #+end_src
 
-**** Maildirs
+***** Maildirs
 Sometimes, bookmarks are a bit too restrictive when I want to search
 for stuff. Simply jumping to a mail directory, or maildir, is more
 than enough. In mu4e, with my current setup, I can jump to any maildir
@@ -3351,7 +3191,7 @@ With this piece of code, I can simply jump to my inbox maildir with
         (:maildir "/Trash" :key ?t)))
 #+end_src
 
-**** Dealing with spammers
+***** Dealing with spammers
 I’m sure you have received at least one email recently from a sketchy
 email address asking you something that might be completely unrelated
 to what you do, or at least somewhat related. Fortunately, [[https://twitter.com/Boris/status/1360208504544444417][we have a
@@ -3374,7 +3214,7 @@ If you want the full story, make sure to read the whole thread, I
 guarantee it, it’s worth your time! And in case the Twitter thread
 disappear in the future, [[https://threader.app/thread/1360208504544444417][here is a backup]].
 
-**** Getting Fancy
+***** Getting Fancy
 I’m not a huge fan of mu4e’s default icons marking my emails, so I’ll
 redefine them as follows. Be aware the name of these icons are from
 /faicon/ in the package ~all-the-icons~.
@@ -3444,14 +3284,14 @@ Let’s enable them and set them:
 (add-hook 'mu4e-headers-mode-hook #'my/set-mu4e-headers-width)
 #+end_src
 
-**** Headers mode
+***** Headers mode
 #+name: mu4e-headers-mode
 #+begin_src emacs-lisp :tangle no
 (add-hook 'mu4e-headers-mode-hook (lambda () (visual-line-mode -1)))
 (add-hook 'mu4e-headers-mode-hook (lambda () (toggle-truncate-lines -1)))
 #+end_src
 
-**** Keybindings
+***** Keybindings
 By default, Evil has some pretty annoying keybindings for users of the
 bépo layout: ~hjkl~ becomes ~ctsr~ for us. Let’s undefine some of these:
 #+name: mu4e-keybindings-undef
@@ -3579,7 +3419,7 @@ the major-mode leader and call a simple function.
   <<general-keybindings-gen(table=mu4e-keybindings-message-tbl)>>)
 #+end_src
 
-*** Composing messages
+**** Composing messages
 Org mime is cool and all, you can write some org-mode and then export
 it to either a plain-text or an HTML email. BUT, have you considered
 skipping the export part and write your emails directly in org-mode?
@@ -3630,7 +3470,7 @@ The keybinds are relatively simple ~org-msg-edit-mode~:
 | s   | message-dont-send     |             |
 | f   | org-msg-attach        |             |
 
-*** Email alerts
+**** Email alerts
 There is also a package for mu4e which generates desktop notifications
 when new emails are received. By default, I want to be notified by all
 messages in my inbox and junk folder. Also, I’ll use Emacs’ default
@@ -3647,7 +3487,7 @@ notification system, and I’ll activate the modeline notification.
   :config
   (setq mu4e-alert-interesting-mail-query "flag:unread"))
 #+end_src
-** COMMENT Wttr.in
+*** COMMENT Wttr.in
 #+begin_src emacs-lisp
 (use-package wttrin
   :defer t
@@ -3661,6 +3501,280 @@ notification system, and I’ll activate the modeline notification.
         wttrin-use-metric t))
 #+end_src
 
-*** TODO Derive a major mode for wttrin                            :noexport:
+**** TODO Derive a major mode for wttrin                           :noexport:
 To handle keybindings correctly, a major mode for wttrin could be
 derived from ~fundamental-mode~ and get an associated keymap.
+*** COMMENT Screenshot
+~screenshot.el~ is a nice utility package made by TEC. It allows the
+user to take a screenshot of a specific area of a buffer and make it
+look nice.
+#+begin_src emacs-lisp
+(use-package screenshot
+  :defer t
+  :straight (screenshot :build t
+                        :type git
+                        :host github
+                        :repo "tecosaur/screenshot")
+  :config (load-file (locate-library "screenshot.el"))
+  :general
+  (phundrak/leader-key
+    :infix "a"
+    :packages '(screenshot)
+    "S" #'screenshot))
+#+end_src
+*** COMMENT LaTeX
+#+begin_src emacs-lisp :noweb yes
+(use-package auctex
+  :defer t
+  :straight (:build t)
+  :hook (tex-mode . lsp-deferred)
+  :hook (latex-mode . lsp-deferred)
+  :init
+  (setq TeX-command-default   (if (executable-find "latexmk") "LatexMk" "LaTeX")
+        TeX-engine            (if (executable-find "xetex")   'xetex    'default)
+        TeX-auto-save                     t
+        TeX-parse-self                    t
+        TeX-syntactic-comment             t
+        TeX-auto-local                    ".auctex-auto"
+        TeX-style-local                   ".auctex-style"
+        TeX-source-correlate-mode         t
+        TeX-source-correlate-method       'synctex
+        TeX-source-correlate-start-server nil
+        TeX-electric-sub-and-superscript  t
+        TeX-fill-break-at-separators      nil
+        TeX-save-query                    t)
+  :config
+  <<latex-fontification>>
+  (setq TeX-master t)
+  (setcar (cdr (assoc "Check" TeX-command-list)) "chktex -v6 -H %s")
+  (add-hook 'TeX-mode-hook (lambda ()
+                             (setq ispell-parser          'tex
+                                   fill-nobreak-predicate (cons #'texmathp fill-nobreak-predicate))))
+  (add-hook 'TeX-mode-hook #'visual-line-mode)
+  (add-hook 'TeX-update-style-hook #'rainbow-delimiters-mode)
+  :general
+  (phundrak/major-leader-key
+    :packages 'lsp-mode
+    :keymaps  '(latex-mode-map LaTeX-mode-map)
+   "l"  '(:keymap lsp-command-map :which-key "lsp"))
+  (phundrak/major-leader-key
+    :packages 'auctex
+    :keymaps  '(latex-mode-map LaTeX-mode-map)
+    "v" '(TeX-view            :which-key "View")
+    "c" '(TeX-command-run-all :which-key "Compile")
+    "m" '(TeX-command-master  :which-key "Run a command")))
+#+end_src
+
+From Doom Emacs’ configuration:
+#+name: latex-fontification
+#+begin_src emacs-lisp :tangle no
+(setq font-latex-match-reference-keywords
+      '(;; BibLaTeX.
+        ("printbibliography" "[{") ("addbibresource" "[{")
+        ;; Standard commands.
+        ("cite" "[{")       ("citep" "[{")
+        ("citet" "[{")      ("Cite" "[{")
+        ("parencite" "[{")  ("Parencite" "[{")
+        ("footcite" "[{")   ("footcitetext" "[{")
+        ;; Style-specific commands.
+        ("textcite" "[{")   ("Textcite" "[{")
+        ("smartcite" "[{")  ("Smartcite" "[{")
+        ("cite*" "[{")      ("parencite*" "[{")
+        ("supercite" "[{")
+        ;; Qualified citation lists.
+        ("cites" "[{")      ("Cites" "[{")
+        ("parencites" "[{") ("Parencites" "[{")
+        ("footcites" "[{")  ("footcitetexts" "[{")
+        ("smartcites" "[{") ("Smartcites" "[{")
+        ("textcites" "[{")  ("Textcites" "[{")
+        ("supercites" "[{")
+        ;; Style-independent commands.
+        ("autocite" "[{")   ("Autocite" "[{")
+        ("autocite*" "[{")  ("Autocite*" "[{")
+        ("autocites" "[{")  ("Autocites" "[{")
+        ;; Text commands.
+        ("citeauthor" "[{") ("Citeauthor" "[{")
+        ("citetitle" "[{")  ("citetitle*" "[{")
+        ("citeyear" "[{")   ("citedate" "[{")
+        ("citeurl" "[{")
+        ;; Special commands.
+        ("fullcite" "[{")
+        ;; Cleveref.
+        ("cref" "{")          ("Cref" "{")
+        ("cpageref" "{")      ("Cpageref" "{")
+        ("cpagerefrange" "{") ("Cpagerefrange" "{")
+        ("crefrange" "{")     ("Crefrange" "{")
+        ("labelcref" "{")))
+
+(setq font-latex-match-textual-keywords
+      '(;; BibLaTeX brackets.
+        ("parentext" "{") ("brackettext" "{")
+        ("hybridblockquote" "[{")
+        ;; Auxiliary commands.
+        ("textelp" "{")   ("textelp*" "{")
+        ("textins" "{")   ("textins*" "{")
+        ;; Subcaption.
+        ("subcaption" "[{")))
+
+(setq font-latex-match-variable-keywords
+      '(;; Amsmath.
+        ("numberwithin" "{")
+        ;; Enumitem.
+        ("setlist" "[{")     ("setlist*" "[{")
+        ("newlist" "{")      ("renewlist" "{")
+        ("setlistdepth" "{") ("restartlist" "{")
+        ("crefname" "{")))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package tex-mode
+  :defer t
+  :straight (:type built-in)
+  :config
+  (setq LaTeX-section-hook '(LaTeX-section-heading
+                             LaTeX-section-title
+                             LaTeX-section-toc
+                             LaTeX-section-section
+                             LaTeX-section-label)
+        LaTeX-fill-break-at-separators nil
+        LaTeX-item-indent              0))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package preview
+  :defer t
+  :straight (:type built-in)
+  :config
+  (add-hook 'LaTeX-mode-hook #'LaTeX-preview-setup)
+  (setq-default preview-scale 1.4
+                preview-scale-function
+                (lambda () (* (/ 10.0 (preview-document-pt)) preview-scale)))
+  (setq preview-auto-cache-preamble nil)
+  (phundrak/major-leader-key
+    :packages 'auctex
+    :keymaps '(latex-mode-map LaTeX-mode-map)
+    "p" #'preview-at-point
+    "P" #'preview-clearout-at-point))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package cdlatex
+  :defer t
+  :after auctex
+  :straight (:build t)
+  :hook (LaTeX-mode . cdlatex-mode)
+  :hook (org-mode   . org-cdlatex-mode)
+  :config
+  (setq cdlatex-use-dollar-to-ensure-math nil)
+  :general
+  (phundrak/major-leader-key
+    :packages 'cdlatex
+    :keymaps 'cdlatex-mode-map
+    "$" nil
+    "(" nil
+    "{" nil
+    "[" nil
+    "|" nil
+    "<" nil
+    "^" nil
+    "_" nil
+    [(control return)] nil))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package adaptive-wrap
+  :defer t
+  :after auctex
+  :straight (:build t)
+  :hook (LaTeX-mode . adaptative-wrap-prefix-mode)
+  :init (setq-default adaptative-wrap-extra-indent 0))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package auctex-latexmk
+  :after auctex
+  :defer t
+  :straight (:build t)
+  :init
+  (setq auctex-latexmk-inherit-TeX-PDF-mode t)
+  (add-hook 'LaTeX-mode (lambda () (setq TeX-command-default "LatexMk")))
+  :config
+  (auctex-latexmk-setup))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package company-auctex
+  :defer t
+  :after (company auctex)
+  :straight (:build t)
+  :config
+  (company-auctex-init))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package company-math
+  :defer t
+  :straight (:build t)
+  :after (company auctex)
+  :config
+  (defun my-latex-mode-setup ()
+    (setq-local company-backends
+                (append '((company-math-symbols-latex company-latex-commands))
+                        company-backends)))
+  (add-hook 'TeX-mode-hook #'my-latex-mode-setup))
+#+end_src
+*** COMMENT Docker
+Docker is an awesome tool for reproducible development environments.
+Due to this, I absolutely need a mode for editing Dockerfiles.
+#+begin_src emacs-lisp
+(use-package dockerfile-mode
+  :defer t
+  :straight (:build t)
+  :hook (dockerfile-mode . lsp-deferred)
+  :init
+  (put 'docker-image-name 'safe-local-variable #'stringp)
+  :mode "Dockerfile\\'"
+  :general
+  (phundrak/major-leader-key
+   :keymaps 'general-mode-map
+   :packages 'lsp-mode
+   "l"  '(:keymap lsp-command-map :which-key "lsp")))
+#+end_src
+
+The ~docker~ package also provides interactivity with Docker and
+docker-compose from Emacs.
+#+begin_src emacs-lisp
+(use-package docker
+  :defer t
+  :straight (:build t))
+#+end_src
+*** COMMENT Nov
+Nov is a major-mode for reading EPUB files within Emacs. Since I have
+it, I don’t need any other Epub reader on my computer! Plus this one
+is customizable and programmable, why would I use any other EPUB
+reader?
+#+begin_src emacs-lisp
+(use-package nov
+  :straight (:build t)
+  :defer t
+  :mode ("\\.epub\\'" . nov-mode)
+  :general
+  (phundrak/evil
+    :keymaps 'nov-mode-map
+    :packages 'nov
+    "c"   #'nov-previous-document
+    "t"   #'nov-scroll-up
+    "C-d" #'nov-scroll-up
+    "s"   #'nov-scroll-down
+    "C-u" #'nov-scroll-down
+    "r"   #'nov-next-document
+    "gm"  #'nov-display-metadata
+    "gn"  #'nov-next-document
+    "gp"  #'nov-previous-document
+    "gr"  #'nov-render-document
+    "gt"  #'nov-goto-toc
+    "gv"  #'nov-view-source
+    "gV"  #'nov-view-content-source)
+  :config
+  (setq nov-text-width 95))
+#+end_src

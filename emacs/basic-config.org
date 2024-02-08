@@ -456,6 +456,13 @@ I still use the mouse for scrolling, changing frame sizes:
   :bind ("C-h C-m" . discover-my-major))
 #+end_src
 
+*** Calc
+Let’s give ~calc-mode~ some better defaults.
+#+begin_src emacs-lisp
+(setq calc-angle-mode    'rad
+      calc-symbolic-mode t)
+#+end_src
+
 ** A better custom variable setter
 Something people often forget about custom variables in Elisp is they
 can have a custom setter that will run some code if we set the

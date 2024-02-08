@@ -90,7 +90,6 @@ block.
 | =autocompletion.el=      | [[file:./packages/autocompletion.org][Packages — Autocompletion]]        |
 | =editing.el=             | [[file:./packages/editing.org][Packages — Editing]]               |
 | =helpful.el=             | [[file:./packages/helpful.org][Packages — Making My Life Easier]] |
-| =misc.el=                | [[file:./packages/misc.org][Packages — Misc]]                  |
 | =org.el=                 | [[file:./packages/org.org][Packages — Org Mode]]              |
 | =programming.el=         | [[file:./packages/programming.org][Packages — Programming]]           |
 | =visual-config.el=       | [[file:./packages/visual-config.org][Packages — Visual Configuration]]  |

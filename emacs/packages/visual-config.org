@@ -392,7 +392,8 @@ I use ~perspective~:
   :ensure t)
 #+end_src
 
-** winner
+** Windows Management
+*** winner
 #+begin_src emacs-lisp
 (use-package winner
   :ensure nil
@@ -411,7 +412,16 @@ I use ~perspective~:
   :config
   (winner-mode 1))
 #+end_src
-
+*** Winum
+Winum allows Emacs to associate windows with a specific number and
+navigate through these windows by directly referring to their
+associated number! This allows for faster window configuration than
+just going to the frame above, then left, left, and up.
+#+begin_src emacs-lisp
+(use-package winum
+  :straight (:build t)
+  :init (winum-mode))
+#+end_src
 ** Change from horizotanl split to vertical split
 #+begin_src emacs-lisp
 ;; https://stackoverflow.com/questions/14881020/emacs-shortcut-to-switch-from-a-horizontal-split-to-a-vertical-split-in-one-move
