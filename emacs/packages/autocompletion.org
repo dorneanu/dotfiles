@@ -35,18 +35,13 @@ I still need to finish this:
         company-frontends
         '(company-pseudo-tooltip-frontend ; always show candidates in overlay tooltip
           company-echo-metadata-frontend) ; show selected candidate docs in echo area
-        company-backends '(company-capf)
+        ;; Default backends
+        company-backends '(company-capf company-dabbrev company-yasnippet)
         company-auto-commit         nil
         company-auto-complete-chars nil
         company-dabbrev-other-buffers t
         company-dabbrev-ignore-case t
         company-dabbrev-downcase    nil)
-  ;; Default backends
-  ;; (setq company-backends (delete 'company-dabbrev company-backends))
-  (add-to-list 'company-backends 'company-capf)
-  (add-to-list 'company-backends 'company-yasnippet)
-  ;; (add-to-list 'company-backends 'company-elisp)
-  (add-to-list 'company-backends 'company-files)
   )
 #+end_src
 
@@ -167,18 +162,18 @@ with an org-table.
             <<gen-company-box-icons()>>))))
 #+end_src
 
-*** COMMENT company-tabnine                                      :disabled:
+*** company-shell
+#+begin_src emacs-lisp
+(use-package company-shell
+   :straight t)
+#+end_src
+*** COMMENT company-tabnine
 A company-mode backend for TabNine, the all-language autocompleter:
 #+begin_src emacs-lisp
 (use-package company-tabnine
   :ensure t
   :config
   (add-to-list 'company-backends #'company-tabnine))
-#+end_src
-*** company-shell
-#+begin_src emacs-lisp
-(use-package company-shell
-   :straight t)
 #+end_src
 *** COMMENT codeium
 #+begin_src emacs-lisp
@@ -359,9 +354,6 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
   :config
   (vertico-mode 1))
 
-;; (use-package vertico-posframe
-;;   :straight t
-;;   :hook (vertico-mode . vertico-posframe-mode))
 
 ;; (use-package vertico-posframe
 ;;   :straight t
@@ -385,28 +377,23 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
               ("C-<backspace>" . vertico-directory-delete-word)
               ;; ("RET" .           vertico-directory-enter)
               ))
-;; (use-package vertico-multiform
-;;   :ensure nil
-;;   :demand t
-;;   :bind (:map vertico-map
-;;               ("C-i"   . vertico-multiform-vertical)
-;;               ("<tab>" . vertico-insert))
-;;   :config
-;;   (vertico-multiform-mode 1))
-;;   :custom
-;;   (vertico-multiform-commands
-;;    '((consult-imenu buffer)
-;;      (consult-line buffer)
-;;      (consult-grep buffer)
-;;      (consult-git-grep buffer)
-;;      (consult-ripgrep buffer)
-;;      (consult-yank-pop)
-;;      (embark-bindings buffer)
-;;      (xref-find-references buffer)))
-;;   (vertico-multiform-categories
-;;    '((t unobtrusive)))
-;;   :config
-;;   (vertico-multiform-mode 1))
+
+(use-package vertico-multiform
+  :ensure nil
+  :after vertico
+  :config
+  (setq vertico-multiform-commands
+        '((consult-line buffer)
+          (consult-buffer buffer)
+          (consult-org-heading buffer)
+          (consult-imenu buffer)
+          (consult-project-buffer buffer)
+          (consult-project-extra-find buffer)))
+
+  ;; (add-to-list 'vertico-multiform-categories
+  ;;              '(jinx grid (vertico-grid-annotate . 35)))
+
+  (vertico-multiform-mode))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -441,9 +428,6 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 #+end_src
 
 *** marginalia
-To enable richer annotations (e.g., summary documentation of the functions and
-variables, as well as having the size and the last consultation of the files)
-for minibuffer completions, [[https://github.com/minad/marginalia/][marginalia]] is awesome.
 
 #+begin_src emacs-lisp
 (use-package marginalia
@@ -466,10 +450,9 @@ If like me you like to have icons associated with candidates, you can use
 
 *** orderless
 
-By default, =vertico= sorts the candidates according to their history position,
-then by length and finally by alphabetical. To improves searching across
-completion (e.g., by filter expressions separated by spaces), you should
-use [[https://github.com/oantolin/orderless][orderless]] (or [[https://github.com/raxod502/prescient.el][prescient]]).
+By default, =vertico= sorts the candidates according to their history position, then by
+length and finally by alphabetical. To improves searching across completion (e.g., by
+filter expressions separated by spaces), you should use [[https://github.com/oantolin/orderless][orderless]] (or [[https://github.com/raxod502/prescient.el][prescient]]).
 
 #+begin_src emacs-lisp
 (use-package orderless
@@ -481,7 +464,6 @@ use [[https://github.com/oantolin/orderless][orderless]] (or [[https://github.co
   (completion-styles '(orderless basic))
   (completion-category-overrides
    '((file (styles basic partial-completion)))))
-
 #+end_src
 *** embark
 
@@ -510,14 +492,10 @@ without having to go through =dired=.
          ("X" . cust/split-file-open)))
 #+end_src
 
+#+begin_src emacs-lisp
 (use-package embark-consult
   :straight t
   :after (consult embark))
-#+end_src
-
-Some usefull functions
-
-#+begin_src emacs-lisp
 #+end_src
 
 ** Yasnippet

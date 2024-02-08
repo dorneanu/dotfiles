@@ -27,6 +27,30 @@ A replacement for ~ibuffer~
    "RET" #'bufler-list-buffer-switch))
 #+end_src
 
+** dict.cc
+#+begin_src emacs-lisp
+(use-package dictcc
+  :straight t
+  :defer t)
+#+end_src
+** google-translate
+#+begin_src emacs-lisp
+;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
+(use-package google-translate
+  :straight t
+  :defer t
+  :custom
+  (google-translate-backend-method 'curl)
+  :config
+  (setq google-translate-translation-directions-alist
+        '(("en" . "de") ("en" . "ro") ("de" . "en") ("de" . "ro")))
+  (setq google-translate-pop-up-buffer-set-focus t)
+  ;; (setq google-translate-default-source-language "en")
+  ;; (setq google-translate-default-target-language "de")
+  (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130)))
+
+;; TODO add keybindings
+#+end_src
 ** Helpful
 As the name tells, ~helpful~ is a really helpful package which greatly
 enhances a couple of built-in functions from Emacs, namely:
@@ -53,29 +77,27 @@ enhances a couple of built-in functions from Emacs, namely:
   ([remap describe-key]      . helpful-key))
 #+end_src
 
-** google-translate
+** Info
+Let’s define some more intuitive keybinds for ~info-mode~.
 #+begin_src emacs-lisp
-;; With fix from https://github.com/atykhonov/google-translate/issues/52#issuecomment-727920888
-(use-package google-translate
-  :straight t
+(use-package info
   :defer t
-  :custom
-  (google-translate-backend-method 'curl)
-  :config
-  (setq google-translate-translation-directions-alist
-        '(("en" . "de") ("en" . "ro") ("de" . "en") ("de" . "ro")))
-  (setq google-translate-pop-up-buffer-set-focus t)
-  ;; (setq google-translate-default-source-language "en")
-  ;; (setq google-translate-default-target-language "de")
-  (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130)))
-
-;; TODO add keybindings
-#+end_src
-** dict.cc
-#+begin_src emacs-lisp
-(use-package dictcc
-  :straight t
-  :defer t)
+  :straight (info :type built-in :build t)
+  :general
+  (phundrak/evil
+    :keymaps 'Info-mode-map
+    "c" #'Info-prev
+    "t" #'evil-scroll-down
+    "s" #'evil-scroll-up
+    "r" #'Info-next)
+  (phundrak/major-leader-key
+    :keymaps 'Info-mode-map
+    "?" #'Info-toc
+    "b" #'Info-history-back
+    "f" #'Info-history-forward
+    "m" #'Info-menu
+    "t" #'Info-top-node
+    "u" #'Info-up))
 #+end_src
 ** leo
 

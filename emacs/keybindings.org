@@ -313,6 +313,7 @@ Keybindings for ~opening~ stuff (prefixed by ~o~)
 | lc  | link-hint-copy-link           |             |
 | lm  | link-hint-open-multiple-links |             |
 
+
 ** Project
 My keybinds for my projects are prefixed by ~p~.
 #+name: keybinds-project

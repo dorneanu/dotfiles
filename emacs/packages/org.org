@@ -26,7 +26,7 @@
            "\n")
 #+end_src
 
-Let's configure ORG
+Main configuration
 
 #+begin_src emacs-lisp
 (use-package org
@@ -74,7 +74,7 @@ Let's configure ORG
            "WAITING(w!)"
            "|"
            "DONE(d)"
-           "CANCELED(l)")
+           "CANCELED(c)")
           (sequence
            "PROJ(p)"
            "MEETING(m)"
@@ -494,7 +494,7 @@ meaningful IDs for its headings. I actually wrote a package for this!
   :init (add-hook 'before-save-hook #'org-unique-id-maybe))
 #+end_src
 
-** TODO org-capture                                                 :todo:
+** org-capture
 Finish this:
 
 #+begin_src emacs-lisp
@@ -561,7 +561,7 @@ Finish this:
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
 | bold           | ~*~         |             42 |
-| italic         | ~/~       |             47 |
+| italic         | ~/~         |             47 |
 | underline      | ~_~         |             95 |
 | verbatim       | ~=~         |             61 |
 | code           | ~~~         |            126 |
@@ -716,28 +716,6 @@ If prefix ARG, copy instead of move."
 #+RESULTS: org-refiling
 
 ** Exporters
-*** COMMENT Epub
-A backend for exporting files through org I like is ~ox-epub~ which, as
-you can guess, exports org files to the [[https://www.w3.org/publishing/epub32/][Epub format]].
-#+begin_src emacs-lisp
-(use-package ox-epub
-  :after (org ox)
-  :straight (:build t))
-#+end_src
-
-*** COMMENT Gemini
-Gemini is a lightweight protocol for creating lightweight websites
-that are basically text-only websites with maybe some images. I’m
-currently maintaining my own fork of Justin Abrahms’ =ox-gemini= which
-fixes two issues I had with the original package.
-#+begin_src emacs-lisp
-;; (use-package ox-gemini
-;;   :defer t
-;;   :straight (ox-gemini :build t
-;;                        :fork (:repo "https://labs.phundrak.com/phundrak/ox-gemini"))
-;;   :after (ox org))
-#+end_src
-
 *** HTML
 On HTML exports, Org-mode tries to include a validation link for the
 exported HTML. Let’s disable that since I never use it.
@@ -777,6 +755,28 @@ files.
   :defer t
   :after ox
   :straight t)
+#+end_src
+
+*** COMMENT Gemini
+Gemini is a lightweight protocol for creating lightweight websites
+that are basically text-only websites with maybe some images. I’m
+currently maintaining my own fork of Justin Abrahms’ =ox-gemini= which
+fixes two issues I had with the original package.
+#+begin_src emacs-lisp
+;; (use-package ox-gemini
+;;   :defer t
+;;   :straight (ox-gemini :build t
+;;                        :fork (:repo "https://labs.phundrak.com/phundrak/ox-gemini"))
+;;   :after (ox org))
+#+end_src
+
+*** COMMENT Epub
+A backend for exporting files through org I like is ~ox-epub~ which, as
+you can guess, exports org files to the [[https://www.w3.org/publishing/epub32/][Epub format]].
+#+begin_src emacs-lisp
+(use-package ox-epub
+  :after (org ox)
+  :straight (:build t))
 #+end_src
 
 *** COMMENT LaTeX
@@ -962,7 +962,7 @@ Let’s now define some keybinds for inserting stuff in our org buffer:
 | in        | org-add-note                            |             |
 | ip        | org-set-property                        |             |
 | is        | org-insert-subheading                   |             |
-| iq        | org-set-tags-command                    |             |
+| iq        | counsel-org-tag                         |             |
 
 *** jumps
 There isn’t a lot of stuff I can jump to yet, but there’s still some:
@@ -1693,7 +1693,27 @@ I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs
 #+end_src
 
 ** Misc
-*** org-tree-slide
+*** org-download
+
+Insert images easily into ORG mode files
+
+#+begin_src emacs-lisp
+(use-package org-download
+  :straight t
+  :after org
+  :hook (org-mode . org-download-enable))
+
+;; Drag-and-drop to `dired`
+(add-hook 'dired-mode-hook 'org-download-enable)
+#+end_src
+*** org-web-tools
+#+begin_src emacs-lisp
+(use-package org-web-tools
+  :straight t
+  :demand t)
+#+end_src
+
+*** COMMENT org-tree-slide
 ~org-tree-slide~ is a presentation tool for org-mode.
 #+begin_src emacs-lisp
 ;; (use-package org-tree-slide
@@ -1716,26 +1736,6 @@ I also use ~svg-tag-mode~ for styling tags (from https://hieuphay.com/doom-emacs
 ;;     "t" #'org-tree-slide-move-next-tree
 ;;     "s" #'org-tree-slide-move-previous-tree
 ;;     "u" #'org-tree-slide-content))
-#+end_src
-
-*** org-download
-
-Insert images easily into ORG mode files
-
-#+begin_src emacs-lisp
-(use-package org-download
-  :straight t
-  :after org
-  :hook (org-mode . org-download-enable))
-
-;; Drag-and-drop to `dired`
-(add-hook 'dired-mode-hook 'org-download-enable)
-#+end_src
-*** org-web-tools
-#+begin_src emacs-lisp
-(use-package org-web-tools
-  :straight t
-  :demand t)
 #+end_src
 
 ** Auto-Completion

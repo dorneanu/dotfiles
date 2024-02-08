@@ -33,17 +33,36 @@
   :defer t)
 #+end_src
 
-** COMMENT Bitwarden
-This package is still a very much work in progress one I’m developing
-in order to interact with Bitwarden in Emacs with the help of the
-[[https://github.com/bitwarden/cli][Bitwarden CLI]]. Use at your own risks.
+** AI
+*** chatgpt-shell
 #+begin_src emacs-lisp
-(use-package bitwarden
-  :defer t
-  :straight (bitwarden :build t
-                       :type git
-                       :host nil
-                       :repo "https://labs.phundrak.com/phundrak/bitwarden.el"))
+(use-package chatgpt-shell
+  :straight t
+  :after (password-store)
+  :commands (chatgpt-shell)
+  :bind (("C-c a p" . chatgpt-shell-prompt)
+         ("C-c a s" . chatgpt-shell)
+         ("C-c a r" . chatgpt-shell-proofread-region))
+  :config
+  (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt"))
+  :custom
+  ;; From https://github.com/jwiegley/dot-emacs/blob/master/init.org
+  ;; I might need to change these
+  (chatgpt-shell-system-prompts
+   '(("English" .
+      "I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in English. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level English words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("Spanish" .
+      "I want you to act as an Latin-American Spanish translator, spelling corrector and improver. I will speak to you in English, and you will translate it and answer in the corrected and improved version of my text, in Latin-American Spanish. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level Latin-American  Spanish words and sentences. Keep the meaning same, but make them more literary and clear. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("Persian" .
+      "I want you to act as an Farsi translator, spelling corrector and improver. I will speak to you in English, and you will translate it and answer in the corrected and improved version of my text, in Farsi. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level Farsi words and sentences. Keep the meaning same, but make them more literary and clear. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("General" .
+      "You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels.")
+     ("Programming" .
+      "The user is a programmer with very limited time. You treat their time as precious. You do not repeat obvious things, including their query. You are as concise as possible in responses. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
+     ("Positive Programming" .
+      "Your goal is to help the user become an amazing computer programmer. You are positive and encouraging. You love see them learn. You do not repeat obvious things, including their query. You are as concise in responses. You always guide the user go one level deeper and help them see patterns. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
+     ("Travel Guide" .
+      "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location."))))
 #+end_src
 
 ** Buffers
@@ -141,7 +160,49 @@ in order to interact with Bitwarden in Emacs with the help of the
             #'(lambda ()
                 (ibuffer-switch-to-saved-filter-groups "default"))))
 #+end_src
+** Browsers
+*** Eww
+Since Emacs 29, it is possible to automatically rename ~eww~ buffers to
+a more human-readable name, see [[https://protesilaos.com/codelog/2021-10-15-emacs-29-eww-rename-buffers/][Prot’s blog]] post on the matter.
+#+begin_src emacs-lisp
+(use-package eww
+  :defer t
+  :straight (:type built-in)
+  :config
+  (setq eww-auto-rename-buffer 'title))
+#+end_src
 
+Set default browser to chrome:
+#+begin_src emacs-lisp
+(setq browse-url-browser-function 'browse-url-chrome)
+#+end_src
+
+*** COMMENT XWidgets Webkit Browser
+I used to use the xwidgets webkit browser in order to view or preview
+HTML files from Emacs, but it seems the Cairo background transparency
+patch breaks it. So while this isn’t patched, I will disable Xwidgets
+in my Emacs build, and these keybinds *will not* be tangled.
+#+begin_src emacs-lisp :tangle no
+(phundrak/evil
+ :keymaps 'xwidget-webkit-mode-map
+ "<mouse-4>" #'xwidget-webkit-scroll-down-line
+ "<mouse-5>" #'xwidget-webkit-scroll-up-line
+ "c"         #'xwidget-webkit-scroll-backward
+ "t"         #'xwidget-webkit-scroll-up-line
+ "s"         #'xwidget-webkit-scroll-down-line
+ "r"         #'xwidget-webkit-scroll-forward
+ "h"         #'xwidget-webkit-goto-history
+ "C"         #'xwidget-webkit-back
+ "R"         #'xwidget-webkit-forward
+ "C-r"       #'xwidget-webkit-reload
+ "j"         nil
+ "k"         nil
+ "l"         nil
+ "H"         nil
+ "L"         nil
+ "C-d"       #'xwidget-webkit-scroll-up
+ "C-u"       #'xwidget-webkit-scroll-down)
+#+end_src
 ** Calendar
 I am using the built-in calendar of Emacs, but as I use Evil and the
 bépo layout, many keybindings available by default or through
@@ -211,38 +272,47 @@ bépo layout, many keybindings available by default or through
     "Hy"  #'cal-html-cursor-year
     "M"   #'calendar-other-month))
 #+end_src
-
-** AI
-*** chatgpt-shell
+** Compilation
+*** Compilation mode
+After reading about a blog article, I found out it is possible to run
+quite a few things through ~compilation-mode~, so why not? First, let’s
+redefine some keybinds for this mode. I’ll also define a general
+keybind in order to re-run my programs from other buffers than the
+~compilation-mode~ buffer. I also want to follow the output of the
+compilation buffer, as well as enable some syntax highlighting.
 #+begin_src emacs-lisp
-(use-package chatgpt-shell
-  :straight t
-  :after (password-store)
-  :commands (chatgpt-shell)
-  :bind (("C-c a p" . chatgpt-shell-prompt)
-         ("C-c a s" . chatgpt-shell)
-         ("C-c a r" . chatgpt-shell-proofread-region))
+(use-package compile
+  :defer t
+  :straight (compile :type built-in)
+  :hook (compilation-filter . colorize-compilation-buffer)
+  :init
+  (require 'ansi-color)
+  (defun colorize-compilation-buffer ()
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region (point-min) (point-max))))
+  :general
+  (phundrak/evil
+    :keymaps 'compilation-mode-map
+    "g" nil
+    "r" nil
+    "R" #'recompile
+    "h" nil)
+  (phundrak/leader-key
+    "R" #'recompile)
   :config
-  (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt"))
-  :custom
-  ;; From https://github.com/jwiegley/dot-emacs/blob/master/init.org
-  ;; I might need to change these
-  (chatgpt-shell-system-prompts
-   '(("English" .
-      "I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in English. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level English words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
-     ("Spanish" .
-      "I want you to act as an Latin-American Spanish translator, spelling corrector and improver. I will speak to you in English, and you will translate it and answer in the corrected and improved version of my text, in Latin-American Spanish. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level Latin-American  Spanish words and sentences. Keep the meaning same, but make them more literary and clear. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
-     ("Persian" .
-      "I want you to act as an Farsi translator, spelling corrector and improver. I will speak to you in English, and you will translate it and answer in the corrected and improved version of my text, in Farsi. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level Farsi words and sentences. Keep the meaning same, but make them more literary and clear. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
-     ("General" .
-      "You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels.")
-     ("Programming" .
-      "The user is a programmer with very limited time. You treat their time as precious. You do not repeat obvious things, including their query. You are as concise as possible in responses. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
-     ("Positive Programming" .
-      "Your goal is to help the user become an amazing computer programmer. You are positive and encouraging. You love see them learn. You do not repeat obvious things, including their query. You are as concise in responses. You always guide the user go one level deeper and help them see patterns. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
-     ("Travel Guide" .
-      "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location."))))
+  (setq compilation-scroll-output t))
 #+end_src
+
+** Debugging
+*** COMMENT esup
+Debug emacs init startup time
+Run ~M-x esup~ to see where the time is spend during emacs startup.
+
+#+BEGIN_SRC emacs-lisp
+(use-package esup
+  :straight t
+  :defer t)
+#+END_SRC
 
 ** COMMENT Docker
 Docker is an awesome tool for reproducible development environments.
@@ -269,62 +339,6 @@ docker-compose from Emacs.
   :defer t
   :straight (:build t))
 #+end_src
-** Debugging
-*** COMMENT esup
-Debug emacs init startup time
-Run ~M-x esup~ to see where the time is spend during emacs startup.
-
-#+BEGIN_SRC emacs-lisp
-(use-package esup
-  :straight t
-  :defer t)
-#+END_SRC
-
-** rg.el
-#+begin_src emacs-lisp
-(use-package rg
-  :straight t
-  :config
-  (rg-enable-default-bindings)
-  ;; Not sure if I really need this
-  (rg-define-toggle "--multiline --multiline-dotall" "u")
-  (rg-define-toggle "--word-regexp" "w")
-  (rg-define-toggle "--files-with-matches" "L")
-  ;; Highlight longer
-  (setq next-error-highlight-no-select t)
-  (add-hook 'next-error-hook #'recenter)
-  (add-hook 'next-error-hook #'focus-mode)
-)
-#+end_src
-
-Configure custom searches
-#+begin_src emacs-lisp
-;; search in org roam folder
-(rg-define-search my/rg-org-roam-directory
-  :query ask
-  :format regexp
-  :files "everything"
-  :dir org-roam-directory
-  :confirm prefix)
-
-;; search in org roam folder where I have transcripts from the Huberman Lab
-(rg-define-search my/rg-org-roam-directory-huberman
-  :query ask
-  :format regexp
-  :files "everything"
-  :dir (concat org-roam-directory "/rez/huberman-lab")
-  :confirm prefix)
-
-(setq dotemacs-directory "/cs/priv/repos/dotemacs")
-(rg-define-search my/rg-dotemacs
-  :query ask
-  :format regexp
-  :files "everything"
-  :dir dotemacs-directory
-  :confirm prefix)
-
-#+end_src
-
 ** elfeed
 
 Elfeed is a nice Atom and RSS reader for Emacs. The only thing I want
@@ -573,6 +587,2087 @@ are prefixed with ~,~ (and ~M-m~).
 | tu  | elfeed-search-untag-all-unread      |         |
 | tT  | elfeed-search-tag-all               |         |
 | tU  | elfeed-search-untag-all             |         |
+
+** Email
+*** mu4e
+**** General config
+#+begin_src emacs-lisp
+;; Make sure we find the mu4e package
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+(use-package mu4e
+  :ensure nil
+  :commands (mu4e)
+  :bind (("C-c a m" . mu4e)
+         :map mu4e-main-mode-map
+         ("U" . mu4e-update-mail-and-index-background)
+         :map mu4e-headers-mode-map
+         ("TAB" . mu4e-headers-next-unread)
+         ("j" . mu4e-view-headers-next)
+         ("k" . mu4e-view-headers-prev)
+         ("J" . mu4e-search-maildir)
+         ;; ("j" . mu4e-move-to-junk)
+         ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+         :map mu4e-view-mode-map
+         ("A" . mu4e-view-attachment-action)
+         ("M-o" . ace-link-mu4e)
+         ("o" . ace-link-mu4e)
+         ("n" . mu4e-scroll-up)
+         ("p" . mu4e-scroll-down)
+         ("J" . mu4e-view-headers-next)
+         ("K" . mu4e-view-headers-prev)
+         ;; ("j" . mu4e-move-to-junk)
+         )
+  :init
+  ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+  ;; (defun mu4e--main-action-str (name func)
+  ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
+  ;;   "mu4e-main-action")
+  ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
+
+  ;; Prefer text over html/ritchtext
+  (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
+
+  ;; Use completing-read (which is ivy) instead of ido
+  (setq mu4e-completing-read-function 'completing-read)
+
+  ;; set mu4e as default mail client
+  (setq mail-user-agent 'mu4e-user-agent)
+
+  ;; SMTP related
+  (setq message-send-mail-function        'smtpmail-send-it
+        smtpmail-stream-type              'tls)
+
+  :config
+  ;; Set mu binary
+  (setq mu4e-mu-binary "/usr/bin/mu")
+
+  ;; Use passwords from password-store
+  (setq auth-sources '(password-store))
+  (setq auth-source-debug t)
+
+  ;; Choose which fields to show
+  (setq mu4e-headers-fields
+        '(
+          (:maildir    . 13)
+          (:human-date . 12)
+          (:flags      . 6)
+          (:from       . 22)
+          (:subject    . nil)))
+
+  ;; Refresh mail using isync every 10 minutes
+  (setq mu4e-update-interval (* 10 60))
+
+  ;; Command used to retrieve new mails
+  (setq mu4e-get-mail-command "mbsync -a")
+
+  ;; Defaults
+  (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
+  (setq-default mu4e-drafts-folder "/private/Drafts")
+  (setq-default mu4e-sent-folder   "/private/Sent")
+  (setq-default mu4e-trash-folder  "/private/Trash")
+
+  ;; Set citation settings
+  (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+  ;; Fancy stuff
+  (setq mu4e-use-fancy-chars t)
+  <<mu4e-fancy-marks>>
+
+  ;; And change default threading characters to some "nicer" looking chars
+  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+  ;; Also change to some nicer characters for marks
+  ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
+  (setq mu4e-headers-passed-mark  '("P" . "›"))
+  (setq mu4e-headers-replied-mark '("R" . "‹"))
+  (setq mu4e-headers-seen-mark   '("S" . ""))
+  ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
+  (setq mu4e-headers-personal-mark '("p" . ""))
+  ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
+
+  ;; Set date format (header view)
+  (setq mu4e-headers-date-format "%F")
+
+  ;; How should html context be converted
+  ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+  (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
+
+  ;; Improve rendering of rich-text messages (html)
+  (setq shr-color-visible-luminance-min 80)
+
+  ;; Show email address as well and not only the name
+  (setq-default mu4e-view-show-addresses t)
+
+  ;; Don't reply to self
+  (setq mu4e-compose-dont-reply-to-self t)
+
+  ;; Setup some handy shortcuts
+  ;; you can quickly switch to your Inbox -- press ``ji''
+  ;; then, when you want archive some messages, move them to
+  ;; the 'All Mail' folder by pressing ``ma''.
+
+  ;; View mail in browser with "a V"
+  (add-to-list 'mu4e-view-actions
+               '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+  (add-to-list 'mu4e-view-actions
+               '("fViewInChrome" . mu4e-action-view-in-chrome) t)
+  (add-to-list 'mu4e-view-actions
+               '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
+
+  (setq mu4e-maildir-shortcuts
+        '(
+          ("/variomedia/inbox"   . ?v)
+          ("/gmail/inbox"    . ?g)
+          ("/cashlink/inbox"   . ?c)
+          ("/private/Trash"   . ?t)
+          ("/private/Drafts"  . ?d)
+          ("/private/Junk"    . ?j)
+          ("/private/Archive" . ?a)))
+
+  ;; Set contexts
+  (dorneanu/set-mu4e-contexts)
+  )
+
+<<mu4e-view-mode>>
+
+#+end_src
+
+#+RESULTS:
+| closure | (t) | nil                       | (visual-fill-column-mode) |
+| lambda  | nil | (visual-fill-column-mode) |                           |
+
+**** Bookmarks
+#+BEGIN_SRC emacs-lisp
+(setq mu4e-bookmarks
+      `(
+        ("maildir:/Sent" "Sent messages" ?s)
+        ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
+        ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
+        ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
+        ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
+        ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
+        ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
+        ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
+        ("from:jira@*" "Jira" ?j)
+        ;; (,(s-join " "
+        ;;           '("OR noreply@tagesspiegel.de"
+        ;;             "OR support@lagedernation.org"
+        ;;             "OR hello@blinkist.com"
+        ;;             "OR info@smarticular.net"
+        ;;             "OR newsletter@*"
+        ;;             "OR support@xeroshoes.com"))
+        ;;  "Newletter" ?n)
+        ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
+#+END_SRC
+
+**** Fancy stuff
+From https://github.com/Phundrak/dotfiles
+
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
+
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+(mapconcat (lambda (line)
+             (let ((mark (car line))
+                   (flag (cadr line))
+                   (icon (caddr line)))
+               (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
+                       mark
+                       flag
+                       icon)))
+           table
+           "\n")
+#+end_src
+
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
+
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
+(setq mu4e-use-fancy-chars t
+      <<mu4e-fancy-marks-gen()>>)
+#+end_src
+
+**** View mode
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
+(add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
+**** Contexts
+Set contexts
+#+begin_src emacs-lisp
+(defun dorneanu/set-mu4e-contexts ()
+  "Set mail contexts for mu4e"
+  (interactive)
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "gmail"
+             :enter-func (lambda () (mu4e-message "Entering gmail context"))
+             :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+             ;; we match based on the contact-fields of the message
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/personal/username"))
+                     (user-full-name    . "Cyneox")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-default-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Cyneox via Gmail")
+                     (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                     (mu4e-sent-folder  . "/[Gmail]/sent")
+                     (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                     (mu4e-trash-folder  . "/[Gmail]/bin")))
+           ,(make-mu4e-context
+             :name "variomedia"
+             :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-default-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Victor via Emacs")
+                     (mu4e-drafts-folder  . "/variomedia/drafts")
+                     (mu4e-sent-folder  . "/variomedia/sent")
+                     (mu4e-trash-folder  . "/variomedia/bin")))
+           ,(make-mu4e-context
+             :name "cashlink"
+             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-drafts-folder  . "/cashlink/drafts")
+                     (mu4e-sent-folder  . "/cashlink/sent")
+                     (mu4e-trash-folder  . "/cashlink/bin")
+                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                     ))))
+  )
+
+#+end_src
+
+#+RESULTS:
+: dorneanu/set-mu4e-contexts
+**** Reply
+I often want to reply without the original message:
+#+begin_src emacs-lisp
+;; From https://github.com/djcb/mu/issues/2345
+;; (after! mu4e
+;;   (defun dorneanu/mu4e-delete-citation ()
+;;     (delete-region (point) (point-max)))
+
+;;   (defun dorneanu/mu4e-reply (prefix)
+;;     (interactive "P")
+;;     (setq mu4e-compose-cite-function (if prefix
+;;                                          #'dorneanu/mu4e-delete-citation
+;;                                        #'message-cite-original-without-signature))
+;;     (mu4e-compose-reply))
+
+;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+;;   )
+#+end_src
+** empv
+Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
+position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
+
+#+begin_src emacs-lisp
+(use-package empv
+  :straight t
+  :after (embark browse-url)
+  :config
+
+  (setq empv-invidious-instance "https://yewtu.be/")
+  (add-to-list 'empv-mpv-args "--ytdl-format=best")
+
+  (defun dorneanu/empv-play-url (url &optional _)
+    (interactive)
+    (empv-toggle-video)
+    (empv-play url)))
+
+;; Handle youtube links using mpv
+(with-eval-after-load 'browse-url
+  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
+
+#+end_src
+** File Management
+*** Dired
+Dired is Emacs’ built-in file manager. It’s really great, and replaces
+any graphical file manager for me most of the time because:
+- I am not limited to /x/ tabs or panes
+- All actions can be done with keybindings
+- I get a consistent behaviour between Dired and Emacs, since it’s the
+  same thing.
+I used to have an extensive configuration for Dired with a couple of
+additional packages to make it more usable. Dirvish rendered that
+obsolete!
+#+begin_src emacs-lisp
+(use-package dirvish
+  :straight (:build t)
+  :defer t
+  :init (dirvish-override-dired-mode)
+  :custom
+  (dirvish-quick-access-entries
+   '(("h" "~/" "Home")
+     ("d" "~/Downloads/" "Downloads")
+     ("c" "~/org/config" "Config")
+     ("C" "~/Documents/conlanging/content" "Conlanging")))
+  (dirvish-mode-line-format
+   '(:left (sort file-time "" file-size symlink) :right (omit yank index)))
+  (dirvish-attributes '(all-the-icons file-size collapse subtree-state vc-state git-msg))
+  :config
+  (dirvish-peek-mode)
+  (dirvish-side-follow-mode)
+  <<dired-drag-and-drop>>
+  <<dired-listing-flags>>
+  <<dired-files-and-dirs>>
+  <<dirvish-exa-offload>>
+  (setq dired-dwim-target         t
+        dired-recursive-copies    'always
+        dired-recursive-deletes   'top
+        delete-by-moving-to-trash t
+        dirvish-preview-dispatchers (cl-substitute 'pdf-preface 'pdf dirvish-preview-dispatchers))
+  :general
+  (phundrak/evil
+    :keymaps 'dirvish-mode-map
+    :packages '(dired dirvish)
+    "q" #'dirvish-quit
+    "TAB" #'dirvish-subtree-toggle)
+  (phundrak/major-leader-key
+    :keymaps 'dirvish-mode-map
+    :packages '(dired dirvish)
+    "A"   #'gnus-dired-attach
+    "a"   #'dirvish-quick-access
+    "d"   #'dirvish-dispatch
+    "e"   #'dirvish-emerge-menu
+    "f"   '(:ignore t :which-key "fd")
+    "ff"   #'dirvish-fd
+    "fj"   #'dirvish-fd-jump
+    "F"   #'dirvish-file-info-menu
+    "h"   '(:ignore t :which-key "history")
+    "hp"  #'dirvish-history-go-backward
+    "hn"  #'dirvish-history-go-forward
+    "hj"  #'dirvish-history-jump
+    "hl"  #'dirvish-history-last
+    "l"   '(:ignore t :which-key "layout")
+    "ls"  #'dirvish-layout-switch
+    "lt"  #'dirvish-layout-toggle
+    "m"   #'dirvish-mark-menu
+    "s"   #'dirvish-quicksort
+    "S"   #'dirvish-setup-menu
+    "t"   #'dirvish-layout-toggle
+    "y"   #'dirvish-yank-menu
+    "n"   #'dirvish-narrow))
+#+end_src
+
+It requires some programs which can be installed like so:
+#+begin_src sh :dir /sudo::~/ :exports code :tangle no :results verbatim
+pacman -S --needed --noprogressbar --noconfirm --color=never \
+       fd poppler ffmpegthumbnailer mediainfo imagemagick tar unzip
+#+end_src
+
+Since Emacs 29, it is possible to enable drag-and-drop between Emacs
+and other applications.
+#+name: dired-drag-and-drop
+#+begin_src emacs-lisp :tangle no
+(csetq dired-mouse-drag-files                   t
+       mouse-drag-and-drop-region-cross-program t)
+#+end_src
+
+In Dirvish, it’s best to use the long name of flags whenever possible,
+otherwise some commands won’t work.
+#+name: dired-listing-flags
+#+begin_src emacs-lisp :tangle no
+(csetq dired-listing-switches (string-join '("--all"
+                                             "--human-readable"
+                                             "--time-style=long-iso"
+                                             "--group-directories-first"
+                                             "-lv1")
+                                           " "))
+#+end_src
+
+However, it is possible to instead use =eza= when it is available (it’s
+a replacement to the unmaintained =exa=). Instead of making Emacs’ main
+thread to the file listing in a directory, we offload it to an
+external thread.
+#+name: dirvish-exa-offload
+#+begin_src emacs-lisp :tangle no
+(dirvish-define-preview eza (file)
+  "Use `eza' to generate directory preview."
+  :require ("eza")
+  (when (file-directory-p file)
+    `(shell . ("eza" "--color=always" "-al" ,file))))
+
+(add-to-list 'dirvish-preview-dispatchers 'eza)
+#+end_src
+
+Finally, some directories need to be set for Dired to store various
+files and images.
+#+name: dired-files-and-dirs
+#+begin_src emacs-lisp :tangle no
+(let ((my/file (lambda (path &optional dir)
+                 (expand-file-name path (or dir user-emacs-directory))))
+      (my/dir (lambda (path &optional dir)
+                (expand-file-name (file-name-as-directory path)
+                                  (or dir user-emacs-directory)))))
+  (csetq image-dired-thumb-size             150
+         image-dired-dir                    (funcall my/dir "dired-img")
+         image-dired-db-file                (funcall my/file "dired-db.el")
+         image-dired-gallery-dir            (funcall my/dir "gallery")
+         image-dired-temp-image-file        (funcall my/file "temp-image" image-dired-dir)
+         image-dired-temp-rotate-image-file (funcall my/file "temp-rotate-image" image-dired-dir)))
+#+end_src
+
+Copying files with Dired is a blocking process. It’s usually fine when
+there’s not a lot to copy, but it becomes annoying when moving larger
+files. The package ~dired-rsync~ allows copying files with ~rsync~ in the
+background; we can then carry on with our tasks while the copy is
+happening.
+#+begin_src emacs-lisp
+(use-package dired-rsync
+  :if (executable-find "rsync")
+  :defer t
+  :straight (:build t)
+  :general
+  (phundrak/evil
+    :keymaps 'dired-mode-map
+    :packages 'dired-rsync
+    "C-r" #'dired-rsync))
+#+end_src
+
+*** Tramp
+
+#+begin_src emacs-lisp
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
+
+(use-package tramp
+  :defer t
+  :custom
+  (tramp-default-method "ssh")
+  (tramp-auto-save-directory "~/.cache/emacs/backups")
+  :config
+  ;; (add-to-list 'tramp-remote-path (expand-file-name "~/.nix-profile/bin"))
+
+  ;; jww (2018-02-20): Without this change, tramp ends up sending hundreds of
+  ;; shell commands to the remote side to ask what the temporary directory is.
+  (put 'temporary-file-directory 'standard-value '("/tmp"))
+
+  ;; Setting this with `:custom' does not take effect.
+  ;; (setq tramp-persistency-file-name (user-data "tramp"))
+)
+
+;; Change default shell to bash
+(eval-after-load 'tramp '(setenv "SHELL" "/bin/bash"))
+
+;; Ignore "Remote file error: Forbidden reentrant call of Tramp"
+(setq debug-ignored-errors
+      (cons 'remote-file-error debug-ignored-errors))
+#+end_src
+** Hydra
+Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
+
+#+begin_src emacs-lisp
+(use-package hydra
+  :straight t)
+
+(use-package hydra-examples
+  :ensure nil)
+
+
+(use-package major-mode-hydra
+  :straight t
+  :after hydra
+  :preface
+  (defun with-alltheicon (icon str &optional height v-adjust face)
+    "Display an icon from all-the-icon."
+    (s-concat (all-the-icons-alltheicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+  (defun with-faicon (icon str &optional height v-adjust face)
+    "Display an icon from Font Awesome icon."
+    (s-concat (all-the-icons-faicon icon ':v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+  (defun with-fileicon (icon str &optional height v-adjust face)
+    "Display an icon from the Atom File Icons package."
+    (s-concat (all-the-icons-fileicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+  (defun with-octicon (icon str &optional height v-adjust face)
+    "Display an icon from the GitHub Octicons."
+    (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
+#+end_src
+
+*** Hydra / Windows
+
+Group window-related commands.
+
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-windows
+    (:hint nil :forein-keys warn :quit-key "q" :title (with-faicon "windows" "Windows" 1 -0.05))
+    ("Window"
+     (("b" balance-windows "balance")
+      ("c" centered-window-mode "center")
+      ("i" enlarge-window "heighten")
+      ("j" shrink-window-horizontally "narrow")
+      ("k" shrink-window "lower")
+      ("u" winner-undo "undo")
+      ("r" winner-redo "redo")
+      ("l" enlarge-window-horizontally "widen")
+      ("s" switch-window-then-swap-buffer "swap" :color teal))
+     "Zoom"
+     (("-" text-scale-decrease "out")
+      ("+" text-scale-increase "in")
+      ("=" (text-scale-increase 0) "reset"))))
+#+end_src
+*** Hydra / Window Nav
+From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
+
+#+begin_src emacs-lisp
+(defhydra +hydra/window-nav (:hint nil)
+  "
+          Split: _v_ert  _s_:horz
+         Delete: _c_lose  _o_nly
+  Switch Window: _h_:left  _j_:down  _k_:up  _l_:right  _u_:undo  _r_:redo
+        Buffers: _p_revious  _n_ext  _b_:select  _f_ind-file
+         Resize: _H_:splitter left  _J_:splitter down  _K_:splitter up  _L_:splitter right
+           Move: _a_:up  _z_:down  _i_menu
+"
+  ("z" scroll-up-line)
+  ("a" scroll-down-line)
+  ("i" idomenu)
+
+  ("h" windmove-left)
+  ("j" windmove-down)
+  ("k" windmove-up)
+  ("l" windmove-right)
+  ("u" winner-undo)
+  ("r" winner-redo)
+
+  ("p" previous-buffer)
+  ("n" next-buffer)
+  ("b" switch-to-buffer)
+  ("f" find-file)
+
+  ("s" split-window-below)
+  ("v" split-window-right)
+
+  ("c" delete-window)
+  ("o" delete-other-windows)
+
+  ("H" hydra-move-splitter-left)
+  ("J" hydra-move-splitter-down)
+  ("K" hydra-move-splitter-up)
+  ("L" hydra-move-splitter-right)
+
+  ("+" text-scale-increase "in")
+  ("-" text-scale-decrease "out")
+  ("=" (text-scale-increase 0) "reset")
+
+  ("q" nil))
+#+end_src
+*** Hydra / Flyspell
+#+begin_src emacs-lisp
+(defhydra flyspell-hydra ()
+  "
+Spell Commands^^           Add To Dictionary^^              Other
+--------------^^---------- -----------------^^------------- -----^^---------------------------
+[_b_] check whole buffer   [_B_] add word to dict (buffer)  [_t_] toggle spell check
+[_r_] check region         [_G_] add word to dict (global)  [_q_] exit
+[_d_] change dictionary    [_S_] add word to dict (session) [_Q_] exit and disable spell check
+[_n_] next error
+[_c_] correct before point
+[_s_] correct at point
+"
+  ("B" nil)
+  ("b" flyspell-buffer)
+  ("r" flyspell-region)
+  ("d" ispell-change-dictionary)
+  ("G" nil)
+  ("n" flyspell-goto-next-error)
+  ("c" flyspell-correct-wrapper)
+  ("Q" flyspell-mode :exit t)
+  ("q" nil :exit t)
+  ("S" nil)
+  ("s" flyspell-correct-at-point)
+  ("t" nil))
+#+end_src
+*** Hydra / ORG
+**** hydra-org-jump
+From [[https://sriramkswamy.github.io/dotemacs/]]
+
+#+begin_src emacs-lisp
+(defhydra sk/hydra-org-jump (:color pink :hint nil)
+  "
+ ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
+ ^^^^^^^^^^^-------------------------------------------------------------------------------
+ ^ ^ _k_ ^ ^   ^ ^ _K_ ^ ^   ^ ^ _u_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _p_ ^ ^   ^ ^ _P_ ^ ^    _q_ quit
+ _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
+ ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
+"
+  ("j" outline-next-visible-heading)
+  ("k" outline-previous-visible-heading)
+  ("l" org-down-element)
+  ("h" org-up-element)
+  ("J" org-forward-heading-same-level)
+  ("K" org-backward-heading-same-level)
+  ("u" org-next-item)
+  ("d" org-previous-item)
+  ("f" org-table-next-field)
+  ("b" org-table-previous-field)
+  ("n" org-next-block)
+  ("p" org-previous-block)
+  ("N" org-next-link)
+  ("P" org-previous-link)
+  ("q" nil :color blue))
+#+end_src
+**** hydra-org-babel-transient
+#+begin_src emacs-lisp :tangle no
+(defhydra org-babel-transient ()
+  "
+^Navigate^                    ^Interact
+^^^^^^^^^^^------------------------------------------
+[_t_/_s_] navigate src blocs  [_x_] execute src block
+[_g_]^^   goto named block    [_'_] edit src block
+[_z_]^^   recenter screen     [_q_] quit
+"
+  ("q" nil :exit t)
+  ("t" org-babel-next-src-block)
+  ("s" org-babel-previous-src-block)
+  ("g" org-babel-goto-named-src-block)
+  ("z" recenter-top-bottom)
+  ("x" org-babel-execute-maybe)
+  ("'" org-edit-special :exit t))
+#+end_src
+*** Hydra / merge
+Group Merge commands.
+
+#+begin_src emacs-lisp
+(pretty-hydra-define hydra-merge
+  (:hint nil :color pink :quit-key "q" :title (with-octicon "mark-github" "Magit" 1 -0.05))
+  ("Move"
+   (("n" smerge-next "next")
+    ("p" smerge-prev "previous"))
+   "Keep"
+   (("RET" smerge-keep-current "current")
+    ("a" smerge-keep-all "all")
+    ("b" smerge-keep-base "base")
+    ("l" smerge-keep-lower "lower")
+    ("u" smerge-keep-upper "upper"))
+   "Diff"
+   (("<" smerge-diff-base-upper "upper/base")
+    ("=" smerge-diff-upper-lower "upper/lower")
+    (">" smerge-diff-base-lower "base/lower")
+    ("R" smerge-refine "redefine")
+    ("E" smerge-ediff "ediff"))
+   "Other"
+   (("C" smerge-combine-with-next "combine")
+    ("r" smerge-resolve "resolve")
+    ("k" smerge-kill-current "kill current"))))
+#+end_src
+jk
+*** Hydra / smerge
+From https://github.com/dakra/dmacs/blob/nil/init.org
+
+#+begin_src emacs-lisp
+(use-package smerge-mode
+  :hook (magit-diff-visit-file . (lambda ()
+                                   (when smerge-mode
+                                     (hydra-smerge/body))))
+  :config
+  (require 'hydra)
+  (defhydra hydra-smerge
+    (:color pink :hint nil :post (smerge-auto-leave))
+    "
+^Move^       ^Keep^               ^Diff^                 ^Other^
+^^-----------^^-------------------^^---------------------^^-------
+_n_ext       _b_ase               _<_: upper/base        _C_ombine
+_p_rev       _u_pper              _=_: upper/lower       _r_esolve
+^^           _l_ower              _>_: base/lower        _k_ill current
+^^           _a_ll                _R_efine
+^^           _RET_: current       _E_diff
+"
+    ("n" smerge-next)
+    ("p" smerge-prev)
+    ("b" smerge-keep-base)
+    ("u" smerge-keep-upper)
+    ("l" smerge-keep-lower)
+    ("a" smerge-keep-all)
+    ("RET" smerge-keep-current)
+    ("\C-m" smerge-keep-current)
+    ("<" smerge-diff-base-upper)
+    ("=" smerge-diff-upper-lower)
+    (">" smerge-diff-base-lower)
+    ("R" smerge-refine)
+    ("E" smerge-ediff)
+    ("C" smerge-combine-with-next)
+    ("r" smerge-resolve)
+    ("k" smerge-kill-current)
+    ("q" nil "cancel" :color blue)))
+#+end_src
+*** Hydra / modeline                                                 :todo:
+#+begin_src emacs-lisp
+(pretty-hydra-define hydra-modeline
+  (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
+   ("Icon"
+    (("i" (setq doom-modeline-icon (not doom-modeline-icon))
+      "display icons" :toggle doom-modeline-icon)
+     ("u" (setq doom-modeline-unicode-fallback (not doom-modeline-unicode-fallback))
+      "unicode fallback" :toggle doom-modeline-unicode-fallback)
+     ("m" (setq doom-modeline-major-mode-icon (not doom-modeline-major-mode-icon))
+      "major mode" :toggle doom-modeline-major-mode-icon)
+     ("c" (setq doom-modeline-major-mode-color-icon (not doom-modeline-major-mode-color-icon))
+      "colorful major mode" :toggle doom-modeline-major-mode-color-icon)
+     ("s" (setq doom-modeline-buffer-state-icon (not doom-modeline-buffer-state-icon))
+      "buffer state" :toggle doom-modeline-buffer-state-icon)
+     ("o" (setq doom-modeline-buffer-modification-icon (not doom-modeline-buffer-modification-icon))
+      "modification" :toggle doom-modeline-buffer-modification-icon)
+     ("x" (setq doom-modeline-time-icon (not doom-modeline-time-icon))
+      "time" :toggle doom-modeline-time-icon)
+     ("v" (setq doom-modeline-modal-icon (not doom-modeline-modal-icon))
+      "modal" :toggle doom-modeline-modal-icon))
+    "Segment"
+    (("g h" (setq doom-modeline-hud (not doom-modeline-hud))
+      "hud" :toggle doom-modeline-hud)
+     ("g m" (setq doom-modeline-minor-modes (not doom-modeline-minor-modes))
+      "minor modes" :toggle doom-modeline-minor-modes)
+     ("g w" (setq doom-modeline-enable-word-count (not doom-modeline-enable-word-count))
+      "word count" :toggle doom-modeline-enable-word-count)
+     ("g e" (setq doom-modeline-buffer-encoding (not doom-modeline-buffer-encoding))
+      "encoding" :toggle doom-modeline-buffer-encoding)
+     ("g i" (setq doom-modeline-indent-info (not doom-modeline-indent-info))
+      "indent" :toggle doom-modeline-indent-info)
+     ("g c" (setq doom-modeline-display-misc-in-all-mode-lines (not doom-modeline-display-misc-in-all-mode-lines))
+      "misc info" :toggle doom-modeline-display-misc-in-all-mode-lines)
+     ("g l" (setq doom-modeline-lsp (not doom-modeline-lsp))
+      "lsp" :toggle doom-modeline-lsp)
+     ("g k" (setq doom-modeline-workspace-name (not doom-modeline-workspace-name))
+      "workspace" :toggle doom-modeline-workspace-name)
+     ("g g" (setq doom-modeline-github (not doom-modeline-github))
+      "github" :toggle doom-modeline-github)
+     ("g n" (setq doom-modeline-gnus (not doom-modeline-gnus))
+      "gnus" :toggle doom-modeline-gnus)
+     ("g u" (setq doom-modeline-mu4e (not doom-modeline-mu4e))
+      "mu4e" :toggle doom-modeline-mu4e)
+     ("g r" (setq doom-modeline-irc (not doom-modeline-irc))
+      "irc" :toggle doom-modeline-irc)
+     ("g f" (setq doom-modeline-irc-buffers (not doom-modeline-irc-buffers))
+      "irc buffers" :toggle doom-modeline-irc-buffers)
+     ("g s" (progn
+              (setq doom-modeline-checker-simple-format (not doom-modeline-checker-simple-format))
+              (and (bound-and-true-p flycheck-mode) (flycheck-buffer)))
+      "simple checker" :toggle doom-modeline-checker-simple-format)
+     ("g t" (setq doom-modeline-time (not doom-modeline-time))
+      "time" :toggle doom-modeline-time)
+     ("g v" (setq doom-modeline-env-version (not doom-modeline-env-version))
+      "version" :toggle doom-modeline-env-version))
+    "Style"
+    (("a" (setq doom-modeline-buffer-file-name-style 'auto)
+      "auto"
+      :toggle (eq doom-modeline-buffer-file-name-style 'auto))
+     ("b" (setq doom-modeline-buffer-file-name-style 'buffer-name)
+      "buffer name"
+      :toggle (eq doom-modeline-buffer-file-name-style 'buffer-name))
+     ("f" (setq doom-modeline-buffer-file-name-style 'file-name)
+      "file name"
+      :toggle (eq doom-modeline-buffer-file-name-style 'file-name))
+     ("t u" (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
+      "truncate upto project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-upto-project))
+     ("t f" (setq doom-modeline-buffer-file-name-style 'truncate-from-project)
+      "truncate from project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-from-project))
+     ("t w" (setq doom-modeline-buffer-file-name-style 'truncate-with-project)
+      "truncate with project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-with-project))
+     ("t e" (setq doom-modeline-buffer-file-name-style 'truncate-except-project)
+      "truncate except project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-except-project))
+     ("t r" (setq doom-modeline-buffer-file-name-style 'truncate-upto-root)
+      "truncate upto root"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-upto-root))
+     ("t a" (setq doom-modeline-buffer-file-name-style 'truncate-all)
+      "truncate all"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-all))
+     ("t n" (setq doom-modeline-buffer-file-name-style 'truncate-nil)
+      "truncate none"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-nil))
+     ("r f" (setq doom-modeline-buffer-file-name-style 'relative-from-project)
+      "relative from project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'relative-from-project))
+     ("r t" (setq doom-modeline-buffer-file-name-style 'relative-to-project)
+      "relative to project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'relative-to-project)))
+    "Project Detection"
+    (("p a" (setq doom-modeline-project-detection 'auto)
+      "auto"
+      :toggle (eq doom-modeline-project-detection 'auto))
+     ("p f" (setq doom-modeline-project-detection 'ffip)
+      "ffip"
+      :toggle (eq doom-modeline-project-detection 'ffip))
+     ("p i" (setq doom-modeline-project-detection 'projectile)
+      "projectile"
+      :toggle (eq doom-modeline-project-detection 'projectile))
+     ("p p" (setq doom-modeline-project-detection 'project)
+      "project"
+      :toggle (eq doom-modeline-project-detection 'project))
+     ("p n" (setq doom-modeline-project-detection nil)
+      "disable"
+      :toggle (eq doom-modeline-project-detection nil)))
+    "Misc"
+    (("n" (progn
+            (message "Fetching GitHub notifications...")
+            (run-with-timer 300 nil #'doom-modeline--github-fetch-notifications)
+            (browse-url "https://github.com/notifications"))
+      "github notifications" :exit t)
+     ("e" (cond ((bound-and-true-p flycheck-mode)
+                 (flycheck-list-errors))
+                ((bound-and-true-p flymake-mode)
+                 (flymake-show-diagnostics-buffer)))
+      "list errors" :exit t)
+     ("w" (if (bound-and-true-p grip-mode)
+              (grip-browse-preview)
+            (message "Not in preview"))
+      "browse preview" :exit t)
+     ("z h" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-height
+                     (symbol-value 'doom-modeline-height)))
+      "set height" :exit t)
+     ("z w" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-bar-width
+                     (symbol-value 'doom-modeline-bar-width)))
+      "set bar width" :exit t)
+     ("z g" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-github-interval
+                     (symbol-value 'doom-modeline-github-interval)))
+      "set github interval" :exit t)
+     ("z n" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-gnus-timer
+                     (symbol-value 'doom-modeline-gnus-timer)))
+      "set gnus interval" :exit t))))
+
+#+end_src
+*** Hydra / unicode
+From https://github.com/dakra/dmacs/blob/nil/init.org
+Add here circled digits like: ②
+#+begin_src emacs-lisp
+(defun dakra/insert-unicode (unicode-name)
+  "Same as C-x 8 enter UNICODE-NAME."
+  (insert-char (gethash unicode-name (ucs-names))))
+
+(defhydra dakra/hydra-unicode (:color blue :hint nil)
+  "
+     Unicode  _c_ €   _a_ ä   _A_ Ä
+              _d_ °   _o_ ö   _O_ Ö
+              _e_ €   _u_ Ü   _U_ Ü
+              _p_ £   _s_ ß
+              _m_ µ
+              _r_ →
+     "
+  ("a" (dakra/insert-unicode "LATIN SMALL LETTER A WITH DIAERESIS"))
+  ("A" (dakra/insert-unicode "LATIN CAPITAL LETTER A WITH DIAERESIS"))
+  ("o" (dakra/insert-unicode "LATIN SMALL LETTER O WITH DIAERESIS")) ;;
+  ("O" (dakra/insert-unicode "LATIN CAPITAL LETTER O WITH DIAERESIS"))
+  ("u" (dakra/insert-unicode "LATIN SMALL LETTER U WITH DIAERESIS")) ;;
+  ("U" (dakra/insert-unicode "LATIN CAPITAL LETTER U WITH DIAERESIS"))
+  ("s" (dakra/insert-unicode "LATIN SMALL LETTER SHARP S"))
+  ("c" (dakra/insert-unicode "COPYRIGHT SIGN"))
+  ("d" (dakra/insert-unicode "DEGREE SIGN"))
+  ("e" (dakra/insert-unicode "EURO SIGN"))
+  ("p" (dakra/insert-unicode "POUND SIGN"))
+  ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
+  ("m" (dakra/insert-unicode "MICRO SIGN")))
+#+end_src
+** Icons
+
+** COMMENT Nov
+Nov is a major-mode for reading EPUB files within Emacs. Since I have
+it, I don’t need any other Epub reader on my computer! Plus this one
+is customizable and programmable, why would I use any other EPUB
+reader?
+#+begin_src emacs-lisp
+(use-package nov
+  :straight (:build t)
+  :defer t
+  :mode ("\\.epub\\'" . nov-mode)
+  :general
+  (phundrak/evil
+    :keymaps 'nov-mode-map
+    :packages 'nov
+    "c"   #'nov-previous-document
+    "t"   #'nov-scroll-up
+    "C-d" #'nov-scroll-up
+    "s"   #'nov-scroll-down
+    "C-u" #'nov-scroll-down
+    "r"   #'nov-next-document
+    "gm"  #'nov-display-metadata
+    "gn"  #'nov-next-document
+    "gp"  #'nov-previous-document
+    "gr"  #'nov-render-document
+    "gt"  #'nov-goto-toc
+    "gv"  #'nov-view-source
+    "gV"  #'nov-view-content-source)
+  :config
+  (setq nov-text-width 95))
+#+end_src
+
+** PDF Tools
+~pdf-tools~ enables PDF support for Emacs, much better than its built-in
+support with DocView. Aside from the classical settings such as
+keybinds, I also enable the midnight colours by default; think of it
+as an equivalent of Zathura’s recolour feature which kind of enables a
+dark mode for PDFs.
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :defer t
+  :magic ("%PDF" . pdf-view-mode)
+  :straight (:build t)
+  :hook (pdf-tools-enabled . pdf-view-midnight-minor-mode)
+  :general
+  (phundrak/evil
+    :keymaps 'pdf-view-mode-map
+    :packages 'pdf-tools
+    "y"   #'pdf-view-kill-ring-save
+    "t"   #'evil-collection-pdf-view-next-line-or-next-page
+    "s"   #'evil-collection-pdf-view-previous-line-or-previous-page)
+  (phundrak/major-leader-key
+    :keymaps 'pdf-view-mode-map
+    :packages 'pdf-tools
+    "a"  '(:ignore t :which-key "annotations")
+    "aD" #'pdf-annot-delete
+    "at" #'pdf-annot-attachment-dired
+    "ah" #'pdf-annot-add-highlight-markup-annotation
+    "al" #'pdf-annot-list-annotations
+    "am" #'pdf-annot-markup-annotation
+    "ao" #'pdf-annot-add-strikeout-markup-annotation
+    "as" #'pdf-annot-add-squiggly-markup-annotation
+    "at" #'pdf-annot-add-text-annotation
+    "au" #'pdf-annot-add-underline-markup-annotation
+
+    "f"  '(:ignore t :which-key "fit")
+    "fw" #'pdf-view-fit-width-to-window
+    "fh" #'pdf-view-fit-height-to-window
+    "fp" #'pdf-view-fit-page-to-window
+
+    "s"  '(:ignore t :which-key "slice/search")
+    "sb" #'pdf-view-set-slice-from-bounding-box
+    "sm" #'pdf-view-set-slice-using-mouse
+    "sr" #'pdf-view-reset-slice
+    "ss" #'pdf-occur
+
+    "o"  'pdf-outline
+    "m"  'pdf-view-midnight-minor-mode)
+  :config
+  (with-eval-after-load 'pdf-view
+    (csetq pdf-view-midnight-colors '("#d8dee9" . "#2e3440"))))
+#+end_src
+
+One thing ~pdf-tools~ doesn’t handle is restoring the PDF to the last
+point it was visited --- in other words, open the PDF where I last
+left it.
+#+begin_src emacs-lisp
+(use-package pdf-view-restore
+  :after pdf-tools
+  :defer t
+  :straight (:build t)
+  :hook (pdf-view-mode . pdf-view-restore-mode)
+  :config
+  (setq pdf-view-restore-filename (expand-file-name ".tmp/pdf-view-restore"
+                                                    user-emacs-directory)))
+#+end_src
+** Project Management
+*** Version control
+**** diffs
+#+begin_src emacs-lisp
+;; From https://github.com/dakra/dmacs/blob/nil/init.org
+(use-package diff-mode
+  :config
+  ;; Shorten file headers like Magit's diff format.
+  (setq diff-font-lock-prettify t))
+
+(use-package ediff
+  :defer t
+  :config
+  ;; Always expand files before diffing (especially org files)
+  (add-hook 'ediff-prepare-buffer-hook #'outline-show-all)
+  ;; Do everything in one frame
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  ;; Split ediff windows horizontally by default
+  (setq ediff-split-window-function 'split-window-horizontally))
+
+#+end_src
+
+*** Magit
+#+begin_src emacs-lisp
+(use-package magit
+  :straight (:build t)
+  :defer t
+  :init
+  (setq forge-add-default-bindings nil)
+  :config
+  (add-hook 'magit-process-find-password-functions 'magit-process-password-auth-source)
+  <<magit-angular-keywords-highlight>>
+  (csetq magit-clone-default-directory "~/fromGIT/"
+         magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
+  (with-eval-after-load 'evil-collection
+    (phundrak/evil
+      :packages '(evil-collection magit)
+      :keymaps '(magit-mode-map magit-log-mode-map magit-status-mode-map)
+      :states 'normal
+      "t" #'magit-tag
+      "s" #'magit-stage))
+  :general
+  (:keymaps '(git-rebase-mode-map)
+   :packages 'magit
+   "C-t" #'evil-next-line
+   "C-s" #'evil-previous-line)
+  (phundrak/major-leader-key
+    :keymaps 'git-rebase-mode-map
+    :packages 'magit
+    "," #'with-editor-finish
+    "k" #'with-editor-cancel
+    "a" #'with-editor-cancel)
+  (phundrak/leader-key
+    :infix   "g"
+    :packages 'magit
+    ""   '(:ignore t :wk "git")
+    "b"  #'magit-blame
+    "c"  #'magit-clone
+    "d"  #'magit-dispatch
+    "i"  #'magit-init
+    "s"  #'magit-status
+    "l"  #'magit-log
+    "y"  #'my/yadm
+    "S"  #'magit-stage-file
+    "U"  #'magit-unstage-file
+    "f"  '(:ignore t :wk "file")
+    "fd" #'magit-diff
+    "fc" #'magit-file-checkout
+    "fl" #'magit-file-dispatch
+    "fF" #'magit-find-file))
+#+end_src
+
+There is currently a bug in Emacs TRAMP as described in issue [[https://github.com/magit/magit/issues/4720][#4720]] of
+Magit and bug [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=62093][62093]] of Emacs. A workaround is to redefine the old
+=tramp-send-command= function through an advice.
+#+begin_src emacs-lisp
+(defun my--tramp-send-command--workaround-stty-icanon-bug (conn-vec orig-command &rest args)
+  "See: https://github.com/magit/magit/issues/4720"
+  (let ((command
+         (if (string= "stty -icrnl -icanon min 1 time 0" orig-command)
+             "stty -icrnl"
+           orig-command)))
+    (append (list conn-vec command) args)))
+
+(defun my--tramp-send-command--workaround-stty-icanon-bug--filter-args (args)
+  (apply #'my--tramp-send-command--workaround-stty-icanon-bug args))
+
+(advice-add 'tramp-send-command :filter-args
+            #'my--tramp-send-command--workaround-stty-icanon-bug--filter-args)
+#+end_src
+
+I also want to highlight these angular-style keywords in commit messages.
+#+name: magit-angular-keywords-highlight
+#+begin_src emacs-lisp :tangle no
+(defun my/magit-log-highlight-angular-keywords (_rev msg)
+  "Highlight angular-style keywords in commit messages."
+  (let ((boundary 0))
+    (when (string-match (rx (seq (or "feat" "fix" "docs" "style" "refactor"
+                                     "perf" "test" "chore")
+                                 (* "(" (* (not ")")) ")")
+                                 ":"))
+                        msg
+                        boundary)
+        (setq boundary (match-end 0))
+        (magit--put-face (match-beginning 0) boundary
+                         'magit-keyword msg)))
+  msg)
+
+(advice-add #'magit-log-propertize-keywords
+            :after
+            #'my/magit-log-highlight-angular-keywords)
+#+end_src
+
+[[https://github.com/alphapapa][Alphapapa]] also created an awesome package for Magit: magit-todos which
+display in the Magit buffer a list of TODOs found in the current
+project to remind you of what to do next.
+
+First, let’s setup our todo keywords with =hl-todo=. A good few todo
+keywords are already defined in the =hl-todo-keyword-faces= variable.
+Why not use them? =hl-todo-mode= enables fontlock highlight of these
+keywords in a buffer. Let’s enable this mode globally.
+#+begin_src emacs-lisp
+;; (use-package hl-todo
+;;   :defer t
+;;   :straight (:build t)
+;;   :init (global-hl-todo-mode 1)
+;;   :general
+;;   (phundrak/leader-key
+;;     :packages '(hl-todo)
+;;     :infix "c"
+;;     ""  '(:ignore t :which-key "todos")
+;;     "n" #'hl-todo-next
+;;     "p" #'hl-todo-previous))
+#+end_src
+
+We can now configure properly =magit-todos=. Notice my custom function
+hooked to =magit-mode-hook=. This is because this package tries to find
+TODOs in all files in the current project, and my yadm repository’s
+root is my =$HOME=. So, yeah, no =magit-todos= in yadm.
+#+begin_src emacs-lisp
+;; (use-package magit-todos
+;;   :straight (:build t)
+;;   :after (magit hl-todo)
+;;   :init
+;;   (with-eval-after-load 'magit
+;;    (defun my/magit-todos-if-not-yadm ()
+;;      "Deactivate magit-todos if in yadm Tramp connection.
+;; If `magit--default-directory' points to a yadm Tramp directory,
+;; deactivate `magit-todos-mode', otherwise enable it."
+;;      (if (string-prefix-p "/yadm:" magit--default-directory)
+;;          (magit-todos-mode -1)
+;;        (magit-todos-mode +1)))
+;;    (add-hook 'magit-mode-hook #'my/magit-todos-if-not-yadm))
+;;   :config
+;;   (csetq magit-todos-ignore-case t))
+#+end_src
+
+*** Forge
+
+#+begin_src emacs-lisp
+;; (use-package forge
+;;   :after magit
+;;   :straight (:build t)
+;;   :init
+;;   (evil-collection-forge-setup)
+;;   :general
+;;   (phundrak/major-leader-key
+;;     :keymaps 'forge-topic-mode-map
+;;     "c"  #'forge-create-post
+;;     "e"  '(:ignore t :which-key "edit")
+;;     "ea" #'forge-edit-topic-assignees
+;;     "ed" #'forge-edit-topic-draft
+;;     "ek" #'forge-delete-comment
+;;     "el" #'forge-edit-topic-labels
+;;     "em" #'forge-edit-topic-marks
+;;     "eM" #'forge-merge
+;;     "en" #'forge-edit-topic-note
+;;     "ep" #'forge-edit-post
+;;     "er" #'forge-edit-topic-review-requests
+;;     "es" #'forge-edit-topic-state
+;;     "et" #'forge-edit-topic-title))
+#+end_src
+**** browse-at-remote
+#+begin_src emacs-lisp
+(use-package browse-at-remote
+  :straight t
+  :bind (("C-c G" . browse-at-remote))
+  :general
+  (phundrak/leader-key
+    :infix   "g"
+    :packages 'magit
+    ""   '(:ignore t :wk "git")
+    "y"  #'browse-at-remote-kill
+    "o" #'browse-at-remote))
+#+end_src
+**** diff-hl-mode
+#+begin_src emacs-lisp
+(use-package diff-hl
+  :ensure t
+  :hook
+  ((magit-post-refresh . diff-hl-magit-post-refresh)
+   ;; (prog-mode . diff-hl-mode)
+   ;; (org-mode . diff-hl-mode)
+   (dired-mode . diff-hl-dired-mode)))
+#+end_src
+
+#+RESULTS:
+| org-download-enable | diff-hl-dired-mode |
+
+*** Projectile
+First, I need to install ~ripgrep~, a faster reimplementation of ~grep~,
+which will be very useful when managing projects.
+#+begin_src emacs-lisp
+(use-package ripgrep
+  :if (executable-find "rg")
+  :straight (:build t)
+  :defer t)
+#+end_src
+
+Now, I can use projectile, which is sort of the /de facto/ standard
+project manager in Emacs. I know there’s ~project.el~, but… Eh… I’m used
+to projectile.
+#+begin_src emacs-lisp
+(use-package projectile
+  :straight t
+  :diminish projectile-mode
+  ;; :custom ((projectile-completion-system 'default))
+  :config
+  (projectile-mode)
+  ;; (setq projectile-completion-system 'default)
+  ;; (setq projectile-switch-project-action #'projectile-dired)
+
+  (add-to-list 'projectile-ignored-projects "~/")
+  (add-to-list 'projectile-globally-ignored-files "node_modules")
+  (add-to-list 'projectile-globally-ignored-files ".cache")
+  (add-to-list 'projectile-globally-ignored-files "_cache")
+  (add-to-list 'projectile-globally-ignored-files "~")
+  (add-to-list 'projectile-globally-ignored-files "^#")
+  (add-to-list 'projectile-globally-ignored-directories "^node_modules$")
+  :general
+  (phundrak/leader-key
+    "p" '(:keymap projectile-command-map :which-key "projectile")))
+#+end_src
+
+And of course, there is a counsel package dedicated to projectile.
+#+begin_src emacs-lisp
+;; (use-package counsel-projectile
+;;   :straight (:build t)
+;;   :after (counsel projectile)
+;;   :config (counsel-projectile-mode))
+#+end_src
+
+*** Recentf
+The built-in package ~recentf~ keeps track of recently opened files. But
+by default, it only follows the twenty most recent files, that not
+nearly enough for me, so I raise it to two hundred. I also don’t want
+recentf to follow the Elfeed database, so I add it to the list of
+excluded files.
+#+begin_src emacs-lisp
+(use-package recentf
+  :straight (:build t :type built-in)
+  :custom ((recentf-max-saved-items 2000))
+  :config
+  (add-all-to-list 'recentf-exclude
+                   `(,(rx (* any)
+                          (or "elfeed-db"
+                              "eln-cache"
+                              "conlanging/content"
+                              "org/config"
+                              "/Mail/Sent"
+                              ".cache/")
+                          (* any)
+                          (? (or "html" "pdf" "tex" "epub")))
+                     ,(rx (* any)
+                          ".elc"
+                          eol)
+                     ,(rx "/"
+                          (or "rsync" "ssh" "tmp" "yadm" "sudoedit" "sudo")
+                          (* any)))))
+#+end_src
+
+*** ejira
+Still not convinced, but let's activate it:
+
+#+begin_src emacs-lisp
+(use-package jiralib2
+  :straight t
+  :commands (ejira-mode)
+  :init
+  (defun dorneanu/setup-jira ()
+    (interactive)
+    (setq jiralib2-url              (password-store-get "emacs/ejira-url")
+          jiralib2-auth             'token
+          jiralib2-token             (password-store-get "emacs/ejira-token")
+          jiralib2-user-login-name  (password-store-get "emacs/ejira-user"))))
+
+
+
+(use-package ejira
+  :straight (ejira :build t
+                      :type git
+                      :host github
+                      :repo "nyyManni/ejira")
+  :after (jiralib2)
+  :init
+  (setq
+   ;; NOTE, this directory needs to be in `org-agenda-files'`
+   ejira-org-directory       "~/work/jira"
+   ejira-projects            '("QDS" "INI")
+
+   ejira-priorities-alist    '(("Highest" . ?A)
+                               ("High"    . ?B)
+                               ("Medium"  . ?C)
+                               ("Low"     . ?D)
+                               ("Lowest"  . ?E))
+   ejira-todo-states-alist   '(("To Do"       . 1)
+                               ("In Progress" . 2)
+                               ("Done"        . 4)))
+  ;; Update my jira projects
+  (defun dorneanu/jira-update-projects ()
+    (interactive)
+    (let ((org-agenda-files nil))
+      (ejira-update-my-projects)))
+
+
+  :config
+  ;; Tries to auto-set custom fields by looking into /editmeta
+  ;; of an issue and an epic.
+  (add-hook 'jiralib2-post-login-hook #'ejira-guess-epic-sprint-fields)
+
+  ;; Make the issues visisble in your agenda by adding `ejira-org-directory'
+  ;; into your `org-agenda-files'.
+  (add-to-list 'org-agenda-files ejira-org-directory))
+
+#+end_src
+*** wakatime
+#+begin_src emacs-lisp
+(use-package wakatime-mode
+  :straight t
+  :config
+  (setq
+   ;; TODO: Need to change these to something more flexible/portable
+   wakatime-python-bin "/home/victor/.pyenv/versions/emacs/bin/python"
+   wakatime-cli-path "/home/victor/.pyenv/versions/emacs/bin/wakatime")
+  (global-wakatime-mode))
+#+end_src
+*** WIP jira
+
+** rg.el
+#+begin_src emacs-lisp
+(use-package rg
+  :straight t
+  :config
+  (rg-enable-default-bindings)
+  ;; Not sure if I really need this
+  (rg-define-toggle "--multiline --multiline-dotall" "u")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L")
+  ;; Highlight longer
+  (setq next-error-highlight-no-select t)
+  (add-hook 'next-error-hook #'recenter)
+  (add-hook 'next-error-hook #'focus-mode)
+)
+#+end_src
+
+Configure custom searches
+#+begin_src emacs-lisp
+;; search in org roam folder
+(rg-define-search my/rg-org-roam-directory
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir org-roam-directory
+  :confirm prefix)
+
+;; search in org roam folder where I have transcripts from the Huberman Lab
+(rg-define-search my/rg-org-roam-directory-huberman
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir (concat org-roam-directory "/rez/huberman-lab")
+  :confirm prefix)
+
+(setq dotemacs-directory "/cs/priv/repos/dotemacs")
+(rg-define-search my/rg-dotemacs
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir dotemacs-directory
+  :confirm prefix)
+
+#+end_src
+
+** COMMENT Screenshot
+~screenshot.el~ is a nice utility package made by TEC. It allows the
+user to take a screenshot of a specific area of a buffer and make it
+look nice.
+#+begin_src emacs-lisp
+(use-package screenshot
+  :defer t
+  :straight (screenshot :build t
+                        :type git
+                        :host github
+                        :repo "tecosaur/screenshot")
+  :config (load-file (locate-library "screenshot.el"))
+  :general
+  (phundrak/leader-key
+    :infix "a"
+    :packages '(screenshot)
+    "S" #'screenshot))
+#+end_src
+** Screenshots
+*** emacsshot
+From https://gitlab.com/marcowahl/emacsshot
+#+begin_src emacs-lisp
+(use-package emacsshot
+  :straight t
+  :bind(("C-x a s f" . emacsshot-snap-frame)
+        ("C-x a s w" . emacsshot-snap-window))
+  )
+#+end_src
+** Security
+*** COMMENT Bitwarden
+This package is still a very much work in progress one I’m developing
+in order to interact with Bitwarden in Emacs with the help of the
+[[https://github.com/bitwarden/cli][Bitwarden CLI]]. Use at your own risks.
+#+begin_src emacs-lisp
+(use-package bitwarden
+  :defer t
+  :straight (bitwarden :build t
+                       :type git
+                       :host nil
+                       :repo "https://labs.phundrak.com/phundrak/bitwarden.el"))
+#+end_src
+
+** Shells
+*** eshell
+#+begin_src emacs-lisp
+(use-package eshell
+  :ensure nil
+  :hook
+  (eshell-mode . (lambda () (eshell/export "NODE_NO_READLINE=1")))
+  (eshell-exit . (lambda () (setq esh-prompt-num 0)))
+
+  :config
+  ;; Don't use any pagers
+  (setenv "PAGER" "cat")
+
+  ;; Emulate terminal
+  (setenv "TERM" "xterm-256color")
+
+  ;; If I ever want my own eshell/foo commands overwrite real commands ...
+  (setq eshell-prefer-lisp-functions t)
+  (setq eshell-prefer-lisp-variables t)
+
+  (setq password-cache t) ; enable password caching
+  (setq password-cache-expiry 3600) ; for one hour (time in secs)
+
+  ;; Increase eshell history size
+  (setq eshell-history-size 8192)
+
+
+  ;; Functions starting with `eshell/' can be called directly from eshell
+  ;; with only the last part. E.g. (eshell/foo) will call `$ foo'
+
+  (defun clipboard/set (astring)
+    "Copy a string to clipboard"
+    (with-temp-buffer
+      (insert astring)
+      (clipboard-kill-region (point-min) (point-max))))
+
+  (defun eshell/copy-pwd ()
+    "Copy current directory to clipboard "
+    (clipboard/set (eshell/pwd)))
+
+  (defun eshell/copy-fpath (fname)
+    "Copy file name with full path to clipboard "
+    (let ((fpath (concat (eshell/pwd) "/" fname)))
+      (clipboard/set fpath)
+      (concat "Copied path: " fpath)))
+
+  (defun eshell/d (&rest args)
+    "Open dired in current directory."
+    (dired (pop args) "."))
+
+  (defun eshell/ccat (file)
+    "Like `cat' but output with Emacs syntax highlighting."
+    (with-temp-buffer
+      (insert-file-contents file)
+      (let ((buffer-file-name file))
+        (delay-mode-hooks
+          (set-auto-mode)
+          (if (fboundp 'font-lock-ensure)
+              (font-lock-ensure)
+            (with-no-warnings
+              (font-lock-fontify-buffer)))))
+      (buffer-string)))
+
+  (defun eshell/find (&rest args)
+    "Wrapper around the ‘find’ executable."
+    (let ((cmd (concat "find " (string-join args))))
+      (shell-command-to-string cmd)))
+
+  ;; Don't print the welcome banner and
+  ;; use native 'sudo', system sudo asks for password every time.
+  (require 'em-tramp)
+  (setq eshell-modules-list
+        '(eshell-alias
+          eshell-basic
+          eshell-cmpl
+          eshell-dirs
+          eshell-glob
+          eshell-hist
+          eshell-ls
+          eshell-pred
+          eshell-prompt
+          eshell-script
+          eshell-term
+          eshell-tramp
+          eshell-unix))
+
+  (require 'em-hist)
+  ;; Some ideas from https://github.com/howardabrams/dot-files/blob/master/emacs-eshell.org
+  (setq-default eshell-scroll-to-bottom-on-input 'all
+                eshell-error-if-no-glob t
+                eshell-hist-ignoredups t
+                eshell-visual-commands '("ptpython" "ipython" "pshell" "tail" "vi" "vim" "watch"
+                                         "nmtui" "dstat" "mycli" "pgcli" "vue" "ngrok"
+                                         "castnow" "mitmproxy" "rmapi"
+                                         "tmux" "screen" "top" "htop" "less" "more" "ncftp")
+                eshell-prefer-lisp-functions nil)
+
+  ;; Furthger hooks
+  (add-hook 'eshell-mode-hook (lambda ()
+                                ;; (local-set-key (kbd "M-P") 'eshell-previous-prompt)
+                                ;; (local-set-key (kbd "M-N") 'eshell-next-prompt)
+                                (local-set-key (kbd "M-R") 'eshell-list-history)
+                                (local-set-key (kbd "C-.") 'consult-history)
+                                ;; (local-set-key (kbd "DEL") 'eshell-delete-backward-char)
+                                (local-set-key [remap eshell-pcomplete] 'completion-at-point)
+
+                                ;; Support imenu
+                                (setq-local imenu-generic-expression `(("Prompt" ,eshell-prompt-regexp 1)))
+                                ;; Support outline (e.g. consult-outline)
+                                (setq-local outline-regexp eshell-prompt-regexp)
+
+                                ;; Disable overwriting the history on eshell exit
+                                ;; See eshell-append-history above
+                                (remove-hook 'eshell-exit-hook #'eshell-write-history t)
+
+                                (setq xterm-color-preserve-properties t)
+
+                                (setq-local company-backends '((company-eshell-history
+                                                                company-shell
+                                                                company-shell-env
+                                                                company-files
+                                                                company-dabbrev-code
+                                                                company-capf
+                                                                company-yasnippet))))))
+
+#+end_src
+**** company-eshell-history
+Company eshell history completion backend.
+From https://gist.github.com/gregsexton/dd2d6c304d06fc3e6833
+
+Set as backend in =eshell-mode-hook= in eshell section above.
+#+BEGIN_SRC emacs-lisp
+(defun company-eshell-history (command &optional arg &rest ignored)
+  (interactive (list 'interactive))
+  (cl-case command
+    (interactive (company-begin-backend 'company-eshell-history))
+    (prefix (and (eq major-mode 'eshell-mode)
+                 (let ((word (company-grab-word)))
+                   (save-excursion
+                     (eshell-bol)
+                     (and (looking-at-p (s-concat word "$")) word)))))
+    (candidates (cl-remove-duplicates
+                 (->> (ring-elements eshell-history-ring)
+                   (cl-remove-if-not (lambda (item) (s-prefix-p arg item)))
+                   (mapcar 's-trim))
+                 :test 'string=))
+    (sorted t)))
+#+END_SRC
+
+**** Prompt
+#+BEGIN_SRC emacs-lisp
+;; Show git info in prompt
+(use-package eshell-prompt-extras
+  :straight t
+  :after eshell
+  ;; :config
+  ;; (require 'virtualenvwrapper)
+ )
+#+END_SRC
+
+*** shell-pop
+Shell-pop allows the user to easily call for a new shell in a pop-up
+buffer.
+#+begin_src emacs-lisp
+(use-package shell-pop
+  :defer t
+  :straight (:build t)
+  :custom
+  (shell-pop-default-directory "/home/phundrak")
+  (shell-pop-shell-type (quote ("eshell" "*eshell*" (lambda () (eshell shell-pop-term-shell)))))
+  (shell-pop-window-size 30)
+  (shell-pop-full-span nil)
+  (shell-pop-window-position "bottom")
+  (shell-pop-autocd-to-working-dir t)
+  (shell-pop-restore-window-configuration t)
+  (shell-pop-cleanup-buffer-at-process-exit t))
+#+end_src
+
+*** VTerm
+VTerm gives Emacs access to regular shells with an almost regular
+emulator. Be aware you will most likely need to hit ~C-c~ twice to send
+an interrupt signal.
+#+begin_src emacs-lisp
+(use-package vterm
+  :defer t
+  :straight t
+  :config
+  (setq vterm-shell "/usr/bin/zsh"))
+#+end_src
+
+One annoying think with vterm is it only can create one buffer, you
+can’t have multiple vterm buffers by default. ~multi-vterm~ fixes this
+issue.
+#+begin_src emacs-lisp
+(use-package multi-vterm
+  :after vterm
+  :defer t
+  :straight (:build t)
+  :general
+  ;; (phundrak/major-leader-key
+  ;;   :packages '(vterm multi-vterm)
+  ;;   :keymap 'vterm-mode-map
+  ;;   "c" #'multi-vterm
+  ;;   "n" #'multi-vterm-next
+  ;;   "p" #'multi-vterm-prev)
+  )
+#+end_src
+*** COMMENT Eshell
+[[file:../img/emacs-eshell.svg]]
+
+Eshell is a built-in shell available from Emacs which I use almost as
+often as fish. Some adjustments are necessary to make it fit my taste
+though.
+#+begin_src emacs-lisp
+(use-package eshell
+  :defer t
+  :straight (:type built-in :build t)
+  :config
+  (setq eshell-prompt-function
+        (lambda ()
+          (concat (abbreviate-file-name (eshell/pwd))
+                  (if (= (user-uid) 0) " # " " λ ")))
+        eshell-prompt-regexp "^[^#λ\n]* [#λ] ")
+  <<eshell-alias-file>>
+  <<eshell-concat-shell-command>>
+  <<eshell-alias-open>>
+  <<eshell-alias-clear>>
+  <<eshell-alias-buffers>>
+  <<eshell-alias-emacs>>
+  <<eshell-alias-mkcd>>
+  :general
+  (phundrak/evil
+    :keymaps 'eshell-mode-map
+    [remap evil-collection-eshell-evil-change] #'evil-backward-char
+    "c" #'evil-backward-char
+    "t" #'evil-next-visual-line
+    "s" #'evil-previous-visual-line
+    "r" #'evil-forward-char
+    "h" #'evil-collection-eshell-evil-change)
+  (general-define-key
+   :keymaps 'eshell-mode-map
+   :states 'insert
+   "C-a" #'eshell-bol
+   "C-e" #'end-of-line))
+#+end_src
+
+**** Aliases
+First, let’s declare our list of “dumb” aliases we’ll use in
+Eshell. You can find them here.
+#+name: eshell-alias-file
+#+begin_src emacs-lisp :tangle no
+(setq eshell-aliases-file (expand-file-name "eshell-alias" user-emacs-directory))
+#+end_src
+
+A couple of other aliases will be defined through custom Elisp
+functions, but first I’ll need a function for concatenating a shell
+command into a single string:
+#+name: eshell-concat-shell-command
+#+begin_src emacs-lisp :tangle no
+(defun phundrak/concatenate-shell-command (&rest command)
+  "Concatenate an eshell COMMAND into a single string.
+All elements of COMMAND will be joined in a single
+space-separated string."
+  (mapconcat #'identity command " "))
+#+end_src
+
+I’ll also declare some aliases here, such as ~open~ and ~openo~ that
+respectively allow me to open a file in Emacs, and same but in another
+window.
+#+name: eshell-alias-open
+#+begin_src emacs-lisp :tangle no
+(defalias 'open #'find-file)
+(defalias 'openo #'find-file-other-window)
+#+end_src
+
+The default behaviour of ~eshell/clear~ is not great at all, although it
+clears the screen it also scrolls all the way down. Therefore, let’s
+alias it to ~eshell/clear-scrollback~ which has the correct behaviour.
+#+name: eshell-alias-clear
+#+begin_src emacs-lisp :tangle no
+(defalias 'eshell/clear #'eshell/clear-scrollback)
+#+end_src
+
+As you see, these were not declared in my dedicated aliases file but
+rather were declared programmatically. This is because I like to keep
+my aliases file for stuff that could work too with other shells were
+the syntax a bit different, and aliases related to Elisp are kept
+programmatically. I’ll also declare ~list-buffers~ an alias of ~ibuffer~
+because naming it that way kind of makes more sense to me.
+#+name: eshell-alias-buffers
+#+begin_src emacs-lisp :tangle no
+(defalias 'list-buffers 'ibuffer)
+#+end_src
+
+I still have some stupid muscle memory telling me to open ~emacs~, ~vim~
+or ~nano~ in Eshell, which is stupid: I’m already inside Emacs and I
+have all its power available instantly. So, let’s open each file
+passed to these commands.
+#+name: eshell-alias-emacs
+#+begin_src emacs-lisp :tangle no
+(defun eshell/emacs (&rest file)
+  "Open each FILE and kill eshell.
+Old habits die hard."
+  (when file
+    (dolist (f (reverse file))
+      (find-file f t))))
+#+end_src
+
+Finally, I’ll declare ~mkcd~ which allows the simultaneous creation of a
+directory and moving into this newly created directory. And of course,
+it will also work if the directory also exists or if parent
+directories don’t, similarly to the ~-p~ option passed to ~mkdir~.
+#+name: eshell-alias-mkcd
+#+begin_src emacs-lisp :tangle no
+(defun eshell/mkcd (dir)
+  "Create the directory DIR and move there.
+If the directory DIR doesn’t exist, create it and its parents
+if needed, then move there."
+  (mkdir dir t)
+  (cd dir))
+#+end_src
+
+**** Commands
+When I’m in Eshell, sometimes I wish to open multiple files at once in
+Emacs. For this, when I have several arguments for ~find-file~, I want
+to be able to open them all at once. Let’s modify ~find-file~ like so:
+#+BEGIN_SRC emacs-lisp
+(defadvice find-file (around find-files activate)
+  "Also find all files within a list of files. This even works recursively."
+  (if (listp filename)
+      (cl-loop for f in filename do (find-file f wildcards))
+    ad-do-it))
+#+END_SRC
+
+I also want to be able to have multiple instances of Eshell opened at
+once. For that, I declared the function ~eshell-new~ that does exactly
+that.
+#+begin_src emacs-lisp
+(defun eshell-new ()
+  "Open a new instance of eshell."
+  (interactive)
+  (eshell 'N))
+#+end_src
+
+A very useful command I often use in fish is ~z~, a port from bash’s and
+zsh’s command that allows to jump around directories based on how
+often we go in various directories.
+#+begin_src emacs-lisp
+(use-package eshell-z
+  :defer t
+  :after eshell
+  :straight (:build t)
+  :hook (eshell-mode . (lambda () (require 'eshell-z))))
+#+end_src
+
+**** Environment Variables
+Some environment variables need to be correctly set so Eshell can
+correctly work. I would like to set two environment variables related
+to Dart development: the ~DART_SDK~ and ~ANDROID_HOME~ variables.
+#+BEGIN_SRC emacs-lisp
+(setenv "DART_SDK" "/opt/dart-sdk/bin")
+(setenv "ANDROID_HOME" (concat (getenv "HOME") "/Android/Sdk/"))
+#+END_SRC
+
+The ~EDITOR~ variable also needs to be set for git commands, especially the
+~yadm~ commands.
+#+BEGIN_SRC emacs-lisp
+(setenv "EDITOR" "emacsclient -c -a emacs")
+#+END_SRC
+
+Finally, for some specific situations I need ~SHELL~ to be set to
+something more standard than fish:
+#+begin_src emacs-lisp
+(setenv "SHELL" "/bin/sh")
+#+end_src
+
+**** Visual configuration
+I like to have at quick glance some information about my machine when
+I fire up a terminal. I haven’t found anything that does that the way
+I like it, so [[https://github.com/Phundrak/eshell-info-banner.el][I’ve written a package]]! It’s actually available on
+Melpa, but since I’m the main dev of this package, I’ll keep track of
+the git repository.
+#+begin_src emacs-lisp
+(use-package eshell-info-banner
+  :after (eshell)
+  :defer t
+  :straight (eshell-info-banner :build t
+                                :type git
+                                :host github
+                                :protocol ssh
+                                :repo "phundrak/eshell-info-banner.el")
+  :hook (eshell-banner-load . eshell-info-banner-update-banner)
+  :custom-face
+  (eshell-info-banner-normal-face ((t :foreground "#A3BE8C")))
+  (eshell-info-banner-background-face ((t :foreground "#E5E9F0")))
+  (eshell-info-banner-warning-face ((t :foreround "#D08770")))
+  (eshell-info-banner-critical-face ((t :foreground "#BF616A")))
+  :custom
+  (eshell-info-banner-partition-prefixes (list "/dev" "zroot" "tank")))
+#+end_src
+
+Another feature I like is fish-like syntax highlight, which brings
+some more colours to Eshell.
+#+begin_src emacs-lisp
+(use-package eshell-syntax-highlighting
+  :after (esh-mode eshell)
+  :defer t
+  :straight (:build t)
+  :config
+  (eshell-syntax-highlighting-global-mode +1))
+#+end_src
+
+Powerline prompts are nice, git-aware prompts are even better!
+~eshell-git-prompt~ is nice, but I prefer to write my own package for
+that.
+#+begin_src emacs-lisp
+(use-package powerline-eshell
+  :if (string= (string-trim (shell-command-to-string "uname -n")) "leon")
+  :load-path "~/fromGIT/emacs-packages/powerline-eshell.el/"
+  :after eshell)
+#+end_src
+
+** To be tested
+Some packages I would like to test first
+*** engine-mode
+
+#+begin_src emacs-lisp
+(use-package engine-mode
+  :straight
+  :config
+  (defengine google "https://www.google.com/search?q=%s"
+             :keybinding "/")
+  (engine-mode 1))
+#+end_src
+*** google-this
+
+#+begin_src emacs-lisp
+(use-package google-this
+  :straight t
+  :bind-keymap ("C-c /" . google-this-mode-submap)
+  :bind* ("M-SPC" . google-this-search)
+  :bind (:map google-this-mode-map
+              ("/" . google-this-search)))
+#+end_src
+*** isearch
+
+Mostly from https://github.com/alexpeits/emacs.d
+
+#+begin_src emacs-lisp
+(use-package isearch
+  :ensure nil
+  :bind (("C-M-r" . isearch-backward-other-window)
+         ("C-M-s" . isearch-forward-other-window))
+  :bind (:map isearch-mode-map
+              ("C-l" . recenter)
+              ("C-SPC" . my/isearch-mark-and-exit)
+              ("<C-return>" . my/isearch-other-end)
+              ("<M-backspace>" . my/isearch-abort-dwim)
+              ("<C-backspace>" . my/isearch-abort-dwim))
+  :init
+  (setq search-whitespace-regexp ".*?"  ;; spaces match anything
+        isearch-lax-whitespace t  ;; the default
+        isearch-regex-lax-whitespace nil
+        isearch-yank-on-move 'shift
+        isearch-allow-scroll 'unlimited
+        isearch-lazy-count t  ;; show match count and current match index
+        lazy-count-prefix-format nil
+        lazy-count-suffix-format " (%s/%s)")
+  :config
+  ;; prot
+  (defun my/isearch-mark-and-exit ()
+    (interactive)
+    (push-mark isearch-other-end t 'activate)
+    (setq deactivate-mark nil)
+    (isearch-done))
+
+  (defun my/isearch-other-end ()
+    (interactive)
+    (isearch-done)
+    (when isearch-other-end
+      (goto-char isearch-other-end)))
+
+  (defun my/isearch-abort-dwim ()
+    "Delete failed `isearch' input, single char, or cancel search.
+
+This is a modified variant of `isearch-abort' that allows us to
+perform the following, based on the specifics of the case: (i)
+delete the entirety of a non-matching part, when present; (ii)
+delete a single character, when possible; (iii) exit current
+search if no character is present and go back to point where the
+search started."
+    (interactive)
+    (if (eq (length isearch-string) 0)
+        (isearch-cancel)
+      (isearch-del-char)
+      (while (or (not isearch-success) isearch-error)
+        (isearch-pop-state)))
+    (isearch-update))
+
+  ;; https://www.reddit.com/r/emacs/comments/b7yjje/isearch_region_search/
+  (defun my/isearch-region (&optional not-regexp no-recursive-edit)
+    "If a region is active, make this the isearch default search pattern."
+    (interactive "P\np")
+    (when (use-region-p)
+      (let ((search (buffer-substring-no-properties
+                     (region-beginning)
+                     (region-end))))
+        (deactivate-mark)
+        (isearch-yank-string search))))
+
+  (advice-add 'isearch-forward :after 'my/isearch-region)
+  (advice-add 'isearch-forward-regexp :after 'my/isearch-region)
+  (advice-add 'isearch-backward :after 'my/isearch-region)
+  (advice-add 'isearch-backward-regexp :after 'my/isearch-region)
+
+  (with-eval-after-load 'evil
+    (dolist (st '(normal visual))
+      (evil-global-set-key st (kbd "gs") 'isearch-forward)
+      (evil-global-set-key st (kbd "gr") 'isearch-backward))))
+#+end_src
+
+*** multi-term
+
+#+begin_src emacs-lisp
+(use-package multi-term
+  :straight t
+  :bind (("C-c t" . multi-term-next)
+         ("C-c T" . multi-term))
+  :custom
+  (multi-term-program "tmux")
+  (multi-term-program-switches "-CC")
+  (multi-term-scroll-show-maximum-output t)
+  (term-bind-key-alist
+   '(("C-c C-c" . term-interrupt-subjob)
+     ("C-b"     . my-term-send-raw-at-prompt)
+     ("C-f"     . my-term-send-raw-at-prompt)
+     ("C-a"     . my-term-send-raw-at-prompt)
+     ("C-e"     . my-term-send-raw-at-prompt)
+     ("C-p"     . previous-line)
+     ("C-n"     . next-line)
+     ("C-s"     . isearch-forward)
+     ("C-r"     . isearch-backward)
+     ("C-m"     . term-send-raw)
+     ("M-f"     . term-send-forward-word)
+     ("M-b"     . term-send-backward-word)
+     ("M->"     . my-term-end-of-buffer)
+     ("M-o"     . term-send-backspace)
+     ("M-p"     . term-send-up)
+     ("M-n"     . term-send-down)
+     ("M-d"     . term-send-forward-kill-word)
+     ("M-DEL"   . term-send-backward-kill-word)
+     ("M-r"     . term-send-reverse-search-history)
+     ("M-,"     . term-send-input)
+     ("M-/"     . comint-dynamic-complete)
+     ("C-y"     . term-paste)))
+  :init
+  (defun screen ()
+    (interactive)
+    (let ((term-buffer
+           (let ((multi-term-program (executable-find "screen"))
+                 (multi-term-program-switches "-DR"))
+             (multi-term-get-buffer))))
+      (set-buffer term-buffer)
+      (multi-term-internal)
+      (switch-to-buffer term-buffer)))
+
+  :config
+  (require 'term)
+
+  (defalias 'my-term-send-raw-at-prompt 'term-send-raw)
+
+  (defun my-term-end-of-buffer ()
+    (interactive)
+    (call-interactively #'end-of-buffer)
+    (if (and (eobp) (bolp))
+        (delete-char -1)))
+
+  (defadvice term-process-pager (after term-process-rebind-keys activate)
+    (define-key term-pager-break-map  "\177" 'term-pager-back-page)))
+#+end_src
+
+*** zoom
+
+#+begin_src emacs-lisp
+(use-package zoom
+  :straight t
+  :bind ("C-x +" . zoom)
+  :custom
+  (zoom-size 'size-callback)
+  :preface
+  (defun size-callback ()
+    (cond ((> (frame-pixel-width) 1280) '(90 . 0.75))
+          (t '(0.5 . 0.5)))))
+#+end_src
+** Web
+*** link-hint
+#+begin_src emacs-lisp
+(use-package link-hint
+  :straight
+  :bind (("M-o" . link-hint-open-link)
+         ("C-c l o" . link-hint-open-link)
+         ("C-c l c" . link-hint-copy-link)))
+#+end_src
 
 ** COMMENT Email                                                   :ARCHIVE:
 *** Basic configuration
@@ -1351,1507 +3446,6 @@ notification system, and I’ll activate the modeline notification.
   :config
   (setq mu4e-alert-interesting-mail-query "flag:unread"))
 #+end_src
-** Email
-*** mu4e
-**** General config
-#+begin_src emacs-lisp
-;; Make sure we find the mu4e package
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
-
-(use-package mu4e
-  :ensure nil
-  :commands (mu4e)
-  :bind (("C-c a m" . mu4e)
-         :map mu4e-main-mode-map
-         ("U" . mu4e-update-mail-and-index-background)
-         :map mu4e-headers-mode-map
-         ("TAB" . mu4e-headers-next-unread)
-         ("j" . mu4e-view-headers-next)
-         ("k" . mu4e-view-headers-prev)
-         ("J" . mu4e-search-maildir)
-         ;; ("j" . mu4e-move-to-junk)
-         ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
-         :map mu4e-view-mode-map
-         ("A" . mu4e-view-attachment-action)
-         ("M-o" . ace-link-mu4e)
-         ("o" . ace-link-mu4e)
-         ("n" . mu4e-scroll-up)
-         ("p" . mu4e-scroll-down)
-         ("J" . mu4e-view-headers-next)
-         ("K" . mu4e-view-headers-prev)
-         ;; ("j" . mu4e-move-to-junk)
-         )
-  :init
-  ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
-  ;; (defun mu4e--main-action-str (name func)
-  ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
-  ;;   "mu4e-main-action")
-  ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
-
-  ;; Prefer text over html/ritchtext
-  (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
-
-  ;; Use completing-read (which is ivy) instead of ido
-  (setq mu4e-completing-read-function 'completing-read)
-
-  ;; set mu4e as default mail client
-  (setq mail-user-agent 'mu4e-user-agent)
-
-  ;; SMTP related
-  (setq message-send-mail-function        'smtpmail-send-it
-        smtpmail-stream-type              'tls)
-
-  :config
-  ;; Set mu binary
-  (setq mu4e-mu-binary "/usr/bin/mu")
-
-  ;; Use passwords from password-store
-  (setq auth-sources '(password-store))
-  (setq auth-source-debug t)
-
-  ;; Choose which fields to show
-  (setq mu4e-headers-fields
-        '(
-          (:maildir    . 13)
-          (:human-date . 12)
-          (:flags      . 6)
-          (:from       . 22)
-          (:subject    . nil)))
-
-  ;; Refresh mail using isync every 10 minutes
-  (setq mu4e-update-interval (* 10 60))
-
-  ;; Command used to retrieve new mails
-  (setq mu4e-get-mail-command "mbsync -a")
-
-  ;; Defaults
-  (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
-  (setq-default mu4e-drafts-folder "/private/Drafts")
-  (setq-default mu4e-sent-folder   "/private/Sent")
-  (setq-default mu4e-trash-folder  "/private/Trash")
-
-  ;; Set citation settings
-  (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
-  (setq message-citation-line-function 'message-insert-formatted-citation-line)
-
-  ;; Fancy stuff
-  (setq mu4e-use-fancy-chars t)
-  <<mu4e-fancy-marks>>
-
-  ;; And change default threading characters to some "nicer" looking chars
-  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
-  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
-  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
-  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
-  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
-
-  ;; Also change to some nicer characters for marks
-  ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
-  (setq mu4e-headers-passed-mark  '("P" . "›"))
-  (setq mu4e-headers-replied-mark '("R" . "‹"))
-  (setq mu4e-headers-seen-mark   '("S" . ""))
-  ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
-  (setq mu4e-headers-personal-mark '("p" . ""))
-  ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
-
-  ;; Set date format (header view)
-  (setq mu4e-headers-date-format "%F")
-
-  ;; How should html context be converted
-  ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
-  (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
-
-  ;; Improve rendering of rich-text messages (html)
-  (setq shr-color-visible-luminance-min 80)
-
-  ;; Show email address as well and not only the name
-  (setq-default mu4e-view-show-addresses t)
-
-  ;; Don't reply to self
-  (setq mu4e-compose-dont-reply-to-self t)
-
-  ;; Setup some handy shortcuts
-  ;; you can quickly switch to your Inbox -- press ``ji''
-  ;; then, when you want archive some messages, move them to
-  ;; the 'All Mail' folder by pressing ``ma''.
-
-  ;; View mail in browser with "a V"
-  (add-to-list 'mu4e-view-actions
-               '("ViewInBrowser" . mu4e-action-view-in-browser) t)
-  (add-to-list 'mu4e-view-actions
-               '("fViewInChrome" . mu4e-action-view-in-chrome) t)
-  (add-to-list 'mu4e-view-actions
-               '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
-
-  (setq mu4e-maildir-shortcuts
-        '(
-          ("/variomedia/inbox"   . ?v)
-          ("/gmail/inbox"    . ?g)
-          ("/cashlink/inbox"   . ?c)
-          ("/private/Trash"   . ?t)
-          ("/private/Drafts"  . ?d)
-          ("/private/Junk"    . ?j)
-          ("/private/Archive" . ?a)))
-
-  ;; Set contexts
-  (dorneanu/set-mu4e-contexts)
-  )
-
-<<mu4e-view-mode>>
-
-#+end_src
-
-#+RESULTS:
-| closure | (t) | nil                       | (visual-fill-column-mode) |
-| lambda  | nil | (visual-fill-column-mode) |                           |
-
-**** Bookmarks
-#+BEGIN_SRC emacs-lisp
-(setq mu4e-bookmarks
-      `(
-        ("maildir:/Sent" "Sent messages" ?s)
-        ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
-        ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
-        ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
-        ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
-        ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
-        ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
-        ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
-        ("from:jira@*" "Jira" ?j)
-        ;; (,(s-join " "
-        ;;           '("OR noreply@tagesspiegel.de"
-        ;;             "OR support@lagedernation.org"
-        ;;             "OR hello@blinkist.com"
-        ;;             "OR info@smarticular.net"
-        ;;             "OR newsletter@*"
-        ;;             "OR support@xeroshoes.com"))
-        ;;  "Newletter" ?n)
-        ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
-#+END_SRC
-
-**** Fancy stuff
-From https://github.com/Phundrak/dotfiles
-
-#+name: mu4e-fancy-marks-tbl
-| Mark      | Flag | Icon        |
-|-----------+------+-------------|
-| draft     | D    | pencil      |
-| flagged   | F    | flag        |
-| new       | N    | rss         |
-| passed    | P    | check       |
-| replied   | R    | reply       |
-| seen      | S    | eye         |
-| unread    | u    | eye-slash   |
-| trashed   | T    | trash       |
-| attach    | a    | paperclip   |
-| encrypted | x    | lock        |
-| signed    | s    | certificate |
-
-#+name: mu4e-fancy-marks-gen
-#+header: :tangle no :exports none :results value :cache yes
-#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
-(mapconcat (lambda (line)
-             (let ((mark (car line))
-                   (flag (cadr line))
-                   (icon (caddr line)))
-               (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
-                       mark
-                       flag
-                       icon)))
-           table
-           "\n")
-#+end_src
-
-#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
-#+begin_example
-mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
-mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
-mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
-mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
-mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
-mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
-mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
-mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
-mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
-mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
-mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
-#+end_example
-
-Let’s enable them and set them:
-#+name: mu4e-fancy-marks
-#+begin_src emacs-lisp :tangle no
-(setq mu4e-use-fancy-chars t
-      <<mu4e-fancy-marks-gen()>>)
-#+end_src
-
-**** View mode
-#+name: mu4e-view-mode
-#+begin_src emacs-lisp :tangle no
-(add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
-#+end_src
-
-**** Contexts
-Set contexts
-#+begin_src emacs-lisp
-(defun dorneanu/set-mu4e-contexts ()
-  "Set mail contexts for mu4e"
-  (interactive)
-  (setq mu4e-contexts
-        `( ,(make-mu4e-context
-             :name "gmail"
-             :enter-func (lambda () (mu4e-message "Entering gmail context"))
-             :leave-func (lambda () (mu4e-message "Leaving gmail context"))
-             ;; we match based on the contact-fields of the message
-             :match-func
-             (lambda (msg)
-               (when msg
-                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
-             :vars `((user-mail-address . ,(password-store-get "mail/gmail/personal/username"))
-                     (user-full-name    . "Cyneox")
-                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
-                     (smtpmail-smtp-server  . "smtp.gmail.com")
-                     (smtpmail-default-smtp-server  . "smtp.gmail.com")
-                     (smtpmail-smtp-service . 465)
-                     (smtpmail-stream-type  . ssl)
-                     (mu4e-compose-signature . "Cyneox via Gmail")
-                     (mu4e-drafts-folder  . "/[Gmail]/drafts")
-                     (mu4e-sent-folder  . "/[Gmail]/sent")
-                     (mu4e-refile-folder  . "/[Gmail]/All Mail")
-                     (mu4e-trash-folder  . "/[Gmail]/bin")))
-           ,(make-mu4e-context
-             :name "variomedia"
-             :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
-             :match-func
-             (lambda (msg)
-               (when msg
-                 (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
-             :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
-                     (user-full-name    . "Victor Dorneanu")
-                     (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
-                     (smtpmail-default-smtp-server  . "smtp.variomedia.de")
-                     (smtpmail-smtp-service . 465)
-                     (smtpmail-stream-type  . ssl)
-                     (mu4e-compose-signature . "Victor via Emacs")
-                     (mu4e-drafts-folder  . "/variomedia/drafts")
-                     (mu4e-sent-folder  . "/variomedia/sent")
-                     (mu4e-trash-folder  . "/variomedia/bin")))
-           ,(make-mu4e-context
-             :name "cashlink"
-             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
-             :match-func
-             (lambda (msg)
-               (when msg
-                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
-             :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
-                     (user-full-name    . "Victor Dorneanu")
-                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
-                     (smtpmail-smtp-server  . "smtp.gmail.com")
-                     (smtpmail-smtp-service . 465)
-                     (smtpmail-stream-type  . ssl)
-                     (mu4e-drafts-folder  . "/cashlink/drafts")
-                     (mu4e-sent-folder  . "/cashlink/sent")
-                     (mu4e-trash-folder  . "/cashlink/bin")
-                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
-                     ))))
-  )
-
-#+end_src
-
-#+RESULTS:
-: dorneanu/set-mu4e-contexts
-**** Reply
-I often want to reply without the original message:
-#+begin_src emacs-lisp
-;; From https://github.com/djcb/mu/issues/2345
-;; (after! mu4e
-;;   (defun dorneanu/mu4e-delete-citation ()
-;;     (delete-region (point) (point-max)))
-
-;;   (defun dorneanu/mu4e-reply (prefix)
-;;     (interactive "P")
-;;     (setq mu4e-compose-cite-function (if prefix
-;;                                          #'dorneanu/mu4e-delete-citation
-;;                                        #'message-cite-original-without-signature))
-;;     (mu4e-compose-reply))
-
-;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
-;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
-;;   )
-#+end_src
-** Hydra
-Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
-
-#+begin_src emacs-lisp
-(use-package hydra
-  :straight t)
-
-(use-package hydra-examples
-  :ensure nil)
-
-
-(use-package major-mode-hydra
-  :straight t
-  :after hydra
-  :preface
-  (defun with-alltheicon (icon str &optional height v-adjust face)
-    "Display an icon from all-the-icon."
-    (s-concat (all-the-icons-alltheicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
-
-  (defun with-faicon (icon str &optional height v-adjust face)
-    "Display an icon from Font Awesome icon."
-    (s-concat (all-the-icons-faicon icon ':v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
-
-  (defun with-fileicon (icon str &optional height v-adjust face)
-    "Display an icon from the Atom File Icons package."
-    (s-concat (all-the-icons-fileicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
-
-  (defun with-octicon (icon str &optional height v-adjust face)
-    "Display an icon from the GitHub Octicons."
-    (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
-#+end_src
-
-*** Hydra / Windows
-
-Group window-related commands.
-
-#+begin_src emacs-lisp
-  (pretty-hydra-define hydra-windows
-    (:hint nil :forein-keys warn :quit-key "q" :title (with-faicon "windows" "Windows" 1 -0.05))
-    ("Window"
-     (("b" balance-windows "balance")
-      ("c" centered-window-mode "center")
-      ("i" enlarge-window "heighten")
-      ("j" shrink-window-horizontally "narrow")
-      ("k" shrink-window "lower")
-      ("u" winner-undo "undo")
-      ("r" winner-redo "redo")
-      ("l" enlarge-window-horizontally "widen")
-      ("s" switch-window-then-swap-buffer "swap" :color teal))
-     "Zoom"
-     (("-" text-scale-decrease "out")
-      ("+" text-scale-increase "in")
-      ("=" (text-scale-increase 0) "reset"))))
-#+end_src
-*** Hydra / Window Nav
-From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
-
-#+begin_src emacs-lisp
-(defhydra +hydra/window-nav (:hint nil)
-  "
-          Split: _v_ert  _s_:horz
-         Delete: _c_lose  _o_nly
-  Switch Window: _h_:left  _j_:down  _k_:up  _l_:right  _u_:undo  _r_:redo
-        Buffers: _p_revious  _n_ext  _b_:select  _f_ind-file
-         Resize: _H_:splitter left  _J_:splitter down  _K_:splitter up  _L_:splitter right
-           Move: _a_:up  _z_:down  _i_menu
-"
-  ("z" scroll-up-line)
-  ("a" scroll-down-line)
-  ("i" idomenu)
-
-  ("h" windmove-left)
-  ("j" windmove-down)
-  ("k" windmove-up)
-  ("l" windmove-right)
-  ("u" winner-undo)
-  ("r" winner-redo)
-
-  ("p" previous-buffer)
-  ("n" next-buffer)
-  ("b" switch-to-buffer)
-  ("f" find-file)
-
-  ("s" split-window-below)
-  ("v" split-window-right)
-
-  ("c" delete-window)
-  ("o" delete-other-windows)
-
-  ("H" hydra-move-splitter-left)
-  ("J" hydra-move-splitter-down)
-  ("K" hydra-move-splitter-up)
-  ("L" hydra-move-splitter-right)
-
-  ("+" text-scale-increase "in")
-  ("-" text-scale-decrease "out")
-  ("=" (text-scale-increase 0) "reset")
-
-  ("q" nil))
-#+end_src
-*** Hydra / Flyspell
-#+begin_src emacs-lisp
-(defhydra flyspell-hydra ()
-  "
-Spell Commands^^           Add To Dictionary^^              Other
---------------^^---------- -----------------^^------------- -----^^---------------------------
-[_b_] check whole buffer   [_B_] add word to dict (buffer)  [_t_] toggle spell check
-[_r_] check region         [_G_] add word to dict (global)  [_q_] exit
-[_d_] change dictionary    [_S_] add word to dict (session) [_Q_] exit and disable spell check
-[_n_] next error
-[_c_] correct before point
-[_s_] correct at point
-"
-  ("B" nil)
-  ("b" flyspell-buffer)
-  ("r" flyspell-region)
-  ("d" ispell-change-dictionary)
-  ("G" nil)
-  ("n" flyspell-goto-next-error)
-  ("c" flyspell-correct-wrapper)
-  ("Q" flyspell-mode :exit t)
-  ("q" nil :exit t)
-  ("S" nil)
-  ("s" flyspell-correct-at-point)
-  ("t" nil))
-#+end_src
-*** Hydra / ORG
-**** hydra-org-jump
-From [[https://sriramkswamy.github.io/dotemacs/]]
-
-#+begin_src emacs-lisp
-(defhydra sk/hydra-org-jump (:color pink :hint nil)
-  "
- ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
- ^^^^^^^^^^^-------------------------------------------------------------------------------
- ^ ^ _k_ ^ ^   ^ ^ _K_ ^ ^   ^ ^ _u_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _p_ ^ ^   ^ ^ _P_ ^ ^    _q_ quit
- _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
- ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
-"
-  ("j" outline-next-visible-heading)
-  ("k" outline-previous-visible-heading)
-  ("l" org-down-element)
-  ("h" org-up-element)
-  ("J" org-forward-heading-same-level)
-  ("K" org-backward-heading-same-level)
-  ("u" org-next-item)
-  ("d" org-previous-item)
-  ("f" org-table-next-field)
-  ("b" org-table-previous-field)
-  ("n" org-next-block)
-  ("p" org-previous-block)
-  ("N" org-next-link)
-  ("P" org-previous-link)
-  ("q" nil :color blue))
-#+end_src
-**** hydra-org-babel-transient
-#+begin_src emacs-lisp :tangle no
-(defhydra org-babel-transient ()
-  "
-^Navigate^                    ^Interact
-^^^^^^^^^^^------------------------------------------
-[_t_/_s_] navigate src blocs  [_x_] execute src block
-[_g_]^^   goto named block    [_'_] edit src block
-[_z_]^^   recenter screen     [_q_] quit
-"
-  ("q" nil :exit t)
-  ("t" org-babel-next-src-block)
-  ("s" org-babel-previous-src-block)
-  ("g" org-babel-goto-named-src-block)
-  ("z" recenter-top-bottom)
-  ("x" org-babel-execute-maybe)
-  ("'" org-edit-special :exit t))
-#+end_src
-*** Hydra / merge
-Group Merge commands.
-
-#+begin_src emacs-lisp
-(pretty-hydra-define hydra-merge
-  (:hint nil :color pink :quit-key "q" :title (with-octicon "mark-github" "Magit" 1 -0.05))
-  ("Move"
-   (("n" smerge-next "next")
-    ("p" smerge-prev "previous"))
-   "Keep"
-   (("RET" smerge-keep-current "current")
-    ("a" smerge-keep-all "all")
-    ("b" smerge-keep-base "base")
-    ("l" smerge-keep-lower "lower")
-    ("u" smerge-keep-upper "upper"))
-   "Diff"
-   (("<" smerge-diff-base-upper "upper/base")
-    ("=" smerge-diff-upper-lower "upper/lower")
-    (">" smerge-diff-base-lower "base/lower")
-    ("R" smerge-refine "redefine")
-    ("E" smerge-ediff "ediff"))
-   "Other"
-   (("C" smerge-combine-with-next "combine")
-    ("r" smerge-resolve "resolve")
-    ("k" smerge-kill-current "kill current"))))
-#+end_src
-jk
-*** Hydra / smerge
-From https://github.com/dakra/dmacs/blob/nil/init.org
-
-#+begin_src emacs-lisp
-(use-package smerge-mode
-  :hook (magit-diff-visit-file . (lambda ()
-                                   (when smerge-mode
-                                     (hydra-smerge/body))))
-  :config
-  (require 'hydra)
-  (defhydra hydra-smerge
-    (:color pink :hint nil :post (smerge-auto-leave))
-    "
-^Move^       ^Keep^               ^Diff^                 ^Other^
-^^-----------^^-------------------^^---------------------^^-------
-_n_ext       _b_ase               _<_: upper/base        _C_ombine
-_p_rev       _u_pper              _=_: upper/lower       _r_esolve
-^^           _l_ower              _>_: base/lower        _k_ill current
-^^           _a_ll                _R_efine
-^^           _RET_: current       _E_diff
-"
-    ("n" smerge-next)
-    ("p" smerge-prev)
-    ("b" smerge-keep-base)
-    ("u" smerge-keep-upper)
-    ("l" smerge-keep-lower)
-    ("a" smerge-keep-all)
-    ("RET" smerge-keep-current)
-    ("\C-m" smerge-keep-current)
-    ("<" smerge-diff-base-upper)
-    ("=" smerge-diff-upper-lower)
-    (">" smerge-diff-base-lower)
-    ("R" smerge-refine)
-    ("E" smerge-ediff)
-    ("C" smerge-combine-with-next)
-    ("r" smerge-resolve)
-    ("k" smerge-kill-current)
-    ("q" nil "cancel" :color blue)))
-#+end_src
-*** Hydra / modeline                                                 :todo:
-#+begin_src emacs-lisp
-(pretty-hydra-define hydra-modeline
-  (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
-   ("Icon"
-    (("i" (setq doom-modeline-icon (not doom-modeline-icon))
-      "display icons" :toggle doom-modeline-icon)
-     ("u" (setq doom-modeline-unicode-fallback (not doom-modeline-unicode-fallback))
-      "unicode fallback" :toggle doom-modeline-unicode-fallback)
-     ("m" (setq doom-modeline-major-mode-icon (not doom-modeline-major-mode-icon))
-      "major mode" :toggle doom-modeline-major-mode-icon)
-     ("c" (setq doom-modeline-major-mode-color-icon (not doom-modeline-major-mode-color-icon))
-      "colorful major mode" :toggle doom-modeline-major-mode-color-icon)
-     ("s" (setq doom-modeline-buffer-state-icon (not doom-modeline-buffer-state-icon))
-      "buffer state" :toggle doom-modeline-buffer-state-icon)
-     ("o" (setq doom-modeline-buffer-modification-icon (not doom-modeline-buffer-modification-icon))
-      "modification" :toggle doom-modeline-buffer-modification-icon)
-     ("x" (setq doom-modeline-time-icon (not doom-modeline-time-icon))
-      "time" :toggle doom-modeline-time-icon)
-     ("v" (setq doom-modeline-modal-icon (not doom-modeline-modal-icon))
-      "modal" :toggle doom-modeline-modal-icon))
-    "Segment"
-    (("g h" (setq doom-modeline-hud (not doom-modeline-hud))
-      "hud" :toggle doom-modeline-hud)
-     ("g m" (setq doom-modeline-minor-modes (not doom-modeline-minor-modes))
-      "minor modes" :toggle doom-modeline-minor-modes)
-     ("g w" (setq doom-modeline-enable-word-count (not doom-modeline-enable-word-count))
-      "word count" :toggle doom-modeline-enable-word-count)
-     ("g e" (setq doom-modeline-buffer-encoding (not doom-modeline-buffer-encoding))
-      "encoding" :toggle doom-modeline-buffer-encoding)
-     ("g i" (setq doom-modeline-indent-info (not doom-modeline-indent-info))
-      "indent" :toggle doom-modeline-indent-info)
-     ("g c" (setq doom-modeline-display-misc-in-all-mode-lines (not doom-modeline-display-misc-in-all-mode-lines))
-      "misc info" :toggle doom-modeline-display-misc-in-all-mode-lines)
-     ("g l" (setq doom-modeline-lsp (not doom-modeline-lsp))
-      "lsp" :toggle doom-modeline-lsp)
-     ("g k" (setq doom-modeline-workspace-name (not doom-modeline-workspace-name))
-      "workspace" :toggle doom-modeline-workspace-name)
-     ("g g" (setq doom-modeline-github (not doom-modeline-github))
-      "github" :toggle doom-modeline-github)
-     ("g n" (setq doom-modeline-gnus (not doom-modeline-gnus))
-      "gnus" :toggle doom-modeline-gnus)
-     ("g u" (setq doom-modeline-mu4e (not doom-modeline-mu4e))
-      "mu4e" :toggle doom-modeline-mu4e)
-     ("g r" (setq doom-modeline-irc (not doom-modeline-irc))
-      "irc" :toggle doom-modeline-irc)
-     ("g f" (setq doom-modeline-irc-buffers (not doom-modeline-irc-buffers))
-      "irc buffers" :toggle doom-modeline-irc-buffers)
-     ("g s" (progn
-              (setq doom-modeline-checker-simple-format (not doom-modeline-checker-simple-format))
-              (and (bound-and-true-p flycheck-mode) (flycheck-buffer)))
-      "simple checker" :toggle doom-modeline-checker-simple-format)
-     ("g t" (setq doom-modeline-time (not doom-modeline-time))
-      "time" :toggle doom-modeline-time)
-     ("g v" (setq doom-modeline-env-version (not doom-modeline-env-version))
-      "version" :toggle doom-modeline-env-version))
-    "Style"
-    (("a" (setq doom-modeline-buffer-file-name-style 'auto)
-      "auto"
-      :toggle (eq doom-modeline-buffer-file-name-style 'auto))
-     ("b" (setq doom-modeline-buffer-file-name-style 'buffer-name)
-      "buffer name"
-      :toggle (eq doom-modeline-buffer-file-name-style 'buffer-name))
-     ("f" (setq doom-modeline-buffer-file-name-style 'file-name)
-      "file name"
-      :toggle (eq doom-modeline-buffer-file-name-style 'file-name))
-     ("t u" (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
-      "truncate upto project"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-upto-project))
-     ("t f" (setq doom-modeline-buffer-file-name-style 'truncate-from-project)
-      "truncate from project"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-from-project))
-     ("t w" (setq doom-modeline-buffer-file-name-style 'truncate-with-project)
-      "truncate with project"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-with-project))
-     ("t e" (setq doom-modeline-buffer-file-name-style 'truncate-except-project)
-      "truncate except project"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-except-project))
-     ("t r" (setq doom-modeline-buffer-file-name-style 'truncate-upto-root)
-      "truncate upto root"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-upto-root))
-     ("t a" (setq doom-modeline-buffer-file-name-style 'truncate-all)
-      "truncate all"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-all))
-     ("t n" (setq doom-modeline-buffer-file-name-style 'truncate-nil)
-      "truncate none"
-      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-nil))
-     ("r f" (setq doom-modeline-buffer-file-name-style 'relative-from-project)
-      "relative from project"
-      :toggle (eq doom-modeline-buffer-file-name-style 'relative-from-project))
-     ("r t" (setq doom-modeline-buffer-file-name-style 'relative-to-project)
-      "relative to project"
-      :toggle (eq doom-modeline-buffer-file-name-style 'relative-to-project)))
-    "Project Detection"
-    (("p a" (setq doom-modeline-project-detection 'auto)
-      "auto"
-      :toggle (eq doom-modeline-project-detection 'auto))
-     ("p f" (setq doom-modeline-project-detection 'ffip)
-      "ffip"
-      :toggle (eq doom-modeline-project-detection 'ffip))
-     ("p i" (setq doom-modeline-project-detection 'projectile)
-      "projectile"
-      :toggle (eq doom-modeline-project-detection 'projectile))
-     ("p p" (setq doom-modeline-project-detection 'project)
-      "project"
-      :toggle (eq doom-modeline-project-detection 'project))
-     ("p n" (setq doom-modeline-project-detection nil)
-      "disable"
-      :toggle (eq doom-modeline-project-detection nil)))
-    "Misc"
-    (("n" (progn
-            (message "Fetching GitHub notifications...")
-            (run-with-timer 300 nil #'doom-modeline--github-fetch-notifications)
-            (browse-url "https://github.com/notifications"))
-      "github notifications" :exit t)
-     ("e" (cond ((bound-and-true-p flycheck-mode)
-                 (flycheck-list-errors))
-                ((bound-and-true-p flymake-mode)
-                 (flymake-show-diagnostics-buffer)))
-      "list errors" :exit t)
-     ("w" (if (bound-and-true-p grip-mode)
-              (grip-browse-preview)
-            (message "Not in preview"))
-      "browse preview" :exit t)
-     ("z h" (read-from-minibuffer
-             "Eval: "
-             (format "(setq %s %s)"
-                     'doom-modeline-height
-                     (symbol-value 'doom-modeline-height)))
-      "set height" :exit t)
-     ("z w" (read-from-minibuffer
-             "Eval: "
-             (format "(setq %s %s)"
-                     'doom-modeline-bar-width
-                     (symbol-value 'doom-modeline-bar-width)))
-      "set bar width" :exit t)
-     ("z g" (read-from-minibuffer
-             "Eval: "
-             (format "(setq %s %s)"
-                     'doom-modeline-github-interval
-                     (symbol-value 'doom-modeline-github-interval)))
-      "set github interval" :exit t)
-     ("z n" (read-from-minibuffer
-             "Eval: "
-             (format "(setq %s %s)"
-                     'doom-modeline-gnus-timer
-                     (symbol-value 'doom-modeline-gnus-timer)))
-      "set gnus interval" :exit t))))
-
-#+end_src
-*** Hydra / unicode
-From https://github.com/dakra/dmacs/blob/nil/init.org
-Add here circled digits like: ②
-#+begin_src emacs-lisp
-(defun dakra/insert-unicode (unicode-name)
-  "Same as C-x 8 enter UNICODE-NAME."
-  (insert-char (gethash unicode-name (ucs-names))))
-
-(defhydra dakra/hydra-unicode (:color blue :hint nil)
-  "
-     Unicode  _c_ €   _a_ ä   _A_ Ä
-              _d_ °   _o_ ö   _O_ Ö
-              _e_ €   _u_ Ü   _U_ Ü
-              _p_ £   _s_ ß
-              _m_ µ
-              _r_ →
-     "
-  ("a" (dakra/insert-unicode "LATIN SMALL LETTER A WITH DIAERESIS"))
-  ("A" (dakra/insert-unicode "LATIN CAPITAL LETTER A WITH DIAERESIS"))
-  ("o" (dakra/insert-unicode "LATIN SMALL LETTER O WITH DIAERESIS")) ;;
-  ("O" (dakra/insert-unicode "LATIN CAPITAL LETTER O WITH DIAERESIS"))
-  ("u" (dakra/insert-unicode "LATIN SMALL LETTER U WITH DIAERESIS")) ;;
-  ("U" (dakra/insert-unicode "LATIN CAPITAL LETTER U WITH DIAERESIS"))
-  ("s" (dakra/insert-unicode "LATIN SMALL LETTER SHARP S"))
-  ("c" (dakra/insert-unicode "COPYRIGHT SIGN"))
-  ("d" (dakra/insert-unicode "DEGREE SIGN"))
-  ("e" (dakra/insert-unicode "EURO SIGN"))
-  ("p" (dakra/insert-unicode "POUND SIGN"))
-  ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
-  ("m" (dakra/insert-unicode "MICRO SIGN")))
-#+end_src
-** Icons
-
-** empv
-Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
-position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
-
-#+begin_src emacs-lisp
-(use-package empv
-  :straight t
-  :after (embark browse-url)
-  :config
-
-  (setq empv-invidious-instance "https://yewtu.be/")
-  (add-to-list 'empv-mpv-args "--ytdl-format=best")
-
-  (defun dorneanu/empv-play-url (url &optional _)
-    (interactive)
-    (empv-toggle-video)
-    (empv-play url)))
-
-;; Handle youtube links using mpv
-(with-eval-after-load 'browse-url
-  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
-
-#+end_src
-
-** COMMENT Nov
-Nov is a major-mode for reading EPUB files within Emacs. Since I have
-it, I don’t need any other Epub reader on my computer! Plus this one
-is customizable and programmable, why would I use any other EPUB
-reader?
-#+begin_src emacs-lisp
-(use-package nov
-  :straight (:build t)
-  :defer t
-  :mode ("\\.epub\\'" . nov-mode)
-  :general
-  (phundrak/evil
-    :keymaps 'nov-mode-map
-    :packages 'nov
-    "c"   #'nov-previous-document
-    "t"   #'nov-scroll-up
-    "C-d" #'nov-scroll-up
-    "s"   #'nov-scroll-down
-    "C-u" #'nov-scroll-down
-    "r"   #'nov-next-document
-    "gm"  #'nov-display-metadata
-    "gn"  #'nov-next-document
-    "gp"  #'nov-previous-document
-    "gr"  #'nov-render-document
-    "gt"  #'nov-goto-toc
-    "gv"  #'nov-view-source
-    "gV"  #'nov-view-content-source)
-  :config
-  (setq nov-text-width 95))
-#+end_src
-
-** PDF Tools
-~pdf-tools~ enables PDF support for Emacs, much better than its built-in
-support with DocView. Aside from the classical settings such as
-keybinds, I also enable the midnight colours by default; think of it
-as an equivalent of Zathura’s recolour feature which kind of enables a
-dark mode for PDFs.
-#+begin_src emacs-lisp
-(use-package pdf-tools
-  :defer t
-  :magic ("%PDF" . pdf-view-mode)
-  :straight (:build t)
-  :hook (pdf-tools-enabled . pdf-view-midnight-minor-mode)
-  :general
-  (phundrak/evil
-    :keymaps 'pdf-view-mode-map
-    :packages 'pdf-tools
-    "y"   #'pdf-view-kill-ring-save
-    "t"   #'evil-collection-pdf-view-next-line-or-next-page
-    "s"   #'evil-collection-pdf-view-previous-line-or-previous-page)
-  (phundrak/major-leader-key
-    :keymaps 'pdf-view-mode-map
-    :packages 'pdf-tools
-    "a"  '(:ignore t :which-key "annotations")
-    "aD" #'pdf-annot-delete
-    "at" #'pdf-annot-attachment-dired
-    "ah" #'pdf-annot-add-highlight-markup-annotation
-    "al" #'pdf-annot-list-annotations
-    "am" #'pdf-annot-markup-annotation
-    "ao" #'pdf-annot-add-strikeout-markup-annotation
-    "as" #'pdf-annot-add-squiggly-markup-annotation
-    "at" #'pdf-annot-add-text-annotation
-    "au" #'pdf-annot-add-underline-markup-annotation
-
-    "f"  '(:ignore t :which-key "fit")
-    "fw" #'pdf-view-fit-width-to-window
-    "fh" #'pdf-view-fit-height-to-window
-    "fp" #'pdf-view-fit-page-to-window
-
-    "s"  '(:ignore t :which-key "slice/search")
-    "sb" #'pdf-view-set-slice-from-bounding-box
-    "sm" #'pdf-view-set-slice-using-mouse
-    "sr" #'pdf-view-reset-slice
-    "ss" #'pdf-occur
-
-    "o"  'pdf-outline
-    "m"  'pdf-view-midnight-minor-mode)
-  :config
-  (with-eval-after-load 'pdf-view
-    (csetq pdf-view-midnight-colors '("#d8dee9" . "#2e3440"))))
-#+end_src
-
-One thing ~pdf-tools~ doesn’t handle is restoring the PDF to the last
-point it was visited --- in other words, open the PDF where I last
-left it.
-#+begin_src emacs-lisp
-(use-package pdf-view-restore
-  :after pdf-tools
-  :defer t
-  :straight (:build t)
-  :hook (pdf-view-mode . pdf-view-restore-mode)
-  :config
-  (setq pdf-view-restore-filename (expand-file-name ".tmp/pdf-view-restore"
-                                                    user-emacs-directory)))
-#+end_src
-** Web
-*** link-hint
-#+begin_src emacs-lisp
-(use-package link-hint
-  :straight
-  :bind (("M-o" . link-hint-open-link)
-         ("C-c l o" . link-hint-open-link)
-         ("C-c l c" . link-hint-copy-link)))
-#+end_src
-
-** Project Management
-*** Version control
-**** diffs
-#+begin_src emacs-lisp
-;; From https://github.com/dakra/dmacs/blob/nil/init.org
-(use-package diff-mode
-  :config
-  ;; Shorten file headers like Magit's diff format.
-  (setq diff-font-lock-prettify t))
-
-(use-package ediff
-  :defer t
-  :config
-  ;; Always expand files before diffing (especially org files)
-  (add-hook 'ediff-prepare-buffer-hook #'outline-show-all)
-  ;; Do everything in one frame
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  ;; Split ediff windows horizontally by default
-  (setq ediff-split-window-function 'split-window-horizontally))
-
-#+end_src
-
-*** Magit
-#+begin_src emacs-lisp
-(use-package magit
-  :straight (:build t)
-  :defer t
-  :init
-  (setq forge-add-default-bindings nil)
-  :config
-  (add-hook 'magit-process-find-password-functions 'magit-process-password-auth-source)
-  <<magit-angular-keywords-highlight>>
-  (csetq magit-clone-default-directory "~/fromGIT/"
-         magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
-  (with-eval-after-load 'evil-collection
-    (phundrak/evil
-      :packages '(evil-collection magit)
-      :keymaps '(magit-mode-map magit-log-mode-map magit-status-mode-map)
-      :states 'normal
-      "t" #'magit-tag
-      "s" #'magit-stage))
-  :general
-  (:keymaps '(git-rebase-mode-map)
-   :packages 'magit
-   "C-t" #'evil-next-line
-   "C-s" #'evil-previous-line)
-  (phundrak/major-leader-key
-    :keymaps 'git-rebase-mode-map
-    :packages 'magit
-    "," #'with-editor-finish
-    "k" #'with-editor-cancel
-    "a" #'with-editor-cancel)
-  (phundrak/leader-key
-    :infix   "g"
-    :packages 'magit
-    ""   '(:ignore t :wk "git")
-    "b"  #'magit-blame
-    "c"  #'magit-clone
-    "d"  #'magit-dispatch
-    "i"  #'magit-init
-    "s"  #'magit-status
-    "l"  #'magit-log
-    "y"  #'my/yadm
-    "S"  #'magit-stage-file
-    "U"  #'magit-unstage-file
-    "f"  '(:ignore t :wk "file")
-    "fd" #'magit-diff
-    "fc" #'magit-file-checkout
-    "fl" #'magit-file-dispatch
-    "fF" #'magit-find-file))
-#+end_src
-
-There is currently a bug in Emacs TRAMP as described in issue [[https://github.com/magit/magit/issues/4720][#4720]] of
-Magit and bug [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=62093][62093]] of Emacs. A workaround is to redefine the old
-=tramp-send-command= function through an advice.
-#+begin_src emacs-lisp
-(defun my--tramp-send-command--workaround-stty-icanon-bug (conn-vec orig-command &rest args)
-  "See: https://github.com/magit/magit/issues/4720"
-  (let ((command
-         (if (string= "stty -icrnl -icanon min 1 time 0" orig-command)
-             "stty -icrnl"
-           orig-command)))
-    (append (list conn-vec command) args)))
-
-(defun my--tramp-send-command--workaround-stty-icanon-bug--filter-args (args)
-  (apply #'my--tramp-send-command--workaround-stty-icanon-bug args))
-
-(advice-add 'tramp-send-command :filter-args
-            #'my--tramp-send-command--workaround-stty-icanon-bug--filter-args)
-#+end_src
-
-I also want to highlight these angular-style keywords in commit messages.
-#+name: magit-angular-keywords-highlight
-#+begin_src emacs-lisp :tangle no
-(defun my/magit-log-highlight-angular-keywords (_rev msg)
-  "Highlight angular-style keywords in commit messages."
-  (let ((boundary 0))
-    (when (string-match (rx (seq (or "feat" "fix" "docs" "style" "refactor"
-                                     "perf" "test" "chore")
-                                 (* "(" (* (not ")")) ")")
-                                 ":"))
-                        msg
-                        boundary)
-        (setq boundary (match-end 0))
-        (magit--put-face (match-beginning 0) boundary
-                         'magit-keyword msg)))
-  msg)
-
-(advice-add #'magit-log-propertize-keywords
-            :after
-            #'my/magit-log-highlight-angular-keywords)
-#+end_src
-
-[[https://github.com/alphapapa][Alphapapa]] also created an awesome package for Magit: magit-todos which
-display in the Magit buffer a list of TODOs found in the current
-project to remind you of what to do next.
-
-First, let’s setup our todo keywords with =hl-todo=. A good few todo
-keywords are already defined in the =hl-todo-keyword-faces= variable.
-Why not use them? =hl-todo-mode= enables fontlock highlight of these
-keywords in a buffer. Let’s enable this mode globally.
-#+begin_src emacs-lisp
-;; (use-package hl-todo
-;;   :defer t
-;;   :straight (:build t)
-;;   :init (global-hl-todo-mode 1)
-;;   :general
-;;   (phundrak/leader-key
-;;     :packages '(hl-todo)
-;;     :infix "c"
-;;     ""  '(:ignore t :which-key "todos")
-;;     "n" #'hl-todo-next
-;;     "p" #'hl-todo-previous))
-#+end_src
-
-We can now configure properly =magit-todos=. Notice my custom function
-hooked to =magit-mode-hook=. This is because this package tries to find
-TODOs in all files in the current project, and my yadm repository’s
-root is my =$HOME=. So, yeah, no =magit-todos= in yadm.
-#+begin_src emacs-lisp
-;; (use-package magit-todos
-;;   :straight (:build t)
-;;   :after (magit hl-todo)
-;;   :init
-;;   (with-eval-after-load 'magit
-;;    (defun my/magit-todos-if-not-yadm ()
-;;      "Deactivate magit-todos if in yadm Tramp connection.
-;; If `magit--default-directory' points to a yadm Tramp directory,
-;; deactivate `magit-todos-mode', otherwise enable it."
-;;      (if (string-prefix-p "/yadm:" magit--default-directory)
-;;          (magit-todos-mode -1)
-;;        (magit-todos-mode +1)))
-;;    (add-hook 'magit-mode-hook #'my/magit-todos-if-not-yadm))
-;;   :config
-;;   (csetq magit-todos-ignore-case t))
-#+end_src
-
-*** Forge
-
-#+begin_src emacs-lisp
-;; (use-package forge
-;;   :after magit
-;;   :straight (:build t)
-;;   :init
-;;   (evil-collection-forge-setup)
-;;   :general
-;;   (phundrak/major-leader-key
-;;     :keymaps 'forge-topic-mode-map
-;;     "c"  #'forge-create-post
-;;     "e"  '(:ignore t :which-key "edit")
-;;     "ea" #'forge-edit-topic-assignees
-;;     "ed" #'forge-edit-topic-draft
-;;     "ek" #'forge-delete-comment
-;;     "el" #'forge-edit-topic-labels
-;;     "em" #'forge-edit-topic-marks
-;;     "eM" #'forge-merge
-;;     "en" #'forge-edit-topic-note
-;;     "ep" #'forge-edit-post
-;;     "er" #'forge-edit-topic-review-requests
-;;     "es" #'forge-edit-topic-state
-;;     "et" #'forge-edit-topic-title))
-#+end_src
-**** browse-at-remote
-#+begin_src emacs-lisp
-(use-package browse-at-remote
-  :straight t
-  :bind (("C-c G" . browse-at-remote))
-  :general
-  (phundrak/leader-key
-    :infix   "g"
-    :packages 'magit
-    ""   '(:ignore t :wk "git")
-    "y"  #'browse-at-remote-kill
-    "o" #'browse-at-remote))
-#+end_src
-**** diff-hl-mode
-#+begin_src emacs-lisp
-(use-package diff-hl
-  :ensure t
-  :hook
-  ((magit-post-refresh . diff-hl-magit-post-refresh)
-   ;; (prog-mode . diff-hl-mode)
-   ;; (org-mode . diff-hl-mode)
-   (dired-mode . diff-hl-dired-mode)))
-#+end_src
-
-#+RESULTS:
-| org-download-enable | diff-hl-dired-mode |
-
-*** Projectile
-First, I need to install ~ripgrep~, a faster reimplementation of ~grep~,
-which will be very useful when managing projects.
-#+begin_src emacs-lisp
-(use-package ripgrep
-  :if (executable-find "rg")
-  :straight (:build t)
-  :defer t)
-#+end_src
-
-Now, I can use projectile, which is sort of the /de facto/ standard
-project manager in Emacs. I know there’s ~project.el~, but… Eh… I’m used
-to projectile.
-#+begin_src emacs-lisp
-(use-package projectile
-  :straight t
-  :diminish projectile-mode
-  ;; :custom ((projectile-completion-system 'default))
-  :config
-  (projectile-mode)
-  ;; (setq projectile-completion-system 'default)
-  ;; (setq projectile-switch-project-action #'projectile-dired)
-
-  (add-to-list 'projectile-ignored-projects "~/")
-  (add-to-list 'projectile-globally-ignored-files "node_modules")
-  (add-to-list 'projectile-globally-ignored-files ".cache")
-  (add-to-list 'projectile-globally-ignored-files "_cache")
-  (add-to-list 'projectile-globally-ignored-files "~")
-  (add-to-list 'projectile-globally-ignored-files "^#")
-  (add-to-list 'projectile-globally-ignored-directories "^node_modules$")
-  :general
-  (phundrak/leader-key
-    "p" '(:keymap projectile-command-map :which-key "projectile")))
-#+end_src
-
-And of course, there is a counsel package dedicated to projectile.
-#+begin_src emacs-lisp
-;; (use-package counsel-projectile
-;;   :straight (:build t)
-;;   :after (counsel projectile)
-;;   :config (counsel-projectile-mode))
-#+end_src
-
-*** Recentf
-The built-in package ~recentf~ keeps track of recently opened files. But
-by default, it only follows the twenty most recent files, that not
-nearly enough for me, so I raise it to two hundred. I also don’t want
-recentf to follow the Elfeed database, so I add it to the list of
-excluded files.
-#+begin_src emacs-lisp
-(use-package recentf
-  :straight (:build t :type built-in)
-  :custom ((recentf-max-saved-items 2000))
-  :config
-  (add-all-to-list 'recentf-exclude
-                   `(,(rx (* any)
-                          (or "elfeed-db"
-                              "eln-cache"
-                              "conlanging/content"
-                              "org/config"
-                              "/Mail/Sent"
-                              ".cache/")
-                          (* any)
-                          (? (or "html" "pdf" "tex" "epub")))
-                     ,(rx (* any)
-                          ".elc"
-                          eol)
-                     ,(rx "/"
-                          (or "rsync" "ssh" "tmp" "yadm" "sudoedit" "sudo")
-                          (* any)))))
-#+end_src
-
-*** ejira
-Still not convinced, but let's activate it:
-
-#+begin_src emacs-lisp
-(use-package jiralib2
-  :straight t
-  :commands (ejira-mode)
-  :init
-  (defun dorneanu/setup-jira ()
-    (interactive)
-    (setq jiralib2-url              (password-store-get "emacs/ejira-url")
-          jiralib2-auth             'token
-          jiralib2-token             (password-store-get "emacs/ejira-token")
-          jiralib2-user-login-name  (password-store-get "emacs/ejira-user"))))
-
-
-
-(use-package ejira
-  :straight (ejira :build t
-                      :type git
-                      :host github
-                      :repo "nyyManni/ejira")
-  :after (jiralib2)
-  :init
-  (setq
-   ;; NOTE, this directory needs to be in `org-agenda-files'`
-   ejira-org-directory       "~/work/jira"
-   ejira-projects            '("QDS" "INI")
-
-   ejira-priorities-alist    '(("Highest" . ?A)
-                               ("High"    . ?B)
-                               ("Medium"  . ?C)
-                               ("Low"     . ?D)
-                               ("Lowest"  . ?E))
-   ejira-todo-states-alist   '(("To Do"       . 1)
-                               ("In Progress" . 2)
-                               ("Done"        . 4)))
-  ;; Update my jira projects
-  (defun dorneanu/jira-update-projects ()
-    (interactive)
-    (let ((org-agenda-files nil))
-      (ejira-update-my-projects)))
-
-
-  :config
-  ;; Tries to auto-set custom fields by looking into /editmeta
-  ;; of an issue and an epic.
-  (add-hook 'jiralib2-post-login-hook #'ejira-guess-epic-sprint-fields)
-
-  ;; Make the issues visisble in your agenda by adding `ejira-org-directory'
-  ;; into your `org-agenda-files'.
-  (add-to-list 'org-agenda-files ejira-org-directory))
-
-#+end_src
-*** wakatime
-#+begin_src emacs-lisp
-(use-package wakatime-mode
-  :straight t
-  :config
-  (setq
-   ;; TODO: Need to change these to something more flexible/portable
-   wakatime-python-bin "/home/victor/.pyenv/versions/emacs/bin/python"
-   wakatime-cli-path "/home/victor/.pyenv/versions/emacs/bin/wakatime")
-  (global-wakatime-mode))
-#+end_src
-*** WIP jira
-
-** COMMENT Screenshot
-~screenshot.el~ is a nice utility package made by TEC. It allows the
-user to take a screenshot of a specific area of a buffer and make it
-look nice.
-#+begin_src emacs-lisp
-(use-package screenshot
-  :defer t
-  :straight (screenshot :build t
-                        :type git
-                        :host github
-                        :repo "tecosaur/screenshot")
-  :config (load-file (locate-library "screenshot.el"))
-  :general
-  (phundrak/leader-key
-    :infix "a"
-    :packages '(screenshot)
-    "S" #'screenshot))
-#+end_src
-** Screenshots
-*** emacsshot
-From https://gitlab.com/marcowahl/emacsshot
-#+begin_src emacs-lisp
-(use-package emacsshot
-  :straight t
-  :bind(("C-x a s f" . emacsshot-snap-frame)
-        ("C-x a s w" . emacsshot-snap-window))
-  )
-#+end_src
-** Shells
-*** Shell-pop
-Shell-pop allows the user to easily call for a new shell in a pop-up
-buffer.
-#+begin_src emacs-lisp
-(use-package shell-pop
-  :defer t
-  :straight (:build t)
-  :custom
-  (shell-pop-default-directory "/home/phundrak")
-  (shell-pop-shell-type (quote ("eshell" "*eshell*" (lambda () (eshell shell-pop-term-shell)))))
-  (shell-pop-window-size 30)
-  (shell-pop-full-span nil)
-  (shell-pop-window-position "bottom")
-  (shell-pop-autocd-to-working-dir t)
-  (shell-pop-restore-window-configuration t)
-  (shell-pop-cleanup-buffer-at-process-exit t))
-#+end_src
-
-*** VTerm
-VTerm gives Emacs access to regular shells with an almost regular
-emulator. Be aware you will most likely need to hit ~C-c~ twice to send
-an interrupt signal.
-#+begin_src emacs-lisp
-(use-package vterm
-  :defer t
-  :straight t
-  :config
-  (setq vterm-shell "/usr/bin/zsh"))
-#+end_src
-
-One annoying think with vterm is it only can create one buffer, you
-can’t have multiple vterm buffers by default. ~multi-vterm~ fixes this
-issue.
-#+begin_src emacs-lisp
-(use-package multi-vterm
-  :after vterm
-  :defer t
-  :straight (:build t)
-  :general
-  ;; (phundrak/major-leader-key
-  ;;   :packages '(vterm multi-vterm)
-  ;;   :keymap 'vterm-mode-map
-  ;;   "c" #'multi-vterm
-  ;;   "n" #'multi-vterm-next
-  ;;   "p" #'multi-vterm-prev)
-  )
-#+end_src
-** To be tested
-Some packages I would like to test first
-*** engine-mode
-
-#+begin_src emacs-lisp
-(use-package engine-mode
-  :straight
-  :config
-  (defengine google "https://www.google.com/search?q=%s"
-             :keybinding "/")
-  (engine-mode 1))
-#+end_src
-*** google-this
-
-#+begin_src emacs-lisp
-(use-package google-this
-  :straight t
-  :bind-keymap ("C-c /" . google-this-mode-submap)
-  :bind* ("M-SPC" . google-this-search)
-  :bind (:map google-this-mode-map
-              ("/" . google-this-search)))
-#+end_src
-*** isearch
-
-Mostly from https://github.com/alexpeits/emacs.d
-
-#+begin_src emacs-lisp
-(use-package isearch
-  :ensure nil
-  :bind (("C-M-r" . isearch-backward-other-window)
-         ("C-M-s" . isearch-forward-other-window))
-  :bind (:map isearch-mode-map
-              ("C-l" . recenter)
-              ("C-SPC" . my/isearch-mark-and-exit)
-              ("<C-return>" . my/isearch-other-end)
-              ("<M-backspace>" . my/isearch-abort-dwim)
-              ("<C-backspace>" . my/isearch-abort-dwim))
-  :init
-  (setq search-whitespace-regexp ".*?"  ;; spaces match anything
-        isearch-lax-whitespace t  ;; the default
-        isearch-regex-lax-whitespace nil
-        isearch-yank-on-move 'shift
-        isearch-allow-scroll 'unlimited
-        isearch-lazy-count t  ;; show match count and current match index
-        lazy-count-prefix-format nil
-        lazy-count-suffix-format " (%s/%s)")
-  :config
-  ;; prot
-  (defun my/isearch-mark-and-exit ()
-    (interactive)
-    (push-mark isearch-other-end t 'activate)
-    (setq deactivate-mark nil)
-    (isearch-done))
-
-  (defun my/isearch-other-end ()
-    (interactive)
-    (isearch-done)
-    (when isearch-other-end
-      (goto-char isearch-other-end)))
-
-  (defun my/isearch-abort-dwim ()
-    "Delete failed `isearch' input, single char, or cancel search.
-
-This is a modified variant of `isearch-abort' that allows us to
-perform the following, based on the specifics of the case: (i)
-delete the entirety of a non-matching part, when present; (ii)
-delete a single character, when possible; (iii) exit current
-search if no character is present and go back to point where the
-search started."
-    (interactive)
-    (if (eq (length isearch-string) 0)
-        (isearch-cancel)
-      (isearch-del-char)
-      (while (or (not isearch-success) isearch-error)
-        (isearch-pop-state)))
-    (isearch-update))
-
-  ;; https://www.reddit.com/r/emacs/comments/b7yjje/isearch_region_search/
-  (defun my/isearch-region (&optional not-regexp no-recursive-edit)
-    "If a region is active, make this the isearch default search pattern."
-    (interactive "P\np")
-    (when (use-region-p)
-      (let ((search (buffer-substring-no-properties
-                     (region-beginning)
-                     (region-end))))
-        (deactivate-mark)
-        (isearch-yank-string search))))
-
-  (advice-add 'isearch-forward :after 'my/isearch-region)
-  (advice-add 'isearch-forward-regexp :after 'my/isearch-region)
-  (advice-add 'isearch-backward :after 'my/isearch-region)
-  (advice-add 'isearch-backward-regexp :after 'my/isearch-region)
-
-  (with-eval-after-load 'evil
-    (dolist (st '(normal visual))
-      (evil-global-set-key st (kbd "gs") 'isearch-forward)
-      (evil-global-set-key st (kbd "gr") 'isearch-backward))))
-#+end_src
-
-*** multi-term
-
-#+begin_src emacs-lisp
-(use-package multi-term
-  :straight t
-  :bind (("C-c t" . multi-term-next)
-         ("C-c T" . multi-term))
-  :custom
-  (multi-term-program "tmux")
-  (multi-term-program-switches "-CC")
-  (multi-term-scroll-show-maximum-output t)
-  (term-bind-key-alist
-   '(("C-c C-c" . term-interrupt-subjob)
-     ("C-b"     . my-term-send-raw-at-prompt)
-     ("C-f"     . my-term-send-raw-at-prompt)
-     ("C-a"     . my-term-send-raw-at-prompt)
-     ("C-e"     . my-term-send-raw-at-prompt)
-     ("C-p"     . previous-line)
-     ("C-n"     . next-line)
-     ("C-s"     . isearch-forward)
-     ("C-r"     . isearch-backward)
-     ("C-m"     . term-send-raw)
-     ("M-f"     . term-send-forward-word)
-     ("M-b"     . term-send-backward-word)
-     ("M->"     . my-term-end-of-buffer)
-     ("M-o"     . term-send-backspace)
-     ("M-p"     . term-send-up)
-     ("M-n"     . term-send-down)
-     ("M-d"     . term-send-forward-kill-word)
-     ("M-DEL"   . term-send-backward-kill-word)
-     ("M-r"     . term-send-reverse-search-history)
-     ("M-,"     . term-send-input)
-     ("M-/"     . comint-dynamic-complete)
-     ("C-y"     . term-paste)))
-  :init
-  (defun screen ()
-    (interactive)
-    (let ((term-buffer
-           (let ((multi-term-program (executable-find "screen"))
-                 (multi-term-program-switches "-DR"))
-             (multi-term-get-buffer))))
-      (set-buffer term-buffer)
-      (multi-term-internal)
-      (switch-to-buffer term-buffer)))
-
-  :config
-  (require 'term)
-
-  (defalias 'my-term-send-raw-at-prompt 'term-send-raw)
-
-  (defun my-term-end-of-buffer ()
-    (interactive)
-    (call-interactively #'end-of-buffer)
-    (if (and (eobp) (bolp))
-        (delete-char -1)))
-
-  (defadvice term-process-pager (after term-process-rebind-keys activate)
-    (define-key term-pager-break-map  "\177" 'term-pager-back-page)))
-#+end_src
-
-*** zoom
-
-#+begin_src emacs-lisp
-(use-package zoom
-  :straight t
-  :bind ("C-x +" . zoom)
-  :custom
-  (zoom-size 'size-callback)
-  :preface
-  (defun size-callback ()
-    (cond ((> (frame-pixel-width) 1280) '(90 . 0.75))
-          (t '(0.5 . 0.5)))))
-#+end_src
-** COMMENT XWidgets Webkit Browser
-I used to use the xwidgets webkit browser in order to view or preview
-HTML files from Emacs, but it seems the Cairo background transparency
-patch breaks it. So while this isn’t patched, I will disable Xwidgets
-in my Emacs build, and these keybinds *will not* be tangled.
-#+begin_src emacs-lisp :tangle no
-(phundrak/evil
- :keymaps 'xwidget-webkit-mode-map
- "<mouse-4>" #'xwidget-webkit-scroll-down-line
- "<mouse-5>" #'xwidget-webkit-scroll-up-line
- "c"         #'xwidget-webkit-scroll-backward
- "t"         #'xwidget-webkit-scroll-up-line
- "s"         #'xwidget-webkit-scroll-down-line
- "r"         #'xwidget-webkit-scroll-forward
- "h"         #'xwidget-webkit-goto-history
- "C"         #'xwidget-webkit-back
- "R"         #'xwidget-webkit-forward
- "C-r"       #'xwidget-webkit-reload
- "j"         nil
- "k"         nil
- "l"         nil
- "H"         nil
- "L"         nil
- "C-d"       #'xwidget-webkit-scroll-up
- "C-u"       #'xwidget-webkit-scroll-down)
-#+end_src
-
 ** COMMENT Wttr.in
 #+begin_src emacs-lisp
 (use-package wttrin
