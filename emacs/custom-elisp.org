@@ -220,3 +220,20 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
     (org-insert-time-stamp end t t "--")
     (org-evaluate-time-range t)))
 #+end_src
+*** ~phundrak/toggle-org-src-window-split~
+#+begin_src emacs-lisp
+(defun phundrak/toggle-org-src-window-split ()
+  "This function allows the user to toggle the behavior of
+`org-edit-src-code'. If the variable `org-src-window-setup' has
+the value `split-window-right', then it will be changed to
+`split-window-below'. Otherwise, it will be set back to
+`split-window-right'"
+  (interactive)
+  (if (equal org-src-window-setup 'split-window-right)
+      (setq org-src-window-setup 'split-window-below)
+    (setq org-src-window-setup 'split-window-right))
+  (message "Org-src buffers will now split %s"
+           (if (equal org-src-window-setup 'split-window-right)
+               "vertically"
+             "horizontally")))
+#+end_src

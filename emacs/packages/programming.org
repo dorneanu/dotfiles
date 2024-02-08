@@ -1099,12 +1099,17 @@ package.
   (go-ts-mode . lsp-deferred)
   (go-ts-mode . apheleia-mode)
   :bind (:map go-ts-mode-map
-         ("M-?" . godoc-at-point)
-         ("M-." . godef-jump)
-         ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
-         ("C-c m r" . go-run))
+              ("M-?" . godoc-at-point)
+              ("M-." . godef-jump)
+              ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+              ("C-c m r" . go-run))
   :config
   (setq go-ts-mode-indent-offset 4))
+
+(use-package company-go
+  :after (company go-mode)
+  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
+  )
 
 (use-package go-mode
   :straight t
@@ -1114,12 +1119,19 @@ package.
   (go-mode . apheleia-mode)
   ;; (go-mode     . lsp-mode)
   :bind (:map go-mode-map
-          ("M-?" . godoc-at-point)
-          ("M-." . godef-jump)
-          ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
-          ("C-c m r" . go-run))
+              ("M-?" . godoc-at-point)
+              ("M-." . godef-jump)
+              ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+              ("C-c m r" . go-run))
   :custom
   (gofmt-command "goimports"))
+
+;; Add company backends
+(defun golang/set-company-backends ()
+ (setq-local company-backends '((company-go company-dabbrev-code company-capf company-yasnippet))))
+
+(add-hook 'go-mode-hook #'golang/set-company-backends)
+(add-hook 'go-ts-mode-hook #'golang/set-company-backends)
 
 (use-package gotest
   :straight t
@@ -1410,6 +1422,10 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
   :after (company lsp)
   :config (company-terraform-init))
 
+;; Add company backends
+(add-hook 'terraform-mode-hook (lambda ()
+   (setq-local company-backends '((company-terraform :with company-dabbrev-code company-capf))))
+)
 
 ;; Disable tfls
 (setq lsp-disabled-clients '(tfls))
@@ -1423,6 +1439,9 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
 ;; Show references
 (setq lsp-terraform-ls-enable-show-reference t)
 #+end_src
+
+#+RESULTS:
+: t
 
 *** Rust
 Rust is a general programming language, akin to C++ in some ways, but

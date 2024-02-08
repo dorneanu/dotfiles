@@ -2252,12 +2252,6 @@ left it.
 #+end_src
 
 *** Magit
-Magit is an awesome wrapper around Git for Emacs! Very often, I go
-from disliking to really hating Git GUI clients because they often
-obfuscate which Git commands are used to make things happen. Such a
-thing doesn’t happen with Magit, it’s pretty transparent, but it still
-provides some awesome features and visualizations of what you are
-doing and what Git is doing! In short, I absolutely love it!
 #+begin_src emacs-lisp
 (use-package magit
   :straight (:build t)
@@ -2391,15 +2385,9 @@ root is my =$HOME=. So, yeah, no =magit-todos= in yadm.
 ;;   :config
 ;;   (csetq magit-todos-ignore-case t))
 #+end_src
-"*** Forge
-Forge acts as an interface for GitHub, GitLab, and Bitbucket inside
-Magit. A lot of possibilities are present, you can read issues and
-pull requests, create them, and fork projects among other things.
 
-*NOTE*: Make sure to configure a GitHub token before using this
- package!
-- [[https://magit.vc/manual/forge/Token-Creation.html#Token-Creation][Token Creation]]
-- [[https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started][Getting started]]
+*** Forge
+
 #+begin_src emacs-lisp
 ;; (use-package forge
 ;;   :after magit
@@ -2657,12 +2645,13 @@ issue.
   :defer t
   :straight (:build t)
   :general
-  (phundrak/major-leader-key
-    :packages '(vterm multi-vterm)
-    :keymap 'vterm-mode-map
-    "c" #'multi-vterm
-    "n" #'multi-vterm-next
-    "p" #'multi-vterm-prev))
+  ;; (phundrak/major-leader-key
+  ;;   :packages '(vterm multi-vterm)
+  ;;   :keymap 'vterm-mode-map
+  ;;   "c" #'multi-vterm
+  ;;   "n" #'multi-vterm-next
+  ;;   "p" #'multi-vterm-prev)
+  )
 #+end_src
 ** To be tested
 Some packages I would like to test first
@@ -2688,28 +2677,79 @@ Some packages I would like to test first
 #+end_src
 *** isearch
 
+Mostly from https://github.com/alexpeits/emacs.d
+
 #+begin_src emacs-lisp
 (use-package isearch
   :ensure nil
   :bind (("C-M-r" . isearch-backward-other-window)
          ("C-M-s" . isearch-forward-other-window))
   :bind (:map isearch-mode-map
-              ("C-c" . isearch-toggle-case-fold)
-              ("C-t" . isearch-toggle-regexp)
-              ("C-^" . isearch-edit-string)
-              ("C-i" . isearch-complete))
-  :preface
-  (defun isearch-backward-other-window ()
+              ("C-l" . recenter)
+              ("C-SPC" . my/isearch-mark-and-exit)
+              ("<C-return>" . my/isearch-other-end)
+              ("<M-backspace>" . my/isearch-abort-dwim)
+              ("<C-backspace>" . my/isearch-abort-dwim))
+  :init
+  (setq search-whitespace-regexp ".*?"  ;; spaces match anything
+        isearch-lax-whitespace t  ;; the default
+        isearch-regex-lax-whitespace nil
+        isearch-yank-on-move 'shift
+        isearch-allow-scroll 'unlimited
+        isearch-lazy-count t  ;; show match count and current match index
+        lazy-count-prefix-format nil
+        lazy-count-suffix-format " (%s/%s)")
+  :config
+  ;; prot
+  (defun my/isearch-mark-and-exit ()
     (interactive)
-    (split-window-vertically)
-    (other-window 1)
-    (call-interactively 'isearch-backward))
+    (push-mark isearch-other-end t 'activate)
+    (setq deactivate-mark nil)
+    (isearch-done))
 
-  (defun isearch-forward-other-window ()
+  (defun my/isearch-other-end ()
     (interactive)
-    (split-window-vertically)
-    (other-window 1)
-    (call-interactively 'isearch-forward)))
+    (isearch-done)
+    (when isearch-other-end
+      (goto-char isearch-other-end)))
+
+  (defun my/isearch-abort-dwim ()
+    "Delete failed `isearch' input, single char, or cancel search.
+
+This is a modified variant of `isearch-abort' that allows us to
+perform the following, based on the specifics of the case: (i)
+delete the entirety of a non-matching part, when present; (ii)
+delete a single character, when possible; (iii) exit current
+search if no character is present and go back to point where the
+search started."
+    (interactive)
+    (if (eq (length isearch-string) 0)
+        (isearch-cancel)
+      (isearch-del-char)
+      (while (or (not isearch-success) isearch-error)
+        (isearch-pop-state)))
+    (isearch-update))
+
+  ;; https://www.reddit.com/r/emacs/comments/b7yjje/isearch_region_search/
+  (defun my/isearch-region (&optional not-regexp no-recursive-edit)
+    "If a region is active, make this the isearch default search pattern."
+    (interactive "P\np")
+    (when (use-region-p)
+      (let ((search (buffer-substring-no-properties
+                     (region-beginning)
+                     (region-end))))
+        (deactivate-mark)
+        (isearch-yank-string search))))
+
+  (advice-add 'isearch-forward :after 'my/isearch-region)
+  (advice-add 'isearch-forward-regexp :after 'my/isearch-region)
+  (advice-add 'isearch-backward :after 'my/isearch-region)
+  (advice-add 'isearch-backward-regexp :after 'my/isearch-region)
+
+  (with-eval-after-load 'evil
+    (dolist (st '(normal visual))
+      (evil-global-set-key st (kbd "gs") 'isearch-forward)
+      (evil-global-set-key st (kbd "gr") 'isearch-backward))))
 #+end_src
 
 *** multi-term

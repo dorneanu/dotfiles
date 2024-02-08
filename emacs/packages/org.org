@@ -103,7 +103,6 @@ Let's configure ORG
   <<org-refiling>>
   <<org-create-emphasis-functions()>>
   <<org-babel-load-languages>>
-  <<org-capture-keybinds>>
   <<org-mode-visual-prettify-symbols>>
   <<org-re-reveal>>
   <<org-html-validation>>
@@ -351,6 +350,40 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 (use-package org-sidebar
   :straight t)
 #+end_src
+** org-timeblock
+#+begin_src emacs-lisp
+(use-package org-timeblock
+  :straight t
+  :after (org org-agenda)
+  :bind (:map org-timeblock-mode-map
+              ("M-n" . org-timeblock-forward-block)
+              ("M-p" . org-timeblock-backward-block)
+              ("r" . org-timeblock-redraw-buffers)
+              ("s" . org-timeblock-switch-view))
+  :general
+  (phundrak/major-leader-key
+    :keymaps 'org-timeblock-mode
+    :packages 'org-timeblock
+    :infix "O"
+    ""  '(:ignore t :which-key "preview")
+    "c" #'org-timeblock-clock-in
+    "g"  #'org-timeblock-goto
+    "j"  #'org-timeblock-jump-to-day
+    "s"  #'org-timeblock-switch-view
+    "t"  #'org-timeblock-todo)
+  :config
+  (setq org-timeblock-n-days-view 2
+        org-timeblock-scale-options '(8 . 17)))
+
+(defun dorneanu/org-setup-org-timeblock()
+  (interactive)
+  (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (org-timeblock))
+#+end_src
+
 ** Babel
 One of the amazing features of org-mode is its literary programming capacities
 by running code blocks from within Org-mode itself. But for that, only a couple
@@ -480,6 +513,11 @@ Finish this:
   (defvar my/org-meeting
     (concat "* MEETING %^{Meeting}\n"
             "SCHEDULED: %t\n") "Template for meetings")
+
+  (defvar my/org-weekly
+    (concat "* wk" (format-time-string "%V") "       " ":wk" (format-time-string "%V") ":")
+    "Template for weeklies")
+
   (defvar my/org-basic-task-template
     (concat "* TODO %^{Task}\n"
             ":PROPERTIES:\n"
@@ -506,41 +544,24 @@ Finish this:
       my/org-active-task-template
       :empty-lines 1
       :clock-in t
-      :clock-resume t
       :immediate-finish t)
      ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
       my/org-basic-task-template
       :empty-lines 1
-      :immediate-finish t))))
+      :immediate-finish t)
+
+     ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
+      my/org-weekly
+      :empty-lines 1))))
 #+end_src
 
-#+name: org-capture-keybinds
-#+begin_src emacs-lisp :tangle no
-(phundrak/leader-key
-  :packages 'org
-  :infix "o"
-  ""  '(:ignore t :which-key "org")
-  "c" #'org-capture)
-#+end_src
-
-
-*** Custom functions
-**** Emphasize text
-Sometimes, I want to emphasize some text in my org-mode documents.
-It’s very possible to just go to the beginning of the chosen text, add
-the marker, then go to the end of the text than needs emphasis and add
-another marker, and I’m sure most people are fine with that. But I
-also like being able to select a region and hit a keybind to emphasize
-it that way. The table [[org-emphasis-character]] lists the emphasis
-characters in org-mode, their role, and the character code of each
-emphasis character. From that, creating functions that emphasize a
-selected text is quite easy.
+** org-emphasize
 
 #+name: org-emphasis-character
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
 | bold           | ~*~         |             42 |
-| italic         | ~/~         |             47 |
+| italic         | ~/~       |             47 |
 | underline      | ~_~         |             95 |
 | verbatim       | ~=~         |             61 |
 | code           | ~~~         |            126 |
@@ -594,23 +615,6 @@ selected text is quite easy.
 
 You can find the keybinds for these functions [[file:./org#keybindings][here]].
 
-**** ~phundrak/toggle-org-src-window-split~
-#+begin_src emacs-lisp
-(defun phundrak/toggle-org-src-window-split ()
-  "This function allows the user to toggle the behavior of
-`org-edit-src-code'. If the variable `org-src-window-setup' has
-the value `split-window-right', then it will be changed to
-`split-window-below'. Otherwise, it will be set back to
-`split-window-right'"
-  (interactive)
-  (if (equal org-src-window-setup 'split-window-right)
-      (setq org-src-window-setup 'split-window-below)
-    (setq org-src-window-setup 'split-window-right))
-  (message "Org-src buffers will now split %s"
-           (if (equal org-src-window-setup 'split-window-right)
-               "vertically"
-             "horizontally")))
-#+end_src
 ** org-refile
 Some extras copied from Doom Emacs
 #+begin_src emacs-lisp
@@ -1222,6 +1226,9 @@ management system based on org-mode.
     "rsc" #'org-roam-db-clear-all
     "rsd" #'org-roam-db-diagnose-node
     "rss" #'org-roam-db-sync
+    "rt" '(:ignore t :which-key "tags")
+    "rta" #'org-roam-tag-add
+    "rtd" #'org-roam-tag-remove
     "ru"  '(:ignore t :which-key "ui")
     "rua" #'org-roam-ui-add-to-local-graph
     "ruo" #'org-roam-ui-open)
@@ -1560,6 +1567,7 @@ tables, source blocks, and tags, and it applies settings similar to
 *** org-modern-indent
 #+begin_src emacs-lisp
 (use-package org-modern-indent
+  :after (org)
   :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
   :config
   (add-hook 'org-mode-hook #'org-modern-indent-mode 90))

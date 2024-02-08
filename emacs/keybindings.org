@@ -72,6 +72,7 @@ Undefining some stuff to make keybind prefixes work correctly.
   <<keybinds-specific-files>>
 
   <<general-keybindings-gen(table=keybinds-help, prefix="h")>>
+  <<general-keybindings-gen(table=keybinds-inserts, prefix="i")>>
 
   "i"   '(:ignore t :wk "insert")
   "iu"  #'counsel-unicode-char
@@ -229,6 +230,16 @@ I also have some keybinds dedicated to opening specific files.
           (find-file "~/org/config/stumpwm.org"))
         :which-key "stumpwm.org")
 #+end_src
+** Inserts
+My keybinds for inserts are prefixed by ~i~.
+#+name: keybinds-inserts
+| Key | Function          | Description |
+|-----+-------------------+-------------|
+|     |                   | inserts     |
+| s   | consult-yasnippet |             |
+| f   | company-files     |             |
+| d   | company-dabbrev   |             |
+
 ** Searches
 My keybinds for searches are prefixed by ~s~.
 #+name: keybinds-searches
@@ -297,6 +308,7 @@ Keybindings for ~opening~ stuff (prefixed by ~o~)
 | Key | Function                      | Description |
 |-----+-------------------------------+-------------|
 |     |                               | open        |
+| c   | org-capture                   |             |
 | ll  | link-hint-open-link           |             |
 | lc  | link-hint-copy-link           |             |
 | lm  | link-hint-open-multiple-links |             |

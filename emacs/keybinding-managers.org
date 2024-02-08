@@ -54,6 +54,13 @@ can still feel some influence from my Spacemacs years here.
     :prefix ","
     :global-prefix "M-m"))
 #+end_src
+** Defaults
+Some default keybindings:
+
+#+begin_src emacs-lisp
+(bind-key "C-c d" 'delete-pair)
+#+end_src
+
 ** Evil
 Evil emulates most of vim’s keybinds, because let’s be honest here,
 they are much more comfortable than Emacs’.

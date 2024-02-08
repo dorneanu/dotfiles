@@ -6,6 +6,7 @@
 
 * Autocompletion
 ** Code Autocompletion                                                :todo:
+*** company
 I still need to finish this:
 
 #+begin_src emacs-lisp
@@ -14,12 +15,12 @@ I still need to finish this:
   :defer t
   :hook (company-mode . evil-normalize-keymaps)
   :init (global-company-mode)
-  :bind (:map global-map
-              ("M-q" . company-complete)
-              :map company-search-map
+  :bind (:map company-search-map
               ("C-n" . company-select-next)
               ("C-p" . company-select-previous)
               :map company-active-map
+              ("TAB" . company-select-next)
+              ([tab] . company-select-next)
               ("C-l" . company-show-location)
               ("C-s" . company-filter-candidates)
               ("C-d" . company-show-doc-buffer)
@@ -41,11 +42,12 @@ I still need to finish this:
         company-dabbrev-ignore-case t
         company-dabbrev-downcase    nil)
   ;; Default backends
-  (setq company-backends (delete 'company-dabbrev company-backends))
+  ;; (setq company-backends (delete 'company-dabbrev company-backends))
   (add-to-list 'company-backends 'company-capf)
   (add-to-list 'company-backends 'company-yasnippet)
   ;; (add-to-list 'company-backends 'company-elisp)
-  (add-to-list 'company-backends 'company-files))
+  (add-to-list 'company-backends 'company-files)
+  )
 #+end_src
 
 *** company-dict
@@ -172,14 +174,6 @@ A company-mode backend for TabNine, the all-language autocompleter:
   :ensure t
   :config
   (add-to-list 'company-backends #'company-tabnine))
-#+end_src
-*** company-go
-#+begin_src emacs-lisp
-(use-package company-go
-  :after (company go-mode)
-  :config
-  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
-  (add-to-list 'company-backends 'company-go))
 #+end_src
 *** company-shell
 #+begin_src emacs-lisp
@@ -369,13 +363,13 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
 ;;   :straight t
 ;;   :hook (vertico-mode . vertico-posframe-mode))
 
-(use-package vertico-posframe
-  :straight t
-  :after vertico
-  :config (vertico-posframe-mode 1)
-  (setq vertico-posframe-border-width 2
-        vertico-posframe-parameters '((internal-border-width . 2)))
-  (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
+;; (use-package vertico-posframe
+;;   :straight t
+;;   :after vertico
+;;   :config (vertico-posframe-mode 1)
+;;   (setq vertico-posframe-border-width 2
+;;         vertico-posframe-parameters '((internal-border-width . 2)))
+;;   (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
 
 
 (use-package vertico-repeat
@@ -391,14 +385,14 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
               ("C-<backspace>" . vertico-directory-delete-word)
               ;; ("RET" .           vertico-directory-enter)
               ))
-(use-package vertico-multiform
-  :ensure nil
-  :demand t
-  :bind (:map vertico-map
-              ("C-i"   . vertico-multiform-vertical)
-              ("<tab>" . vertico-insert))
-  :config
-  (vertico-multiform-mode 1))
+;; (use-package vertico-multiform
+;;   :ensure nil
+;;   :demand t
+;;   :bind (:map vertico-map
+;;               ("C-i"   . vertico-multiform-vertical)
+;;               ("<tab>" . vertico-insert))
+;;   :config
+;;   (vertico-multiform-mode 1))
 ;;   :custom
 ;;   (vertico-multiform-commands
 ;;    '((consult-imenu buffer)
