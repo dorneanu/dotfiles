@@ -296,7 +296,7 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
           ;; Isearch integration
           ("M-s e"   . consult-isearch-history)
           ;; Bookmarks
-          ("M-s b"   . consult-bookmark)
+          ("M-g b"   . consult-bookmark)
           :map isearch-mode-map
           ("M-e"     . consult-isearch-history)
           ("M-s e"   . consult-isearch-history)
@@ -322,6 +322,7 @@ ones I find most useful are ~counsel-M-x~ and ~counsel-find-file~.
                                 "OlMon/consult-projectile" :branch "master")
   :commands (consult-projectile))
 #+end_src
+
 ** Minibuffer completion
 *** vertico
 #+begin_src emacs-lisp
