@@ -6,58 +6,269 @@
 
 * Autocompletion
 ** Code Autocompletion                                                :todo:
+*** corfu
+Some useful resources:
+- https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
+- https://kristofferbalintona.me/posts/202203130102/
+#+begin_src emacs-lisp
+(use-package corfu
+  :straight t
+  :demand t
+  :hook ((global-corfu-mode . corfu-popupinfo-mode)
+         (lsp-completion-mode . dorneanu/corfu-setup-lsp) ; Use corfu for lsp completion
+         )
+  :bind (("C-c . p" . completion-at-point)
+         :map corfu-map
+         ("TAB" . corfu-next)
+         ([tab] . corfu-next)
+         ("S-TAB" . corfu-previous)
+         ([backtab] . corfu-previous)
+         ("<escape>" . corfu-quit)
+         ("<return>" . corfu-insert)
+         ("M-d"      . corfu-info-documentation)
+         ("M-l"      . corfu-info-location)
+         ("M-."      . corfu-move-to-minibuffer))
+  :custom
+  ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
+  ;; want to perform completion
+  (tab-always-indent 'complete)
+  (completion-cycle-threshold nil)      ; Always show candidates in menu
+
+  ;; Only use `corfu' when calling `completion-at-point' or
+  ;; `indent-for-tab-command'
+  (corfu-auto t)
+  (corfu-auto-prefix 2)
+  (corfu-auto-delay 0.25)
+
+  (corfu-min-width 80)
+  (corfu-max-width corfu-min-width)     ; Always have the same width
+  ;; (corfu-count 14)
+  ;; (corfu-scroll-margin 4)
+  (corfu-cycle nil)
+  (corfu-preselect 'prompt)
+
+  ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
+  ;; `corfu-quit-at-boundary' = nil behavior. Set this to separator if using
+  ;; `corfu-auto' = `t' workflow (in that case, make sure you also set up
+  ;; `corfu-separator' and a keybind for `corfu-insert-separator', which my
+  ;; configuration already has pre-prepared). Necessary for manual corfu usage with
+  ;; orderless, otherwise first component is ignored, unless `corfu-separator'
+  ;; is inserted.
+  (corfu-quit-at-boundary nil)
+  (corfu-separator ?\s)            ; Use space
+  (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
+  (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
+  (corfu-preselect-first t)        ; Preselect first candidate?
+  (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
+
+  ;; Other
+  ;; (corfu-echo-documentation nil)        ; Already use corfu-popupinfo
+  :preface
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active) ; Useful if I ever use MCT
+                (bound-and-true-p vertico--input))
+      (setq-local corfu-auto nil)       ; Ensure auto completion is disabled
+      (corfu-mode 1)))
+
+  (defun corfu-move-to-minibuffer ()
+    (interactive)
+    (let (completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data)))
+  :config
+  ;; Enable Corfu more generally for every minibuffer, as long as no other
+  ;; completion UI is active. If you use Mct or Vertico as your main
+  ;; minibuffer completion UI. From
+  ;; https://github.com/minad/corfu#completing-with-corfu-in-the-minibuffer
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+
+  ;; Setup lsp to use corfu for lsp completion
+  (defun dorneanu/corfu-setup-lsp ()
+    "Use orderless completion style with lsp-capf instead of the default lsp-passthrough."
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+
+  (global-corfu-mode)
+)
+#+end_src
+**** kind-icon
+#+begin_src emacs-lisp
+(use-package kind-icon
+  :straight (:build t)
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default) ; Have background color be the same as `corfu' face background
+  (kind-icon-blend-background nil)  ; Use midpoint color between foreground and background colors ("blended")?
+  (kind-icon-blend-frac 0.08)
+  :config
+  ;; (when *is-windows*
+  ;;   (setq kind-icon-use-icons nil))   ;; 由于 Windows 上的svg 显示有问题 所以关掉
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter) ; Enable `kind-icon'
+  )
+#+end_src
+**** nerd-icons-corfu
+#+begin_src emacs-elisp
+(use-package nerd-icons-corfu
+  :straight t
+  :after corfu
+  :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+#+end_src
+**** corfu-popupinfo
+
+#+begin_src emacs-lisp
+(use-package corfu-popupinfo
+  :ensure nil
+  :after corfu
+  :hook (corfu-mode . corfu-popupinfo-mode)
+  :bind (:map corfu-map
+              ("M-n" . corfu-popupinfo-scroll-up)
+              ("M-p" . corfu-popupinfo-scroll-down)
+              ([remap corfu-show-documentation] . corfu-popupinfo-toggle))
+  :custom
+  (corfu-popupinfo-delay 0.5)
+  (corfu-popupinfo-max-width 70)
+  (corfu-popupinfo-max-height 20)
+  ;; Also here to be extra-safe that this is set when `corfu-popupinfo' is
+  ;; loaded. I do not want documentation shown in both the echo area and in
+  ;; the `corfu-popupinfo' popup.
+  (corfu-echo-documentation nil))
+#+end_src
+**** COMMENT lsp-mode-corfu
+#+begin_src emacs-lisp
+(use-package lsp-mode-corfu
+  :ensure nil
+  :after (corfu lsp-mode)
+  :custom
+  (lsp-completion-provider :none)) ;; we use corfu
+#+end_src
+
+*** cape
+#+begin_src emacs-lisp
+(use-package cape
+  :straight t
+  :demand t
+  :hook ((prog-mode . dorneanu/set-basic-capf)
+         (text-mode . dorneanu/set-basic-capf)
+         (org-mode . dorneanu/set-basic-capf)
+         (go-ts-mode . dorneanu/set-go-capf)
+         (lsp-completion-mode . dorneanu/set-lsp-capf))
+
+  :general (:prefix "M-c"              ; I don't really use capitalize-word
+                    "p" 'completion-at-point
+                    "t" 'complete-tag   ; etags
+                    "d" 'cape-dabbrev   ; basically `dabbrev-completion'
+                    "f" 'cape-file
+                    "k" 'cape-keyword
+                    "s" 'cape-symbol
+                    "a" 'cape-abbrev
+                    "i" 'cape-ispell
+                    "l" 'cape-line
+                    "w" 'cape-dict
+                    "\\" 'cape-tex
+                    "_" 'cape-tex
+                    "^" 'cape-tex
+                    "&" 'cape-sgml
+                    "r" 'cape-rfc1345)
+  :custom
+  (cape-dabbrev-min-length 1)
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; (add-to-list 'completion-at-point-functions #'cape-history)
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block))
+
+;; Disable company
+;; (add-hook 'prog-mode-hook (lambda () (company-mode -1)))
+;; (global-company-mode -1)
+
+;; Set capfs
+(defun dorneanu/set-basic-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'cape-symbol #'cape-dabbrev #'cape-dict #'cape-keyword)))
+  )
+
+(defun dorneanu/set-lsp-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'lsp-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword)))
+  )
+
+(defun dorneanu/set-go-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'lsp-completion-at-point (cape-company-to-capf #'company-go))))
+  )
+
+
+#+end_src
+
+#+RESULTS:
+: dorneanu/set-lsp-capf
+
+**** COMMENT elisp-mode-cape
+
+#+begin_src emacs-lisp
+(use-package elisp-mode-cape
+  :no-require t
+  :after (cape elisp-mode)
+  :hook (emacs-lisp-mode . my/setup-elisp)
+  :preface
+  (defun my/setup-elisp ()
+    (setq-local completion-at-point-functions
+                `(,(cape-super-capf
+                    #'elisp-completion-at-point
+                    #'cape-dabbrev)
+                  cape-file)
+                cape-dabbrev-min-length 5)))
+#+end_src
+
 *** company
 I still need to finish this:
 
 #+begin_src emacs-lisp
 (use-package company
   :straight (:build t)
-  :defer t
-  :hook (company-mode . evil-normalize-keymaps)
-  :init (global-company-mode)
-  :bind (:map company-search-map
-              ("C-n" . company-select-next)
-              ("C-p" . company-select-previous)
-              :map company-active-map
-              ("TAB" . company-select-next)
-              ([tab] . company-select-next)
-              ("C-l" . company-show-location)
-              ("C-s" . company-filter-candidates)
-              ("C-d" . company-show-doc-buffer)
-              ("C-n" . company-select-next)
-              ("C-p" . company-select-previous))
-  :config
-  (setq company-minimum-prefix-length     2
-        company-toolsip-limit             14
-        company-tooltip-align-annotations t
-        company-require-match             'never
-        company-global-modes              '(not erc-mode message-mode help-mode gud-mode)
-        company-frontends
-        '(company-pseudo-tooltip-frontend ; always show candidates in overlay tooltip
-          company-echo-metadata-frontend) ; show selected candidate docs in echo area
-        ;; Default backends
-        company-backends '(company-capf company-dabbrev company-yasnippet)
-        company-auto-commit         nil
-        company-auto-complete-chars nil
-        company-dabbrev-other-buffers t
-        company-dabbrev-ignore-case t
-        company-dabbrev-downcase    nil)
+  :disabled t
+  :custom
+  (company-idle-delay nil) ;; turn off auto-completion
+  ;; :hook (company-mode . evil-normalize-keymaps)
+  ;; :bind (:map global-map
+  ;;             ("<backtab>" . company-complete)
+  ;;             :map company-search-map
+  ;;             ("C-n" . company-select-next)
+  ;;             ("C-p" . company-select-previous)
+  ;;             ("M-m q" . company-other-backend)
+  ;;             :map company-active-map
+  ;;             ("TAB" . company-select-next)
+  ;;             ([tab] . company-select-next)
+  ;;             ("C-l" . company-show-location)
+  ;;             ("C-s" . company-filter-candidates)
+  ;;             ("C-d" . company-show-doc-buffer)
+  ;;             ("C-n" . company-select-next)
+  ;;             ("C-p" . company-select-previous))
+  ;; :config
+  ;; (setq company-minimum-prefix-length     3
+  ;;       company-idle-delay                0.2
+  ;;       company-toolsip-limit             14
+  ;;       company-tooltip-align-annotations t
+  ;;       company-require-match             'never
+  ;;       company-global-modes              '(not prog-mode org-mode)
+  ;;       company-frontends
+  ;;       '(company-pseudo-tooltip-frontend ; always show candidates in overlay tooltip
+  ;;         company-echo-metadata-frontend) ; show selected candidate docs in echo area
+  ;;       ;; Default backends
+  ;;       company-backends '(company-capf)
+  ;;       ;; company-auto-commit         t
+  ;;       ;; company-auto-complete-chars nil
+  ;;       ;; company-dabbrev-other-buffers t
+  ;;       ;; company-dabbrev-ignore-case t
+  ;;       company-dabbrev-downcase nil)
   )
 #+end_src
 
-*** company-dict
-This package is a backend for company. It emulates
-~ac-source-dictionary~ by proposing text related to the current
-major-mode.
-#+begin_src emacs-lisp
-(use-package company-dict
-  :after company
-  :straight (:build t)
-  :config
-  (setq company-dict-dir (expand-file-name "dicts" user-emacs-directory)))
-#+end_src
 
-*** company-box
+**** COMMENT company-box
 On the other hand, ~company-box~ is a Company front-end which offers
 colours, icons, documentation and so on. Very nice.
 
@@ -149,8 +360,9 @@ with an org-table.
 
 #+begin_src emacs-lisp
 (use-package company-box
-  :straight (:build t)
+  :straight t
   :after (company all-the-icons)
+  :hook (prog-mode . company-box-mode)
   :config
   (setq company-box-show-single-candidate t
         company-box-backends-colors       nil
@@ -162,12 +374,27 @@ with an org-table.
             <<gen-company-box-icons()>>))))
 #+end_src
 
-*** company-shell
+#+RESULTS:
+| company-box-mode | rainbow-delimiters-mode | prog-mode-set-symbols-alist | git-gutter-mode | highlight-indent-guides-mode | (lambda nil (setq truncate-lines t)) | undo-hl-mode | smartparens-mode | yas-minor-mode | enable-trailing-whitespace | hs-minor-mode | display-line-numbers-mode | (lambda nil (setq indent-tabs-mode nil)) | editorconfig-major-mode-hook |
+
+**** COMMENT company-shell
 #+begin_src emacs-lisp
 (use-package company-shell
    :straight t)
 #+end_src
-*** COMMENT company-tabnine
+**** COMMENT company-dict
+This package is a backend for company. It emulates
+~ac-source-dictionary~ by proposing text related to the current
+major-mode.
+#+begin_src emacs-lisp
+(use-package company-dict
+  :after company
+  :straight (:build t)
+  :config
+  (setq company-dict-dir (expand-file-name "dicts" user-emacs-directory)))
+#+end_src
+
+**** COMMENT company-tabnine
 A company-mode backend for TabNine, the all-language autocompleter:
 #+begin_src emacs-lisp
 (use-package company-tabnine

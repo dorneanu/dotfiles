@@ -40,6 +40,7 @@ Undefining some stuff to make keybind prefixes work correctly.
   "U"   #'evil-redo
   "C-a" #'beginning-of-line
   "C-e" #'end-of-line
+  "C-i" #'evil-jump-forward
   "C-y" #'yank
   "M-y" #'counsel-yank-pop)
 #+end_src
@@ -101,24 +102,24 @@ Undefining some stuff to make keybind prefixes work correctly.
 ** Apps
 Here are my apps keybinds. Each one of them is prefixed by ~a~.
 #+name: keybinds-apps
-| Key | Function                   | Description | Package    |
-|-----+----------------------------+-------------+------------|
-|     |                            | apps        |            |
-| c   | calc                       |             |            |
-| cs  | chatgpt-shell              |             |            |
-| C   |                            | calendar    |            |
-| CC  | calendar                   |             |            |
-| Co  | org-agenda                 |             | org        |
-| Cs  | org-caldav-sync            |             | org-caldav |
-| d   | docker                     |             |            |
-| E   | elfeed                     |             |            |
-| e   |                            | email       |            |
-| ec  | mu4e-compose-new           |             |            |
-| em  | mu4e                       |             |            |
-| k   | keycast-mode               |             |            |
-| K   | keycast-log-mode           |             |            |
-| T   | tetris                     |             |            |
-| w   | wttrin                     |             | wttrin     |
+| Key | Function         | Description | Package    |
+|-----+------------------+-------------+------------|
+|     |                  | apps        |            |
+| c   | calc             |             |            |
+| cs  | chatgpt-shell    |             |            |
+| C   |                  | calendar    |            |
+| CC  | calendar         |             |            |
+| Co  | org-agenda       |             | org        |
+| Cs  | org-caldav-sync  |             | org-caldav |
+| d   | docker           |             |            |
+| E   | elfeed           |             |            |
+| e   |                  | email       |            |
+| ec  | mu4e-compose-new |             |            |
+| em  | mu4e             |             |            |
+| k   | keycast-mode     |             |            |
+| K   | keycast-log-mode |             |            |
+| T   | tetris           |             |            |
+| w   | wttrin           |             | wttrin     |
 
 I also have two main shell-related functions, prefixed with ~as~.
 #+name: keybinds-apps-shell

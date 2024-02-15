@@ -84,9 +84,8 @@ and ~C-y~.
  "C-e" nil)
 #+end_src
 *** evil-collection
-This package enables and integrates Evil into a lot of different
-modes, such as org-mode, dired, mu4e, etc. Again, I need some
-additional code compared to most people due to the bépo layout.
+This package enables and integrates Evil into a lot of different modes, such as org-mode,
+dired, mu4e, etc.
 #+begin_src emacs-lisp
 (use-package evil-collection
   :after evil

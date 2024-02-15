@@ -233,6 +233,35 @@ I love /olivetti/ mode
 #+end_src
 
 ** undo
+*** undo-tree
+~undo-tree~ is my preferred way of undoing and redoing stuff. The main
+reason is it doesn’t create a linear undo/redo history, but rather a
+complete tree you can navigate to see your complete editing history.
+One of the two obvious things to do are to tell Emacs to save all its
+undo history files in a dedicated directory, otherwise we’d risk
+littering all of our directories. The second thing is to simply
+globally enable its mode.
+#+begin_src emacs-lisp
+(use-package undo-tree
+  :defer t
+  :straight (:build t)
+  :custom
+  (undo-tree-history-directory-alist
+   `(("." . ,(expand-file-name (file-name-as-directory "undo-tree-hist")
+                               user-emacs-directory))))
+  :init
+  (global-undo-tree-mode)
+  :config
+  (setq undo-tree-visualizer-diff       t
+        undo-tree-visualizer-timestamps t
+        undo-tree-auto-save-history     t
+        undo-tree-enable-undo-in-region t
+        undo-limit        (* 800 1024)
+        undo-strong-limit (* 12 1024 1024)
+        undo-outer-limit  (* 128 1024 1024)))
+#+end_src
+
+*** others
 #+begin_src emacs-lisp
 (use-package undo-fu-session
   :straight t
@@ -262,7 +291,6 @@ I love /olivetti/ mode
   (undo-hl-insert ((t (:background "#FFFF00"))))
   (undo-hl-delete ((t (:background "#FFFF00")))))
 #+END_SRC
-
 ** expand-region
 Use expand-region
 #+begin_src emacs-lisp

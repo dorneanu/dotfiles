@@ -83,15 +83,7 @@ Main configuration
         ;; "|"
         ;; "STOP(c)"
         ;; "EVENT(m)"
-
-        org-todo-keyword-faces
-        '(("[-]"  . +org-todo-active)
-          ("NEXT" . +org-todo-active)
-          ("STARTED" . +org-todo-active)
-          ("WAITING" . +org-todo-onhold)
-          ("CANCELED" . +org-archived)
-          ("PROJ" . +org-todo-project)
-          ("DONE"   . +org-todo-cancel)))
+)
 
   ;; No blank lines before new entries
   (setq org-blank-before-new-entry
@@ -129,6 +121,8 @@ Main configuration
     "k" #'org-edit-src-abort)
   )
 #+end_src
+
+#+RESULTS:
 
 ** Packages
 *** evil-org
@@ -424,8 +418,7 @@ Finish this:
 
      ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
       my/org-meeting
-      :empty-lines 1
-      :immediate-finish t)
+      :empty-lines 1)
 
      ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
       "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
@@ -434,17 +427,17 @@ Finish this:
      ("ta" "Active" entry (file+headline "inbox.org" "Active"),
       my/org-active-task-template
       :empty-lines 1
-      :clock-in t
-      :immediate-finish t)
+      :clock-in t)
      ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
       my/org-basic-task-template
-      :empty-lines 1
-      :immediate-finish t)
+      :empty-lines 1)
 
      ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
       my/org-weekly
       :empty-lines 1))))
 #+end_src
+
+#+RESULTS:
 
 *** org-emphasize
 
@@ -1083,9 +1076,17 @@ tables, source blocks, and tags, and it applies settings similar to
    org-modern-keyword "‣"
    org-modern-list '((43 . "•")
                      (45 . "–")
-                     (42 . "↪")))
+                     (42 . "↪"))
+   org-modern-todo-faces
+   '(("[-]"  . +org-todo-active)
+     ("NEXT" . +org-todo-active)
+     ("STARTED" . +org-todo-active)
+     ("WAITING" . +org-todo-onhold)
+     ("CANCELED" . +org-archived)
+     ("PROJ" . +org-todo-project)
+     ("DONE"   . +org-todo-cancel)))
   ;; (global-org-modern-mode)
-)
+  )
 
 (add-hook 'org-mode-hook #'org-modern-mode)
 (add-hook 'org-agenda-finalize #'org-modern-agenda)

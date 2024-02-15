@@ -233,6 +233,7 @@ awesome!
          (html-mode       . lsp-deferred)
          (sh-mode         . lsp-deferred)
          (terraform-mode  . lsp-deferred)
+         (yaml-mode       . lsp-deferred)
          (lsp-mode        . lsp-enable-which-key-integration)
          (lsp-mode        . lsp-ui-mode))
   :commands (lsp lsp-deferred)
@@ -1106,10 +1107,10 @@ package.
   :config
   (setq go-ts-mode-indent-offset 4))
 
+
 (use-package company-go
-  :after (company go-mode)
-  ;; (setq +lsp-company-backends '(company-tabnine :separate company-go company-capf company-yasnippet))
-  )
+  :straight (:build t)
+  :after (company go-mode))
 
 (use-package go-mode
   :straight t
@@ -1127,11 +1128,16 @@ package.
   (gofmt-command "goimports"))
 
 ;; Add company backends
-(defun golang/set-company-backends ()
- (setq-local company-backends '((company-go company-dabbrev-code company-capf company-yasnippet))))
+;; (defun golang/set-company-backends ()
+;;  (setq-local company-backends '((company-capf company-go))))
 
-(add-hook 'go-mode-hook #'golang/set-company-backends)
-(add-hook 'go-ts-mode-hook #'golang/set-company-backends)
+;; (add-hook 'go-mode-hook #'golang/set-company-backends)
+;; (add-hook 'go-ts-mode-hook #'golang/set-company-backends)
+
+;; Setup capf
+(add-hook 'go-ts-mode-hook (lambda ()
+                             (setq-local completion-at-point-functions
+                                         (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
 
 (use-package gotest
   :straight t
@@ -1409,23 +1415,28 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
 #+begin_src emacs-lisp
 (use-package terraform-mode
   :straight t
-  :defer t
   :hook
   (terraform-mode . apheleia-mode)
   :config
   (setq terraform-indent-level 2
         terraform-format-on-save t))
 
+;; Setup capf
+(add-hook 'terraform-mode-hook (lambda ()
+    (setq-local completion-at-point-functions
+    (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-terraform))))))
+
 ;; Configure company
 (use-package company-terraform
   :straight t
   :after (company lsp)
-  :config (company-terraform-init))
+  :defer t)
 
-;; Add company backends
-(add-hook 'terraform-mode-hook (lambda ()
-   (setq-local company-backends '((company-terraform :with company-dabbrev-code company-capf))))
-)
+;; ;; Add company backends
+;; (add-hook 'terraform-mode-hook (lambda ()
+;;    (setq-local company-backends '((company-capf company-terraform))))
+;; )
+
 
 ;; Disable tfls
 (setq lsp-disabled-clients '(tfls))

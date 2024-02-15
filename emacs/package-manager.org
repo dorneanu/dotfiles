@@ -5,6 +5,13 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 
 * Package Manager
+** Disable packages
+#+begin_src emacs-lisp
+;; Disable company
+;; (setq package-load-list '(all
+;;                           (company nil)
+;;                           ))
+#+end_src
 ** Repositories
 By default, only GNU’s repositories are available to the package
 managers of Emacs. I also want to use Melpa and org-mode’s repository,
