@@ -353,11 +353,14 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
   :bind (:map org-timeblock-mode-map
               ("M-n" . org-timeblock-forward-block)
               ("M-p" . org-timeblock-backward-block)
+              ("M-s" . org-timeblock-schedule)
+              ("M-c i" . org-timeblock-clock-in)
+              ("M-c t" . org-timeblock-todo)
               ("r" . org-timeblock-redraw-buffers)
               ("s" . org-timeblock-switch-view))
   :general
   (phundrak/major-leader-key
-    :keymaps 'org-timeblock-mode
+    :keymaps 'org-timeblock-mode-map
     :packages 'org-timeblock
     :infix "O"
     ""  '(:ignore t :which-key "preview")
@@ -444,12 +447,12 @@ Finish this:
 #+name: org-emphasis-character
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
-| bold           | ~*~       |             42 |
-| italic         | ~/~       |             47 |
-| underline      | ~_~       |             95 |
-| verbatim       | ~=~       |             61 |
-| code           | ~~~       |            126 |
-| strike-through | ~+~       |             43 |
+| bold           | ~*~         |             42 |
+| italic         | ~/~         |             47 |
+| underline      | ~_~         |             95 |
+| verbatim       | ~=~         |             61 |
+| code           | ~~~         |            126 |
+| strike-through | ~+~         |             43 |
 
 #+name: org-create-emphasis-functions
 #+header: :tangle no :exports results :cache yes

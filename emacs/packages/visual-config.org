@@ -294,6 +294,10 @@ personal preference.
 (use-package ef-themes
   :straight t)
 
+;; Install sanityinc tomorrow
+(use-package color-theme-sanityinc-tomorrow
+  :straight t)
+
 ;; Load theme
 (load-theme 'doom-monokai-octagon t)
 #+end_src

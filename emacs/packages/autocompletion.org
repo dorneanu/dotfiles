@@ -187,7 +187,7 @@ Some useful resources:
 ;; Set capfs
 (defun dorneanu/set-basic-capf ()
   (setq-local completion-at-point-functions
-              (list (cape-capf-super #'cape-symbol #'cape-dabbrev #'cape-dict #'cape-keyword)))
+              (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword)))
   )
 
 (defun dorneanu/set-lsp-capf ()
@@ -204,7 +204,7 @@ Some useful resources:
 #+end_src
 
 #+RESULTS:
-: dorneanu/set-lsp-capf
+: dorneanu/set-go-capf
 
 **** COMMENT elisp-mode-cape
 
@@ -222,6 +222,9 @@ Some useful resources:
                   cape-file)
                 cape-dabbrev-min-length 5)))
 #+end_src
+
+#+RESULTS:
+| my/setup-elisp | lisp-mode-prettify | (lambda nil (smartparens-mode -1)) |
 
 *** company
 I still need to finish this:

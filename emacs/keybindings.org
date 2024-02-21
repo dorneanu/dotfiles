@@ -433,6 +433,7 @@ My toggle keybinds are prefixed by ~t~.
 | it  | toggle-input-method                   |                     |
 | is  | set-input-method                      |                     |
 | ln  | display-line-numbers-mode             | Toggle line numbers |
+| lh  | hl-line-mode                          |                     |
 | om  | olivetti-mode                         | olivetti mode       |
 | os  | org-sidebar-tree-toggle               |                     |
 | vc  | visual-fill-column-mode               |                     |
