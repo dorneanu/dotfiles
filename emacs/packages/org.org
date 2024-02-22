@@ -652,7 +652,6 @@ management system based on org-mode.
            :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
            :unnarrowed t)
           ))
-
   :general
   (phundrak/leader-key
     :packages '(org org-roam)

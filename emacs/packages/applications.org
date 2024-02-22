@@ -42,9 +42,14 @@
   :commands (chatgpt-shell)
   :bind (("C-c a p" . chatgpt-shell-prompt)
          ("C-c a s" . chatgpt-shell)
+         ("C-c a cd" . dorneanu/+chatgpt-shell-check-diff)
+         ("C-c a cp" . dorneanu/+chatgpt-shell-check-paragraph)
+         ("C-c a P" . dorneanu/+chatgpt-shell-check-and-correct-paragraph)
+         ("C-c a u" . +retrive-text-content-from-page)
          ("C-c a r" . chatgpt-shell-proofread-region))
   :config
   (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt"))
+  <<chatgpt-shell-custom-functions>>
   :custom
   ;; From https://github.com/jwiegley/dot-emacs/blob/master/init.org
   ;; I might need to change these
@@ -63,6 +68,69 @@
       "Your goal is to help the user become an amazing computer programmer. You are positive and encouraging. You love see them learn. You do not repeat obvious things, including their query. You are as concise in responses. You always guide the user go one level deeper and help them see patterns. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
      ("Travel Guide" .
       "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location."))))
+#+end_src
+
+**** Custom functions
+***** chatgpt-shell-checks
+For ChatGPT:
+#+name: chatgpt-shell-custom-functions
+#+begin_src emacs-lisp
+;; https://www.reddit.com/r/emacs/comments/185n3yo/emacs_meets_chatgpt_for_flawless_grammar_and/
+(defun chatgpt-shell-check-paragraph (text)
+   "Send TEXT to ChatGPT for spell and grammar checking."
+   ;; trim both sides to make diff easier
+   (if (string= text "")
+       (error "nothing to send to chatGPT"))
+   (message "sending [%s]" text)
+   (let ((response (chatgpt-shell-post-prompt
+                    (concat
+                     "Please correct the spelling and grammar of the following paragraph."
+                     "Maintain existing org-mode syntax expressions like =this=, *this* and ~this~."
+                     "Only return the corrected paragraph, not the original text or this prompt."
+                     " If there is no change, return 'It looks good'."
+                     "Here's the text:\n\n" text)
+                    nil "gpt-3.5-turbo" nil nil nil nil)))
+     response))
+
+(defun dorneanu/+chatgpt-shell-check-and-correct-paragraph ()
+   "Check and correct the current paragraph using ChatGPT."
+   (interactive)
+   (let* ((bounds (bounds-of-thing-at-point 'paragraph))
+          (start (car bounds))
+          (end (cdr bounds))
+          (original-text (string-trim-left (buffer-substring-no-properties start end)))
+          (point-offset (- end (point))) ; Save the offset of point from end
+          (checked-text (chatgpt-shell-check-paragraph original-text)))
+     (when checked-text
+       (if (string-prefix-p "It looks good" checked-text)
+           (message "It looks good")
+         (save-excursion
+           (goto-char start)
+           (delete-region start end)
+           (insert "\n") ; Insert a newline here
+           (insert checked-text)
+           (chatgpt-shell-check-diff original-text checked-text)
+           ;; Move the point to its new position relative to the end
+           (goto-char (- (cdr (bounds-of-thing-at-point 'paragraph)) point-offset)))))))
+
+(defun chatgpt-shell-check-diff (original-text checked-text)
+   (let ((buffer-ori (get-buffer-create "*chatgpt-grammar-original*"))
+         (buffer-new (get-buffer-create "*chatgpt-grammar-checked*"))
+         (reg-A-end nil)
+         (reg-B-end nil)
+         )
+     (set-buffer buffer-ori)
+     (erase-buffer)
+     (insert original-text)
+     (setq reg-A-end (point-max))
+     (set-buffer buffer-new)
+     (erase-buffer)
+     (insert checked-text)
+     (setq reg-B-end (point-max))
+     (ediff-regions-internal buffer-ori 1 reg-A-end
+                             buffer-new 1 reg-B-end
+                             nil 'ediff-regions-wordwise 'word-mode nil)))
+
 #+end_src
 
 ** Browsers
