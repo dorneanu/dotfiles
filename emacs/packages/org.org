@@ -649,7 +649,7 @@ management system based on org-mode.
       ,* Notes
       ") :unnarrowed t)
           ("x" "Blog" plain "%?"
-           :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: blog.setup\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
+           :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: setup.org\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
            :unnarrowed t)
           ))
   :general
