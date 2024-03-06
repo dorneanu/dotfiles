@@ -103,7 +103,7 @@ Garbage Collect when Emacs is out of focus and avoid garbage collection when usi
 I *never* want to keep trailing spaces in my files, which is why I’m
 doing this:
 #+begin_src emacs-lisp
-(add-hook 'before-save-hook #'whitespace-cleanup)
+;; (add-hook 'before-save-hook #'whitespace-cleanup)
 #+end_src
 
 I don’t understand why some people add two spaces behind a full stop,
@@ -271,7 +271,7 @@ background transparent, excluding images and text.
 ;; (add-to-list 'default-frame-alist '(alpha-background . 0.2))
 #+end_src
 
-*** Some other global configs
+** Some other global configs
 #+begin_src emacs-lisp
 ;; https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-base.el
 (use-package simple
