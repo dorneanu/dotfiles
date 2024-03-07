@@ -80,8 +80,8 @@ block.
 ** Loading All Configuration Modules
 
 #+name: emacs-modules
-| Module Name            | Config Page                      |
-|------------------------+----------------------------------|
+| Module Name              | Config Page                      |
+|--------------------------+----------------------------------|
 | =basic-config.el=        | [[file:./basic-config.org][Basic Configuration]]              |
 | =custom-elisp.el=        | [[file:./custom-elisp.org][Custom Elisp]]                     |
 | =package-manager.el=     | [[file:./package-manager.org][Package Manager]]                  |
