@@ -314,24 +314,25 @@ Keybindings for ~opening~ stuff (prefixed by ~o~)
 ** Project
 My keybinds for my projects are prefixed by ~p~.
 #+name: keybinds-project
-| Key | Function                                   | Description |
-|-----+--------------------------------------------+-------------|
-|     |                                            | project     |
-| .   | rg-project                                 |             |
-| !   | projectile-run-shell-command-in-root       |             |
-| &   | projectile-run-async-shell-command-in-root |             |
-| a   | projectile-add-known-project               |             |
-| b   | consult-project-buffer                     |             |
-| c   | counsel-projectile                         |             |
-| d   | consult-projectile-find-dir                |             |
-| e   | projectile-edit-dir-locals                 |             |
-| f   | projectile--find-file                      |             |
-| g   | projectile-find-tag                        |             |
-| k   | project-kill-buffers                       |             |
-| p   | consult-projectile-switch-project          |             |
-| S   | dirvish-side                               |             |
-| t   | ivy-magit-todos                            |             |
-| v   | projectile-vc                              |             |
+| Key | Function                                   | Description   |
+|-----+--------------------------------------------+---------------|
+|     |                                            | project       |
+| .   | rg-project                                 |               |
+| !   | projectile-run-shell-command-in-root       |               |
+| &   | projectile-run-async-shell-command-in-root |               |
+| a   | projectile-add-known-project               |               |
+| b   | consult-project-buffer                     |               |
+| c   | counsel-projectile                         |               |
+| d   | consult-projectile-find-dir                |               |
+| e   | projectile-edit-dir-locals                 |               |
+| f   | projectile--find-file                      |               |
+| g   | projectile-find-tag                        |               |
+| k   | project-kill-buffers                       |               |
+| p   | consult-projectile-switch-project          |               |
+| S   | dirvish-side                               |               |
+| T   | treemacs                                   | Open treemacs |
+| t   | ivy-magit-todos                            |               |
+| v   | projectile-vc                              |               |
 
 *** Treemacs
 
@@ -389,18 +390,19 @@ advantages of having multiple frames.
 
 My keybinds are prefixed by ~SPC TAB~.
 #+name: keybinds-tabs
-| Key | Function     | Description |
-|-----+--------------+-------------|
-|     |              | tabs        |
-| TAB | tab-switch   |             |
-| »   | tab-next     |             |
-| «   | tab-previous |             |
-| c   | tab-new      |             |
-| C   | tab-new-to   |             |
-| d   | tab-close    |             |
-| n   | tab-next     |             |
-| p   | tab-previous |             |
-| r   | tab-rename   |             |
+| Key | Function                     | Description |
+|-----+------------------------------+-------------|
+|     |                              | tabs        |
+| TAB | tab-switch                   |             |
+| »   | tab-next                     |             |
+| «   | tab-previous                 |             |
+| c   | centaur-tabs--create-new-tab |             |
+| C   | tab-new-to                   |             |
+| d   | tab-close                    |             |
+| j   | centaur-tabs-ace-jump        |             |
+| n   | centaur-tabs-forward         |             |
+| p   | centaur-tabs-backward        |             |
+| r   | tab-rename                   |             |
 
 ** Text
 The prefix here is ~T~.
@@ -419,7 +421,7 @@ My toggle keybinds are prefixed by ~t~.
 | Key | Function                              | Description         |
 |-----+---------------------------------------+---------------------|
 |     |                                       | toggles             |
-| TAB | tab-bar-mode                          |                     |
+| TAB | centaur-tabs-mode                     |                     |
 | t   | my/modify-frame-alpha-background/body |                     |
 | T   | consult-theme                         |                     |
 | d   |                                       | debug               |

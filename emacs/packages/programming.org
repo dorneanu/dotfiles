@@ -791,7 +791,8 @@ or some I write myself.
   :config
   (setq plantuml-default-exec-mode 'jar
         plantuml-jar-path "~/.local/bin/plantuml.jar"
-        org-plantuml-jar-path "~/.local/bin/plantuml.jar"))
+        org-plantuml-jar-path "~/.local/bin/plantuml.jar"
+        plantuml-indent-level 4))
 #+end_src
 
 *** SDLang
@@ -1138,10 +1139,20 @@ package.
 (add-hook 'go-ts-mode-hook (lambda ()
                              (setq-local completion-at-point-functions
                                          (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+(add-hook 'go-mode-hook (lambda ()
+                             (setq-local completion-at-point-functions
+                                         (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
 
 (use-package gotest
   :straight t
-  :after go-mode)
+  :after go-mode
+  :bind (:map go-ts-mode-map
+              ("C-c t f" . go-test-current-file)
+              ("C-c t t" . go-test-current-test)
+              ("C-c t j" . go-test-current-project)
+              ("C-c t b" . go-test-current-benchmark)
+              ("C-c t c" . go-test-current-coverage)
+              ("C-c t x" . go-run)))
 
 (use-package go-guru
   :straight t
@@ -1161,6 +1172,19 @@ package.
   :straight t
   :hook
   (go-mode . go-eldoc-setup))
+
+(use-package go-tag
+  :straight (:build t)
+  :bind (:map go-mode-map
+              ("C-c t a" . go-tag-add)
+              ("C-c t r" . go-tag-remove))
+  :init (setq go-tag-args (list "-transform" "camelcase")))
+
+(use-package go-fill-struct
+  :straight (:build t))
+
+(use-package go-impl
+  :straight (:build t))
 #+end_src
 
 *** Python

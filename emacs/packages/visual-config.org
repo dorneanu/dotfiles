@@ -302,7 +302,7 @@ personal preference.
 (load-theme 'doom-monokai-octagon t)
 #+end_src
 ** Tabs
-*** Tab Bar
+*** COMMENT Tab Bar
 #+begin_src emacs-lisp
 (use-package tab-bar
   :defer t
@@ -324,8 +324,17 @@ personal preference.
 #+end_src
 
 #+RESULTS:
-
-
+*** centaur-tabs
+#+begin_src emacs-lisp
+(use-package centaur-tabs
+  :straight (:build t)
+  :demand
+  :config
+  (centaur-tabs-mode t)
+  :bind
+  ("C-<prior>" . centaur-tabs-backward)
+  ("C-<next>" . centaur-tabs-forward))
+#+end_src
 ** Rainbow Delimiters
 This makes Lisp especially more readable, but it’s also nice to have
 for any language that has delimiters like brackets too.

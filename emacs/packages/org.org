@@ -38,7 +38,7 @@ Main configuration
   :config
   (require 'ox-beamer)
   (require 'org-protocol)
-  (setq org-hide-leading-stars             nil
+  (setq org-hide-leading-stars             t
         org-hide-macro-markers             t
         org-ellipsis                       "…"
         org-image-actual-width             600
@@ -129,15 +129,33 @@ Main configuration
 #+begin_src emacs-lisp
 (use-package evil-org
   :straight (:build t)
+  :diminish
   :after (org)
-  :hook (org-mode . evil-org-mode)
+  :hook (org-mode . (lambda () evil-org-mode))
   :config
-  (evil-org-set-key-theme '(textobjects navigation calendar additional shift operators))
+  (evil-org-set-key-theme)
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys)
-  ;; Disable SPC in org-agenda-mode
-  (evil-define-key 'motion org-agenda-mode-map
-    (kbd "SPC") nil))
+  ;; Disable SPC key in org-agenda
+  ;; (define-key org-agenda-mode-map (kbd "SPC") nil)
+  (evil-define-key 'motion org-agenda-mode-map (kbd "SPC") nil)
+)
+#+end_src
+
+*** COMMENT evil-org-agenda
+#+begin_src emacs-lisp
+;; (use-package evil-org-agenda
+;;   :after (evil-org org-agenda)
+;;   :hook 
+;;   (org-agenda-mode . evil-org-agenda-mode)
+;;   :config
+;;   (evil-org-agenda-set-keys)
+;;   ;; Disable SPC in org-agenda-mode
+;;   ;; (require 'evil-org-agenda)
+;;   ;; (evil-define-key* 'motion evil-org-agenda-mode-map
+;;   ;;   (kbd "SPC") nil)
+;;   )
+
 #+end_src
 *** org-contrib
 #+begin_src emacs-lisp
@@ -339,6 +357,15 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:auto-parent t)
                             (:discard (:anything)))))))))))
 
+#+end_src
+
+Copy same keymap as in ~org-agenda-mode~:
+
+#+begin_src emacs-lisp
+(eval-after-load "evil-org-agenda"
+  '(progn
+     (setq org-super-agenda-header-map (copy-keymap org-agenda-mode-map))
+     ))
 #+end_src
 *** org-sidebar-tree                                                    :todo:
 #+begin_src emacs-lisp
@@ -1093,13 +1120,13 @@ tables, source blocks, and tags, and it applies settings similar to
 (add-hook 'org-mode-hook #'org-modern-mode)
 (add-hook 'org-agenda-finalize #'org-modern-agenda)
 #+end_src
-*** org-modern-indent
+*** COMMENT org-modern-indent
 #+begin_src emacs-lisp
 (use-package org-modern-indent
   :after (org)
   :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
   :config
-  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
+  (add-hook 'org-indent-mode-hook #'org-modern-indent-mode 90))
 #+end_src
 *** org-outline-tree
 /Org Outline Tree/ is a better way of managing my org files’ outline.
