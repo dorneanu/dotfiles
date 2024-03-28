@@ -734,7 +734,10 @@ without having to go through =dired=.
   :bind (("C-;" . embark-act)
          :map embark-file-map
          ("V" . cust/vsplit-file-open)
-         ("X" . cust/split-file-open)))
+         ("X" . cust/split-file-open))
+  :config
+  (define-key embark-url-map "X" #'dorneanu/embark-open-url-in-xwidget-webkit)
+)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -742,6 +745,30 @@ without having to go through =dired=.
   :straight t
   :after (consult embark))
 #+end_src
+
+Further functions: 
+
+#+begin_src emacs-lisp
+(defun dorneanu/embark-open-url-in-xwidget-webkit (url &rest args)
+  "open with xwidget"
+  (message "URL: " url)
+  ;; Split window and focus there
+  (when (stringp url)
+    ;; If it's a "naked url", just try adding https: to it.
+    (unless (string-match "\\`[A-Za-z]+:" url)
+      (setq url (concat "https://" url)))
+
+    ;; Split window
+    (split-window-right)
+    (balance-windows)
+    (other-window 1)
+
+    (xwidget-webkit-new-session url)
+    (xwidget-webkit-goto-url url)
+    ))
+
+#+end_src
+
 
 ** Yasnippet
 Yasnippet allows you to insert some pre-made code by just typing a few

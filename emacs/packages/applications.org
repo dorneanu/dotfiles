@@ -145,12 +145,14 @@ Set default browser to chrome:
 (setq browse-url-browser-function 'browse-url-chrome)
 #+end_src
 
-*** COMMENT XWidgets Webkit Browser
-I used to use the xwidgets webkit browser in order to view or preview
-HTML files from Emacs, but it seems the Cairo background transparency
-patch breaks it. So while this isn’t patched, I will disable Xwidgets
-in my Emacs build, and these keybinds *will not* be tangled.
-#+begin_src emacs-lisp :tangle no
+*** XWidgets Webkit Browser
+#+begin_src emacs-lisp 
+(use-package xwidget
+  :bind
+  (:map xwidget-webkit-mode-map
+        ("M-w" . xwidget-webkit-copy-selection-as-kill)
+        ("M-4" . kill-buffer-and-window)))
+
 (phundrak/evil
  :keymaps 'xwidget-webkit-mode-map
  "<mouse-4>" #'xwidget-webkit-scroll-down-line
@@ -168,9 +170,13 @@ in my Emacs build, and these keybinds *will not* be tangled.
  "l"         nil
  "H"         nil
  "L"         nil
+ "X"         #'kill-buffer-and-window
  "C-d"       #'xwidget-webkit-scroll-up
  "C-u"       #'xwidget-webkit-scroll-down)
 #+end_src
+
+#+RESULTS:
+
 ** Buffers
 *** ibuffer
 #+begin_src emacs-lisp
@@ -915,7 +921,18 @@ thanks to ~elfeed-org~.
 
 #+end_src
 
-
+**** functions
+#+begin_src emacs-lisp
+(defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
+  "open with xwidget"
+  (interactive "P")
+  ;; Split window and focus there
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+    (elfeed-search-browse-url use-generic-p)))
+#+end_src
 **** reddigg
 Use reddigg to show reddit threads.
 #+begin_src emacs-lisp
@@ -987,23 +1004,24 @@ will directly launch the function.
 Same thing, different mode, here are my keybinds for
 ~elfeed-search-mode~.
 #+name: elfeed-keybinds-search-mode
-| Key | Function                       | Comment |
-|-----+--------------------------------+---------|
-| «   | elfeed-search-first-entry      |         |
-| »   | elfeed-search-last-entry       |         |
-| b   | elfeed-search-browse-url       |         |
-| f   |                                | filter  |
-| fc  | elfeed-search-clear-filter     |         |
-| fl  | elfeed-search-live-filter      |         |
-| fs  | elfeed-search-set-filter       |         |
-| u   |                                | update  |
-| us  | elfeed-search-fetch            |         |
-| uS  | elfeed-search-update           |         |
-| uu  | elfeed-update                  |         |
-| uU  | elfeed-search-update--force    |         |
-| y   | elfeed-search-yank             |         |
-| x   | elfeed-search-untag-all-unread |         |
-| TAB | elfeed-search-show-entry       |         |
+| Key | Function                                  | Comment |
+|-----+-------------------------------------------+---------|
+| «   | elfeed-search-first-entry                 |         |
+| »   | elfeed-search-last-entry                  |         |
+| b   | elfeed-search-browse-url                  |         |
+| f   |                                           | filter  |
+| fc  | elfeed-search-clear-filter                |         |
+| fl  | elfeed-search-live-filter                 |         |
+| fs  | elfeed-search-set-filter                  |         |
+| u   |                                           | update  |
+| us  | elfeed-search-fetch                       |         |
+| uS  | elfeed-search-update                      |         |
+| uu  | elfeed-update                             |         |
+| uU  | elfeed-search-update--force               |         |
+| y   | elfeed-search-yank                        |         |
+| x   | elfeed-search-untag-all-unread            |         |
+| X   | dorneanu/elfeed-search-browse-url-xwidget |         |
+| TAB | elfeed-search-show-entry                  |         |
 
 I have some additional keybinds for ~elfeed-search-mode~, but these one
 are prefixed with ~,~ (and ~M-m~).
