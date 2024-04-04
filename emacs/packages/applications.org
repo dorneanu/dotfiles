@@ -2837,7 +2837,19 @@ search started."
 
 #+RESULTS:
 : t
-
+*** gif-screencast
+#+begin_src emacs-lisp
+(use-package gif-screencast
+  :commands gif-screencast-mode
+  :bind (:map gif-screencast-mode-map
+              ("<f11>" . gif-screencast-toggle-pause)
+              ("<f12>" . gif-screencast-stop))
+  :config
+  (setq gif-screencast-program "maim"
+        gif-screencast-args `("--quality" "3" "-i" ,(string-trim-right
+                                                     (shell-command-to-string
+                                                      "xdotool getactivewindow")))))
+#+end_src
 ** Web
 *** link-hint
 #+begin_src emacs-lisp
