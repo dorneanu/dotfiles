@@ -97,6 +97,24 @@ Undefining some stuff to make keybind prefixes work correctly.
   "U"   #'undo-tree-visualize)
 #+end_src
 
+Now some keybindings for the ~Super_L~ key: 
+
+#+begin_src emacs-lisp
+;; lower case “s” is for super
+;; Use windows key (super) for window navigation 
+(global-set-key (kbd "s-h") #'evil-window-left)
+(global-set-key (kbd "s-l") #'evil-window-right)
+(global-set-key (kbd "s-k") #'evil-window-up)
+(global-set-key (kbd "s-j") #'evil-window-down)
+
+;; perspective
+(global-set-key (kbd "s-,") #'persp-prev)
+(global-set-key (kbd "s-.") #'persp-next)
+
+;; buffers
+(global-set-key (kbd "s-b") #'consult-buffer)
+#+end_src
+
 #+RESULTS:
 
 ** Apps
