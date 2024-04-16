@@ -97,6 +97,8 @@ Undefining some stuff to make keybind prefixes work correctly.
   "U"   #'undo-tree-visualize)
 #+end_src
 
+#+RESULTS:
+
 Now some keybindings for the ~Super_L~ key: 
 
 #+begin_src emacs-lisp
@@ -114,8 +116,6 @@ Now some keybindings for the ~Super_L~ key:
 ;; buffers
 (global-set-key (kbd "s-b") #'consult-buffer)
 #+end_src
-
-#+RESULTS:
 
 ** Apps
 Here are my apps keybinds. Each one of them is prefixed by ~a~.
@@ -436,28 +436,28 @@ The prefix here is ~T~.
 ** Toggles
 My toggle keybinds are prefixed by ~t~.
 #+name: keybinds-toggle
-| Key | Function                              | Description         |
-|-----+---------------------------------------+---------------------|
-|     |                                       | toggles             |
-| TAB | centaur-tabs-mode                     |                     |
-| t   | my/modify-frame-alpha-background/body |                     |
-| T   | consult-theme                         |                     |
-| d   |                                       | debug               |
-| de  | toggle-debug-on-error                 |                     |
-| dq  | toggle-debug-on-quit                  |                     |
-| dhl | diff-hl-mode                          |                     |
-| dgg | git-gutter-mode                       |                     |
-| f   | focus-mode                            | focus-mode          |
-| h   | highlight-indent-guides-mode          |                     |
-| i   |                                       | input method        |
-| it  | toggle-input-method                   |                     |
-| is  | set-input-method                      |                     |
-| ln  | display-line-numbers-mode             | Toggle line numbers |
-| lh  | hl-line-mode                          |                     |
-| om  | olivetti-mode                         | olivetti mode       |
-| os  | org-sidebar-tree-toggle               |                     |
-| vc  | visual-fill-column-mode               |                     |
-| vp  | vertico-posframe-mode                 |                     |
+| Key | Function                     | Description         |
+|-----+------------------------------+---------------------|
+|     |                              | toggles             |
+| TAB | centaur-tabs-mode            |                     |
+| t   | dorneanu/toggle-transparency |                     |
+| T   | consult-theme                |                     |
+| d   |                              | debug               |
+| de  | toggle-debug-on-error        |                     |
+| dq  | toggle-debug-on-quit         |                     |
+| dhl | diff-hl-mode                 |                     |
+| dgg | git-gutter-mode              |                     |
+| f   | focus-mode                   | focus-mode          |
+| h   | highlight-indent-guides-mode |                     |
+| i   |                              | input method        |
+| it  | toggle-input-method          |                     |
+| is  | set-input-method             |                     |
+| ln  | display-line-numbers-mode    | Toggle line numbers |
+| lh  | hl-line-mode                 |                     |
+| om  | olivetti-mode                | olivetti mode       |
+| os  | org-sidebar-tree-toggle      |                     |
+| vc  | visual-fill-column-mode      |                     |
+| vp  | vertico-posframe-mode        |                     |
 
 ** Windows
 A couple of keybinds are hidden from which-key, otherwise there’s not

@@ -268,7 +268,21 @@ With Emacs 29.0.50 onwards, a new frame parameter exists:
 ~alpha-background~. Unlike ~alpha~, this frame parameter only makes Emacs’
 background transparent, excluding images and text.
 #+begin_src emacs-lisp
-;; (add-to-list 'default-frame-alist '(alpha-background . 0.2))
+;; From https://www.emacswiki.org/emacs/TransparentEmacs
+(set-frame-parameter (selected-frame) 'alpha '(95 . 70))
+(add-to-list 'default-frame-alist '(alpha . (95 . 70)))
+
+(defun dorneanu/toggle-transparency ()
+  (interactive)
+  (let ((alpha (frame-parameter nil 'alpha)))
+    (set-frame-parameter
+     nil 'alpha
+     (if (eql (cond ((numberp alpha) alpha)
+                    ((numberp (cdr alpha)) (cdr alpha))
+                    ;; Also handle undocumented (<active> <inactive>) form.
+                    ((numberp (cadr alpha)) (cadr alpha)))
+              100)
+         '(90 . 90) '(100 . 100)))))
 #+end_src
 
 ** Some other global configs
