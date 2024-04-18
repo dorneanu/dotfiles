@@ -5,5 +5,5 @@
               (eval .
                     (progn
                       ;; Tangle whole file after being saved
-                      (add-hook 'after-save-hook 'org-babel-tangle)
+                      (add-hook 'after-save-hook 'org-babel-tangle t t)
                       )))))

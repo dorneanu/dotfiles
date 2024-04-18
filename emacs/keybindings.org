@@ -117,6 +117,13 @@ Now some keybindings for the ~Super_L~ key:
 (global-set-key (kbd "s-b") #'consult-buffer)
 #+end_src
 
+Some keybindings for *paragraphs*:
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "M-n") #'forward-paragraph)
+(global-set-key (kbd "M-p") #'backward-paragraph)
+#+end_src
+
 ** Apps
 Here are my apps keybinds. Each one of them is prefixed by ~a~.
 #+name: keybinds-apps

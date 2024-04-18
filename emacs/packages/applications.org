@@ -2849,6 +2849,14 @@ search started."
                                                      (shell-command-to-string
                                                       "xdotool getactivewindow")))))
 #+end_src
+*** TODO COMMENT kele                                                       :k8s:
+Spritzy Kubernetes cluster management for Emacs
+#+begin_src emacs-lisp
+(use-package kele
+  :straight t
+  :config
+  (kele-mode 1))
+#+end_src
 ** Web
 *** link-hint
 #+begin_src emacs-lisp

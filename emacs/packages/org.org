@@ -474,12 +474,12 @@ Finish this:
 #+name: org-emphasis-character
 | Emphasis       | Character | Character code |
 |----------------+-----------+----------------|
-| bold           | ~*~         |             42 |
-| italic         | ~/~         |             47 |
-| underline      | ~_~         |             95 |
-| verbatim       | ~=~         |             61 |
-| code           | ~~~         |            126 |
-| strike-through | ~+~         |             43 |
+| bold           | ~*~       |             42 |
+| italic         | ~/~       |             47 |
+| underline      | ~_~       |             95 |
+| verbatim       | ~=~       |             61 |
+| code           | ~~~       |            126 |
+| strike-through | ~+~       |             43 |
 
 #+name: org-create-emphasis-functions
 #+header: :tangle no :exports results :cache yes
@@ -555,7 +555,7 @@ And now all the settings for ~org-refile~:
 #+name: org-refiling
 #+begin_src emacs-lisp
 ;; Refiling
-(setq org-refile-use-cache nil)
+(setq org-refile-use-cache t)
 (setq org-refile-targets '((nil :maxlevel . 9)
                            (org-agenda-files :maxlevel . 9)))
 
@@ -626,8 +626,6 @@ If prefix ARG, copy instead of move."
 ;; Save all buffers after refilling
 (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers)))
 #+end_src
-
-#+RESULTS: org-refiling
 
 *** org-roam
 After hearing about it for so many years and thinking I really should
