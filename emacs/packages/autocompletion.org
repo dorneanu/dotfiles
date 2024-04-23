@@ -269,7 +269,6 @@ I still need to finish this:
   )
 #+end_src
 
-
 **** COMMENT company-box
 On the other hand, ~company-box~ is a Company front-end which offers
 colours, icons, documentation and so on. Very nice.
@@ -771,21 +770,20 @@ Further functions:
 
 
 ** Yasnippet
-Yasnippet allows you to insert some pre-made code by just typing a few
-characters. It can even generate some string with Elisp expressions
-and ask the user for some input in some precise places.
 #+begin_src emacs-lisp
 (use-package yasnippet
   :defer t
   :straight (:build t)
   :init
+  (setq yas-snippet-dirs
+        '("~/.config/emacs/snippets"))
   (yas-global-mode)
   :hook ((prog-mode . yas-minor-mode)
          (text-mode . yas-minor-mode)))
 #+end_src
 
-Of course, yasnippet wouldn’t be as awesome as it is without pre-made
-snippets.
+Of course, yasnippet wouldn’t be as awesome as it is without pre-made snippets.
+
 #+begin_src emacs-lisp
 (use-package yasnippet-snippets
   :defer t
@@ -793,15 +791,12 @@ snippets.
   :straight (:build t))
 #+end_src
 
-Similarly, yatemplate offers pre-made files rather than just strings.
-That’s still yasnippet by the way.
 #+begin_src emacs-lisp
-(use-package yatemplate
-  :defer t
-  :after yasnippet
-  :straight (:build t))
+;; (use-package auto-yasnippet
+;;   :straight t
+;;   :config
+;;   (setq aya-persist-snippets-dir ("~/.config/emacs/auto-snippets")))
 #+end_src
-
 *** consult-yasnippet
 Use ~consult-yasnippet~:
 #+begin_src emacs-lisp

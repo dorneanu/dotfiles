@@ -6,6 +6,7 @@
 
 * Visual Configuration
 ** Dashboard
+*** welcome-dashboard
 Use a minimalistic dashboard:
 #+begin_src emacs-lisp
 (use-package welcome-dashboard
@@ -14,15 +15,15 @@ Use a minimalistic dashboard:
                       :repo "konrad1977/welcome-dashboard"
                       :build t)
   :config
-  (setq welcome-latitude 52.520008
-        welcome-longitude 13.404954
-        welcome-path-max-length 75
-        welcome-min-left-padding 10
+  (setq welcome-dashboard-latitude 52.520008
+        welcome-dashboard-longitude 13.404954
+        welcome-dashboard-path-max-length 75
+        welcome-dashboard-min-left-padding 10
         ;; TODO: Fix the welcome image
-        welcome-image-file (concat user-emacs-directory "straight/repos/evil/doc/logo.png")
-        welcome-image-width 200
-        welcome-image-height 169
-        welcome-title "Welcome Victor. Have a great day!")
+        welcome-dashboard-image-file "/home/victor/.config/emacs/straight/repos/evil/doc/logo.png"
+        welcome-dashboard-image-width 200
+        welcome-dashboard-image-height 169
+        welcome-dashboard-title "Welcome Victor. Have a great day!")
   (welcome-dashboard-create-welcome-hook))
 #+end_src
 
@@ -302,7 +303,9 @@ personal preference.
 (load-theme 'doom-monokai-octagon t)
 #+end_src
 ** Tabs
-*** COMMENT Tab Bar
+*** tab-bar
+Built-in tab bar navigation:
+
 #+begin_src emacs-lisp
 (use-package tab-bar
   :defer t
@@ -324,7 +327,7 @@ personal preference.
 #+end_src
 
 #+RESULTS:
-*** centaur-tabs
+*** COMMENT centaur-tabs
 #+begin_src emacs-lisp
 (use-package centaur-tabs
   :straight (:build t)
@@ -399,10 +402,10 @@ I use ~perspective~:
 ** visual-fill-column
 #+begin_src emacs-lisp
 (use-package visual-fill-column
+  :ensure nil
   :custom
   (visual-fill-column-width 90)
-  (visual-fill-column-center-text t)
-  :ensure t)
+  (visual-fill-column-center-text t))
 #+end_src
 
 ** Windows Management

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Macro for inserting a book from my Zettelkasten
+# key: <zkb
+# --
+{{{zk_book($1,$2)}}}

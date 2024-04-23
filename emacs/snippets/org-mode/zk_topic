@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Macro for inserting a topic from my Zettelkasten
+# key: <zkt
+# --
+{{{zk_topic($1,$2)}}}

@@ -1,4 +1,7 @@
 # Phony target to tangle all org files
-.PHONY: tangle
+.PHONY: tangle snippets
 tangle:
 	find . -name "*.org" -exec sh -c 'echo "[!] Tangling {}"; ./tangle_script.sh "{}"' \;
+
+snippets:
+	cp -Rv snippets ~/.config/emacs/
