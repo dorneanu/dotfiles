@@ -172,21 +172,22 @@ And of course, there’s a package for that.
 The DoomEmacs modeline looks nice in my opinion, let’s use it.
 #+begin_src emacs-lisp
 (use-package doom-modeline
-  :straight (:build t)
-  :defer t
+  :straight (:type git :host github :repo "seagle0128/doom-modeline") 
   :init
-  (doom-modeline-mode 1)
-  (setq find-file-visit-truename t)
   :custom
   (doom-modeline-height 15)
   (doom-modeline-enable-word-count t)
   (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
-  (doom-modeline-mu4e t)
-  (doom-modeline-project-detection 'auto)
+  (doom-modeline-mu4e nil)
+  (doom-modeline-project-detection nil)
   (doom-modeline-env-version t)
   (doom-modeline-persp-name nil)
-  (doom-modeline-buffer-file-name-style 'truncate-upto-project))
-
+  (doom-modeline-persp-icon nil)
+  (doom-modeline-buffer-file-name-style 'truncate-upto-project)
+  :config
+  (setq find-file-visit-truename t)
+  (doom-modeline-mode 1)
+)
 #+end_src
 *** COMMENT mini-modeline
 #+begin_src emacs-lisp
@@ -215,31 +216,24 @@ The DoomEmacs modeline looks nice in my opinion, let’s use it.
 #+begin_src emacs-lisp
 (use-package moody
   :straight t
-  ;; :disabled t
-  :unless noninteractive
-  ;; :defer 1
-  ;;:init
-  ;;(set-background-color "black")
-  ;;(set-foreground-color "white")
-  ;; If you use the default Emacs black theme (no external theme loaded) you have to specify
-  ;; a different color for mode-line-buffer-id or it will be the same as the background
-  ;;(set-face-attribute 'mode-line-buffer-id nil :foreground "light sky blue" :weight 'bold)
-  ;;(let ((line (face-attribute 'mode-line :underline)))
-  ;;  (set-face-attribute 'mode-line nil :overline line)
-  ;;  (set-face-attribute 'mode-line-inactive nil :overline line)
-  ;;  (set-face-attribute 'mode-line-inactive nil :underline line)
-  ;;  (set-face-attribute 'mode-line nil :box nil)
-  ;;  (set-face-attribute 'mode-line-inactive nil :box nil))
+  :custom
+  (moody-mode-line-height 15)
   :config
   (setq x-underline-at-descent-line t)
-  (setq moody-mode-line-height nil)
-  ;; moody buffer-identification doesn't work with modus themes and
-  ;; the following line needs to be commented out first or emacs hangs!
   (moody-replace-mode-line-buffer-identification)
-  (moody-replace-vc-mode)
-  (moody-replace-eldoc-minibuffer-message-function))
+  (moody-replace-vc-mode))
 
+(use-package minions
+  :straight t
+  :config (minions-mode 1))
 #+end_src
+
+The package diminish helps to de-clutter the modeline.
+
+#+begin_src emacs-lisp
+(use-package diminish :straight t)
+#+end_src
+
 *** COMMENT lambda-line
 #+begin_src emacs-lisp
 (use-package lambda-line
@@ -288,8 +282,7 @@ once it is fixed.
   ;; :hook ((org-mode markdown-mode) . valign-mode)
   :custom ((valign-fancy-bar t)))
 #+end_src
-
-** Solaire: Incandescent Emacs
+** solaire-mode
 #+begin_src emacs-lisp
 (use-package solaire-mode
   :straight t
@@ -297,7 +290,6 @@ once it is fixed.
   :custom (solaire-mode-remap-fringe t)
   :config (solaire-global-mode))
 #+end_src
-
 ** Theme
 
 You may have noticed I use the Nord theme pretty much everywhere on my
@@ -402,25 +394,30 @@ I use ~perspective~:
          ("M-O" . persp-switch))
   :init
   (setq persp-mode-prefix-key (kbd "M-g ."))
+  :custom
+  (persp-modestring-short nil)
+  (persp-show-modestring nil)
   :config
   (add-hook 'minibuffer-setup-hook
             '(lambda ()
                (dolist (k '("M-N" "M-P" "M-J"))
                  (local-set-key (kbd k) 'ignore))))
-  (advice-add 'persp-switch
-              :after
-              #'(lambda (n &optional r)
-                  (message (persp-name (persp-curr)))))
+  ;; (advice-add 'persp-switch
+  ;;             :after
+  ;;             #'(lambda (n &optional r)
+  ;;                 (message (persp-name (persp-curr)))))
   ;; emacs window title
-  (setq frame-title-format
-        '("" invocation-name
-          (:eval (when persp-mode (format "[%s]" (persp-name (persp-curr))))))))
+  ;; (setq frame-title-format
+  ;;       '("" invocation-name
+  ;;         (:eval (when persp-mode (format "[%s]" (persp-name (persp-curr)))))))
+)
 
 (use-package persp-projectile
   :straight t
   :ensure t
   :after (perspective projectile))
 #+end_src
+
 ** focus-mode
 #+begin_src emacs-lisp
 (use-package focus
