@@ -1,0 +1,1711 @@
+#+title: MinEmacs — Programming
+#+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
+#+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
+
+* Programming
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+#+begin_src emacs-lisp
+(message "Programming loaded")
+#+end_src
+** Visual config
+*** truncate-lines
+Disable truncating lines
+#+begin_src emacs-lisp
+(add-hook 'prog-mode-hook (lambda () (setq truncate-lines t)))
+#+end_src
+*** indentation
+#+begin_src emacs-lisp
+(setq-default tab-width 4
+              indent-tabs-mode nil)
+#+end_src
+** LSP
+*** COMMENT lsp-ui
+#+begin_src emacs-lisp
+(use-package lsp-ui
+  :after lsp
+  :defer t
+  :straight t
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-peek-always-show t)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-doc-enable t))
+#+end_src
+*** consult-lsp
+#+begin_src emacs-lisp
+(use-package consult-lsp
+  :defer t
+  :after lsp
+  :straight t)
+#+end_src
+** Tools
+*** highlight-indent-guides
+#+begin_src emacs-lisp
+(use-package highlight-indent-guides
+  :hook (prog-mode . highlight-indent-guides-mode)
+  :custom (highlight-indent-guides-method 'character))
+#+end_src
+
+*** COMMENT Treesitter
+Treesit is a native Emacs [[https://tree-sitter.github.io/tree-sitter/][tree-sitter]] implementation which provides a
+very fast and flexible way of performing code-highlighting in Emacs.
+It is built-in in Emacs 29 and newer, and I just need to tweak a couple of
+variables to install grammars for different languages.
+#+begin_src emacs-lisp
+(use-package treesit
+  :defer t
+  :straight (:type built-in)
+  ;; :hook ((bash-ts-mode c-ts-mode c++-ts-mode
+  ;;                      html-ts-mode js-ts-mode typescript-ts-mode
+  ;;                      go-ts-mode json-ts-mode rust-ts-mode tsx-ts-mode python-ts-mode
+  ;;                      css-ts-mode yaml-ts-mode) . lsp-deferred)
+  :init
+  (setq treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (cmake "https://github.com/uyha/tree-sitter-cmake")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (gomod "https://github.com/camdencheek/tree-sitter-go-mod")
+          (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (make "https://github.com/alemuller/tree-sitter-make")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (terraform "https://github.com/kgrotel/terraform-ts-mode")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml"))))
+
+(use-package treesit-auto
+  :demand t
+  :straight t
+  :config
+  (global-treesit-auto-mode)
+  (setq treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (cmake "https://github.com/uyha/tree-sitter-cmake")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (gomod "https://github.com/camdencheek/tree-sitter-go-mod")
+          (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (make "https://github.com/alemuller/tree-sitter-make")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (terraform "https://github.com/kgrotel/terraform-ts-mode")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml"))))
+#+end_src
+
+#+results:
+: t
+
+** DSLs
+*** Makefiles
+#+begin_src emacs-lisp
+(defun my/local-tab-indent ()
+  (setq-local indent-tabs-mode 1))
+(add-hook 'makefile-mode-hook #'my/local-tab-indent)
+#+end_src
+*** COMMENT Markdown
+Yes, I love org-mode and I largely prefer to use it instead of
+Markdown due to its far superior power and abilities. But still,
+sometimes I need to use Markdown because not everyone uses org-mode,
+unfortunately.
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :defer t
+  :straight t
+  :mode
+  (("\\.mkd\\'" . markdown-mode)
+   ("\\.mdk\\'" . markdown-mode)
+   ("\\.mdx\\'" . markdown-mode))
+  :hook (markdown-mode . orgtbl-mode)
+  :hook (markdown-mode . visual-line-mode)
+  :config
+  (setq markdown-fontify-code-blocks-natively t))
+#+end_src
+
+Since most of my Markdown files are related to GitHub, I’d like to be
+able to render Markdown through its API.
+#+begin_src emacs-lisp
+(use-package gh-md
+  :defer t
+  :after markdown-mode
+  :straight (:build t))
+#+end_src
+
+Sometimes, I have to work with GitHub’s markdown flavour, but I’m not
+really a huge fan of writing it by hand. So instead, I’ll write it in
+org-mode and then export it with ~ox-gfm~.
+#+begin_src emacs-lisp
+(use-package ox-gfm
+  :straight (:build t)
+  :defer t
+  :after (org ox))
+#+end_src
+
+Nuxt has its own flavour of Markdown, called [[https://content.nuxtjs.org/guide/writing/mdc/][MDC]] (/MarkDown Components/)
+which is a godsend to write content for Nuxt websites! However, no
+~mdc-mode~ existed when I began working with it, so I’m working on one.
+#+begin_src emacs-lisp
+;; (use-package mdc-mode
+;;   :defer t
+;;   :after markdown-mode
+;;   :straight (mdc-mode :type git
+;;                       :host github
+;;                       :repo "Phundrak/mdc-mode"
+;;                       :build t))
+#+end_src
+
+Tables of content are always nice to have for large files, just like
+with the ~toc-org~ package for org-mode.
+#+begin_src emacs-lisp
+(use-package markdown-toc
+  :defer t
+  :after markdown-mode
+  :straight (:build t))
+#+end_src
+
+Lastly, ~edit-indirect~ is a package that allows to edit code blocks as
+in org-mode but with other major modes, such as code blocks in
+Markdown.
+#+begin_src emacs-lisp
+(use-package edit-indirect
+  :straight (:build t)
+  :defer t)
+#+end_src
+
+*** COMMENT PKGBUILD
+As I am an ArchLinux user, I sometimes have to interact with PKGBUILD
+files, both from the AUR when I want to install something from there
+or some I write myself.
+#+begin_src emacs-lisp
+(use-package pkgbuild-mode
+  :straight (:build t)
+  :defer t
+  :custom
+  (pkgbuild-update-sums-on-save nil)
+  (pkgbuild-ask-about-save nil)
+  :general
+  (phundrak/major-leader-key
+    :keymaps 'pkgbuild-mode-map
+    "c"  #'pkgbuild-syntax-check
+    "i"  #'pkgbuild-initialize
+    "I"  #'pkgbuild-increase-release-tag
+    "m"  #'pkgbuild-makepkg
+    "u"  '(:ignore :wk "update")
+    "us" #'pkgbuild-update-sums-line
+    "uS" #'pkgbuild-update-srcinfo))
+#+end_src
+
+*** PlantUML
+#+begin_src emacs-lisp
+(use-package plantuml-mode
+  :defer t
+  :straight t
+  :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
+  :after ob
+  :init
+  (add-to-list 'org-babel-load-languages '(plantuml . t))
+  :config
+  (setq plantuml-default-exec-mode 'jar
+        plantuml-jar-path "~/.local/bin/plantuml.jar"
+        org-plantuml-jar-path "~/.local/bin/plantuml.jar"
+        plantuml-indent-level 4))
+#+end_src
+
+*** SSH Config files
+#+begin_src emacs-lisp
+(use-package ssh-config-mode
+  :defer t
+  :straight t)
+#+end_src
+
+*** Systemd
+#+begin_src emacs-lisp
+(use-package systemd
+  :defer t
+  :straight t)
+#+end_src
+
+*** Tmux config
+#+begin_src emacs-lisp
+(use-package tmux-mode
+  :defer t
+  :straight (tmux-mode :type git :host github :repo "nverno/tmux-mode")
+  :mode (("tmux\\.conf\\'" . tmux-mode)))
+#+end_src
+
+*** Toml
+#+begin_src emacs-lisp
+(use-package toml-mode
+  :straight t
+  :defer t
+  :mode "/\\(Cargo.lock\\|\\.cargo/config\\)\\'")
+#+end_src
+
+*** Yaml
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :defer t
+  :straight t
+  :mode "\\.yml\\'"
+  :mode "\\.yaml\\'")
+#+end_src
+
+** Languages
+*** Golang
+#+begin_src emacs-lisp
+;; (use-package go-ts-mode
+;;   :hook
+;;   (go-ts-mode . lsp-deferred)
+;;   (go-ts-mode . apheleia-mode)
+;;   :bind (:map go-ts-mode-map
+;;               ("M-?" . godoc-at-point)
+;;               ("M-." . godef-jump)
+;;               ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+;;               ("C-c m r" . go-run))
+;;   :config
+;;   (setq go-ts-mode-indent-offset 4))
+
+
+(use-package company-go
+  :straight t
+  :after (company go-mode))
+
+(use-package go-mode
+  :straight t
+  :mode "\\.go\\'"
+  :hook
+  ;; (before-save . gofmt-before-save)
+  (go-mode . apheleia-mode)
+  (go-mode     . eglot)
+  :bind (:map go-mode-map
+              ("M-?" . godoc-at-point)
+              ("M-." . godef-jump)
+              ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+              ("C-c m r" . go-run))
+  :custom
+  (gofmt-command "goimports"))
+
+;; Add company backends
+;; (defun golang/set-company-backends ()
+;;  (setq-local company-backends '((company-capf company-go))))
+
+;; (add-hook 'go-mode-hook #'golang/set-company-backends)
+;; (add-hook 'go-ts-mode-hook #'golang/set-company-backends)
+
+;; Setup capf
+(add-hook 'go-ts-mode-hook (lambda ()
+                             (setq-local completion-at-point-functions
+                                         (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+(add-hook 'go-mode-hook (lambda ()
+                             (setq-local completion-at-point-functions
+                                         (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+
+(use-package gotest
+  :straight t
+  :after go-mode
+  :bind (:map go-mode-map
+              ("C-c t f" . go-test-current-file)
+              ("C-c t t" . go-test-current-test)
+              ("C-c t j" . go-test-current-project)
+              ("C-c t b" . go-test-current-benchmark)
+              ("C-c t c" . go-test-current-coverage)
+              ("C-c t x" . go-run)))
+
+(use-package go-guru
+  :straight t
+  :hook
+  (go-mode . go-guru-hl-identifier-mode))
+
+(use-package go-projectile
+  :straight t
+  :after (projectile go-mode))
+
+(use-package flycheck-golangci-lint
+  :straight t
+  :hook
+  (go-mode . flycheck-golangci-lint-setup))
+
+(use-package go-eldoc
+  :straight t
+  :hook
+  (go-mode . go-eldoc-setup))
+
+(use-package go-tag
+  :straight t
+  :bind (:map go-mode-map
+              ("C-c t a" . go-tag-add)
+              ("C-c t r" . go-tag-remove))
+  :init (setq go-tag-args (list "-transform" "camelcase")))
+
+(use-package go-fill-struct
+  :straight t)
+
+(use-package go-impl
+  :straight t)
+#+end_src
+
+*** Python
+:end:
+First, we need to set up the main Python mode. With this, we’ll also
+add Python to the list of LSP languages and to the list of languages
+org-babel supports.
+#+begin_src emacs-lisp
+(use-package python
+  :defer t
+  :straight t
+  :after ob
+  :mode (("SConstruct\\'" . python-mode)
+         ("SConscript\\'" . python-mode)
+         ("[./]flake8\\'" . conf-mode)
+         ("/Pipfile\\'"   . conf-mode))
+  :init
+  (setq python-indent-guess-indent-offset-verbose nil)
+  (add-hook 'python-mode-local-vars-hook #'lsp)
+  :config
+  (setq python-indent-guess-indent-offset-verbose nil)
+  (when (and (executable-find "python3")
+           (string= python-shell-interpreter "python"))
+    (setq python-shell-interpreter "python3")))
+#+end_src
+**** pytest
+#+begin_src emacs-lisp
+(use-package pytest
+  :defer t
+  :straight t
+  :commands (pytest-one
+             pytest-pdb-one
+             pytest-all
+             pytest-pdb-all
+             pytest-last-failed
+             pytest-pdb-last-failed
+             pytest-module
+             pytest-pdb-module)
+  :config
+  (add-to-list 'pytest-project-root-files "setup.cfg"))
+#+end_src
+**** poetry
+#+begin_src emacs-lisp
+(use-package poetry
+  :defer t
+  :straight t
+  :commands (poetry-venv-toggle
+             poetry-tracking-mode)
+  :config
+  (setq poetry-tracking-strategy 'switch-buffer)
+  (add-hook 'python-mode-hook #'poetry-tracking-mode))
+#+end_src
+
+**** pip-requirements
+This package will bring a new major mode for editing pip requirements.
+#+begin_src emacs-lisp
+(use-package pip-requirements
+  :defer t
+  :straight t)
+#+end_src
+
+#+end_src
+**** pipenv
+This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
+#+begin_src emacs-lisp
+(use-package pipenv
+  :defer t
+  :straight t
+  :commands (pipenv-activate
+             pipenv-deactivate
+             pipenv-shell
+             pipenv-open
+             pipenv-install
+             pipenv-uninstall)
+  :hook (python-mode . pipenv-mode)
+  :init (setq pipenv-with-projectile nil))
+#+end_src
+**** pyenv
+This integrates ~pyenv~ into ~python-mode~.
+#+begin_src emacs-lisp
+(use-package pyenv
+  :defer t
+  :straight t
+  :config
+  (add-hook 'python-mode-hook #'pyenv-track-virtualenv)
+  (add-to-list 'global-mode-string
+               '(pyenv-virtual-env-name (" venv:" pyenv-virtual-env-name " "))
+               'append))
+#+end_src
+**** pyenv-mode
+Let’s also add a mode for ~pyenv~:
+#+begin_src emacs-lisp
+(use-package pyenv-mode
+  :defer t
+  :after python
+  :straight t
+  :if (executable-find "pyenv")
+  :commands (pyenv-mode-versions))
+#+end_src
+**** pyimport
+This package automatically imports packages we forgot to import.
+#+begin_src emacs-lisp
+(use-package pyimport
+  :defer t
+  :straight t)
+#+end_src
+**** py-isort
+On the other hand, this one sorts our imports to make them more readable.
+#+begin_src emacs-lisp
+(use-package py-isort
+  :defer t
+  :straight t)
+#+end_src
+**** counsel-pydoc
+Access pydoc through counsel.
+#+begin_src emacs-lisp
+(use-package counsel-pydoc
+  :defer t
+  :straight t)
+#+end_src
+**** sphinx-doc
+This generates Python documentation that is meant to be compatible
+with Sphinx, a documentation generation for Python.
+#+begin_src emacs-lisp
+(use-package sphinx-doc
+  :defer t
+  :straight t
+  :init
+  (add-hook 'python-mode-hook #'sphinx-doc-mode))
+#+end_src
+**** COMMENT cython-mode
+Cython is a Python to C compiler. It also introduces the extended
+Cython programming language which makes writing C for Python easier.
+This package is a major mode for the Cython programming language.
+#+begin_src emacs-lisp
+(use-package cython-mode
+  :defer t
+  :straight t
+  :mode "\\.p\\(yx\\|x[di]\\)\\'"
+  :config
+  (setq cython-default-compile-format "cython -a %s"))
+#+end_src
+**** COMMENT flycheck-cython
+Flycheck can also be enabled for Cython:
+#+begin_src emacs-lisp
+(use-package flycheck-cython
+  :defer t
+  :straight t
+  :after cython-mode)
+#+end_src
+**** blacken
+Blacken uses the ~black~ formatter backend to format Python buffers.
+#+begin_src emacs-lisp
+(use-package blacken
+  :defer t
+  :straight t
+  :init
+  (add-hook 'python-mode-hook #'blacken-mode))
+#+end_src
+**** pyright
+Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP backend for Python.
+#+begin_src emacs-lisp
+;; (use-package lsp-pyright
+;;   :after lsp-mode
+;;   :defer t
+;;   :straight (:buidl t))
+#+end_src
+*** Terraform
+#+begin_src emacs-lisp
+(use-package terraform-mode
+  :straight t
+  :hook
+  (terraform-mode . apheleia-mode)
+  :config
+  (setq terraform-indent-level 2
+        terraform-format-on-save t))
+
+;; Configure company
+(use-package company-terraform
+  :straight t
+  :after (company lsp)
+  :defer t)
+
+;; Setup capf
+;; (add-hook 'terraform-mode-hook (lambda ()
+;;                                  (setq-local completion-at-point-functions
+;;                                              (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-terraform))))))
+
+;; Setup LSP
+;; (with-eval-after-load 'lsp
+;;   (lsp-register-client
+;;    (make-lsp-client :new-connection (lsp-stdio-connection '("~/.bin/terraform-lsp" "-enable-log-file"))
+;;                     :major-modes '(terraform-mode)
+;;                     :server-id 'terraform-ls))
+
+;;   ;; Disable tfls
+;;   (setq lsp-disabled-clients '(tfls))
+
+;;   ;; Enable links
+;;   (setq lsp-enable-links t)
+
+;;   ;; Pre-fill fields
+;;   (setq lsp-terraform-ls-prefill-required-fields t)
+
+;;   ;; Show references
+;;   (setq lsp-terraform-ls-enable-show-reference t)
+
+;;   (add-hook 'terraform-mode-hook #'lsp-deferred)
+;;  )
+#+end_src
+
+*** Web programming
+**** emmet
+[[https://emmet.io/][Emmet]] is a powerful templating engine that can generate through simple
+CSS-like expression some HTML to avoid the user writing everything by
+hand.
+#+begin_src emacs-lisp
+(use-package emmet-mode
+  :straight t
+  :defer t
+  :hook ((css-mode  . emmet-mode)
+         (html-mode . emmet-mode)
+         (web-mode  . emmet-mode)
+         (sass-mode . emmet-mode)
+         (scss-mode . emmet-mode)
+         (web-mode  . emmet-mode))
+  :config
+  (general-define-key
+   :keymaps 'emmet-mode-keymap
+   "M-RET" #'emmet-expand-yas)
+  (phundrak/major-leader-key
+    :keymaps 'web-mode-map
+    :packages '(web-mode emmet-mode)
+    "e" '(:ignore t :which-key "emmet")
+    "ee" #'emmet-expand-line
+    "ep" #'emmet-preview
+    "eP" #'emmet-preview-mode
+    "ew" #'emmet-wrap-with-markup))
+#+end_src
+**** impatient-mode
+Impatient mode serves web buffers live over HTTP, including your live
+modifications.
+#+begin_src emacs-lisp
+(use-package impatient-mode
+  :straight t
+  :defer t)
+#+end_src
+
+* Autocompletion
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+*** cape
+#+begin_src emacs-lisp
+(use-package cape
+  :straight t
+  :demand t
+  ;; :hook ((prog-mode . dorneanu/set-basic-capf)
+  ;;        (text-mode . dorneanu/set-basic-capf)
+  ;;        (org-mode . dorneanu/set-basic-capf)
+  ;;        ;; (go-ts-mode . dorneanu/set-go-capf)
+  ;;        (lsp-completion-mode . dorneanu/set-lsp-capf))
+  :bind (:map prog-mode-map
+         ("M-c ." . completion-at-point)
+         ("M-c p" . completion-at-point)
+         ("M-c t" . complete-tag)
+         ("M-c d" . cape-dabbrev)
+         ("M-c f" . cape-file)
+         ("M-c k" . cape-keyword)
+         ("M-c s" . cape-symbol)
+         ("M-c a" . cape-abbrev)
+         ("M-c i" . cape-ispell)
+         ("M-c l" . cape-line)
+         ("M-c w" . cape-dict)
+         ("M-c \\" . cape-tex)
+         ("M-c _" . cape-tex)
+         ("M-c ^" . cape-tex)
+         ("M-c &" . cape-sgml)
+         ("M-c r" . cape-rfc1345))
+  ;; :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; (add-to-list 'completion-at-point-functions #'cape-history)
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;; (add-to-list 'completion-at-point-functions #'cape-file)
+  :custom
+  (cape-dabbrev-min-length 1)
+  )
+
+;; Disable company
+;; (add-hook 'prog-mode-hook (lambda () (company-mode -1)))
+;; (global-company-mode -1)
+
+;; Set capfs
+(defun dorneanu/set-basic-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-history))))
+
+(defun dorneanu/set-lsp-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'lsp-completion-at-point #'cape-dabbrev #'cape-dict #'cape-keyword))))
+
+(defun dorneanu/set-go-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'lsp-completion-at-point (cape-company-to-capf #'company-go)))))
+#+end_src
+*** yasnippet
+**** consult-yasnippet
+Use ~consult-yasnippet~:
+#+begin_src emacs-lisp
+(use-package consult-yasnippet
+  :straight t
+  :init
+  (+map!
+    ;; consult-yasnippet
+    "sy" #'consult-yasnippet))
+#+end_src
+
+*** embark
+Finally, [[https://github.com/oantolin/embark/][embark]] is great if like me you like to interact directly with your
+files (e.g., for renaming, deleting and copying) through your completion system
+without having to go through =dired=.
+
+#+begin_src emacs-lisp
+;; Some usefull functions
+(defun cust/vsplit-file-open (f)
+  (let ((evil-vsplit-window-right t))
+    (evil-window-vsplit)
+    (find-file f)))
+
+(defun cust/split-file-open (f)
+  (let ((evil-split-window-below t))
+    (evil-window-split)
+    (find-file f)))
+
+(use-package embark
+  :straight t
+  :bind (("M-i" . embark-act)
+         :map embark-file-map
+         ("V" . cust/vsplit-file-open)
+         ("X" . cust/split-file-open))
+  :config
+  (define-key embark-url-map "X" #'dorneanu/embark-open-url-in-xwidget-webkit)
+)
+#+end_src
+
+Further functions:
+
+#+begin_src emacs-lisp
+(defun dorneanu/embark-open-url-in-xwidget-webkit (url &rest args)
+  "open with xwidget"
+  (message "URL: " url)
+  ;; Split window and focus there
+  (when (stringp url)
+    ;; If it's a "naked url", just try adding https: to it.
+    (unless (string-match "\\`[A-Za-z]+:" url)
+      (setq url (concat "https://" url)))
+
+    ;; Split window
+    (split-window-right)
+    (balance-windows)
+    (other-window 1)
+
+    (xwidget-webkit-new-session url)
+    (xwidget-webkit-goto-url url)
+    ))
+
+#+end_src
+
+* Editing
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+** Searching
+*** swiper
+Extended ~isearch~
+#+begin_src emacs-lisp
+(use-package swiper
+  :straight t
+  :init
+  (+map!
+    "S" #'swiper)
+  :config
+  ;; Recenter afer jump
+  (setq swiper-action-center t))
+#+end_src
+
+** rg.el
+#+begin_src emacs-lisp
+(use-package rg
+  :straight t
+  :config
+  (rg-enable-default-bindings)
+  ;; Not sure if I really need this
+  (rg-define-toggle "--multiline --multiline-dotall" "u")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L")
+  ;; Highlight longer
+  (setq next-error-highlight-no-select t)
+  (add-hook 'next-error-hook #'recenter)
+  (add-hook 'next-error-hook #'focus-mode)
+)
+#+end_src
+
+Configure custom searches
+#+begin_src emacs-lisp
+;; search in org roam folder
+(rg-define-search my/rg-org-roam-directory
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir org-roam-directory
+  :confirm prefix)
+
+;; search in org roam folder where I have transcripts from the Huberman Lab
+(rg-define-search my/rg-org-roam-directory-huberman
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir (concat org-roam-directory "/rez/huberman-lab")
+  :confirm prefix)
+
+(setq dotemacs-directory "/cs/priv/repos/dotemacs")
+(rg-define-search my/rg-dotemacs
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir dotemacs-directory
+  :confirm prefix)
+#+end_src
+
+** evil
+*** evil-surround
+#+begin_src emacs-lisp
+(use-package evil-surround
+  :straight t
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
+* Reading
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+** olivetti
+#+begin_src emacs-lisp
+(use-package olivetti
+  :straight t
+  :custom
+  (olivetti-body-width 0.89))
+#+end_src
+
+** expand-region
+#+begin_src emacs-lisp
+(use-package expand-region
+  :straight t
+  :bind
+  (("M-g =" . er/expand-region)
+   ("M-g - " . er/contract-region)
+   :map mode-specific-map
+   :prefix-map region-prefix-map
+   :prefix "r"
+   ("(" . er/mark-inside-pairs)
+   (")" . er/mark-outside-pairs)
+   ("'" . er/mark-inside-quotes)
+   ([34] . er/mark-outside-quotes) ; it's just a quotation mark
+   ("o" . er/mark-org-parent)
+   ("u" . er/mark-url)
+   ("b" . er/mark-org-code-block)
+   ("." . er/mark-method-call)
+   (">" . er/mark-next-accessor)
+   ("w" . er/mark-word)
+   ("d" . er/mark-defun)
+   ("e" . er/mark-email)
+   ("," . er/mark-symbol)
+   ("<" . er/mark-symbol-with-prefix)
+   (";" . er/mark-comment)
+   ("s" . er/mark-sentence)
+   ("S" . er/mark-text-sentence)
+   ("p" . er/mark-paragraph)
+   ("P" . er/mark-text-paragraph)))
+#+end_src
+* Helpful
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+** leo
+#+begin_src emacs-lisp
+(use-package leo
+  :straight t
+  :defer t
+  :init
+  (+map!
+    "ll" #'leo-translate-word))
+#+end_src
+** dict.cc
+#+begin_src emacs-lisp
+(use-package dictcc
+  :straight t
+  :defer t
+  :init
+  (+map!
+    "ld" #'dictcc))
+#+end_src
+** wordreference
+#+begin_src emacs-lisp
+(use-package wordreference
+  :straight t
+  :defer t
+  :bind (:map wordreference-mode-map
+              ("S" . wordreference-switch-source-target-and-search))
+  :config
+  (setq
+   wordreference-source-lang "en"
+   wordreference-target-lang "de")
+  :init
+  (+map!
+    "lw" #'wordreference-search))
+
+(add-hook 'wordreference-mode-hook #'turn-off-evil-mode)
+#+end_src
+** password-store
+#+begin_src emacs-lisp
+(use-package auth-source
+  :straight t)
+(use-package password-store
+  :straight t)
+(use-package pass
+  :straight t)
+#+end_src
+** Screenshots
+*** emacsshot
+From https://gitlab.com/marcowahl/emacsshot
+#+begin_src emacs-lisp
+(use-package emacsshot
+  :straight t
+  :bind(("C-x a s f" . my/emacsshot-snap-frame)
+        ("C-x a s w" . my/emacsshot-snap-window))
+  :config
+  (defun copy-file-content-to-clipboard (file-path)
+    (shell-command (format "xclip -selection clipboard -t image/png -i %s" file-path)))
+  (defun my/emacsshot-snap-window ()
+    (interactive)
+    (emacsshot-snap-window)
+    (copy-file-content-to-clipboard "~/emacsshot.png")
+    )
+  (defun my/emacsshot-snap-frame ()
+    (interactive)
+    (emacsshot-snap-frame)
+    (copy-file-content-to-clipboard "~/emacsshot.png")
+    ))
+#+end_src
+
+** Misc
+*** Keycast
+In case I am sharing my screen with people and I want to show which
+functions are called on my keystrokes since I don’t exactly use
+standard keybindings.
+
+#+begin_src emacs-lisp
+(use-package keycast
+  :defer t
+  :straight (:build t)
+  :config
+  (define-minor-mode keycast-mode
+    "Show current command and its key binding in the mode line."
+    :global t
+    (if keycast-mode
+        (add-hook 'pre-command-hook 'keycast--update t)
+      (remove-hook 'pre-command-hook 'keycast--update)))
+  (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
+#+end_src
+** Hydra
+Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
+
+#+begin_src emacs-lisp
+(use-package hydra
+  :straight t)
+
+(use-package hydra-examples
+  :ensure nil)
+
+(use-package major-mode-hydra
+  :straight t
+  :after hydra
+  :preface
+  (defun with-alltheicon (icon str &optional height v-adjust face)
+    "Display an icon from all-the-icon."
+    (s-concat (all-the-icons-alltheicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+  (defun with-faicon (icon str &optional height v-adjust face)
+    "Display an icon from Font Awesome icon."
+    (s-concat (all-the-icons-faicon icon ':v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+  (defun with-fileicon (icon str &optional height v-adjust face)
+    "Display an icon from the Atom File Icons package."
+    (s-concat (all-the-icons-fileicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+  (defun with-octicon (icon str &optional height v-adjust face)
+    "Display an icon from the GitHub Octicons."
+    (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
+#+end_src
+
+*** Hydra / Windows
+
+Group window-related commands.
+
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-windows
+    (:hint nil :forein-keys warn :quit-key "q" :title (with-faicon "windows" "Windows" 1 -0.05))
+    ("Window"
+     (("b" balance-windows "balance")
+      ("c" centered-window-mode "center")
+      ("i" enlarge-window "heighten")
+      ("j" shrink-window-horizontally "narrow")
+      ("k" shrink-window "lower")
+      ("u" winner-undo "undo")
+      ("r" winner-redo "redo")
+      ("l" enlarge-window-horizontally "widen")
+      ("s" switch-window-then-swap-buffer "swap" :color teal))
+     "Zoom"
+     (("-" text-scale-decrease "out")
+      ("+" text-scale-increase "in")
+      ("=" (text-scale-increase 0) "reset"))))
+#+end_src
+*** Hydra / Window Nav
+From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
+
+#+begin_src emacs-lisp
+(defhydra +hydra/window-nav (:hint nil)
+  "
+          Split: _v_ert  _s_:horz
+         Delete: _c_lose  _o_nly
+  Switch Window: _h_:left  _j_:down  _k_:up  _l_:right  _u_:undo  _r_:redo
+        Buffers: _p_revious  _n_ext  _b_:select  _f_ind-file
+         Resize: _H_:splitter left  _J_:splitter down  _K_:splitter up  _L_:splitter right
+           Move: _a_:up  _z_:down  _i_menu
+"
+  ("z" scroll-up-line)
+  ("a" scroll-down-line)
+  ("i" idomenu)
+
+  ("h" windmove-left)
+  ("j" windmove-down)
+  ("k" windmove-up)
+  ("l" windmove-right)
+  ("u" winner-undo)
+  ("r" winner-redo)
+
+  ("p" previous-buffer)
+  ("n" next-buffer)
+  ("b" switch-to-buffer)
+  ("f" find-file)
+
+  ("s" split-window-below)
+  ("v" split-window-right)
+
+  ("c" delete-window)
+  ("o" delete-other-windows)
+
+  ("H" hydra-move-splitter-left)
+  ("J" hydra-move-splitter-down)
+  ("K" hydra-move-splitter-up)
+  ("L" hydra-move-splitter-right)
+
+  ("+" text-scale-increase "in")
+  ("-" text-scale-decrease "out")
+  ("=" (text-scale-increase 0) "reset")
+
+  ("q" nil))
+#+end_src
+*** Hydra / Flyspell
+#+begin_src emacs-lisp
+(defhydra flyspell-hydra ()
+  "
+Spell Commands^^           Add To Dictionary^^              Other
+--------------^^---------- -----------------^^------------- -----^^---------------------------
+[_b_] check whole buffer   [_B_] add word to dict (buffer)  [_t_] toggle spell check
+[_r_] check region         [_G_] add word to dict (global)  [_q_] exit
+[_d_] change dictionary    [_S_] add word to dict (session) [_Q_] exit and disable spell check
+[_n_] next error
+[_c_] correct before point
+[_s_] correct at point
+"
+  ("B" nil)
+  ("b" flyspell-buffer)
+  ("r" flyspell-region)
+  ("d" ispell-change-dictionary)
+  ("G" nil)
+  ("n" flyspell-goto-next-error)
+  ("c" flyspell-correct-wrapper)
+  ("Q" flyspell-mode :exit t)
+  ("q" nil :exit t)
+  ("S" nil)
+  ("s" flyspell-correct-at-point)
+  ("t" nil))
+#+end_src
+*** Hydra / ORG
+**** hydra-org-jump
+From [[https://sriramkswamy.github.io/dotemacs/]]
+
+#+begin_src emacs-lisp
+(defhydra sk/hydra-org-jump (:color pink :hint nil)
+  "
+ ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
+ ^^^^^^^^^^^-------------------------------------------------------------------------------
+ ^ ^ _k_ ^ ^   ^ ^ _K_ ^ ^   ^ ^ _u_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _p_ ^ ^   ^ ^ _P_ ^ ^    _q_ quit
+ _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
+ ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
+"
+  ("j" outline-next-visible-heading)
+  ("k" outline-previous-visible-heading)
+  ("l" org-down-element)
+  ("h" org-up-element)
+  ("J" org-forward-heading-same-level)
+  ("K" org-backward-heading-same-level)
+  ("u" org-next-item)
+  ("d" org-previous-item)
+  ("f" org-table-next-field)
+  ("b" org-table-previous-field)
+  ("n" org-next-block)
+  ("p" org-previous-block)
+  ("N" org-next-link)
+  ("P" org-previous-link)
+  ("q" nil :color blue))
+#+end_src
+**** hydra-org-babel-transient
+#+begin_src emacs-lisp :tangle no
+(defhydra org-babel-transient ()
+  "
+^Navigate^                    ^Interact
+^^^^^^^^^^^------------------------------------------
+[_t_/_s_] navigate src blocs  [_x_] execute src block
+[_g_]^^   goto named block    [_'_] edit src block
+[_z_]^^   recenter screen     [_q_] quit
+"
+  ("q" nil :exit t)
+  ("t" org-babel-next-src-block)
+  ("s" org-babel-previous-src-block)
+  ("g" org-babel-goto-named-src-block)
+  ("z" recenter-top-bottom)
+  ("x" org-babel-execute-maybe)
+  ("'" org-edit-special :exit t))
+#+end_src
+*** Hydra / merge
+Group Merge commands.
+
+#+begin_src emacs-lisp
+(pretty-hydra-define hydra-merge
+  (:hint nil :color pink :quit-key "q" :title (with-octicon "mark-github" "Magit" 1 -0.05))
+  ("Move"
+   (("n" smerge-next "next")
+    ("p" smerge-prev "previous"))
+   "Keep"
+   (("RET" smerge-keep-current "current")
+    ("a" smerge-keep-all "all")
+    ("b" smerge-keep-base "base")
+    ("l" smerge-keep-lower "lower")
+    ("u" smerge-keep-upper "upper"))
+   "Diff"
+   (("<" smerge-diff-base-upper "upper/base")
+    ("=" smerge-diff-upper-lower "upper/lower")
+    (">" smerge-diff-base-lower "base/lower")
+    ("R" smerge-refine "redefine")
+    ("E" smerge-ediff "ediff"))
+   "Other"
+   (("C" smerge-combine-with-next "combine")
+    ("r" smerge-resolve "resolve")
+    ("k" smerge-kill-current "kill current"))))
+#+end_src
+jk
+*** Hydra / smerge
+From https://github.com/dakra/dmacs/blob/nil/init.org
+
+#+begin_src emacs-lisp
+(use-package smerge-mode
+  :hook (magit-diff-visit-file . (lambda ()
+                                   (when smerge-mode
+                                     (hydra-smerge/body))))
+  :config
+  (require 'hydra)
+  (defhydra hydra-smerge
+    (:color pink :hint nil :post (smerge-auto-leave))
+    "
+^Move^       ^Keep^               ^Diff^                 ^Other^
+^^-----------^^-------------------^^---------------------^^-------
+_n_ext       _b_ase               _<_: upper/base        _C_ombine
+_p_rev       _u_pper              _=_: upper/lower       _r_esolve
+^^           _l_ower              _>_: base/lower        _k_ill current
+^^           _a_ll                _R_efine
+^^           _RET_: current       _E_diff
+"
+    ("n" smerge-next)
+    ("p" smerge-prev)
+    ("b" smerge-keep-base)
+    ("u" smerge-keep-upper)
+    ("l" smerge-keep-lower)
+    ("a" smerge-keep-all)
+    ("RET" smerge-keep-current)
+    ("\C-m" smerge-keep-current)
+    ("<" smerge-diff-base-upper)
+    ("=" smerge-diff-upper-lower)
+    (">" smerge-diff-base-lower)
+    ("R" smerge-refine)
+    ("E" smerge-ediff)
+    ("C" smerge-combine-with-next)
+    ("r" smerge-resolve)
+    ("k" smerge-kill-current)
+    ("q" nil "cancel" :color blue)))
+#+end_src
+*** Hydra / modeline                                                 :todo:
+#+begin_src emacs-lisp
+(pretty-hydra-define hydra-modeline
+  (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
+   ("Icon"
+    (("i" (setq doom-modeline-icon (not doom-modeline-icon))
+      "display icons" :toggle doom-modeline-icon)
+     ("u" (setq doom-modeline-unicode-fallback (not doom-modeline-unicode-fallback))
+      "unicode fallback" :toggle doom-modeline-unicode-fallback)
+     ("m" (setq doom-modeline-major-mode-icon (not doom-modeline-major-mode-icon))
+      "major mode" :toggle doom-modeline-major-mode-icon)
+     ("c" (setq doom-modeline-major-mode-color-icon (not doom-modeline-major-mode-color-icon))
+      "colorful major mode" :toggle doom-modeline-major-mode-color-icon)
+     ("s" (setq doom-modeline-buffer-state-icon (not doom-modeline-buffer-state-icon))
+      "buffer state" :toggle doom-modeline-buffer-state-icon)
+     ("o" (setq doom-modeline-buffer-modification-icon (not doom-modeline-buffer-modification-icon))
+      "modification" :toggle doom-modeline-buffer-modification-icon)
+     ("x" (setq doom-modeline-time-icon (not doom-modeline-time-icon))
+      "time" :toggle doom-modeline-time-icon)
+     ("v" (setq doom-modeline-modal-icon (not doom-modeline-modal-icon))
+      "modal" :toggle doom-modeline-modal-icon))
+    "Segment"
+    (("g h" (setq doom-modeline-hud (not doom-modeline-hud))
+      "hud" :toggle doom-modeline-hud)
+     ("g m" (setq doom-modeline-minor-modes (not doom-modeline-minor-modes))
+      "minor modes" :toggle doom-modeline-minor-modes)
+     ("g w" (setq doom-modeline-enable-word-count (not doom-modeline-enable-word-count))
+      "word count" :toggle doom-modeline-enable-word-count)
+     ("g e" (setq doom-modeline-buffer-encoding (not doom-modeline-buffer-encoding))
+      "encoding" :toggle doom-modeline-buffer-encoding)
+     ("g i" (setq doom-modeline-indent-info (not doom-modeline-indent-info))
+      "indent" :toggle doom-modeline-indent-info)
+     ("g c" (setq doom-modeline-display-misc-in-all-mode-lines (not doom-modeline-display-misc-in-all-mode-lines))
+      "misc info" :toggle doom-modeline-display-misc-in-all-mode-lines)
+     ("g l" (setq doom-modeline-lsp (not doom-modeline-lsp))
+      "lsp" :toggle doom-modeline-lsp)
+     ("g k" (setq doom-modeline-workspace-name (not doom-modeline-workspace-name))
+      "workspace" :toggle doom-modeline-workspace-name)
+     ("g g" (setq doom-modeline-github (not doom-modeline-github))
+      "github" :toggle doom-modeline-github)
+     ("g n" (setq doom-modeline-gnus (not doom-modeline-gnus))
+      "gnus" :toggle doom-modeline-gnus)
+     ("g u" (setq doom-modeline-mu4e (not doom-modeline-mu4e))
+      "mu4e" :toggle doom-modeline-mu4e)
+     ("g r" (setq doom-modeline-irc (not doom-modeline-irc))
+      "irc" :toggle doom-modeline-irc)
+     ("g f" (setq doom-modeline-irc-buffers (not doom-modeline-irc-buffers))
+      "irc buffers" :toggle doom-modeline-irc-buffers)
+     ("g s" (progn
+              (setq doom-modeline-checker-simple-format (not doom-modeline-checker-simple-format))
+              (and (bound-and-true-p flycheck-mode) (flycheck-buffer)))
+      "simple checker" :toggle doom-modeline-checker-simple-format)
+     ("g t" (setq doom-modeline-time (not doom-modeline-time))
+      "time" :toggle doom-modeline-time)
+     ("g v" (setq doom-modeline-env-version (not doom-modeline-env-version))
+      "version" :toggle doom-modeline-env-version))
+    "Style"
+    (("a" (setq doom-modeline-buffer-file-name-style 'auto)
+      "auto"
+      :toggle (eq doom-modeline-buffer-file-name-style 'auto))
+     ("b" (setq doom-modeline-buffer-file-name-style 'buffer-name)
+      "buffer name"
+      :toggle (eq doom-modeline-buffer-file-name-style 'buffer-name))
+     ("f" (setq doom-modeline-buffer-file-name-style 'file-name)
+      "file name"
+      :toggle (eq doom-modeline-buffer-file-name-style 'file-name))
+     ("t u" (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
+      "truncate upto project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-upto-project))
+     ("t f" (setq doom-modeline-buffer-file-name-style 'truncate-from-project)
+      "truncate from project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-from-project))
+     ("t w" (setq doom-modeline-buffer-file-name-style 'truncate-with-project)
+      "truncate with project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-with-project))
+     ("t e" (setq doom-modeline-buffer-file-name-style 'truncate-except-project)
+      "truncate except project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-except-project))
+     ("t r" (setq doom-modeline-buffer-file-name-style 'truncate-upto-root)
+      "truncate upto root"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-upto-root))
+     ("t a" (setq doom-modeline-buffer-file-name-style 'truncate-all)
+      "truncate all"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-all))
+     ("t n" (setq doom-modeline-buffer-file-name-style 'truncate-nil)
+      "truncate none"
+      :toggle (eq doom-modeline-buffer-file-name-style 'truncate-nil))
+     ("r f" (setq doom-modeline-buffer-file-name-style 'relative-from-project)
+      "relative from project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'relative-from-project))
+     ("r t" (setq doom-modeline-buffer-file-name-style 'relative-to-project)
+      "relative to project"
+      :toggle (eq doom-modeline-buffer-file-name-style 'relative-to-project)))
+    "Project Detection"
+    (("p a" (setq doom-modeline-project-detection 'auto)
+      "auto"
+      :toggle (eq doom-modeline-project-detection 'auto))
+     ("p f" (setq doom-modeline-project-detection 'ffip)
+      "ffip"
+      :toggle (eq doom-modeline-project-detection 'ffip))
+     ("p i" (setq doom-modeline-project-detection 'projectile)
+      "projectile"
+      :toggle (eq doom-modeline-project-detection 'projectile))
+     ("p p" (setq doom-modeline-project-detection 'project)
+      "project"
+      :toggle (eq doom-modeline-project-detection 'project))
+     ("p n" (setq doom-modeline-project-detection nil)
+      "disable"
+      :toggle (eq doom-modeline-project-detection nil)))
+    "Misc"
+    (("n" (progn
+            (message "Fetching GitHub notifications...")
+            (run-with-timer 300 nil #'doom-modeline--github-fetch-notifications)
+            (browse-url "https://github.com/notifications"))
+      "github notifications" :exit t)
+     ("e" (cond ((bound-and-true-p flycheck-mode)
+                 (flycheck-list-errors))
+                ((bound-and-true-p flymake-mode)
+                 (flymake-show-diagnostics-buffer)))
+      "list errors" :exit t)
+     ("w" (if (bound-and-true-p grip-mode)
+              (grip-browse-preview)
+            (message "Not in preview"))
+      "browse preview" :exit t)
+     ("z h" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-height
+                     (symbol-value 'doom-modeline-height)))
+      "set height" :exit t)
+     ("z w" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-bar-width
+                     (symbol-value 'doom-modeline-bar-width)))
+      "set bar width" :exit t)
+     ("z g" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-github-interval
+                     (symbol-value 'doom-modeline-github-interval)))
+      "set github interval" :exit t)
+     ("z n" (read-from-minibuffer
+             "Eval: "
+             (format "(setq %s %s)"
+                     'doom-modeline-gnus-timer
+                     (symbol-value 'doom-modeline-gnus-timer)))
+      "set gnus interval" :exit t))))
+
+#+end_src
+*** Hydra / unicode
+From https://github.com/dakra/dmacs/blob/nil/init.org
+Add here circled digits like: ②
+#+begin_src emacs-lisp
+(defun dakra/insert-unicode (unicode-name)
+  "Same as C-x 8 enter UNICODE-NAME."
+  (insert-char (gethash unicode-name (ucs-names))))
+
+(defhydra dakra/hydra-unicode (:color blue :hint nil)
+  "
+     Unicode  _c_ €   _a_ ä   _A_ Ä
+              _d_ °   _o_ ö   _O_ Ö
+              _e_ €   _u_ Ü   _U_ Ü
+              _p_ £   _s_ ß
+              _m_ µ
+              _r_ →
+     "
+  ("a" (dakra/insert-unicode "LATIN SMALL LETTER A WITH DIAERESIS"))
+  ("A" (dakra/insert-unicode "LATIN CAPITAL LETTER A WITH DIAERESIS"))
+  ("o" (dakra/insert-unicode "LATIN SMALL LETTER O WITH DIAERESIS")) ;;
+  ("O" (dakra/insert-unicode "LATIN CAPITAL LETTER O WITH DIAERESIS"))
+  ("u" (dakra/insert-unicode "LATIN SMALL LETTER U WITH DIAERESIS")) ;;
+  ("U" (dakra/insert-unicode "LATIN CAPITAL LETTER U WITH DIAERESIS"))
+  ("s" (dakra/insert-unicode "LATIN SMALL LETTER SHARP S"))
+  ("c" (dakra/insert-unicode "COPYRIGHT SIGN"))
+  ("d" (dakra/insert-unicode "DEGREE SIGN"))
+  ("e" (dakra/insert-unicode "EURO SIGN"))
+  ("p" (dakra/insert-unicode "POUND SIGN"))
+  ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
+  ("m" (dakra/insert-unicode "MICRO SIGN")))
+#+end_src
+* Applications
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+** AI
+*** chatgpt-shell
+#+begin_src emacs-lisp
+(use-package chatgpt-shell
+  :straight t
+  :commands (chatgpt-shell)
+  :bind (("C-c a p" . chatgpt-shell-prompt)
+         ("C-c a s" . chatgpt-shell)
+         ("C-c a cd" . dorneanu/+chatgpt-shell-check-diff)
+         ("C-c a cp" . dorneanu/+chatgpt-shell-check-paragraph)
+         ("C-c a P" . dorneanu/+chatgpt-shell-check-and-correct-paragraph)
+         ("C-c a u" . +retrive-text-content-from-page)
+         ("C-c a r" . chatgpt-shell-proofread-region))
+  :config
+  (setq chatgpt-shell-openai-key (password-store-get "emacs/chatgpt"))
+  ;; <<chatgpt-shell-custom-functions>>
+  :custom
+  ;; From https://github.com/jwiegley/dot-emacs/blob/master/init.org
+  ;; I might need to change these
+  (chatgpt-shell-system-prompts
+   '(("English" .
+      "I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in English. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level English words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations.")
+     ("General" .
+      "You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels.")
+     ("Programming" .
+      "The user is a programmer with very limited time. You treat their time as precious. You do not repeat obvious things, including their query. You are as concise as possible in responses. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
+     ("Positive Programming" .
+      "Your goal is to help the user become an amazing computer programmer. You are positive and encouraging. You love see them learn. You do not repeat obvious things, including their query. You are as concise in responses. You always guide the user go one level deeper and help them see patterns. You never apologize for confusions because it would waste their time. You use markdown liberally to structure responses. Always show code snippets in markdown blocks with language labels. Don't explain code snippets. Whenever you output updated code for the user, only show diffs, instead of entire snippets.")
+     )))
+#+end_src
+**** Custom functions
+***** chatgpt-shell-checks
+For ChatGPT:
+#+name: chatgpt-shell-custom-functions
+#+begin_src emacs-lisp
+;; https://www.reddit.com/r/emacs/comments/185n3yo/emacs_meets_chatgpt_for_flawless_grammar_and/
+(defun chatgpt-shell-check-paragraph (text)
+   "Send TEXT to ChatGPT for spell and grammar checking."
+   ;; trim both sides to make diff easier
+   (if (string= text "")
+       (error "nothing to send to chatGPT"))
+   (message "sending [%s]" text)
+   (let ((response (chatgpt-shell-post-prompt
+                    (concat
+                     "Please correct the spelling and grammar of the following paragraph."
+                     "Maintain existing org-mode syntax expressions like =this=, *this* and ~this~."
+                     "Only return the corrected paragraph, not the original text or this prompt."
+                     " If there is no change, return 'It looks good'."
+                     "Here's the text:\n\n" text)
+                    nil "gpt-3.5-turbo" nil nil nil nil)))
+     response))
+
+(defun dorneanu/+chatgpt-shell-check-and-correct-paragraph ()
+   "Check and correct the current paragraph using ChatGPT."
+   (interactive)
+   (let* ((bounds (bounds-of-thing-at-point 'paragraph))
+          (start (car bounds))
+          (end (cdr bounds))
+          (original-text (string-trim-left (buffer-substring-no-properties start end)))
+          (point-offset (- end (point))) ; Save the offset of point from end
+          (checked-text (chatgpt-shell-check-paragraph original-text)))
+     (when checked-text
+       (if (string-prefix-p "It looks good" checked-text)
+           (message "It looks good")
+         (save-excursion
+           (goto-char start)
+           (delete-region start end)
+           (insert "\n") ; Insert a newline here
+           (insert checked-text)
+           (chatgpt-shell-check-diff original-text checked-text)
+           ;; Move the point to its new position relative to the end
+           (goto-char (- (cdr (bounds-of-thing-at-point 'paragraph)) point-offset)))))))
+
+(defun chatgpt-shell-check-diff (original-text checked-text)
+   (let ((buffer-ori (get-buffer-create "*chatgpt-grammar-original*"))
+         (buffer-new (get-buffer-create "*chatgpt-grammar-checked*"))
+         (reg-A-end nil)
+         (reg-B-end nil)
+         )
+     (set-buffer buffer-ori)
+     (erase-buffer)
+     (insert original-text)
+     (setq reg-A-end (point-max))
+     (set-buffer buffer-new)
+     (erase-buffer)
+     (insert checked-text)
+     (setq reg-B-end (point-max))
+     (ediff-regions-internal buffer-ori 1 reg-A-end
+                             buffer-new 1 reg-B-end
+                             nil 'ediff-regions-wordwise 'word-mode nil)))
+
+#+end_src
+*** gptel
+#+begin_src emacs-lisp
+(use-package gptel
+  :straight t
+  :commands (gptel gptel-send)
+  :bind (("<f7>" . #'gptel)
+         ("s-<f7>" . #'gptel-send))
+  :custom
+  (gptel-default-mode 'org-mode)
+  (gptel-model "gpt-4")
+  :config
+  ;; ChatGPT
+  (setq gptel-api-key (password-store-get "emacs/chatgpt"))
+  ;; Anthropic / Claude 3
+  (gptel-make-anthropic "Claude"
+    :stream t
+    :key (password-store-get "emacs/anthropic-claude3"))
+  ;; OPTIONAL configuration
+  ;; (setq
+  ;;  gptel-model "claude-3-sonnet-20240229" ;  "claude-3-opus-20240229" also available
+  ;;  gptel-backend (gptel-make-anthropic "Claude"
+  ;;                                      :stream t :key (password-store-get "emacs/anthropic-claude3")))
+)
+#+end_src
+
+#+results:
+: gptel-send
+
+** Feeds
+*** elfeed
+#+begin_src emacs-lisp
+(use-package elfeed
+  :defer t
+  :straight t
+  ;; :config
+  ;; <<elfeed-open-youtube-with-mpv>>
+  :custom
+  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
+   (elfeed-db-directory "~/.elfeed")
+   (elfeed-goodies/wide-threshold 0.2)
+   (elfeed-set-timeout 36000)))
+#+end_src
+
+Custom functions:
+
+#+begin_src emacs-lisp
+(defun hp/elfeed-entry-line-draw (entry)
+  "Print ENTRY to the buffer."
+  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+         (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+         (feed (elfeed-entry-feed entry))
+         (feed-title
+          (when feed
+            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
+         (title-width (- (window-width) elfeed-goodies/feed-source-column-width
+                         elfeed-goodies/tag-column-width 4))
+         (title-column (elfeed-format-column
+                        title (elfeed-clamp
+                               elfeed-search-title-min-width
+                               title-width
+                               title-width)
+                        :left))
+         (tag-column (elfeed-format-column
+                      tags-str (elfeed-clamp (length tags-str)
+                                             elfeed-goodies/tag-column-width
+                                             elfeed-goodies/tag-column-width)
+                      :left))
+         (feed-column (elfeed-format-column
+                       feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width)
+                       :left))
+         ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
+         ;; (entry-authors (concatenate-authors
+         ;;                 (elfeed-meta entry :authors)))
+         ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
+         )
+    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
+        (progn
+          ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize date 'face 'elfeed-search-date-face) " ")
+          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+          ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
+          (insert (propertize title 'face title-faces 'kbd-help title))
+          )
+      (insert (propertize title 'face title-faces 'kbd-help title))))
+  )
+
+#+end_src
+
+I don’t want YouTube videos to be open with my web browser when I
+invoke ~elfeed-show-visit~, so I’ll advise this function to make it
+possible to modify the behaviour of said function. Oh, and I already
+made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
+[[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
+
+#+name: elfeed-open-youtube-with-mpv
+#+begin_src emacs-lisp
+(defun my/elfeed-filter-youtube-videos (orig-fun &rest args)
+  "Open with mpv the video leading to PATH"
+  (let ((link (elfeed-entry-link elfeed-show-entry)))
+    (when link
+      (if (string-match-p ".*youtube\.com.*watch.*" link)
+          ;; This is a YouTube video, open it with mpv
+          (progn
+            (require 'ytplay)
+            (ytplay link))
+        (apply orig-fun args)))))
+
+(advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
+#+end_src
+
+A future improvement to be made is to let the user chose the
+resolution of the video before it is launched. I may not always have
+the best internet connection, and viewing 4K videos on a 1080p display
+is not something very useful.
+**** elfeed-goodies
+Elfeed-goodies is a package which enhances the Elfeed experience.
+Aside from running its setup command as soon as possible, I also set
+in this code block all my keybinds for Elfeed here.
+#+begin_src emacs-lisp
+(use-package elfeed-goodies
+  :defer t
+  :after elfeed
+  :commands elfeed-goodies/setup
+  :straight (:build t)
+  :init
+  (elfeed-goodies/setup)
+  :custom
+  (elfeed-goodies/feed-source-column-width 28)
+  (elfeed-goodies/tag-column-width 28)
+  :config
+  (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
+#+end_src
+
+**** elfeed-org
+Last but not least, my Elfeed configuration is stored in an org file
+thanks to ~elfeed-org~.
+#+begin_src emacs-lisp
+(use-package elfeed-org
+  :defer nil
+  :after elfeed
+  :straight (:build t)
+  :init
+  (elfeed-org)
+  :config
+  (setq rmh-elfeed-org-files '("~/work/repos/org/elfeed.org.gpg")))
+#+end_src
+**** elfeed-tube
+#+begin_src emacs-lisp
+(use-package elfeed-tube
+  :straight (:build t)
+  :after elfeed
+  :config
+  (elfeed-tube-setup)
+  :bind (:map elfeed-show-mode-map
+         ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+         ("C-c C-x f" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)
+         :map elfeed-search-mode-map
+         ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+         ("C-c C-x f" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)))
+
+;; https://github.com/skeeto/elfeed/issues/267
+(defun dorneanu/elfeed-play-with-mpv ()
+  "Play entry link with mpv."
+  (interactive)
+  (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
+        (quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
+
+#+end_src
+
+**** functions
+#+begin_src emacs-lisp
+(defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
+  "open with xwidget"
+  (interactive "P")
+  ;; Split window and focus there
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+    (elfeed-search-browse-url use-generic-p)))
+#+end_src
+**** reddigg
+Use reddigg to show reddit threads.
+#+begin_src emacs-lisp
+(use-package reddigg
+  :straight t
+  :after elfeed
+  :config
+  (defun my/elfeed-reddit-show-commments (&optional link)
+    (interactive)
+    (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                      elfeed-show-entry
+                    (elfeed-search-selected :ignore-region)))
+           (link (if link link (elfeed-entry-link entry))))
+      (reddigg-view-comments link))))
+#+end_src
+**** hnreader
+#+begin_src emacs-lisp
+(use-package hnreader
+  :straight t
+  :after (elfeed))
+#+end_src
+Open in same window
+#+begin_src emacs-lisp
+(setq hnreader-view-comments-in-same-window nil)
+#+end_src
+
+Use hnreader to show HN threads
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-commments (&optional link)
+  (interactive)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (setq-local hnreader-view-comments-in-same-window nil)
+    (hnreader-promise-comment (format "%s" link))))
+#+end_src
+
+Use hnread to show HN threads for a URL at point
+#+begin_src emacs-lisp
+(defun my/elfeed-hn-show-comments-at-point ()
+  "Kill the url at point."
+  (interactive)
+  (setq-local hnreader-view-comments-in-same-window t)
+  (hnreader-comment (format "%s" (url-get-url-at-point))))
+#+end_src
+* Keybindings
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+** navigation
+Now some keybindings for the ~Super_L~ key:
+
+#+begin_src emacs-lisp
+;; lower case “s” is for super
+;; Use windows key (super) for window navigation
+(global-set-key (kbd "s-h") #'evil-window-left)
+(global-set-key (kbd "s-l") #'evil-window-right)
+(global-set-key (kbd "s-k") #'evil-window-up)
+(global-set-key (kbd "s-j") #'evil-window-down)
+#+end_src
+
+Some keybindings for *paragraphs*:
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "M-n") #'forward-paragraph)
+(global-set-key (kbd "M-p") #'backward-paragraph)
+#+end_src
