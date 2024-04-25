@@ -1,6 +1,7 @@
 #+title: MinEmacs — Programming
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
+#+startup: indent overview
 
 * Programming
 :properties:
