@@ -605,6 +605,419 @@ modifications.
   :defer t)
 #+end_src
 
+* MinEmacs Config
+** config.el
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
+:end:
+#+begin_src emacs-lisp
+;;; config.el -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2022-2024 Abdelhak Bougouffa
+
+;; =============================================================================
+;; CAVEAT! PLEASE NOTE THAT THIS CONFIG FILE IS JUST AN EXAMPLE OF HOW TO SET
+;; SOME OF MINEMACS' FEATURES. IT IS NOT INTENDED TO BE USED AS IT IS UNLESS YOU
+;; UNDERSTAND IT ALL. IF YOU USE IT AS IT IS, YOU CAN SET SOME SETTINGS THAT YOU
+;; DON'T WANT TO SET!
+;; =============================================================================
+
+;; Personal info
+(setq user-full-name "Victor Dorneanu"
+      user-mail-address (rot13 "no - spam at dornea dot nu"))
+
+;; Set the default GPG key ID, see "gpg --list-secret-keys"
+;; (setq-default epa-file-encrypt-to '("XXXX"))
+
+;; Set a theme for MinEmacs, supported themes include these from `doom-themes'
+;; or built-in themes
+(setq minemacs-theme 'doom-henna) ; `doom-one' is a dark theme, `doom-one-light' is the light one
+
+;; MinEmacs defines the variable `minemacs-fonts-plist' that is used by the
+;; `+setup-fonts' function. The function checks and enables the first available
+;; font from these defined in `minemacs-fonts-plist'. This variable can be
+;; customized to set font specs for specific Emacs faces or to enable some
+;; language-specific fonts.
+
+;; You can set a list of fonts to be used, like the snippet below. The first
+;; font found on the system will be used:
+(plist-put minemacs-fonts-plist
+           :default ;; <- applies to the `default' face using `custom-theme-set-faces'
+           '((:family "Iosevka Fixed Curly Slab" :height 130) ; <- priority 1
+             (:family "JetBrains Mono" :height 110 :weight light) ; <- priority 2
+             (:family "Cascadia Code" :height 120 :weight semi-light))) ; <- priority 3
+
+;; To set font for arbitrary Emacs face, you need just to write the face name as
+;; a keyword. For example `variable-pitch' -> `:variable-pitch':
+(plist-put minemacs-fonts-plist
+           :variable-pitch ;; <- applies to the `variable-pitch' face using `custom-theme-set-faces'
+           '("Lato"
+             "Roboto"
+             "Inter"
+             "Helvetica"))
+
+;; For example to set custom font for `mode-line' -> `:mode-line':
+(plist-put minemacs-fonts-plist
+           :mode-line ;; <- applies to the `mode-line' face using `custom-theme-set-faces'
+           '((:family "Lato" :weight regular)
+             (:family "Roboto" :weight light)))
+
+(plist-put minemacs-fonts-plist
+           :mode-line-inactive ;; <- applies to the `mode-line-inactive'
+           '((:family "Lato" :weight regular)
+             (:family "Roboto" :weight light)))
+
+;; You can also setup some language-specific fonts. For example, to use "Amiri"
+;; or "KacstOne" for Arabic script (the first to be found). All scripts
+;; supported by Emacs can be found in `+known-scripts'. The value of the extra
+;; `:prepend' is passed the last argument to `set-fontset-font'. The extra
+;; `:scale' parameter can be used to set a scaling factor for the font in Emacs'
+;; `face-font-rescale-alist'.
+(plist-put minemacs-fonts-plist
+           :arabic ;; <- applies to arabic script using `set-fontset-font'
+           '((:family "Amiri" :scale 0.9)
+             (:family "KacstOne")))
+
+;; Use "LXGW WenKai Mono" for Han (Chinese) script
+(plist-put minemacs-fonts-plist
+           :han
+           '((:family "LXGW WenKai Mono" :scale 1.3)))
+
+;; When `me-daemon' and `me-email' are enabled, MinEmacs will try to start
+;; `mu4e' in background at startup. To disable this behavior, you can set
+;; `+mu4e-auto-start' to nil here.
+;; (setq +mu4e-auto-start nil)
+
+(+deferred!
+ ;; Auto enable Eglot in modes `+eglot-auto-enable-modes' using
+ ;; `+eglot-auto-enable' (from the `me-prog' module). You can use
+ ;; `+lsp-auto-enable' instead to automatically enable LSP mode in supported
+ ;; modes (from the `me-lsp' module).
+ (+eglot-auto-enable)
+
+ ;; Add `ocaml-mode' to `eglot' auto-enable modes
+ (add-to-list '+eglot-auto-enable-modes 'go-mode)
+ (add-to-list '+eglot-auto-enable-modes 'terraform-mode)
+
+ (with-eval-after-load 'eglot
+   ;; You can use this to fill `+eglot-auto-enable-modes' with all supported
+   ;; modes from `eglot-server-programs'
+   (+eglot-use-on-all-supported-modes eglot-server-programs)))
+
+;; If you installed Emacs from source, you can add the source code
+;; directory to enable jumping to symbols defined in Emacs' C code.
+;; (setq source-directory "~/Sources/emacs-git/")
+
+;; I use Brave, and never use Chrome, so I replace chrome program with "brave"
+(setq browse-url-chrome-program (or (executable-find "chrome") (executable-find "chromium")))
+
+;; Install some third-party packages. MinEmacs uses `use-package' and `straight'
+;; for package management. It is recommended to use the same to install
+;; additional packages. For example, to install `devdocs' you can use something
+;; like:
+;; (use-package devdocs
+;;   ;; The installation recipe (from Github)
+;;   :straight (:host github :repo "astoff/devdocs.el" :files ("*.el"))
+;;   ;; Autoload the package when invoking these commands, note that if the
+;;   ;; commands are already autoloaded (defined with `autoload'), this is not
+;;   ;; needed.
+;;   :commands devdocs-install
+;;   ;; MinEmacs sets the `use-package-always-defer' to t, so by default, packages
+;;   ;; are deferred to save startup time. If you want to load a package
+;;   ;; immediately, you need to explicitly use `:demand t'.
+;;   ;; :demand t
+;;   ;; Set some custom variables, using the `:custom' block is recommended over
+;;   ;; using `setq'. This will ensure calling the right setter function if it is
+;;   ;; defined for the custom variable.
+;;   :custom
+;;   (devdocs-data-dir (concat minemacs-local-dir "devdocs/")))
+
+;; Load additional modules
+;; (load (concat minemacs-config-dir "modules/autocompletion"))
+;; (load (concat minemacs-config-dir "modules/programming"))
+
+;; Module: `me-tools' -- Package: `vterm'
+;; When the libvterm present in the system is too old, you can face VTERM_COLOR
+;; related compilation errors. Thil parameter tells `vterm' to download libvterm
+;; for you, see the FAQ at: github.com/akermu/emacs-libvterm.
+;; (with-eval-after-load 'vterm
+;;   (setq vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=Off"))
+
+;; Module: `me-natural-langs' -- Package: `jinx'
+(with-eval-after-load 'jinx
+  ;; Check spelling for Arabic, English and French by default.
+  (setq-default jinx-languages "de en"))
+
+;; The `spell-fu' configuration is obsolete now (in favor of `jinx'). However,
+;; you can force MinEmacs to load obsolete configurations by loading them
+;; manually. Here is an example of how to force loading an obsolete module, you
+;; can do this here or in local.el.
+;; (+load minemacs-obsolete-local-dir "me-spell-fu.el")
+;; (with-eval-after-load 'spell-fu
+;;   ;; We can use MinEmacs' helper macro `+spell-fu-register-dictionaries!'
+;;   ;; to enable multi-language spell checking.
+;;   (+spell-fu-register-dictionaries! "en" "fr"))
+
+;; Module: `me-rss' -- Package: `elfeed'
+;; (with-eval-after-load 'elfeed
+;;   ;; Add news feeds for `elfeed'
+;;   (setq elfeed-feeds
+;;         '("https://itsfoss.com/feed"
+;;           "https://lwn.net/headlines/rss"
+;;           "https://linuxhandbook.com/feed"
+;;           "https://www.omgubuntu.co.uk/feed"
+;;           "https://this-week-in-rust.org/rss.xml"
+;;           "https://planet.emacslife.com/atom.xml")))
+
+;; Module: `me-email' -- Package: `mu4e'
+;; (with-eval-after-load 'mu4e
+;;   ;; Load personal aliases, a file containing aliases, for example:
+;;   ;; alias gmail "Firstname Lastname <some.user.name@gmail.com>"
+;;   ;; alias work  "Firstname Lastname <some.user.name@work.com>"
+
+;;   ;; (setq mail-personal-alias-file (concat minemacs-config-dir "private/mail-aliases.mailrc"))
+
+;;   (setq +mu4e-auto-bcc-address "always.bcc@this.email") ;; Add an email address always included as BCC
+
+;;   ;; Register email accounts with mu4e
+;;   ;; Use MinEmacs' `+mu4e-register-account' helper function to register multiple accounts
+;;   (+mu4e-register-account
+;;    "Google mail" ;; Account name
+;;    "gmail" ;; Maildir
+;;    `((user-mail-address     . "account1@gmail.com")
+;;      (mu4e-sent-folder      . "/gmail/Sent Mail")
+;;      (mu4e-drafts-folder    . "/gmail/Drafts")
+;;      (mu4e-trash-folder     . "/gmail/Trash")
+;;      ;; These settings aren't mandatory if a `msmtp' config is used.
+;;      (smtpmail-smtp-server  . "smtp.googlemail.com")
+;;      (smtpmail-smtp-service . 587)
+;;      ;; Define account aliases
+;;      (+mu4e-account-aliases . ("account1-alias@somesite.org"
+;;                                "account1-alias@othersite.org"))
+;;      ;; Org-msg greeting and signature
+;;      (org-msg-greeting-fmt  . "Hi%s,")
+;;      ;; Generate signature
+;;      (org-msg-signature     . ,(+org-msg-make-signature
+;;                                 "Regards," ;; Closing phrase
+;;                                 "Firstname" ;; First name
+;;                                 "Lastname" ;; Last name
+;;                                 "/R&D Engineer at Some company/")))
+;;    'default ;; Use it as default in a multi-accounts setting
+;;    'gmail)) ;; This is a Gmail account, store it and treat it accordingly (see `me-mu4e-gmail')
+
+;; Module: `me-org' -- Package: `org'
+(with-eval-after-load 'org
+  ;; Set Org-mode directory
+  (setq org-directory "~/Org/" ; let's put files here
+        org-default-notes-file (concat org-directory "inbox.org"))
+  ;; Customize Org stuff
+  ;; (setq org-todo-keywords
+  ;;       '((sequence "IDEA(i)" "TODO(t)" "NEXT(n)" "PROJ(p)" "STRT(s)" "WAIT(w)" "HOLD(h)" "|" "DONE(d)" "KILL(k)")
+  ;;         (sequence "[ ](T)" "[-](S)" "|" "[X](D)")
+  ;;         (sequence "|" "OKAY(o)" "YES(y)" "NO(n)")))
+
+  (setq org-export-headline-levels 5)
+
+  ;; Your Org files to include in the agenda
+  (setq org-agenda-files
+        (mapcar
+         (lambda (f) (concat org-directory f))
+         '("inbox.org"
+           "agenda.org"
+           "projects.org"))))
+
+;; Module: `me-notes' -- Package: `denote'
+(with-eval-after-load 'denote
+  (setq denote-directory "~/Org/notes/"))
+
+;; Module: `me-media' -- Package: `empv'
+;; (with-eval-after-load 'empv
+;;   ;; Set the radio channels, you can get streams from radio-browser.info
+;;   (setq empv-radio-channels
+;;         '(("El-Bahdja FM" . "http://webradio.tda.dz:8001/ElBahdja_64K.mp3")
+;;           ("El-Chaabia" . "https://radio-dzair.net/proxy/chaabia?mp=/stream")
+;;           ("Quran Radio" . "http://stream.radiojar.com/0tpy1h0kxtzuv")
+;;           ("Algeria International" . "https://webradio.tda.dz/Internationale_64K.mp3")
+;;           ("JOW Radio" . "https://str0.creacast.com/jowradio")
+;;           ("Europe1" . "http://ais-live.cloud-services.paris:8000/europe1.mp3")
+;;           ("France Iter" . "http://direct.franceinter.fr/live/franceinter-hifi.aac")
+;;           ("France Info" . "http://direct.franceinfo.fr/live/franceinfo-hifi.aac")
+;;           ("France Culture" . "http://icecast.radiofrance.fr/franceculture-hifi.aac")
+;;           ("France Musique" . "http://icecast.radiofrance.fr/francemusique-hifi.aac")
+;;           ("FIP" . "http://icecast.radiofrance.fr/fip-hifi.aac")
+;;           ("Beur FM" . "http://broadcast.infomaniak.ch/beurfm-high.aac")
+;;           ("Skyrock" . "http://icecast.skyrock.net/s/natio_mp3_128k"))
+;;         ;; See: docs.invidious.io/instances/
+;;         empv-invidious-instance "https://invidious.projectsegfau.lt/api/v1"))
+
+;; Module: `me-ros' -- Package: `ros'
+;; (with-eval-after-load 'ros
+;;   (setq ros-workspaces
+;;         (list
+;;          (ros-dump-workspace
+;;           :tramp-prefix "/docker:ros@ros-machine:"
+;;           :workspace "~/ros_ws"
+;;           :extends '("/opt/ros/noetic/"))
+;;          (ros-dump-workspace
+;;           :tramp-prefix "/docker:ros@ros-machine:"
+;;           :workspace "~/ros2_ws"
+;;           :extends '("/opt/ros/foxy/")))))
+
+;; Module: `me-vc' -- Package: `forge'
+;; (with-eval-after-load 'forge
+;;   ;; To setup private Gitlab instance
+;;   ;; 1. Add this to your ~/.gitconfig
+;;   ;; [gitlab "gitlab.private.com/api/v4"]
+;;   ;;   user = my.username
+;;   ;; 2. Then create an access token on GitLab. I ticked api and write_repository, which seems to work fine so far. Put the token in ~/.authinfo.gpg
+;;   ;; machine gitlab.private.com/api/v4 login my.user^forge password <token>
+;;   ;; 3. Use this in your config:
+;;   (add-to-list 'forge-alist '("gitlab.private.com" "gitlab.private.com/api/v4" "gitlab.private.com" forge-gitlab-repository)))
+
+;; ;; Module: `me-vc' -- Package: `jiralib2'
+;; ;; When `jiralib2' is enabled, do some extra stuff
+;; (when (memq 'jiralib2 minemacs-configured-packages)
+;;   ;; You need to set `jiralib2-url' and `jiralib2-user-login-name'
+;;   (setq jiralib2-url "https://my-jira-server.tld/"
+;;         jiralib2-user-login-name "my-username")
+
+;;   ;; Add a hook on git-commit, so it adds the ticket number to the commit message
+;;   (add-hook
+;;    'git-commit-mode-hook
+;;    (defun +jira-commit-auto-insert-ticket-id-h ()
+;;      (when (and jiralib2-user-login-name
+;;                 ;; Do not auto insert if the commit message is not empty (ex. amend)
+;;                 (+first-line-empty-p))
+;;        (goto-char (point-min))
+;;        (insert "\n")
+;;        (goto-char (point-min))
+;;        (+jira-insert-ticket-id)
+;;        (insert ": ")))))
+
+
+
+#+end_src
+** modules.el
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/modules.el
+:end:
+#+begin_src emacs-lisp
+;;; modules.el -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2022 Abdelhak Bougouffa
+
+;; This file can be used to override `minemacs-modules'
+;; and `minemacs-core-modules'
+
+;;; Ordered list of enabled core modules
+(setq minemacs-core-modules
+      '(me-splash         ; Simple splash screen
+        me-keybindings    ; Keybinding (general, which-key, hydra, ...)
+        me-evil           ; Emacs as Vim (evil, evil-collection, evil-snipe, evil-numbers, ...)
+        me-core-ui        ; Core UI (doom-themes, modus-themes, doom-modeline, ...)
+        me-completion))   ; Completion (vertico, marginalia, corfu, cape, consult, embark, ...)
+
+;;; List of enabled modules
+(setq minemacs-modules
+      '(me-ui             ; User interface (svg-lib, focus, mixed-pitch, ...)
+        ;; me-nano           ; N Λ N O Emacs, ...
+        ;; me-ai             ; AI assistant using ollama (ellama, llm, ...)
+        me-editor         ; Editing (tempel, tempel-collection, rainbow-delimiters, expreg, drag-stuff, ...)
+        me-daemon         ; Emacs daemon tweaks
+        me-undo           ; Better undoing (undo-fu-session, vundo, ...)
+        me-multi-cursors  ; Multi-cursors editing (iedit, evil-mc, evil-iedit-state, ...)
+        me-vc             ; Version control (magit, forge, core-review, diff-hl, ...)
+        me-project        ; Project management (projection, compile-multi, consult-project-extra, ...)
+        me-prog           ; Programming stuff (tree-sitter, eldoc-box, apheleia, editorconfig, ...)
+        me-checkers       ; Static checkers (flymake-collection, flymenu, flymake-quickdef, flymake-cppcheck, ...)
+        me-debug          ; Debugging tools (realgud, disaster, dape, ...)
+        me-emacs-lisp     ; Emacs lisp development (parinfer-rust, macrostep, eros, helpful, ...)
+        ;; me-common-lisp ; Common Lisp development (sly, sly-quicklisp, ...)
+        ;; me-scheme      ; Scheme development (racket-mode, geiser, ...)
+        ;; me-clojure     ; Clojure development (clojure-mode, cider, ...)
+        ;; me-embedded    ; Embedded systems (embed, arduino, openocd, bitbake, dts-mode, ...)
+        ;; me-robot       ; Robotics stuff (ros, robot-mode, ...)
+        me-data           ; Data file formats (csv, yaml, toml, json, plantuml-mode, ...)
+        ;; me-math        ; Mathematics (maxima, ess, ein, code-cells, julia-mode, ...)
+        ;; me-modeling    ; Modeling tools (scad-mode, modelica-mode, ...)
+        me-org            ; Org-mode for life (org-contrib, org-modern, org-appear, engrave-faces, ...)
+        extras/me-org-extras
+        extras/me-writing-mode
+        me-extra          ; Extra features (better-jumper, crux, ...)
+        ;; me-notes          ; Notes & Zettelkasten (denote, consult-notes, ...)
+        ;; me-email       ; Email (mu4e, mu4e-alert, org-msg, ...)
+        me-rss         ; News feed (elfeed, ...)
+        ;; me-lifestyle   ; *Very* opinionated lifestyle packages (awqat, ...)
+        me-docs           ; Documents (pdf-tools, pdf-view-restore, nov, crdt, edraw, markdown-mode, ...)
+        ;; me-calendar    ; Calendar (calfw, calfw-org, calfw-ical, ...)
+        ;; me-latex          ; LaTeX (auctex, auctex-latexmk, LaTeX-preview-pane, ...)
+        ;; me-biblio      ; Bibliography & citations (citar, citar-embark, org-re-reveal-citeproc, ...)
+        me-natural-langs  ; Natural language stuff (jinx, spell-fu, go-translate, eglot-ltex, ...)
+        me-files          ; Files and directories (dirvish, vlf, sudo-edit, ztree, ...)
+        me-tools          ; System tools (vterm, tldr, ssh-deploy, docker, logview, with-editor, ...)
+        me-tty            ; Emacs from terminal (xclip, ...)
+        ;; me-fun            ; Games and funny packages (xkcd, speed-type, wordel, ...)
+        me-media          ; Multimedia (empv, emms, ...)
+        me-workspaces  ; Workspace separation (tabspaces, ...)
+        me-binary         ; Display binary files in hex or decompile them
+        me-window         ; Frame & window tweaks
+        obsolete/me-yasnippet))
+        ;;obsolete/me-lsp))       ; Good old yasnippet
+
+;;; List of disabled packages
+;; You can set `minemacs-disabled-packages' to disable some packages. For
+;; example, if you want to use the `me-ui' module, but you want to disable the
+;; `focus' package. You can use:
+;; (push 'embark minemacs-disabled-packages)
+;; (push 'eglot minemacs-disabled-packages)
+
+;; Adding a package to `minemacs-disabled-packages' guarantees disabling its
+;; corresponding `use-package' section in MinEmacs' modules. However, please
+;; note that, if you want to completely disable a package, you need to make sure
+;; you've also disabled its dependent packages (see `M-x straight-dependents'),
+;; otherwise it will get installed as a dependency.
+;;
+;; You can also `push' (or `add-to-list') multiple packages at once (as a list).
+;; For example, to completely disable `iedit' and its dependencies
+;; `evil-multiedit' and `evil-iedit-state', you can use:
+;; (push '(iedit evil-multiedit evil-iedit-state) minemacs-disabled-packages)
+(push '(cape-yasnippet treesit-auto lsp-mode) minemacs-disabled-packages)
+;;; Using the obsolete modules
+;; You can use the obsolete packages configurations by adding the
+;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
+;; their names indicate, are OBSOLETE and NOT SUPPORTED. This is a
+;; non-comprehensive list of obsolete modules, see "modules/obsolete/*.el" for
+;; the full list.
+;; (setq minemacs-modules
+;;       (append
+;;        minemacs-modules
+;;        '(
+;;          obsolete/me-blamer         ; M-x git blame
+;;          obsolete/me-chezmoi        ; Integrate chezmoi with Emacs
+;;          obsolete/me-cov            ; Show code coverage results (cov, ...)
+;;          obsolete/me-eaf            ; EAF apps (browser, jupyter, file-sender, ...)
+;;          obsolete/me-evil-escape    ; Escape without ESC (evil-escape, ...)
+;;          obsolete/me-expand-region  ; Expand region (included as an alternative for `expreg' in non tree-sitter builds)
+;;          obsolete/me-flycheck       ; Static checkers (flycheck, ...)
+;;          obsolete/me-flycheck-cmake ; Flycheck + CMake
+;;          obsolete/me-flycheck-eglot ; Flycheck + Eglot
+;;          obsolete/me-lexic          ; Offline dictionary using sdcv
+;;          obsolete/me-ligature       ; Ligatures (needs further customization in function of the used font)
+;;          obsolete/me-lsp            ; LSP and DAP (lsp-mode, dap-mode, consult-lsp, lsp-pyright, ccls, ...)
+;;          obsolete/me-netextender    ; NetExtender integration (start/stop VPN sessions from Emacs)
+;;          obsolete/me-org-present    ; Org presentations in Emacs
+;;          obsolete/me-org-roam       ; Org roam configuration (org-roam, consult-org-roam, ...)
+;;          obsolete/me-projectile     ; Project management (projectile, consult-projectile, treemacs-projectile, ...)
+;;          obsolete/me-smartparens    ; Smartparens
+;;          obsolete/me-spell-fu       ; Spell checking (included as an alternative when `jinx' cannot be used)
+;;          obsolete/me-tree-sitter    ; Tree-sitter module configuration (this module is automatically activated for Emacs 28 or 29+ built without treesitter support)
+;;          obsolete/me-unicode-fonts  ; Better Unicode management mainly for non-latin fonts
+;;          obsolete/me-writeroom      ; Replacement for `+writing-mode' (writeroom-mode, ...)
+;;          obsolete/me-yasnippet      ; Yasnippet (yasnippet, cape-yasnippet, yasnippet-snippets, ...)
+;;         )))
+
+#+end_src
+
 * Autocompletion
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -1701,7 +2114,14 @@ Now some keybindings for the ~Super_L~ key:
 (global-set-key (kbd "s-l") #'evil-window-right)
 (global-set-key (kbd "s-k") #'evil-window-up)
 (global-set-key (kbd "s-j") #'evil-window-down)
+
+;; Tab navigation
+(global-set-key (kbd "s-.") #'tab-next)
+(global-set-key (kbd "s-,") #'tab-previous)
 #+end_src
+
+#+results:
+: evil-window-down
 
 Some keybindings for *paragraphs*:
 
