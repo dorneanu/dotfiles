@@ -1,4 +1,4 @@
-#+title: MinEmacs — Programming
+#+title: MinEmacs — Config
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 #+startup: indent overview
@@ -7,9 +7,6 @@
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
 :end:
-#+begin_src emacs-lisp
-(message "Programming loaded")
-#+end_src
 ** Visual config
 *** truncate-lines
 Disable truncating lines
@@ -644,8 +641,8 @@ modifications.
 ;; font found on the system will be used:
 (plist-put minemacs-fonts-plist
            :default ;; <- applies to the `default' face using `custom-theme-set-faces'
-           '((:family "Iosevka Fixed Curly Slab" :height 130) ; <- priority 1
-             (:family "JetBrains Mono" :height 110 :weight light) ; <- priority 2
+           '((:family "JetBrains Mono" :height 130) ; <- priority 1
+             (:family "Iosevka Fixed Curly Slab" :height 110 :weight light) ; <- priority 2
              (:family "Cascadia Code" :height 120 :weight semi-light))) ; <- priority 3
 
 ;; To set font for arbitrary Emacs face, you need just to write the face name as
@@ -704,6 +701,11 @@ modifications.
    ;; You can use this to fill `+eglot-auto-enable-modes' with all supported
    ;; modes from `eglot-server-programs'
    (+eglot-use-on-all-supported-modes eglot-server-programs)))
+
+;; Enable tab bar
+(with-eval-after-load 'tab-bar
+  (setq tab-bar-show t))
+
 
 ;; If you installed Emacs from source, you can add the source code
 ;; directory to enable jumping to symbols defined in Emacs' C code.
@@ -2130,3 +2132,7 @@ Some keybindings for *paragraphs*:
 (global-set-key (kbd "M-n") #'forward-paragraph)
 (global-set-key (kbd "M-p") #'backward-paragraph)
 #+end_src
+
+# Local Variables:
+# after-save-hook: (org-babel-tangle)
+# End:
