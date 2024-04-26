@@ -2170,6 +2170,18 @@ Some keybindings for *paragraphs*:
   "xw"   #'+hydra/window-nav/body
   )
 #+end_src
+** jumps
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Jumps ======
+  "jol"   #'link-hint-open-link
+  "jc"   #'avy-goto-char
+  "jw"   #'avy-goto-word-1
+  "jl"   #'avy-goto-line
+  "j'"   #'avy-resume
+  )
+#+end_src
+
 * ORG mode
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
