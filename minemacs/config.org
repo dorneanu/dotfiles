@@ -608,6 +608,7 @@ modifications.
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
+
 #+begin_src emacs-lisp
 ;;; config.el -*- lexical-binding: t; -*-
 
@@ -640,10 +641,10 @@ modifications.
 ;; You can set a list of fonts to be used, like the snippet below. The first
 ;; font found on the system will be used:
 (plist-put minemacs-fonts-plist
-           :default ;; <- applies to the `default' face using `custom-theme-set-faces'
-           '((:family "JetBrains Mono" :height 130) ; <- priority 1
-             (:family "Iosevka Fixed Curly Slab" :height 110 :weight light) ; <- priority 2
-             (:family "Cascadia Code" :height 120 :weight semi-light))) ; <- priority 3
+           :default
+           '((:family "JetBrains Mono" :height 130)
+             (:family "Iosevka Fixed Curly Slab" :height 110 :weight light)
+             (:family "Cascadia Code" :height 120 :weight semi-light)))
 
 ;; To set font for arbitrary Emacs face, you need just to write the face name as
 ;; a keyword. For example `variable-pitch' -> `:variable-pitch':
@@ -1766,6 +1767,14 @@ Add here circled digits like: ②
   ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
   ("m" (dakra/insert-unicode "MICRO SIGN")))
 #+end_src
+** Custom Elisp
+*** reload config
+#+begin_src emacs-lisp
+(defun dorneanu/reload-dotemacs ()
+  (interactive)
+  (load-file (concat minemacs-root-dir "early-init.el" )))
+#+end_src
+
 * Applications
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -2136,3 +2145,367 @@ Some keybindings for *paragraphs*:
 # Local Variables:
 # after-save-hook: (org-babel-tangle)
 # End:
+* ORG mode
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
+:end:
+** org
+Basic configuration
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+    (setq org-hide-leading-stars             t
+        org-hide-macro-markers             t
+        org-ellipsis                       "…"
+        org-image-actual-width             600
+        org-redisplay-inline-images        t
+        org-display-inline-images          t
+        org-auto-align-tags                t
+        org-startup-with-inline-images     "inlineimages"
+        org-pretty-entities                t
+        org-fontify-whole-heading-line     t
+        org-fontify-done-headline          t
+        org-fontify-quote-and-verse-blocks t
+        org-startup-indented               t
+        org-startup-align-all-tables       t
+        org-use-property-inheritance       t
+        org-list-allow-alphabetical        t
+        org-M-RET-may-split-line           nil
+        ;; org-src-window-setup               'split-window-below
+        org-src-fontify-natively           t
+        org-src-tab-acts-natively          t
+        org-src-preserve-indentation       t
+        org-adapt-indentation              nil
+        org-log-done                       'time
+        org-directory                      "~/work/repos/org/"
+        org-default-notes-file             (expand-file-name "notes.org" org-directory))
+
+    ;; Set TODO keywords
+    (setq org-todo-keywords
+            '((sequence
+               "TODO(t)"
+               "STARTED(s)"
+               "NEXT(n)"
+               "WIP(p)"
+               "WAITING(w!)"
+               "|"
+               "DONE(d)"
+               "CANCELED(c)")
+              (sequence
+               "PROJ(p)"
+               "MEETING(m)"
+               "REVIEW(r)"
+               "IDEA(i)")))
+    ;; "|"
+    ;; "STOP(c)"
+    ;; "EVENT(m)"
+
+
+    ;; No blank lines before new entries
+    (setq org-blank-before-new-entry
+            '((heading . nil)
+            (plain-list-item . nil))))
+#+end_src
+** org-agenda
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  (setq
+   ;; Set agenda files
+   org-agenda-files (list org-directory)
+
+   org-agenda-file-regexp
+   (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
+                             org-agenda-file-regexp)
+
+   ;; Skip unavailable agenda files
+   org-agenda-skip-unavailable-files t
+
+   ;; Skip done tasks
+   org-agenda-skip-scheduled-if-done t
+   org-agenda-skip-deadline-if-done t
+
+   ;; Show warnings for deadlines 7 days in advance.
+   org-deadline-warning-days 5
+   org-agenda-include-deadlines t
+   org-agenda-todo-list-sublevels t
+
+   ;; Set column width for tags in agenda
+   org-agenda-tags-column 80
+
+
+   ;; org-agenda-todo-ignore-scheduled 'all
+   ;; org-agenda-todo-ignore-deadlines 'all
+   ;; org-agenda-todo-ignore-with-date 'all
+
+   ;; Use straight line as separator between agenda blocks
+   ;; https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472&utf8=dec&unicodeinhtml=dec
+   ;; org-agenda-block-separator 9472
+   org-agenda-compact-blocks t
+   org-agenda-start-day nil ;; i.e. today
+   org-agenda-span 1
+   org-agenda-start-on-weekday nil
+
+   ;; Clock report settings
+   org-agenda-start-with-clockreport-mode t
+   org-clock-report-include-clocking-task t
+   org-agenda-clockreport-parameter-plist '(:link nil :maxlevel 6 :fileskip0 t :compact nil)
+
+   ;; Time grid
+   org-agenda-time-grid
+   '((daily today require-timed)
+     (0900 01000 1100 1200 1300 1400 1500 1600 1700 1800)
+     "-"
+     "────────────────")
+
+   ;; http://doc.endlessparentheses.com/Var/org-agenda-prefix-format.html
+   org-agenda-prefix-format
+   '(
+     (agenda . "%5c %4e %?-12t %s")
+     (todo   . " %4e %-12c")
+     (tags   . " %-22c")
+     (search . " %-12c")))
+
+  ;; (add-hook 'org-agenda-mode-hook
+  ;;           (lambda ()
+  ;;             (visual-line-mode -1)
+  ;;             (toggle-truncate-lines 1)
+  ;;             (display-line-numbers-mode 0)))
+
+  ;; Add extra files to org-agenda-files
+  (add-to-list 'org-agenda-files "~/syncthing/org/2-PARA.org" "~/syncthing/org/0box.org"))
+#+end_src
+** org-super-agenda
+Define custom org agenda commands.
+Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org-agenda
+  ;; Enable it
+  (org-super-agenda-mode)
+
+  ;; Toggle org links display
+  (setq org-link-descriptive t)
+
+  ;; Set agenda custom commands
+  (setq org-agenda-custom-commands
+        '(
+          ("a" "Agenda"
+           ((agenda "" ((org-agend-span 'day)
+                        (org-super-agenda-groups
+                         '(
+                           (:name "Today"
+                            :time-grid t
+                            :date today
+                            :scheduled today
+                            :order 1)
+                           (:discard (:anything))))))
+            (tags (concat "wk" (format-time-string "%V")) ((org-agenda-overriding-header  (concat "--\nToDos Week " (format-time-string "%V")))
+                                                           (org-super-agenda-groups
+                                                            '((:discard (:deadline t))
+                                                              (:discard (:todo ("DONE" "CANCELED" "WAITING")))
+                                                              (:discard (:not (:todo t)))))))
+
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-agenda-prefix-format '(
+                                                     (agenda . "%7c %4e %?-12t %s")
+                                                     (todo . " %-8c [%-4e] %?-12t %s")
+                                                     (tags   . " %-22c")
+                                                     (search . " %-12c")))
+
+                         (org-super-agenda-groups
+                          '(
+                            (:log t)
+                            (:discard (:tag "inactive"))
+                            (:discard (:tag "jira"))
+                            (:name "Started"
+                             :todo ("STARTED")
+                             :order 1)
+                            (:name "Quickies"
+                             :and (:effort< "0:15" :not (:tag "recurring")))
+
+                            (:name "This Week"
+                             :auto-property "week")
+
+                            (:name "Overdue"
+                             :deadline past
+                             :scheduled past
+                             :order 2)
+                            (:name "Soon"
+                             :deadline feature
+                             :scheduled feature
+                             :order 2)
+                            (:name "Waiting"
+                             :todo "WAITING"
+                             :order 2)
+                            (:name "To refile"
+                             :category "inbox"
+                             :todo ""
+                             :order 10)
+                            (:name "Next to do"
+                             :todo "NEXT"
+                             :order 20)
+                            ;; (:name "WIP"
+                            ;;  :todo ("WIP")
+                            ;;  :order 40)
+                            (:discard (:anything))))))
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
+                         (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
+                         (org-super-agenda-groups
+                          '(
+                            (:log t)
+                            (:discard (:tag "inactive"))
+                            (:name "Projects"
+                             :auto-property "project"
+                             :todo t
+                             :order 1)
+                            (:discard (:anything))))))))
+
+
+          ("r" "Resonance"
+           ((alltodo "" ((org-agenda-overriding-header "Resonance calendar")
+                         (org-super-agenda-groups
+                          '(
+                            (:discard (:not (:tag ("video" "article"))))
+                            (:and (:tag))
+                            (:auto-parent t)
+                            (:discard (:anything)))))))))))
+
+
+#+end_src
+** org-refile
+Some extras copied from Doom Emacs:
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  ;; Refiling
+ (setq org-refile-use-cache t)
+ (setq org-refile-targets '((nil :maxlevel . 9)
+                            (org-agenda-files :maxlevel . 9)))
+
+  ;; Allow refile to create parent tasks with confirmation
+  (setq org-refile-allow-creating-parent-nodes 'confirm)
+  (setq org-refile-use-outline-path 'file)       ; Show filename for refiling
+  (setq org-outline-path-complete-in-steps nil)  ; Refile in a single go
+
+  ;; Exclude DONE state tasks from refile targets
+  (defun dorneanu/verify-refile-target ()
+    "Exclude todo keywords with a done state from refile targets."
+    (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+  (setq org-refile-target-verify-function 'dorneanu/verify-refile-target)
+
+  ;; Some custom elisp functions
+  (defun dorneanu/org-refile-anywhere (&optional goto default-buffer rfloc msg)
+    "A version of `org-refile' which allows refiling to any subtree."
+    (interactive "P")
+    (let ((org-refile-target-verify-function))
+      (org-refile goto default-buffer rfloc msg)))
+
+  (defun dorneanu/org-agenda-refile-anywhere (&optional goto rfloc no-update)
+    "A version of `org-agenda-refile' which allows refiling to any subtree."
+    (interactive "P")
+    (let ((org-refile-target-verify-function))
+      (org-agenda-refile goto rfloc no-update)))
+
+  ;; These are from Doom Emacs: https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org-refile.el
+  (defun +org/refile-to-current-file (arg &optional file)
+    "Refile current heading to elsewhere in the current buffer.
+If prefix ARG, copy instead of move."
+    (interactive "P")
+    (let ((org-refile-targets `((,file :maxlevel . 10)))
+          (org-refile-use-outline-path t)
+          (org-refile-keep arg)
+          current-prefix-arg)
+      (call-interactively #'org-refile)))
+
+  (defun +org/refile-to-visible ()
+    "Refile current heading as first child of visible heading selected with Avy."
+    (interactive)
+    (when-let (marker (+org-headline-avy))
+      (let* ((buffer (marker-buffer marker))
+             (filename
+              (buffer-file-name (or (buffer-base-buffer buffer)
+                                    buffer)))
+             (heading
+              (org-with-point-at marker
+                (org-get-heading 'no-tags 'no-todo)))
+             ;; Won't work with target buffers whose filename is nil
+             (rfloc (list heading filename nil marker))
+             (org-after-refile-insert-hook (cons #'org-reveal org-after-refile-insert-hook)))
+        (org-refile nil nil rfloc))))
+
+  (defun +org/refile-to-last-location (arg)
+    "Refile current heading to the last node you refiled to.
+If prefix ARG, copy instead of move."
+    (interactive "P")
+    (or (assoc (plist-get org-bookmark-names-plist :last-refile)
+               bookmark-alist)
+        (user-error "No saved location to refile to"))
+    (let ((org-refile-keep arg)
+          (completing-read-function
+           (lambda (_p _coll _pred _rm _ii _h default &rest _)
+             default)))
+      (org-refile)))
+
+  ;; Save all buffers after refilling
+  (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers))))
+
+
+#+end_src
+** org-timeblock
+#+begin_src emacs-lisp
+(use-package org-timeblock
+  :straight t
+  :after (org org-agenda)
+  :bind (:map org-timeblock-mode-map
+              ("M-n" . org-timeblock-forward-block)
+              ("M-p" . org-timeblock-backward-block)
+              ("M-s" . org-timeblock-schedule)
+              ("M-c i" . org-timeblock-clock-in)
+              ("M-c t" . org-timeblock-todo)
+              ("r" . org-timeblock-redraw-buffers)
+              ("s" . org-timeblock-switch-view))
+  :config
+  (setq org-timeblock-n-days-view 2
+        org-timeblock-scale-options '(8 . 17)))
+
+(defun dorneanu/org-setup-org-timeblock()
+  (interactive)
+  (add-hook `org-agenda-mode-hook #'org-timeblock-redraw-buffers)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (org-timeblock))
+#+end_src
+** packages
+*** org-re-reveal
+Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
+#+begin_src emacs-lisp
+(use-package org-re-reveal
+   :straight t)
+#+end_src
+** exporters
+*** hugo
+#+begin_src emacs-lisp
+(use-package ox-hugo
+  :defer t
+  :after ox
+  :straight t)
+#+end_src
+** misc
+*** org-download
+Insert images easily into ORG mode files
+
+#+begin_src emacs-lisp
+(use-package org-download
+  :straight t
+  :after org
+  :hook (org-mode . org-download-enable))
+
+;; Drag-and-drop to `dired`
+(add-hook 'dired-mode-hook 'org-download-enable)
+#+end_src
+*** org-web-tools
+#+begin_src emacs-lisp
+(use-package org-web-tools
+  :straight t)
+#+end_src
