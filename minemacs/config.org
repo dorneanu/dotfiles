@@ -965,7 +965,8 @@ modifications.
         me-workspaces  ; Workspace separation (tabspaces, ...)
         me-binary         ; Display binary files in hex or decompile them
         me-window         ; Frame & window tweaks
-        obsolete/me-yasnippet))
+        obsolete/me-yasnippet
+        obsolete/me-org-roam))
         ;;obsolete/me-lsp))       ; Good old yasnippet
 
 ;;; List of disabled packages
@@ -986,6 +987,7 @@ modifications.
 ;; `evil-multiedit' and `evil-iedit-state', you can use:
 ;; (push '(iedit evil-multiedit evil-iedit-state) minemacs-disabled-packages)
 (push '(cape-yasnippet treesit-auto lsp-mode) minemacs-disabled-packages)
+(push '(citar-org-roam citar) minemacs-disabled-packages)
 ;;; Using the obsolete modules
 ;; You can use the obsolete packages configurations by adding the
 ;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
@@ -1021,7 +1023,15 @@ modifications.
 ;;         )))
 
 #+end_src
-
+** custom-vars
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/custom-vars.el
+:end:
+#+begin_src emacs-lisp
+(setq
+ org-roam-directory "/cs/priv/repos/roam"
+ org-directory "~/work/repos/org")
+#+end_src
 * Autocompletion
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -1772,7 +1782,7 @@ Add here circled digits like: ②
 #+begin_src emacs-lisp
 (defun dorneanu/reload-dotemacs ()
   (interactive)
-  (load-file (concat minemacs-root-dir "early-init.el" )))
+  (load-file (concat minemacs-root-dir "init.el" )))
 #+end_src
 
 * Applications
@@ -2138,17 +2148,33 @@ Now some keybindings for the ~Super_L~ key:
 Some keybindings for *paragraphs*:
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "M-n") #'forward-paragraph)
-(global-set-key (kbd "M-p") #'backward-paragraph)
+(global-set-key (kbd "s-i") #'forward-paragraph)
+(global-set-key (kbd "s-u") #'backward-paragraph)
 #+end_src
 
-# Local Variables:
-# after-save-hook: (org-babel-tangle)
-# End:
+** toggles
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Toggles ======
+  "to"   #'olivetti-mode
+  "tj"   #'jinx-mode
+  "th"   #'highlight-indent-guides-mode
+  "tn"   #'display-line-numbers-mode
+  "t.f"  #'fringe-mode)
+#+end_src
+** hydras
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Hydras ======
+  "xoj"   #'sk/hydra-org-jump/body
+  "xw"   #'+hydra/window-nav/body
+  )
+#+end_src
 * ORG mode
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
 :end:
+All this goes to ~~/.minemacs.d/local/config.el~:
 ** org
 Basic configuration
 #+begin_src emacs-lisp
@@ -2476,6 +2502,13 @@ If prefix ARG, copy instead of move."
   (other-window 1)
   (org-timeblock))
 #+end_src
+** keybindings
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== ORG ======
+  "orv"   #'+org/refile-to-visible
+  )
+#+end_src
 ** packages
 *** org-re-reveal
 Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
@@ -2509,3 +2542,7 @@ Insert images easily into ORG mode files
 (use-package org-web-tools
   :straight t)
 #+end_src
+* internal :no:export:
+# Local Variables:
+# after-save-hook: (org-babel-tangle)
+# End:
