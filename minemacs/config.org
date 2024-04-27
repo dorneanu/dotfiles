@@ -1784,6 +1784,14 @@ Add here circled digits like: ②
   (interactive)
   (load-file (concat minemacs-root-dir "init.el" )))
 #+end_src
+*** change font size
+Change default font size
+#+begin_src emacs-lisp
+(defun dorneanu/set-font-size (size)
+  "Set the font size to SIZE, specified in tenths of a point."
+  (interactive "nEnter the font size: ")
+  (set-face-attribute 'default nil :height size))
+#+end_src
 
 * Applications
 :properties:
@@ -2167,7 +2175,8 @@ Some keybindings for *paragraphs*:
 (+map!
   ;; ====== Hydras ======
   "xoj"   #'sk/hydra-org-jump/body
-  "xw"   #'+hydra/window-nav/body
+  "xw"    #'+hydra/window-nav/body
+  "xfs"   #'dorneanu/set-font-size
   )
 #+end_src
 ** jumps
@@ -2179,6 +2188,13 @@ Some keybindings for *paragraphs*:
   "jw"   #'avy-goto-word-1
   "jl"   #'avy-goto-line
   "j'"   #'avy-resume
+  )
+#+end_src
+** projects
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Projects ======
+  "pe"   #'projectile-run-eshell
   )
 #+end_src
 
@@ -2555,6 +2571,7 @@ Insert images easily into ORG mode files
   :straight t)
 #+end_src
 * internal :no:export:
+
 # Local Variables:
 # after-save-hook: (org-babel-tangle)
 # End:
