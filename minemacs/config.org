@@ -987,7 +987,7 @@ modifications.
 ;; `evil-multiedit' and `evil-iedit-state', you can use:
 ;; (push '(iedit evil-multiedit evil-iedit-state) minemacs-disabled-packages)
 (push '(cape-yasnippet treesit-auto lsp-mode) minemacs-disabled-packages)
-(push '(citar-org-roam citar) minemacs-disabled-packages)
+(push '(citar-org-roam citar tempel tempel-collection) minemacs-disabled-packages)
 ;;; Using the obsolete modules
 ;; You can use the obsolete packages configurations by adding the
 ;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
