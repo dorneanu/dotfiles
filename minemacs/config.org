@@ -965,7 +965,7 @@ modifications.
         me-workspaces  ; Workspace separation (tabspaces, ...)
         me-binary         ; Display binary files in hex or decompile them
         me-window         ; Frame & window tweaks
-        obsolete/me-yasnippet
+        ;; obsolete/me-yasnippet
         obsolete/me-org-roam))
         ;;obsolete/me-lsp))       ; Good old yasnippet
 
@@ -1094,6 +1094,59 @@ modifications.
               (list (cape-capf-super #'lsp-completion-at-point (cape-company-to-capf #'company-go)))))
 #+end_src
 *** yasnippet
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :straight t
+  :hook (minemacs-lazy . yas-global-mode)
+  :init
+  (defvar yas-verbosity 2)
+  :custom
+  (yas-snippet-dirs nil)
+  (yas-triggers-in-field t))
+
+;; (use-package cape-yasnippet
+;;   :straight (:host github :repo "elken/cape-yasnippet")
+;;   :after cape yasnippet
+;;   :demand t
+;;   :hook ((prog-mode text-mode conf-mode) . +cape-yasnippet--setup-h)
+;;   :config
+;;   ;; To avoid auto-expanding snippets
+;;   (plist-put cape-yasnippet--properties :exit-function #'always)
+;;   (defun +cape-yasnippet--setup-h ()
+;;     (when (bound-and-true-p yas-minor-mode)
+;;       (add-to-list 'completion-at-point-functions #'cape-yasnippet))))
+
+(use-package yasnippet-capf
+  :straight t
+  :after cape
+  :hook ((prog-mode text-mode conf-mode) . +cape-yasnippet--setup-h)
+  :config
+  (defun +cape-yasnippet--setup-h ()
+    (when (bound-and-true-p yas-minor-mode)
+      (add-to-list 'completion-at-point-functions #'yasnippet-capf))))
+  
+
+(use-package yasnippet-snippets
+  :straight t
+  :after yasnippet
+  :demand t)
+
+(use-package doom-snippets
+  :straight (:host github :repo "hlissner/doom-snippets" :files ("*.el" "*"))
+  :after yasnippet
+  :demand t)
+
+(with-eval-after-load 'yasnippet
+  (push "~/.minemacs.d/snippets/" yas-snippet-dirs))
+
+;; (Use-package license-snippets
+;;   :straight t
+;;   :after yasnippet
+;;   :demand t
+;;   :config
+;;   (license-snippets-init))
+
+#+end_src
 **** consult-yasnippet
 Use ~consult-yasnippet~:
 #+begin_src emacs-lisp
