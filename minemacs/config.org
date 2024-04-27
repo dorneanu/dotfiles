@@ -2130,6 +2130,38 @@ Use hnread to show HN threads for a URL at point
   (setq-local hnreader-view-comments-in-same-window t)
   (hnreader-comment (format "%s" (url-get-url-at-point))))
 #+end_src
+** gnus
+- [ ] Fix pyenv issue
+*** COMMENT nnreddit
+#+begin_src emacs-lisp
+(use-package nnreddit
+  :straight t)
+;; Applies to first-time Gnus users
+(custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
+(add-to-list 'gnus-secondary-select-methods '(nnreddit ""))
+
+;; Primary Mailbox
+(setq gnus-select-method
+      '(nnmaildir "Local"
+        (directory "~/Maildir")
+        (nnir-search-engine notmuch)
+        ))
+
+(setq gnus-asynchronous t)
+
+(setq-default
+ gnus-summary-line-format "%U%R%z %(%&user-date class="comment">;  %-15,15f  %B%s%)\n"
+ gnus-user-date-format-alist '((t . "%Y-%m-%d %H:%M"))
+ gnus-summary-thread-gathering-function 'gnus-gather-threads-by-references
+ gnus-thread-sort-functions '(gnus-thread-sort-by-date)
+ gnus-sum-thread-tree-false-root ""
+ gnus-sum-thread-tree-indent " "
+ gnus-sum-thread-tree-leaf-with-other "├► "
+ gnus-sum-thread-tree-root ""
+ gnus-sum-thread-tree-single-leaf "╰► "
+ gnus-sum-thread-tree-vertical "│")
+#+end_src
+
 * Keybindings
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
