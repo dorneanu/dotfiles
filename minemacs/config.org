@@ -630,7 +630,7 @@ modifications.
 
 ;; Set a theme for MinEmacs, supported themes include these from `doom-themes'
 ;; or built-in themes
-(setq minemacs-theme 'doom-henna) ; `doom-one' is a dark theme, `doom-one-light' is the light one
+(setq minemacs-theme 'tango) ; `doom-one' is a dark theme, `doom-one-light' is the light one
 
 ;; MinEmacs defines the variable `minemacs-fonts-plist' that is used by the
 ;; `+setup-fonts' function. The function checks and enables the first available
@@ -658,12 +658,12 @@ modifications.
 ;; For example to set custom font for `mode-line' -> `:mode-line':
 (plist-put minemacs-fonts-plist
            :mode-line ;; <- applies to the `mode-line' face using `custom-theme-set-faces'
-           '((:family "Lato" :weight regular)
+           '((:family "JetBrains Mono" :weight regular)
              (:family "Roboto" :weight light)))
 
 (plist-put minemacs-fonts-plist
            :mode-line-inactive ;; <- applies to the `mode-line-inactive'
-           '((:family "Lato" :weight regular)
+           '((:family "JetBrains Mono" :weight regular)
              (:family "Roboto" :weight light)))
 
 ;; You can also setup some language-specific fonts. For example, to use "Amiri"
@@ -812,7 +812,7 @@ modifications.
 ;; Module: `me-org' -- Package: `org'
 (with-eval-after-load 'org
   ;; Set Org-mode directory
-  (setq org-directory "~/Org/" ; let's put files here
+  (setq org-directory "~/work/repos/org/" ; let's put files here
         org-default-notes-file (concat org-directory "inbox.org"))
   ;; Customize Org stuff
   ;; (setq org-todo-keywords
@@ -827,12 +827,13 @@ modifications.
         (mapcar
          (lambda (f) (concat org-directory f))
          '("inbox.org"
-           "agenda.org"
-           "projects.org"))))
+           "work.org.gpg"
+           "private.org.gpg"
+           "projects.org.gpg"))))
 
 ;; Module: `me-notes' -- Package: `denote'
-(with-eval-after-load 'denote
-  (setq denote-directory "~/Org/notes/"))
+;; (with-eval-after-load 'denote
+;;   (setq denote-directory "~/Org/notes/"))
 
 ;; Module: `me-media' -- Package: `empv'
 ;; (with-eval-after-load 'empv
@@ -966,7 +967,8 @@ modifications.
         me-binary         ; Display binary files in hex or decompile them
         me-window         ; Frame & window tweaks
         ;; obsolete/me-yasnippet
-        obsolete/me-org-roam))
+        ;;obsolete/me-org-roam
+        ))
         ;;obsolete/me-lsp))       ; Good old yasnippet
 
 ;;; List of disabled packages
@@ -988,6 +990,8 @@ modifications.
 ;; (push '(iedit evil-multiedit evil-iedit-state) minemacs-disabled-packages)
 (push '(cape-yasnippet treesit-auto lsp-mode) minemacs-disabled-packages)
 (push '(citar-org-roam citar tempel tempel-collection) minemacs-disabled-packages)
+(push '(org org-agenda org-modern) minemacs-disabled-packages)
+(push '(marginalia) minemacs-disabled-packages)
 ;;; Using the obsolete modules
 ;; You can use the obsolete packages configurations by adding the
 ;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
@@ -1023,10 +1027,7 @@ modifications.
 ;;         )))
 
 #+end_src
-** custom-vars
-:properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/custom-vars.el
-:end:
+** COMMENT custom-vars
 #+begin_src emacs-lisp
 (setq
  org-roam-directory "/cs/priv/repos/roam"
@@ -1124,7 +1125,7 @@ modifications.
   (defun +cape-yasnippet--setup-h ()
     (when (bound-and-true-p yas-minor-mode)
       (add-to-list 'completion-at-point-functions #'yasnippet-capf))))
-  
+
 
 (use-package yasnippet-snippets
   :straight t
@@ -1208,7 +1209,95 @@ Further functions:
     ))
 
 #+end_src
+*** counsel
+#+begin_src emacs-lisp
+(use-package counsel
+  :straight t)
+#+end_src
+*** marginalia
+Don't load marginalia by default:
 
+#+begin_src emacs-lisp
+(use-package marginalia
+  :straight t)
+#+end_src
+*** consult-org-roam
+#+begin_src emacs-lisp
+(use-package consult-org-roam
+  :straight t
+  :init
+  (+map! :infix "n"
+    "s" #'consult-org-roam-search
+    "l" #'consult-org-roam-forward-links
+    "b" #'consult-org-roam-backlinks
+    "F" #'consult-org-roam-file-find)
+  :custom
+  (consult-org-roam-grep-func #'consult-ripgrep)
+  (consult-org-roam-buffer-narrow-key ?r) ; custom narrow key for `consult-buffer'
+  (consult-org-roam-buffer-after-buffers t)
+  :config
+  (consult-org-roam-mode 1)
+  ;; Eventually suppress previewing for certain functions
+  (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
+#+end_src
+* UI
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:end:
+** Theme
+Install additional themes:
+
+#+begin_src emacs-lisp
+;; (use-package doom-themes
+;;   :straight (:build t)
+;;   :defer t
+;;   ;; :init (load-theme 'doom-nord-aurora t)
+;;  )
+
+;; Install kaolin themes
+(use-package kaolin-themes
+  :straight t
+  :defer t)
+
+;; Install moe-theme
+(use-package moe-theme
+  :straight t)
+
+(use-package ef-themes
+  :straight t)
+
+(use-package modus-themes
+  :straight t)
+
+;; Install sanityinc tomorrow
+(use-package color-theme-sanityinc-tomorrow
+  :straight t)
+#+end_src
+** alpha-background
+#+begin_src emacs-lisp
+;; From https://www.emacswiki.org/emacs/TransparentEmacs
+(set-frame-parameter (selected-frame) 'alpha '(95 . 70))
+(add-to-list 'default-frame-alist '(alpha . (95 . 70)))
+
+(defun dorneanu/toggle-transparency ()
+  (interactive)
+  (let ((alpha (frame-parameter nil 'alpha)))
+    (set-frame-parameter
+     nil 'alpha
+     (if (eql (cond ((numberp alpha) alpha)
+                    ((numberp (cdr alpha)) (cdr alpha))
+                    ;; Also handle undocumented (<active> <inactive>) form.
+                    ((numberp (cadr alpha)) (cadr alpha)))
+              100)
+         '(95 . 70) '(100 . 100)))))
+#+end_src
+
+** COMMENT solaire-mode
+I'm still not sure if I like it
+#+begin_src emacs-lisp
+(use-package solaire-mode
+  :straight t)
+#+end_src
 * Editing
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -1412,6 +1501,7 @@ standard keybindings.
   (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
 #+end_src
 ** Hydra
+**
 Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
 
 #+begin_src emacs-lisp
@@ -1830,6 +1920,15 @@ Add here circled digits like: ②
   ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
   ("m" (dakra/insert-unicode "MICRO SIGN")))
 #+end_src
+** explain-pause-mode
+#+begin_src emacs-lisp
+(use-package explain-pause-mode
+  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode"))
+  :straight t
+  :config
+  (explain-pause-mode)
+#+end_src
+
 ** Custom Elisp
 *** reload config
 #+begin_src emacs-lisp
@@ -2183,6 +2282,335 @@ Use hnread to show HN threads for a URL at point
   (setq-local hnreader-view-comments-in-same-window t)
   (hnreader-comment (format "%s" (url-get-url-at-point))))
 #+end_src
+** Email
+*** mu4e
+**** General config
+#+begin_src emacs-lisp
+  ;; Make sure we find the mu4e package
+  (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+  (use-package mu4e
+    :straight (:type built-in)
+    :commands (mu4e)
+    :bind (("C-c a m" . mu4e)
+           :map mu4e-main-mode-map
+           ("U" . mu4e-update-mail-and-index-background)
+           :map mu4e-headers-mode-map
+           ("TAB" . mu4e-headers-next-unread)
+           ("j" . mu4e-view-headers-next)
+           ("k" . mu4e-view-headers-prev)
+           ("J" . mu4e-search-maildir)
+           ;; ("j" . mu4e-move-to-junk)
+           ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+           :map mu4e-view-mode-map
+           ("A" . mu4e-view-attachment-action)
+           ("M-o" . ace-link-mu4e)
+           ("o" . ace-link-mu4e)
+           ("n" . mu4e-scroll-up)
+           ("p" . mu4e-scroll-down)
+           ("J" . mu4e-view-headers-next)
+           ("K" . mu4e-view-headers-prev)
+           ;; ("j" . mu4e-move-to-junk)
+           )
+    :init
+    ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+    ;; (defun mu4e--main-action-str (name func)
+    ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
+    ;;   "mu4e-main-action")
+    ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
+
+    ;; Prefer text over html/ritchtext
+    (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
+
+    ;; Use completing-read (which is ivy) instead of ido
+    (setq mu4e-completing-read-function 'completing-read)
+
+    ;; set mu4e as default mail client
+    (setq mail-user-agent 'mu4e-user-agent)
+
+    ;; SMTP related
+    (setq message-send-mail-function        'smtpmail-send-it
+          smtpmail-stream-type              'tls)
+
+    :config
+    ;; Set mu binary
+    (setq mu4e-mu-binary "/usr/bin/mu")
+
+    ;; Use passwords from password-store
+    (setq auth-sources '(password-store))
+    (setq auth-source-debug t)
+
+    ;; Choose which fields to show
+    (setq mu4e-headers-fields
+          '(
+            (:maildir    . 13)
+            (:human-date . 12)
+            (:flags      . 6)
+            (:from       . 22)
+            (:subject    . nil)))
+
+    ;; Refresh mail using isync every 10 minutes
+    (setq mu4e-update-interval (* 10 60))
+
+    ;; Command used to retrieve new mails
+    (setq mu4e-get-mail-command "mbsync -a")
+
+    ;; Defaults
+    (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
+    (setq-default mu4e-drafts-folder "/private/Drafts")
+    (setq-default mu4e-sent-folder   "/private/Sent")
+    (setq-default mu4e-trash-folder  "/private/Trash")
+
+    ;; Set citation settings
+    (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+    (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+    ;; Fancy stuff
+    (setq mu4e-use-fancy-chars t)
+    ;; <<mu4e-fancy-marks>>
+
+    ;; And change default threading characters to some "nicer" looking chars
+    (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+    (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+    (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+    (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+    (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+    ;; Also change to some nicer characters for marks
+    ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
+    (setq mu4e-headers-passed-mark  '("P" . "›"))
+    (setq mu4e-headers-replied-mark '("R" . "‹"))
+    (setq mu4e-headers-seen-mark   '("S" . ""))
+    ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
+    (setq mu4e-headers-personal-mark '("p" . ""))
+    ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
+
+    ;; Set date format (header view)
+    (setq mu4e-headers-date-format "%F")
+
+    ;; How should html context be converted
+    ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+    (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
+
+    ;; Improve rendering of rich-text messages (html)
+    (setq shr-color-visible-luminance-min 80)
+
+    ;; Show email address as well and not only the name
+    (setq-default mu4e-view-show-addresses t)
+
+    ;; Don't reply to self
+    (setq mu4e-compose-dont-reply-to-self t)
+
+    ;; Setup some handy shortcuts
+    ;; you can quickly switch to your Inbox -- press ``ji''
+    ;; then, when you want archive some messages, move them to
+    ;; the 'All Mail' folder by pressing ``ma''.
+
+    ;; View mail in browser with "a V"
+    (add-to-list 'mu4e-view-actions
+                 '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+    (add-to-list 'mu4e-view-actions
+                 '("fViewInChrome" . mu4e-action-view-in-chrome) t)
+    (add-to-list 'mu4e-view-actions
+                 '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
+
+    (setq mu4e-maildir-shortcuts
+          '(
+            ("/variomedia/inbox"   . ?v)
+            ("/gmail/inbox"    . ?g)
+            ("/cashlink/inbox"   . ?c)
+            ("/private/Trash"   . ?t)
+            ("/private/Drafts"  . ?d)
+            ("/private/Junk"    . ?j)
+            ("/private/Archive" . ?a)))
+
+    ;; Set contexts
+    (dorneanu/set-mu4e-contexts)
+    )
+
+  (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+
+
+#+end_src
+
+#+results:
+| closure | (t) | nil                       | (visual-fill-column-mode) |
+| lambda  | nil | (visual-fill-column-mode) |                           |
+
+**** Bookmarks
+#+begin_src emacs-lisp
+(setq mu4e-bookmarks
+      `(
+        ("maildir:/Sent" "Sent messages" ?s)
+        ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
+        ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
+        ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
+        ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
+        ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
+        ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
+        ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
+        ("from:jira@*" "Jira" ?j)
+        ("from:notifications@github.com" "Github" ?g)
+        ;; (,(s-join " "
+        ;;           '("OR noreply@tagesspiegel.de"
+        ;;             "OR support@lagedernation.org"
+        ;;             "OR hello@blinkist.com"
+        ;;             "OR info@smarticular.net"
+        ;;             "OR newsletter@*"
+        ;;             "OR support@xeroshoes.com"))
+        ;;  "Newletter" ?n)
+        ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
+#+end_src
+
+**** Fancy stuff
+From https://github.com/Phundrak/dotfiles
+
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
+
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+(mapconcat (lambda (line)
+             (let ((mark (car line))
+                   (flag (cadr line))
+                   (icon (caddr line)))
+               (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
+                       mark
+                       flag
+                       icon)))
+           table
+           "\n")
+#+end_src
+
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
+
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
+(setq mu4e-use-fancy-chars t
+      <<mu4e-fancy-marks-gen()>>)
+#+end_src
+
+**** View mode
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
+(add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
+**** Contexts
+Set contexts
+#+begin_src emacs-lisp
+(defun dorneanu/set-mu4e-contexts ()
+  "Set mail contexts for mu4e"
+  (interactive)
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "gmail"
+             :enter-func (lambda () (mu4e-message "Entering gmail context"))
+             :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+             ;; we match based on the contact-fields of the message
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/personal/username"))
+                     (user-full-name    . "Cyneox")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-default-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Cyneox via Gmail")
+                     (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                     (mu4e-sent-folder  . "/[Gmail]/sent")
+                     (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                     (mu4e-trash-folder  . "/[Gmail]/bin")))
+           ,(make-mu4e-context
+             :name "variomedia"
+             :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-default-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Victor via Emacs")
+                     (mu4e-drafts-folder  . "/variomedia/drafts")
+                     (mu4e-sent-folder  . "/variomedia/sent")
+                     (mu4e-trash-folder  . "/variomedia/bin")))
+           ,(make-mu4e-context
+             :name "cashlink"
+             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-drafts-folder  . "/cashlink/drafts")
+                     (mu4e-sent-folder  . "/cashlink/sent")
+                     (mu4e-trash-folder  . "/cashlink/bin")
+                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                     ))))
+  )
+
+#+end_src
+
+#+results:
+: dorneanu/set-mu4e-contexts
+**** Reply
+I often want to reply without the original message:
+#+begin_src emacs-lisp
+;; From https://github.com/djcb/mu/issues/2345
+;; (after! mu4e
+;;   (defun dorneanu/mu4e-delete-citation ()
+;;     (delete-region (point) (point-max)))
+
+;;   (defun dorneanu/mu4e-reply (prefix)
+;;     (interactive "P")
+;;     (setq mu4e-compose-cite-function (if prefix
+;;                                          #'dorneanu/mu4e-delete-citation
+;;                                        #'message-cite-original-without-signature))
+;;     (mu4e-compose-reply))
+
+;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+;;   )
+#+end_src
 ** gnus
 - [ ] Fix pyenv issue
 *** COMMENT nnreddit
@@ -2215,6 +2643,21 @@ Use hnread to show HN threads for a URL at point
  gnus-sum-thread-tree-vertical "│")
 #+end_src
 
+** epa-file
+
+Configure GPG assistant
+
+#+begin_src emacs-lisp
+(use-package epa-file
+  :config
+  (setq
+   epa-file-encrypt-to '("BF2828095372F24D")
+   password-cache nil
+   password-cache-expiry nil
+   epa-pinentry-mode 'ask)
+  :custom
+  (epa-file-select-keys 'silent))
+#+end_src
 * Keybindings
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -2250,9 +2693,11 @@ Some keybindings for *paragraphs*:
 (+map!
   ;; ====== Toggles ======
   "to"   #'olivetti-mode
+  "tt"   #'dorneanu/toggle-transparency
   "tj"   #'jinx-mode
   "th"   #'highlight-indent-guides-mode
   "tn"   #'display-line-numbers-mode
+  "tS"   #'solaire-mode
   "t.f"  #'fringe-mode)
 #+end_src
 ** hydras
@@ -2291,8 +2736,23 @@ All this goes to ~~/.minemacs.d/local/config.el~:
 ** org
 Basic configuration
 #+begin_src emacs-lisp
-(with-eval-after-load 'org
-    (setq org-hide-leading-stars             t
+(use-package org
+  :straight (:type built-in)
+  :hook ((org-mode . toggle-truncate-lines))
+  :custom
+  (org-auto-align-tags nil)
+  (org-edit-src-content-indentation t) ; indent the content of src blocks
+  (org-edit-src-turn-on-auto-save t) ; auto-save org-edit-src
+  (org-fontify-quote-and-verse-blocks t)
+  (org-id-locations-file (concat minemacs-cache-dir "org/id-locations.el"))
+  (org-pretty-entities t)
+  (org-pretty-entities-include-sub-superscripts t)
+  (org-special-ctrl-a/e t)
+  (org-startup-indented nil)
+  (org-element-use-cache nil)
+  (org-hide-emphasis-markers t)
+  :config
+  (setq org-hide-leading-stars             t
         org-hide-macro-markers             t
         org-ellipsis                       "…"
         org-image-actual-width             600
@@ -2318,38 +2778,40 @@ Basic configuration
         org-directory                      "~/work/repos/org/"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
 
-    ;; Set TODO keywords
-    (setq org-todo-keywords
-            '((sequence
-               "TODO(t)"
-               "STARTED(s)"
-               "NEXT(n)"
-               "WIP(p)"
-               "WAITING(w!)"
-               "|"
-               "DONE(d)"
-               "CANCELED(c)")
-              (sequence
-               "PROJ(p)"
-               "MEETING(m)"
-               "REVIEW(r)"
-               "IDEA(i)")))
-    ;; "|"
-    ;; "STOP(c)"
-    ;; "EVENT(m)"
+  ;; Set TODO keywords
+  (setq org-todo-keywords
+        '((sequence
+           "TODO(t)"
+           "STARTED(s)"
+           "NEXT(n)"
+           "WIP(p)"
+           "WAITING(w!)"
+           "|"
+           "DONE(d)"
+           "CANCELED(c)")
+          (sequence
+           "PROJ(p)"
+           "MEETING(m)"
+           "REVIEW(r)"
+           "IDEA(i)")))
+  ;; "|"
+  ;; "STOP(c)"
+  ;; "EVENT(m)"
 
 
-    ;; No blank lines before new entries
-    (setq org-blank-before-new-entry
-            '((heading . nil)
-            (plain-list-item . nil))))
+  ;; No blank lines before new entries
+  (setq org-blank-before-new-entry
+        '((heading . nil)
+          (plain-list-item . nil))))
 #+end_src
 ** org-agenda
 #+begin_src emacs-lisp
-(with-eval-after-load 'org
+(use-package org-agenda
+  :straight (:type built-in)
+  :config
   (setq
    ;; Set agenda files
-   org-agenda-files (list org-directory)
+   ;; org-agenda-files (list org-directory)
 
    org-agenda-file-regexp
    (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
@@ -2417,6 +2879,9 @@ Define custom org agenda commands.
 Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
 
 #+begin_src emacs-lisp
+(use-package org-super-agenda
+  :straight t)
+
 (with-eval-after-load 'org-agenda
   ;; Enable it
   (org-super-agenda-mode)
@@ -2515,6 +2980,27 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 Some extras copied from Doom Emacs:
 
 #+begin_src emacs-lisp
+(defun +org-headline-avy ()
+  "TODO"
+  (require 'avy)
+  (save-excursion
+    (when-let* ((org-reverse-note-order t)
+                (pos (avy-with avy-goto-line (avy-jump (rx bol (1+ "*") (1+ blank))))))
+      (when (integerp (car pos))
+        ;; If avy is aborted with "C-g", it returns `t', so we know it was NOT
+        ;; aborted when it returns an int. If it doesn't return an int, we
+        ;; return nil.
+        (copy-marker (car pos))))))
+
+(defun +org/goto-visible ()
+  "TODO"
+  (interactive)
+  (goto-char (+org-headline-avy)))
+#+end_src
+
+Now settings for ~org-refile~:
+
+#+begin_src emacs-lisp
 (with-eval-after-load 'org
   ;; Refiling
  (setq org-refile-use-cache t)
@@ -2590,7 +3076,36 @@ If prefix ARG, copy instead of move."
 
 
 #+end_src
-** org-timeblock
+** COMMENT org-modern
+#+begin_src emacs-lisp
+(use-package org-modern
+  :straight t
+  :hook (org-mode . org-modern-mode)
+  :hook (org-agenda-finalize . org-modern-agenda)
+  ;; :custom-face
+  ;; ;; force monospaced font for tags
+  ;; (org-modern-tag ((t (:inherit org-verbatim :foreground "black" :background "lightgray" :box "black"))))
+  :custom
+  (org-modern-star '("◉" "○" "◈" "◇" "✳" "◆" "✸" "▶"))
+  (org-modern-table-vertical 5)
+  (org-modern-table-horizontal 2)
+  (org-modern-list '((?+ . "➤") (?- . "–") (?* . "•")))
+  (org-modern-block-fringe nil)
+  (org-modern-checkbox nil) ;; not that interesting! maybe it depends on the used font
+  (org-modern-todo-faces
+   ;; tweak colors, and force it to be monospaced, useful when using `mixed-pitch-mode'.
+   '(("idea" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "goldenrod"))
+     ("next" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "indianred1"))
+     ("strt" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "orangered"))
+     ("wait" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "coral"))
+     ("kill" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "darkgreen"))
+     ("proj" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "limegreen"))
+     ("hold" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "orange"))
+     ("done" . (:inherit org-verbatim :weight semi-bold :foreground "black" :background "lightgray")))))
+#+end_src
+
+** org-timeblock                                                      :todo:
+**
 #+begin_src emacs-lisp
 (use-package org-timeblock
   :straight t
@@ -2615,11 +3130,75 @@ If prefix ARG, copy instead of move."
   (other-window 1)
   (org-timeblock))
 #+end_src
+** org-roam
+#+begin_src emacs-lisp
+(use-package org-roam
+  :straight t
+  :custom
+  (org-roam-directory "/cs/priv/repos/roam/org")
+  (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
+  ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
+  ;; (org-roam-completion-everywhere t)
+  :init
+  (+map! :infix "n"
+    "f" #'org-roam-node-find
+    "r" #'org-roam-ref-find
+    "i" #'org-roam-node-insert
+    "R" #'org-roam-node-random
+    "B" #'org-roam-buffer-display-dedicated)
+  :config
+  (org-roam-db-autosync-mode 1)
+  (setq org-roam-capture-templates
+        '(("d" "default" plain
+           "%?"
+           :if-new (file+head "topics/${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("j" "Journal" plain "%?"
+           :if-new (file+head "journal/%<%Y-%m-%d>.org"
+                    "#+title: %<%Y-%m-%d>\n#+filetags: journal\n#+date: %<%Y-%m-%d>\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ("b" "book" plain "%?"
+           :if-new
+           (file+head "books/${slug}.org" "#+title: ${title}\n#+filetags: book\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ;; Idea from https://daryl.wakatara.com/emacs-gtd-flow-evolved/
+          ("r" "Rez" plain "%?"
+           :target (file+head "rez/%<%Y>/${slug}.org"
+                    "#+TITLE: ${title}
+      ,#+CREATED: %u
+
+      ,* ${title}
+      :properties:
+      :url:
+      :end:
+
+      ,* Actions
+      ,* Quotes
+      ,* Notes
+      ") :unnarrowed t)
+          ("x" "Blog" plain "%?"
+           :if-new (file+head "blog/%<%Y-%m-%d>-${slug}.org" "#+SETUPFILE: setup.org\n#+TITLE: ${title}\n#+CREATED: %<%Y-%m-%d>\n#+HUGO_DRAFT: true\n\n")
+           :unnarrowed t)
+          ))
+  )
+#+end_src
+** tags
+Use counsel-org-tag (I couldn't find any alternative for consult):
+
+#+begin_src emacs-lisp
+(global-set-key [remap org-set-tags-command] #'counsel-org-tag)
+#+end_src
 ** keybindings
 #+begin_src emacs-lisp
 (+map!
   ;; ====== ORG ======
   "orv"   #'+org/refile-to-visible
+  "ocr"   #'org-clock-report
+  "oci"   #'org-clock-in
+  "oco"   #'org-clock-out
+  "ocm"   #'dorneanu/org-clock-enter-manually
   )
 #+end_src
 ** packages
@@ -2637,6 +3216,62 @@ Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating present
   :after ox
   :straight t)
 #+end_src
+** custom elisp
+*** Enter clock data manually
+From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
+
+#+begin_src emacs-lisp
+(defun dorneanu/org-clock-enter-manually (begin end)
+  "Enter a clock item manually."
+  (interactive (list (org-read-date t t) (org-read-date t t)))
+  (save-excursion
+    (org-clock-find-position nil)
+    (insert-before-markers-and-inherit "\n")
+    (backward-char 1)
+    (insert-and-inherit org-clock-string " ")
+    (org-insert-time-stamp begin t t)
+    (org-insert-time-stamp end t t "--")
+    (org-evaluate-time-range t)))
+#+end_src
+*** Auto clock-in when task is started
+#+begin_src emacs-lisp
+;; From https://github.com/svetlyak40wt/dot-emacs/blob/master/.emacs.d/lib/org-auto-clock.el
+;; Auto clock-in when task is marked STARTED
+(defun wicked/org-clock-in-if-starting ()
+  "Clock in when the task is marked STARTED."
+  (when (and (string= org-state "STARTED")
+             (not (string= org-last-state org-state)))
+    (org-clock-in)))
+
+(defun wicked/org-clock-out-if-waiting ()
+  "Clock out when the task is marked WAITING or WIP (Work in Progress)."
+  (when (and (or (string= org-state "WAITING")
+                 (string= org-state "WIP"))
+             (equal (marker-buffer org-clock-marker) (current-buffer))
+             (< (point) org-clock-marker)
+             (> (save-excursion (outline-next-heading) (point))
+                org-clock-marker)
+             (not (string= org-last-state org-state)))
+    (org-clock-out)))
+
+(with-eval-after-load 'org
+  (add-hook 'org-after-todo-state-change-hook #'wicked/org-clock-in-if-starting)
+  (defadvice org-clock-in (after wicked activate)
+    "Set this task's status to 'STARTED'."
+    (org-todo "STARTED"))
+  (add-hook 'org-after-todo-state-change-hook #'wicked/org-clock-out-if-waiting))
+#+end_src
+*** Create ORG heading from clipboard link
+#+begin_src emacs-lisp
+(cl-defun dorneanu/org-insert-link-from-clipboard (&optional (url (org-web-tools--get-first-url)))
+  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+  (interactive)
+  (if-let ((dom (plz 'get url :as (lambda ()
+                                    (libxml-parse-html-region (point-min) (point-max)))))
+           (title (cl-caddr (car (dom-by-tag dom 'title)))))
+      (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url (org-web-tools--cleanup-title title)))))
+#+end_src
+
 ** misc
 *** org-download
 Insert images easily into ORG mode files
