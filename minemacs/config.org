@@ -289,7 +289,6 @@ or some I write myself.
   :hook
   ;; (before-save . gofmt-before-save)
   (go-mode . apheleia-mode)
-  (go-mode     . eglot)
   :bind (:map go-mode-map
               ("M-?" . godoc-at-point)
               ("M-." . godef-jump)
@@ -697,11 +696,13 @@ modifications.
  ;; Add `ocaml-mode' to `eglot' auto-enable modes
  (add-to-list '+eglot-auto-enable-modes 'go-mode)
  (add-to-list '+eglot-auto-enable-modes 'terraform-mode)
+ (add-to-list '+eglot-auto-enable-modes 'python-mode)
 
- (with-eval-after-load 'eglot
-   ;; You can use this to fill `+eglot-auto-enable-modes' with all supported
-   ;; modes from `eglot-server-programs'
-   (+eglot-use-on-all-supported-modes eglot-server-programs)))
+ ;; (with-eval-after-load 'eglot
+ ;;   ;; You can use this to fill `+eglot-auto-enable-modes' with all supported
+ ;;   ;; modes from `eglot-server-programs'
+ ;;   (+eglot-use-on-all-supported-modes eglot-server-programs))
+ )
 
 ;; Enable tab bar
 (with-eval-after-load 'tab-bar
@@ -956,7 +957,7 @@ modifications.
         me-docs           ; Documents (pdf-tools, pdf-view-restore, nov, crdt, edraw, markdown-mode, ...)
         ;; me-calendar    ; Calendar (calfw, calfw-org, calfw-ical, ...)
         ;; me-latex          ; LaTeX (auctex, auctex-latexmk, LaTeX-preview-pane, ...)
-        ;; me-biblio      ; Bibliography & citations (citar, citar-embark, org-re-reveal-citeproc, ...)
+        me-biblio         ; Bibliography & citations (citar, citar-embark, org-re-reveal-citeproc, ...)
         me-natural-langs  ; Natural language stuff (jinx, spell-fu, go-translate, eglot-ltex, ...)
         me-files          ; Files and directories (dirvish, vlf, sudo-edit, ztree, ...)
         me-tools          ; System tools (vterm, tldr, ssh-deploy, docker, logview, with-editor, ...)
@@ -1042,28 +1043,28 @@ modifications.
 (use-package cape
   :straight t
   :demand t
+  :hook ((org-mode . dorneanu/set-org-capf))
   ;; :hook ((prog-mode . dorneanu/set-basic-capf)
   ;;        (text-mode . dorneanu/set-basic-capf)
   ;;        (org-mode . dorneanu/set-basic-capf)
   ;;        ;; (go-ts-mode . dorneanu/set-go-capf)
   ;;        (lsp-completion-mode . dorneanu/set-lsp-capf))
-  :bind (:map prog-mode-map
-         ("M-c ." . completion-at-point)
-         ("M-c p" . completion-at-point)
-         ("M-c t" . complete-tag)
-         ("M-c d" . cape-dabbrev)
-         ("M-c f" . cape-file)
-         ("M-c k" . cape-keyword)
-         ("M-c s" . cape-symbol)
-         ("M-c a" . cape-abbrev)
-         ("M-c i" . cape-ispell)
-         ("M-c l" . cape-line)
-         ("M-c w" . cape-dict)
-         ("M-c \\" . cape-tex)
-         ("M-c _" . cape-tex)
-         ("M-c ^" . cape-tex)
-         ("M-c &" . cape-sgml)
-         ("M-c r" . cape-rfc1345))
+  ;; :bind (("M-c ." . completion-at-point)
+  ;;        ("M-c p" . completion-at-point)
+  ;;        ("M-c t" . complete-tag)
+  ;;        ("M-c d" . cape-dabbrev)
+  ;;        ("M-c f" . cape-file)
+  ;;        ("M-c k" . cape-keyword)
+  ;;        ("M-c s" . cape-symbol)
+  ;;        ("M-c a" . cape-abbrev)
+  ;;        ("M-c i" . cape-ispell)
+  ;;        ("M-c l" . cape-line)
+  ;;        ("M-c w" . cape-dict)
+  ;;        ("M-c \\" . cape-tex)
+  ;;        ("M-c _" . cape-tex)
+  ;;        ("M-c ^" . cape-tex)
+  ;;        ("M-c &" . cape-sgml)
+  ;;        ("M-c r" . cape-rfc1345))
   ;; :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
   ;; (add-to-list 'completion-at-point-functions #'cape-history)
@@ -1077,14 +1078,40 @@ modifications.
   (cape-dabbrev-min-length 1)
   )
 
+;; Apply the same completion keybindings to several modes
+(defun dorneanu/my-setup-completion-bindings ()
+  (define-key (current-local-map) (kbd "M-c .") 'completion-at-point)
+  (define-key (current-local-map) (kbd "M-c p") 'completion-at-point) ;; Duplicate, consider removing
+  (define-key (current-local-map) (kbd "M-c t") 'complete-tag)
+  (define-key (current-local-map) (kbd "M-c d") 'cape-dabbrev)
+  (define-key (current-local-map) (kbd "M-c f") 'cape-file)
+  (define-key (current-local-map) (kbd "M-c k") 'cape-keyword)
+  (define-key (current-local-map) (kbd "M-c s") 'cape-symbol)
+  (define-key (current-local-map) (kbd "M-c a") 'cape-abbrev)
+  (define-key (current-local-map) (kbd "M-c i") 'cape-ispell)
+  (define-key (current-local-map) (kbd "M-c l") 'cape-line)
+  (define-key (current-local-map) (kbd "M-c w") 'cape-dict)
+  (define-key (current-local-map) (kbd "M-c \\") 'cape-tex)
+  (define-key (current-local-map) (kbd "M-c _") 'cape-tex)
+  (define-key (current-local-map) (kbd "M-c ^") 'cape-tex)
+  (define-key (current-local-map) (kbd "M-c &") 'cape-sgml)
+  (define-key (current-local-map) (kbd "M-c r") 'cape-rfc1345))
+
+(add-hook 'prog-mode-hook 'dorneanu/my-setup-completion-bindings)
+(add-hook 'org-mode-hook 'dorneanu/my-setup-completion-bindings)
+
 ;; Disable company
 ;; (add-hook 'prog-mode-hook (lambda () (company-mode -1)))
 ;; (global-company-mode -1)
 
-;; Set capfs
+;; Set capfs for different modes
 (defun dorneanu/set-basic-capf ()
   (setq-local completion-at-point-functions
               (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-history))))
+
+(defun dorneanu/set-org-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super #'cape-dabbrev #'yasnippet-capf))))
 
 (defun dorneanu/set-lsp-capf ()
   (setq-local completion-at-point-functions
