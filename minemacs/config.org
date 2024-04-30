@@ -696,13 +696,12 @@ modifications.
  ;; Add `ocaml-mode' to `eglot' auto-enable modes
  (add-to-list '+eglot-auto-enable-modes 'go-mode)
  (add-to-list '+eglot-auto-enable-modes 'terraform-mode)
- (add-to-list '+eglot-auto-enable-modes 'python-mode)
+ (add-to-list '+eglot-auto-enable-modes 'python-mode))
 
  ;; (with-eval-after-load 'eglot
  ;;   ;; You can use this to fill `+eglot-auto-enable-modes' with all supported
  ;;   ;; modes from `eglot-server-programs'
  ;;   (+eglot-use-on-all-supported-modes eglot-server-programs))
- )
 
 ;; Enable tab bar
 (with-eval-after-load 'tab-bar
@@ -821,16 +820,16 @@ modifications.
   ;;         (sequence "[ ](T)" "[-](S)" "|" "[X](D)")
   ;;         (sequence "|" "OKAY(o)" "YES(y)" "NO(n)")))
 
-  (setq org-export-headline-levels 5)
+  (setq org-export-headline-levels 5))
 
   ;; Your Org files to include in the agenda
-  (setq org-agenda-files
-        (mapcar
-         (lambda (f) (concat org-directory f))
-         '("inbox.org"
-           "work.org.gpg"
-           "private.org.gpg"
-           "projects.org.gpg"))))
+  ;; (setq org-agenda-files
+  ;;       (mapcar
+  ;;        (lambda (f) (concat org-directory f))
+  ;;        '("inbox.org"
+  ;;          "work.org.gpg"
+  ;;          "private.org.gpg"
+  ;;          "projects.org.gpg"))))
 
 ;; Module: `me-notes' -- Package: `denote'
 ;; (with-eval-after-load 'denote
@@ -965,7 +964,7 @@ modifications.
         ;; me-fun            ; Games and funny packages (xkcd, speed-type, wordel, ...)
         me-media          ; Multimedia (empv, emms, ...)
         me-workspaces  ; Workspace separation (tabspaces, ...)
-        me-binary         ; Display binary files in hex or decompile them
+        ;; me-binary         ; Display binary files in hex or decompile them
         me-window         ; Frame & window tweaks
         ;; obsolete/me-yasnippet
         ;;obsolete/me-org-roam
@@ -1318,12 +1317,25 @@ Install additional themes:
               100)
          '(95 . 70) '(100 . 100)))))
 #+end_src
+** COMMENT spacious-padding
+Make the echo / minibuffer area smaller:
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'spacious-padding
+  (plist-put spacious-padding-widths :internal-border-width 1))
+#+end_src
 
 ** COMMENT solaire-mode
 I'm still not sure if I like it
 #+begin_src emacs-lisp
 (use-package solaire-mode
   :straight t)
+#+end_src
+** display-line-numbers
+Don't use relative numbers
+#+begin_src emacs-lisp
+(with-eval-after-load 'display-line-numbers
+  (setq display-line-numbers-type 'absolute))
 #+end_src
 * Editing
 :properties:
@@ -1951,9 +1963,6 @@ Add here circled digits like: ②
 #+begin_src emacs-lisp
 (use-package explain-pause-mode
   :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode"))
-  :straight t
-  :config
-  (explain-pause-mode)
 #+end_src
 
 ** Custom Elisp
@@ -2104,6 +2113,18 @@ For ChatGPT:
   :straight t
   ;; :config
   ;; <<elfeed-open-youtube-with-mpv>>
+  :init
+  (+nmap! :keymaps 'elfeed-show-mode-map
+    "q" #'elfeed-kill-buffer
+    "u" #'elfeed-show-tag--unread
+    "y" #'elfeed-show-yank)
+  (+nmap! :keymaps 'elfeed-search-mode-map
+    "uu" #'elfeed-update
+    "uU" #'elfeed-search-update--force
+    "y"  #'elfeed-show-yank
+    "mgr" #'my/elfeed-reddit-show-comments
+    "mgh" #'my/elfeed-hn-show-comments-at-point
+    "ox"  #'dorneanu/elfeed-search-browse-url-xwidget)
   :custom
   ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
    (elfeed-db-directory "~/.elfeed")
@@ -2212,18 +2233,17 @@ Last but not least, my Elfeed configuration is stored in an org file
 thanks to ~elfeed-org~.
 #+begin_src emacs-lisp
 (use-package elfeed-org
-  :defer nil
   :after elfeed
-  :straight (:build t)
+  :straight t
   :init
   (elfeed-org)
   :config
-  (setq rmh-elfeed-org-files '("~/work/repos/org/elfeed.org.gpg")))
+  (setq rmh-elfeed-org-files (list (concat org-directory "elfeed.org.gpg"))))
 #+end_src
 **** elfeed-tube
 #+begin_src emacs-lisp
 (use-package elfeed-tube
-  :straight (:build t)
+  :straight t
   :after elfeed
   :config
   (elfeed-tube-setup)
@@ -2270,7 +2290,7 @@ Use reddigg to show reddit threads.
   :straight t
   :after elfeed
   :config
-  (defun my/elfeed-reddit-show-commments (&optional link)
+  (defun my/elfeed-reddit-show-comments (&optional link)
     (interactive)
     (let* ((entry (if (eq major-mode 'elfeed-show-mode)
                       elfeed-show-entry
@@ -2278,6 +2298,7 @@ Use reddigg to show reddit threads.
            (link (if link link (elfeed-entry-link entry))))
       (reddigg-view-comments link))))
 #+end_src
+
 **** hnreader
 #+begin_src emacs-lisp
 (use-package hnreader
@@ -2640,10 +2661,11 @@ I often want to reply without the original message:
 #+end_src
 ** gnus
 - [ ] Fix pyenv issue
-*** COMMENT nnreddit
+*** nnreddit
 #+begin_src emacs-lisp
 (use-package nnreddit
   :straight t)
+
 ;; Applies to first-time Gnus users
 (custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
 (add-to-list 'gnus-secondary-select-methods '(nnreddit ""))
@@ -2685,6 +2707,18 @@ Configure GPG assistant
   :custom
   (epa-file-select-keys 'silent))
 #+end_src
+** VC
+*** browse-at-remote
+#+begin_src emacs-lisp
+(use-package browse-at-remote
+  :straight t
+  :bind (("C-c G" . browse-at-remote))
+  :init
+  (+map! :infix "g"
+    "y" #'browse-at-remote-kill
+    "o" #'browse-at-remote))
+#+end_src
+
 * Keybindings
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -2754,7 +2788,13 @@ Some keybindings for *paragraphs*:
   "pe"   #'projectile-run-eshell
   )
 #+end_src
-
+** evil-org
+#+begin_src emacs-lisp
+(with-eval-after-load 'evil-org-agenda
+  ;; Disable SPC key in org-agenda
+  ;; (define-key org-agenda-mode-map (kbd "SPC") nil)
+  (evil-define-key 'motion org-agenda-mode-map (kbd "SPC") nil))
+#+end_src
 * ORG mode
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -2773,7 +2813,7 @@ Basic configuration
   (org-fontify-quote-and-verse-blocks t)
   (org-id-locations-file (concat minemacs-cache-dir "org/id-locations.el"))
   (org-pretty-entities t)
-  (org-pretty-entities-include-sub-superscripts t)
+  (org-pretty-entities-include-sub-superscripts nil)
   (org-special-ctrl-a/e t)
   (org-startup-indented nil)
   (org-element-use-cache nil)
@@ -2838,7 +2878,12 @@ Basic configuration
   :config
   (setq
    ;; Set agenda files
-   ;; org-agenda-files (list org-directory)
+   org-agenda-files (mapcar
+                     (lambda (f) (concat org-directory f))
+                     '("inbox.org"
+                       "work.org.gpg"
+                       "private.org.gpg"
+                       "projects.org.gpg"))
 
    org-agenda-file-regexp
    (replace-regexp-in-string "\\\\\\.org" "\\\\.org\\\\(\\\\.gpg\\\\)?"
@@ -2899,7 +2944,9 @@ Basic configuration
   ;;             (display-line-numbers-mode 0)))
 
   ;; Add extra files to org-agenda-files
-  (add-to-list 'org-agenda-files "~/syncthing/org/2-PARA.org" "~/syncthing/org/0box.org"))
+  org-agenda-files (append org-agenda-files
+                           '("~/syncthing/org/2-PARA.org"
+                             "~/syncthing/org/01-TDL.org")))
 #+end_src
 ** org-super-agenda
 Define custom org agenda commands.
