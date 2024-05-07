@@ -1295,6 +1295,9 @@ Install additional themes:
 (use-package modus-themes
   :straight t)
 
+(use-package solarized-theme
+  :straight t)
+
 ;; Install sanityinc tomorrow
 (use-package color-theme-sanityinc-tomorrow
   :straight t)
@@ -2481,10 +2484,6 @@ Use hnread to show HN threads for a URL at point
 
 #+end_src
 
-#+results:
-| closure | (t) | nil                       | (visual-fill-column-mode) |
-| lambda  | nil | (visual-fill-column-mode) |                           |
-
 **** Bookmarks
 #+begin_src emacs-lisp
 (setq mu4e-bookmarks
@@ -3268,6 +3267,7 @@ Use counsel-org-tag (I couldn't find any alternative for consult):
 #+begin_src emacs-lisp
 (+map!
   ;; ====== ORG ======
+  "os"    #'org-sort
   "orv"   #'+org/refile-to-visible
   "ocr"   #'org-clock-report
   "oci"   #'org-clock-in
