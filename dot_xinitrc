@@ -2,4 +2,11 @@
 # blueman &
 # exec awesome
 xset r rate 220 50 &
-exec cinnamon-session
+
+# Let capskey act as escape when taped and as ctrl when held
+setxkbmap -option 'caps:ctrl_modifier' &
+# xcape -e '#66=Escape' &
+xcape -e 'Control_L=Escape' &
+
+# exec cinnamon-session
+exec cinnamon-session-cinnamon2d
