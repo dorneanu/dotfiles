@@ -1266,6 +1266,54 @@ Don't load marginalia by default:
   ;; Eventually suppress previewing for certain functions
   (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
 #+end_src
+*** vertico-multiform
+#+begin_src emacs-lisp
+(use-package vertico-multiform
+  :straight (:type built-in)
+  :config
+  (setq vertico-multiform-commands
+        '((consult-line buffer)
+          (consult-buffer buffer)
+          (consult-org-heading buffer)
+          (consult-imenu buffer)
+          (consult-project-buffer buffer)
+          (consult-project-extra-find buffer)))
+  ;; (setq vertico-multiform-commands
+  ;;       '((consult-line
+  ;;          ;; posframe
+  ;;          ;; (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+  ;;          ;; (vertico-posframe-border-width . 10)
+  ;;          ;; NOTE: This is useful when emacs is used in both in X and
+  ;;          ;; terminal, for posframe do not work well in terminal, so
+  ;;          ;; vertico-buffer-mode will be used as fallback at the
+  ;;          ;; moment.
+  ;;          ;; (vertico-posframe-fallback-mode . vertico-buffer-mode))
+  ;;         (t posframe)))
+  ;; (add-to-list 'vertico-multiform-categories
+  ;;              '(jinx grid (vertico-grid-annotate . 35)))
+
+  (vertico-multiform-mode 1))
+
+#+end_src
+* Buffer Management
+** popper
+Used for popups (eshell, scratch buffer etc.)
+#+begin_src emacs-lisp
+(use-package popper
+  :straight t
+  :bind (("C-#"   . popper-toggle)
+         ("M-#"   . popper-cycle)
+         ("C-M-#" . popper-toggle-type))
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          "\\*Async Shell Command\\*"
+          help-mode
+          compilation-mode))
+  (popper-mode +1)
+  (popper-echo-mode +1))                ; For echo area hints
+#+end_src
 * UI
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
@@ -1339,6 +1387,33 @@ Don't use relative numbers
 #+begin_src emacs-lisp
 (with-eval-after-load 'display-line-numbers
   (setq display-line-numbers-type 'absolute))
+#+end_src
+** treemacs
+#+begin_src emacs-lisp
+(use-package treemacs
+  :straight t
+  :custom
+  (treemacs-persist-file (concat minemacs-local-dir "treemacs/persist.el"))
+  (treemacs-last-error-persist-file (concat minemacs-local-dir "treemacs/last-error-persist.el"))
+  (treemacs-width 40)
+  :config
+  ;; Use the same height for the root node (project directory)
+  (set-face-attribute 'treemacs-root-face nil :height 1.0))
+
+(use-package treemacs-nerd-icons
+  :straight t
+  :after treemacs nerd-icons
+  :demand t
+  :config
+  (treemacs-load-theme "nerd-icons"))
+
+(use-package treemacs-evil
+  :straight t
+  :after (evil))
+
+(use-package treemacs-projectile
+  :straight t
+  :after (treemacs))
 #+end_src
 * Editing
 :properties:
@@ -2288,10 +2363,11 @@ thanks to ~elfeed-org~.
 #+end_src
 **** reddigg
 Use reddigg to show reddit threads.
+
 #+begin_src emacs-lisp
 (use-package reddigg
   :straight t
-  :after elfeed
+  :after (elfeed)
   :config
   (defun my/elfeed-reddit-show-comments (&optional link)
     (interactive)
@@ -2308,12 +2384,15 @@ Use reddigg to show reddit threads.
   :straight t
   :after (elfeed))
 #+end_src
+
 Open in same window
+
 #+begin_src emacs-lisp
 (setq hnreader-view-comments-in-same-window nil)
 #+end_src
 
 Use hnreader to show HN threads
+
 #+begin_src emacs-lisp
 (defun my/elfeed-hn-show-commments (&optional link)
   (interactive)
@@ -2785,6 +2864,7 @@ Some keybindings for *paragraphs*:
 (+map!
   ;; ====== Projects ======
   "pe"   #'projectile-run-eshell
+  "oT"   #'treemacs
   )
 #+end_src
 ** evil-org
