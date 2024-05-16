@@ -1443,11 +1443,38 @@ Extended ~isearch~
   (rg-define-toggle "--multiline --multiline-dotall" "u")
   (rg-define-toggle "--word-regexp" "w")
   (rg-define-toggle "--files-with-matches" "L")
+
   ;; Highlight longer
   (setq next-error-highlight-no-select t)
-  (add-hook 'next-error-hook #'recenter)
-  (add-hook 'next-error-hook #'focus-mode)
-)
+
+  ;; Custom searches
+  ;; search in org roam folder
+   (rg-define-search my/rg-org-roam-directory
+     :query ask
+     :format regexp
+     :files "everything"
+     :dir org-roam-directory
+     :confirm prefix)
+
+  ;; search in org roam folder where I have transcripts from the Huberman Lab
+  (rg-define-search my/rg-org-roam-directory-huberman
+    :query ask
+
+    :format regexp
+    :files "everything"
+    :dir (concat org-roam-directory "/rez/huberman-lab")
+    :confirm prefix)
+
+  (setq dotemacs-directory "/cs/priv/repos/dotemacs")
+  (rg-define-search my/rg-dotemacs
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir dotemacs-directory
+    :confirm prefix)
+
+ (add-hook 'next-error-hook #'recenter)
+ (add-hook 'next-error-hook #'focus-mode))
 #+end_src
 
 Configure custom searches
@@ -2197,8 +2224,8 @@ For ChatGPT:
     "u" #'elfeed-show-tag--unread
     "y" #'elfeed-show-yank)
   (+nmap! :keymaps 'elfeed-search-mode-map
-    "uu" #'elfeed-update
-    "uU" #'elfeed-search-update--force
+    "fuu" #'elfeed-update
+    "fuU" #'elfeed-search-update--force
     "y"  #'elfeed-show-yank
     "mgr" #'my/elfeed-reddit-show-comments
     "mgh" #'my/elfeed-hn-show-comments-at-point
@@ -2837,7 +2864,8 @@ Some keybindings for *paragraphs*:
   "th"   #'highlight-indent-guides-mode
   "tn"   #'display-line-numbers-mode
   "tS"   #'solaire-mode
-  "t.f"  #'fringe-mode)
+  "t.f"  #'fringe-mode
+  "tV"   #'visual-line-fill-column-mode)
 #+end_src
 ** hydras
 #+begin_src emacs-lisp
@@ -2867,6 +2895,15 @@ Some keybindings for *paragraphs*:
   "oT"   #'treemacs
   )
 #+end_src
+** searches
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Searches ======
+  "srd"   #'my/rg-dotemacs
+  "srh"   #'my/rg-org-roam-directory-huberman
+  "sro"   #'my/rg-org-roam-directory)
+#+end_src
+
 ** evil-org
 #+begin_src emacs-lisp
 (with-eval-after-load 'evil-org-agenda
