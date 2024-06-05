@@ -1270,6 +1270,7 @@ Don't load marginalia by default:
 #+begin_src emacs-lisp
 (use-package vertico-multiform
   :straight (:type built-in)
+  :demand t
   :config
   (setq vertico-multiform-commands
         '((consult-line buffer)
@@ -1587,6 +1588,7 @@ Configure custom searches
     ;; Search
     "sd" #'dirvish-fd)
   :custom
+  (dirvish-side-width 40)
   (dirvish-attributes '(subtree-state nerd-icons file-size))
   (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
    '(("r" "~/work/repos"   "Repos (work)")
@@ -2927,6 +2929,14 @@ Some keybindings for *paragraphs*:
   "t.f"  #'fringe-mode
   "tV"   #'visual-line-fill-column-mode)
 #+end_src
+** inserts
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Inserts ======
+  "ii"     #'org-download-clipboard
+  "ioc"    #'dorneanu/org-insert-link-from-clipboard)
+#+end_src
+
 ** hydras
 #+begin_src emacs-lisp
 (+map!
@@ -3517,6 +3527,7 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
 (cl-defun dorneanu/org-insert-link-from-clipboard (&optional (url (org-web-tools--get-first-url)))
   "Extend org-web-tools to create to take URL from clipboard or kill-ring"
   (interactive)
+  (require 'org-web-tools)
   (if-let ((dom (plz 'get url :as (lambda ()
                                     (libxml-parse-html-region (point-min) (point-max)))))
            (title (cl-caddr (car (dom-by-tag dom 'title)))))

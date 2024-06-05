@@ -3,6 +3,9 @@
 # exec awesome
 xset r rate 220 50 &
 
+# https://gist.github.com/tanyuan/55bca522bf50363ae4573d4bdcf06e2e?permalink_comment_id=2951416#gistcomment-2951416
+setxkbmap -option
+
 # Let capskey act as escape when taped and as ctrl when held
 setxkbmap -option 'caps:ctrl_modifier' &
 # xcape -e '#66=Escape' &
