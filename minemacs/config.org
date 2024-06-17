@@ -603,6 +603,14 @@ modifications.
 #+end_src
 
 * MinEmacs Config
+** early-config.el
+:properties:
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/early-config.el
+:end:
+#+begin_src emacs-lisp
+;; Restore `tool-bar-setup`
+(advice-remove 'tool-bar-setup #'ignore)
+#+end_src
 ** config.el
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1418,6 +1426,12 @@ Don't use relative numbers
 (use-package treemacs-projectile
   :straight t
   :after (treemacs))
+#+end_src
+** visual-fill-column
+#+begin_src emacs-lisp
+(use-package visual-fill-column
+  :straight t
+  :demand t)
 #+end_src
 * Editing
 :properties:
@@ -2647,7 +2661,7 @@ Use hnread to show HN threads for a URL at point
     (dorneanu/set-mu4e-contexts)
     )
 
-  (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+  ;; (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
 
 
 #+end_src
@@ -2934,7 +2948,8 @@ Some keybindings for *paragraphs*:
 (+map!
   ;; ====== Inserts ======
   "ii"     #'org-download-clipboard
-  "ioc"    #'dorneanu/org-insert-link-from-clipboard)
+  "ioc"    #'dorneanu/org-insert-link-from-clipboard
+  "iot"    #'counsel-org-tag)
 #+end_src
 
 ** hydras
@@ -3121,18 +3136,19 @@ Basic configuration
      (agenda . "%5c %4e %?-12t %s")
      (todo   . " %4e %-12c")
      (tags   . " %-22c")
-     (search . " %-12c")))
+     (search . " %-12c"))
+
+   ;; Append extra files
+   org-agenda-files (append org-agenda-files
+                            '("~/syncthing/org/2-PARA.org"
+                              "~/syncthing/org/01-TDL.org")))
 
   ;; (add-hook 'org-agenda-mode-hook
   ;;           (lambda ()
   ;;             (visual-line-mode -1)
   ;;             (toggle-truncate-lines 1)
   ;;             (display-line-numbers-mode 0)))
-
-  ;; Add extra files to org-agenda-files
-  org-agenda-files (append org-agenda-files
-                           '("~/syncthing/org/2-PARA.org"
-                             "~/syncthing/org/01-TDL.org")))
+  )
 #+end_src
 ** org-super-agenda
 Define custom org agenda commands.
@@ -3459,6 +3475,7 @@ Use counsel-org-tag (I couldn't find any alternative for consult):
   "ocr"   #'org-clock-report
   "oci"   #'org-clock-in
   "oco"   #'org-clock-out
+  "ocq"   #'org-clock-out
   "ocm"   #'dorneanu/org-clock-enter-manually
   )
 #+end_src
