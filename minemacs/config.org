@@ -603,13 +603,13 @@ modifications.
 #+end_src
 
 * MinEmacs Config
-** early-config.el
+** COMMENT early-config.el
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/early-config.el
 :end:
 #+begin_src emacs-lisp
 ;; Restore `tool-bar-setup`
-(advice-remove 'tool-bar-setup #'ignore)
+;; (advice-remove 'tool-bar-setup #'ignore)
 #+end_src
 ** config.el
 :properties:
@@ -923,18 +923,21 @@ modifications.
 ;; and `minemacs-core-modules'
 
 ;;; Ordered list of enabled core modules
-(setq minemacs-core-modules
-      '(me-splash         ; Simple splash screen
-        me-keybindings    ; Keybinding (general, which-key, hydra, ...)
-        me-evil           ; Emacs as Vim (evil, evil-collection, evil-snipe, evil-numbers, ...)
-        me-core-ui        ; Core UI (doom-themes, modus-themes, doom-modeline, ...)
-        me-completion))   ; Completion (vertico, marginalia, corfu, cape, consult, embark, ...)
+;; (setq minemacs-core-modules
+;;       '(me-splash         ; Simple splash screen
+;;         me-keybindings    ; Keybinding (general, which-key, hydra, ...)
+;;         me-evil           ; Emacs as Vim (evil, evil-collection, evil-snipe, evil-numbers, ...)
+;;         ;; me-core-ui        ; Core UI (doom-themes, modus-themes, doom-modeline, ...)
+;;         me-completion))   ; Completion (vertico, marginalia, corfu, cape, consult, embark, ...)
 
 ;;; List of enabled modules
 (setq minemacs-modules
       '(me-ui             ; User interface (svg-lib, focus, mixed-pitch, ...)
         ;; me-nano           ; N Λ N O Emacs, ...
         ;; me-ai             ; AI assistant using ollama (ellama, llm, ...)
+        me-keybindings
+        me-evil
+        me-completion
         me-editor         ; Editing (tempel, tempel-collection, rainbow-delimiters, expreg, drag-stuff, ...)
         me-daemon         ; Emacs daemon tweaks
         me-undo           ; Better undoing (undo-fu-session, vundo, ...)
@@ -1034,12 +1037,6 @@ modifications.
 ;;          obsolete/me-yasnippet      ; Yasnippet (yasnippet, cape-yasnippet, yasnippet-snippets, ...)
 ;;         )))
 
-#+end_src
-** COMMENT custom-vars
-#+begin_src emacs-lisp
-(setq
- org-roam-directory "/cs/priv/repos/roam"
- org-directory "~/work/repos/org")
 #+end_src
 * Autocompletion
 :properties:
@@ -1959,7 +1956,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
     ("k" smerge-kill-current)
     ("q" nil "cancel" :color blue)))
 #+end_src
-*** Hydra / modeline                                                 :todo:
+*** Hydra / modeline                                                   :todo:
 #+begin_src emacs-lisp
 (pretty-hydra-define hydra-modeline
   (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
@@ -2474,6 +2471,7 @@ Use reddigg to show reddit threads.
   :config
   (defun my/elfeed-reddit-show-comments (&optional link)
     (interactive)
+    (require 'reddigg)
     (let* ((entry (if (eq major-mode 'elfeed-show-mode)
                       elfeed-show-entry
                     (elfeed-search-selected :ignore-region)))
@@ -2921,7 +2919,7 @@ Now some keybindings for the ~Super_L~ key:
 #+end_src
 
 #+results:
-: evil-window-down
+: tab-previous
 
 Some keybindings for *paragraphs*:
 
@@ -3380,7 +3378,7 @@ If prefix ARG, copy instead of move."
      ("done" . (:inherit org-verbatim :weight semi-bold :foreground "black" :background "lightgray")))))
 #+end_src
 
-** org-timeblock                                                      :todo:
+** org-timeblock                                                       :todo:
 **
 #+begin_src emacs-lisp
 (use-package org-timeblock
@@ -3569,7 +3567,7 @@ Insert images easily into ORG mode files
 (use-package org-web-tools
   :straight t)
 #+end_src
-* internal :no:export:
+* internal :no-export:
 
 # Local Variables:
 # after-save-hook: (org-babel-tangle)
