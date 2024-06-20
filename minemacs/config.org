@@ -1537,7 +1537,7 @@ Configure custom searches
 (use-package olivetti
   :straight t
   :custom
-  (olivetti-body-width 0.89))
+  (olivetti-body-width 0.68))
 #+end_src
 
 ** expand-region
@@ -1848,7 +1848,11 @@ Spell Commands^^           Add To Dictionary^^              Other
 From [[https://sriramkswamy.github.io/dotemacs/]]
 
 #+begin_src emacs-lisp
-(defhydra sk/hydra-org-jump (:color pink :hint nil)
+(defun sk/before-hydra ()
+  "Function to run before the Hydra gets executed."
+  (focus-mode))
+
+(defhydra sk/hydra-org-jump (:color pink :hint nil :pre sk/before-hydra)
   "
  ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
  ^^^^^^^^^^^-------------------------------------------------------------------------------
@@ -1856,12 +1860,12 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
  _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
  ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
 "
-  ("j" outline-next-visible-heading)
-  ("k" outline-previous-visible-heading)
-  ("l" org-down-element)
-  ("h" org-up-element)
-  ("J" org-forward-heading-same-level)
-  ("K" org-backward-heading-same-level)
+  ("J" outline-next-visible-heading)
+  ("K" outline-previous-visible-heading)
+  ("L" org-down-element)
+  ("H" org-up-element)
+  ("j" org-forward-heading-same-level)
+  ("k" org-backward-heading-same-level)
   ("u" org-next-item)
   ("d" org-previous-item)
   ("f" org-table-next-field)
@@ -1872,6 +1876,10 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   ("P" org-previous-link)
   ("q" nil :color blue))
 #+end_src
+
+#+results:
+: sk/hydra-org-jump/body
+
 **** hydra-org-babel-transient
 #+begin_src emacs-lisp :tangle no
 (defhydra org-babel-transient ()
@@ -2467,16 +2475,16 @@ Use reddigg to show reddit threads.
 #+begin_src emacs-lisp
 (use-package reddigg
   :straight t
-  :after (elfeed)
-  :config
-  (defun my/elfeed-reddit-show-comments (&optional link)
-    (interactive)
-    (require 'reddigg)
-    (let* ((entry (if (eq major-mode 'elfeed-show-mode)
-                      elfeed-show-entry
-                    (elfeed-search-selected :ignore-region)))
-           (link (if link link (elfeed-entry-link entry))))
-      (reddigg-view-comments link))))
+  :after (elfeed))
+
+(defun my/elfeed-reddit-show-comments (&optional link)
+  (interactive)
+  (require 'reddigg)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (reddigg-view-comments link)))
 #+end_src
 
 **** hnreader
@@ -3350,12 +3358,12 @@ If prefix ARG, copy instead of move."
 
 
 #+end_src
-** COMMENT org-modern
+** org-modern
 #+begin_src emacs-lisp
 (use-package org-modern
   :straight t
-  :hook (org-mode . org-modern-mode)
-  :hook (org-agenda-finalize . org-modern-agenda)
+  ;; :hook (org-mode . org-modern-mode)
+  ;; :hook (org-agenda-finalize . org-modern-agenda)
   ;; :custom-face
   ;; ;; force monospaced font for tags
   ;; (org-modern-tag ((t (:inherit org-verbatim :foreground "black" :background "lightgray" :box "black"))))
@@ -3377,6 +3385,8 @@ If prefix ARG, copy instead of move."
      ("hold" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "orange"))
      ("done" . (:inherit org-verbatim :weight semi-bold :foreground "black" :background "lightgray")))))
 #+end_src
+
+#+results:
 
 ** org-timeblock                                                       :todo:
 **
@@ -3457,6 +3467,12 @@ If prefix ARG, copy instead of move."
            :unnarrowed t)
           ))
   )
+#+end_src
+** org-babel
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sql . t)))
 #+end_src
 ** tags
 Use counsel-org-tag (I couldn't find any alternative for consult):
