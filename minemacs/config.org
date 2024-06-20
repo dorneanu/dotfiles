@@ -2309,8 +2309,9 @@ For ChatGPT:
     "fuU" #'elfeed-search-update--force
     "y"  #'elfeed-show-yank
     "mgr" #'my/elfeed-reddit-show-comments
-    "mgh" #'my/elfeed-hn-show-comments-at-point
-    "ox"  #'dorneanu/elfeed-search-browse-url-xwidget)
+    "mgh" #'my/elfeed-hn-show-comments
+    "ox"  #'dorneanu/elfeed-search-browse-url-xwidget
+    "or" #'sqrtminusone/rdrview-elfeed-show)
   :custom
   ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
    (elfeed-db-directory "~/.elfeed")
@@ -2503,17 +2504,24 @@ Open in same window
 Use hnreader to show HN threads
 
 #+begin_src emacs-lisp
-(defun my/elfeed-hn-show-commments (&optional link)
+(defun my/elfeed-hn-show-comments (&optional link)
   (interactive)
   (let* ((entry (if (eq major-mode 'elfeed-show-mode)
                     elfeed-show-entry
                   (elfeed-search-selected :ignore-region)))
-         (link (if link link (elfeed-entry-link entry))))
+         (link (if link link (elfeed-entry-link entry)))
+         (content (elfeed-deref (elfeed-entry-content entry)))
+         ;; Regex to match the Comments URL
+         (comments-url (and content
+                            (string-match "Comments URL: <a href=\"\\(https://news.ycombinator.com/item\\?id=[0-9]+\\)\">" content)
+                            (match-string 1 content))))
+    (message comments-url)
     (setq-local hnreader-view-comments-in-same-window nil)
-    (hnreader-promise-comment (format "%s" link))))
+    (hnreader-promise-comment (format "%s" comments-url))))
 #+end_src
 
 Use hnread to show HN threads for a URL at point
+
 #+begin_src emacs-lisp
 (defun my/elfeed-hn-show-comments-at-point ()
   "Kill the url at point."
