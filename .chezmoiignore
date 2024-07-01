@@ -2,4 +2,10 @@ README.md
 Makefile
 install.sh
 .oh-my-zsh/cache/**
-.doom.d/custom.el
+.doom.d/**
+.doom.d/
+emacs
+headers
+minemacs
+scripts
+

@@ -13,7 +13,7 @@ y = 10
 TERM = "xterm-256color"
 
 [font]
-size = 9.0
+size = 8.0
 
 [font.bold]
 family = "JetBrainsMono Nerd Font"
