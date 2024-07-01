@@ -9,3 +9,8 @@
     type = "archive"
     url = "https://github.com/tmux-plugins/tpm/archive/refs/heads/master.zip"
     stripComponents = 1
+
+[".config/rofi"]
+    type = "archive"
+    url = "https://github.com/adi1090x/rofi/archive/refs/heads/master.zip"
+    stripComponents = 1
