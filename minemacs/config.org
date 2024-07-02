@@ -406,7 +406,7 @@
   (push '(cape-yasnippet treesit-auto lsp-mode) minemacs-disabled-packages)
   (push '(citar-org-roam citar tempel tempel-collection) minemacs-disabled-packages)
   (push '(org org-agenda org-modern) minemacs-disabled-packages)
-  (push '(marginalia jinx) minemacs-disabled-packages)
+  (push '(marginalia) minemacs-disabled-packages)
   ;;; Using the obsolete modules
   ;; You can use the obsolete packages configurations by adding the
   ;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
