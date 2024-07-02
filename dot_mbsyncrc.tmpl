@@ -5,7 +5,7 @@ Create Both
 Expunge Both
 SyncState *
 
-{{- if eq .chezmoi.hostname "nusec" }}
+{{- if eq .chezmoi.hostname "yoga" }}
 ###############################################################################
 ## variomedia
 ###############################################################################
@@ -23,8 +23,8 @@ IMAPStore variomedia-remote
 Account variomedia
 
 MaildirStore variomedia-local
-Path ~/enc/mail/variomedia/
-Inbox ~/enc/mail/variomedia/inbox
+Path ~/.mail/variomedia/
+Inbox ~/.mail/variomedia/inbox
 SubFolders Verbatim
 
 Channel variomedia-inbox
@@ -53,8 +53,8 @@ Account gmail
 
 MaildirStore gmail-local
 Subfolders Verbatim
-Path ~/enc/mail/gmail/
-Inbox ~/enc/mail/gmail/inbox
+Path ~/.mail/gmail/
+Inbox ~/.mail/gmail/inbox
 
 Channel gmail-inbox
 Master :gmail-remote:
