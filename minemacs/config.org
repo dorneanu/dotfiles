@@ -4,6 +4,8 @@
 #+startup: indent overview
 
 * MinEmacs Config
+This section will be ~tangled~ to ~$HOME/.minemacs.d~
+
 ** early-config.el
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/early-config.el
@@ -363,9 +365,10 @@
           extras/me-writing-mode
           me-extra          ; Extra features (better-jumper, crux, ...)
           ;; me-notes          ; Notes & Zettelkasten (denote, consult-notes, ...)
-          me-email       ; Email (mu4e, mu4e-alert, org-msg, ...)
-          extras/me-mu4e-ui
-          extras/me-mu4e-extras
+          ;; me-email       ; Email (mu4e, mu4e-alert, org-msg, ...)
+          ;; extras/me-mu4e-ui
+          ;; extras/me-mu4e-gmail
+          ;; extras/me-mu4e-extras
           me-rss         ; News feed (elfeed, ...)
           ;; me-lifestyle   ; *Very* opinionated lifestyle packages (awqat, ...)
           me-docs           ; Documents (pdf-tools, pdf-view-restore, nov, crdt, edraw, markdown-mode, ...)
@@ -444,7 +447,7 @@
 #+end_src
 * Autocompletion
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 *** cape
 #+begin_src emacs-lisp
@@ -514,6 +517,7 @@
 
 ;; Set capfs for different modes
 (defun dorneanu/set-basic-capf ()
+
   (setq-local completion-at-point-functions
               (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-history))))
 
@@ -681,7 +685,7 @@ Further functions:
   :config
   (setq vertico-multiform-commands
         '((consult-line buffer)
-          (consult-buffer buffer)
+          ;; (consult-buffer buffer)
           (consult-org-heading buffer)
           (consult-imenu buffer)
           (consult-project-buffer buffer)
@@ -705,7 +709,7 @@ Further functions:
 #+end_src
 * Programming
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** Visual config
 *** truncate-lines
@@ -1305,7 +1309,7 @@ modifications.
 
 * Buffer Management
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** popper
 Used for popups (eshell, scratch buffer etc.)
@@ -1327,7 +1331,7 @@ Used for popups (eshell, scratch buffer etc.)
 #+end_src
 * UI
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** Theme
 Install additional themes:
@@ -1434,7 +1438,7 @@ Don't use relative numbers
 #+end_src
 * Editing
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** Searching
 *** swiper
@@ -1526,13 +1530,13 @@ Configure custom searches
 #+begin_src emacs-lisp
   (use-package evil-surround
     :straight t
-    :after (evil)
+    :demand t
     :config
     (global-evil-surround-mode 1))
 #+end_src
 * Reading
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** olivetti
 #+begin_src emacs-lisp
@@ -1584,7 +1588,7 @@ Configure custom searches
 
 * Files
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** dirvish
 #+begin_src emacs-lisp
@@ -1631,7 +1635,7 @@ Configure custom searches
 #+end_src
 * Helpful
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** leo
 #+begin_src emacs-lisp
@@ -2178,7 +2182,7 @@ Change default font size
 
 * Applications
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
 ** AI
 *** chatgpt-shell
@@ -2314,6 +2318,7 @@ For ChatGPT:
     "u" #'elfeed-show-tag--unread
     "y" #'elfeed-show-yank)
   (+nmap! :keymaps 'elfeed-search-mode-map
+    "fj" #'dorneanu/elfeed-cycle-filters
     "fuu" #'elfeed-update
     "fuU" #'elfeed-search-update--force
     "y"  #'elfeed-show-yank
@@ -2377,6 +2382,35 @@ Custom functions:
       (insert (propertize title 'face title-faces 'kbd-help title))))
   )
 
+#+end_src
+
+Cycle through different filters:
+
+#+begin_src emacs-lisp
+(defvar dorneanu/elfeed-custom-filters
+  '("@1-week-ago +unread +daily -devto -youtube -hn"
+    "@1-week-ago +unread +daily -devto -youtube -hn +blogs"
+    "@1-week-ago +unread +daily -devto -youtube -hn +security"
+    "@1-week-ago +unread +reddit +top"
+    "@1-week-ago +unread -hn +news +lage"
+    "@1-week-ago +unread -hn +news +correctiv"
+    "@1-week-ago +unread +finance"
+    "@1-week-ago +unread +daily -devto +youtube +y1"
+    "@1-week-ago +unread +daily -devto +hn +points")
+  "List of elfeed filters to cycle through.")
+
+(defvar dorneanu/elfeed-current-filter-index 0
+  "Current index of `my-elfeed-filters` list.")
+
+(defun dorneanu/elfeed-cycle-filters ()
+  "Cycle through `dorneanu/elfeed-custom-filters` and apply the current filter."
+  (interactive)
+  (setq dorneanu/elfeed-current-filter-index
+        (mod (1+ dorneanu/elfeed-current-filter-index)
+             (length dorneanu/elfeed-custom-filters)))
+  (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
+    (elfeed-search-set-filter current-filter)
+    (message "Elfeed filter set to: %s" current-filter)))
 #+end_src
 
 I don’t want YouTube videos to be open with my web browser when I
@@ -2458,13 +2492,12 @@ thanks to ~elfeed-org~.
   (interactive)
   (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
         (quality-arg "")
-        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720") nil nil)))
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
     (setq quality-val (string-to-number quality-val))
     (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
     (when (< 0 quality-val)
       (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
     (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
-
 #+end_src
 
 **** functions
@@ -2979,15 +3012,16 @@ I often want to reply without the original message:
 ;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
 ;;   )
 #+end_src
-** gnus
+** COMMENT gnus
 - [ ] Fix pyenv issue
 *** nnreddit
 #+begin_src emacs-lisp
 (use-package nnreddit
-  :straight t)
+  :straight t
+  :after (gnus))
 
 ;; Applies to first-time Gnus users
-(custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
+;; (custom-set-variables '(gnus-select-method (quote (nnreddit ""))))
 (add-to-list 'gnus-secondary-select-methods '(nnreddit ""))
 
 ;; Primary Mailbox
@@ -3134,11 +3168,36 @@ Some keybindings for *paragraphs*:
   ;; (define-key org-agenda-mode-map (kbd "SPC") nil)
   (evil-define-key 'motion org-agenda-mode-map (kbd "SPC") nil))
 #+end_src
+* Media
+** empv
+Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
+position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
+
+#+begin_src emacs-lisp
+(use-package empv
+  :straight t
+  :after (embark browse-url)
+  :config
+
+  (setq empv-invidious-instance "https://yewtu.be/")
+  (add-to-list 'empv-mpv-args "--ytdl-format=best")
+
+  (defun dorneanu/empv-play-url (url &optional _)
+    (interactive)
+    (empv-toggle-video)
+    (empv-play url)))
+
+;; Handle youtube links using mpv
+(with-eval-after-load 'browse-url
+  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
+
+#+end_src
+
 * ORG mode
 :properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/local/config.el
+:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
-All this goes to ~~/.minemacs.d/local/config.el~:
+All this goes to ~~/.minemacs.d/config.el~:
 ** org
 Basic configuration
 #+begin_src emacs-lisp
@@ -3551,7 +3610,7 @@ If prefix ARG, copy instead of move."
 (use-package org-roam
   :straight t
   :custom
-  (org-roam-directory "/cs/priv/repos/roam/org")
+  (org-roam-directory "~/repos/roam")
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
   ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
   ;; (org-roam-completion-everywhere t)
@@ -3606,7 +3665,7 @@ If prefix ARG, copy instead of move."
  'org-babel-load-languages
  '((sql . t)))
 #+end_src
-** tags
+** counsel-org-tag
 Use counsel-org-tag (I couldn't find any alternative for consult):
 
 #+begin_src emacs-lisp
