@@ -2318,7 +2318,10 @@ For ChatGPT:
     "u" #'elfeed-show-tag--unread
     "y" #'elfeed-show-yank)
   (+nmap! :keymaps 'elfeed-search-mode-map
-    "fj" #'dorneanu/elfeed-cycle-filters
+    "fj" #'dorneanu/elfeed-cycle-filters-forward
+    "fJ" #'dorneanu/elfeed-cycle-filters-backward
+    "fk" #'dorneanu/elfeed-increase-time-filter
+    "fK" #'dorneanu/elfeed-decrease-time-filter
     "fuu" #'elfeed-update
     "fuU" #'elfeed-search-update--force
     "y"  #'elfeed-show-yank
@@ -2384,6 +2387,7 @@ Custom functions:
 
 #+end_src
 
+**** Filter cycling
 Cycle through different filters:
 
 #+begin_src emacs-lisp
@@ -2402,6 +2406,56 @@ Cycle through different filters:
 (defvar dorneanu/elfeed-current-filter-index 0
   "Current index of `my-elfeed-filters` list.")
 
+;; Regular expression to match the time filter
+(defvar dorneanu/time-filter-regex "@\\([0-9]+\\)-week-ago"
+  "Regex to match the time filter in elfeed.")
+
+(defun dorneanu/elfeed-cycle-filters-forward ()
+  "Cycle forward through `dorneanu/elfeed-custom-filters` and apply the current filter."
+  (interactive)
+  (setq dorneanu/elfeed-current-filter-index
+        (mod (1+ dorneanu/elfeed-current-filter-index)
+             (length dorneanu/elfeed-custom-filters)))
+  (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
+    (elfeed-search-set-filter current-filter)
+    (message "Elfeed filter set to: %s" current-filter)))
+
+(defun dorneanu/elfeed-cycle-filters-backward ()
+  "Cycle backward through `dorneanu/elfeed-custom-filters` and apply the current filter."
+  (interactive)
+  (setq dorneanu/elfeed-current-filter-index
+        (mod (1- dorneanu/elfeed-current-filter-index)
+             (length dorneanu/elfeed-custom-filters)))
+  (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
+    (elfeed-search-set-filter current-filter)
+    (message "Elfeed filter set to: %s" current-filter)))
+
+(defun dorneanu/elfeed-adjust-time-filter (increment)
+  "Adjust the time filter in the current elfeed filter.
+INCREMENT can be positive or negative to increase or decrease the time filter."
+  (let* ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters))
+         (new-filter (replace-regexp-in-string
+                      "@\\([0-9]+\\)-week-ago"
+                      (lambda (match)
+                        (let ((current-weeks (string-to-number (match-string 1 match))))
+                          (concat "@" (number-to-string (max 1 (+ current-weeks increment))) "-week-ago")))
+                      current-filter)))
+    ;; Update the filter list with the new filter
+    (setf (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters) new-filter)
+    ;; Apply the new filter
+    (elfeed-search-set-filter new-filter)
+    (message "Elfeed filter set to: %s" new-filter)))
+
+(defun dorneanu/elfeed-increase-time-filter ()
+  "Increase the time filter (e.g., from @1-week-ago to @2-week-ago)."
+  (interactive)
+  (dorneanu/elfeed-adjust-time-filter 1))
+
+(defun dorneanu/elfeed-decrease-time-filter ()
+  "Decrease the time filter (e.g., from @2-week-ago to @1-week-ago)."
+  (interactive)
+  (dorneanu/elfeed-adjust-time-filter -1))
+
 (defun dorneanu/elfeed-cycle-filters ()
   "Cycle through `dorneanu/elfeed-custom-filters` and apply the current filter."
   (interactive)
@@ -2413,6 +2467,7 @@ Cycle through different filters:
     (message "Elfeed filter set to: %s" current-filter)))
 #+end_src
 
+**** Youtube
 I don’t want YouTube videos to be open with my web browser when I
 invoke ~elfeed-show-visit~, so I’ll advise this function to make it
 possible to modify the behaviour of said function. Oh, and I already
