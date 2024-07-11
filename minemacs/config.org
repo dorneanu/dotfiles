@@ -2164,6 +2164,20 @@ Add here circled digits like: ②
   :config
   (exec-path-from-shell-initialize))
 #+end_src
+** crux
+Various useful utilities
+#+begin_src emacs-lisp
+(global-unset-key (kbd "C-c f"))
+(use-package crux
+  :bind (("C-c u" . crux-view-url)
+         ("C-c f r" . crux-rename-buffer-and-file)
+         ("C-c f d" . crux-delete-file-and-buffer)
+         ("s-k"   . crux-kill-whole-line)
+         ;;("s-o"   . crux-smart-open-line-above)
+         ("C-a"   . crux-move-beginning-of-line)
+         ([(shift return)] . crux-smart-open-line)
+         ([(control shift return)] . crux-smart-open-line-above)))
+#+end_src
 ** Custom Elisp
 *** reload config
 #+begin_src emacs-lisp
