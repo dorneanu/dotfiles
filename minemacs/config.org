@@ -2349,8 +2349,7 @@ For ChatGPT:
    (elfeed-goodies/wide-threshold 0.2)
    (elfeed-set-timeout 36000)))
 #+end_src
-
-Custom functions:
+**** Custom functions
 
 #+begin_src emacs-lisp
 (defun hp/elfeed-entry-line-draw (entry)
@@ -2399,6 +2398,20 @@ Custom functions:
       (insert (propertize title 'face title-faces 'kbd-help title))))
   )
 
+#+end_src
+
+xwidget related:
+
+#+begin_src emacs-lisp
+(defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
+  "open with xwidget"
+  (interactive "P")
+  ;; Split window and focus there
+  (split-window-right)
+  (balance-windows)
+  (other-window 1)
+  (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+    (elfeed-search-browse-url use-generic-p)))
 #+end_src
 
 **** Filter cycling
@@ -2481,6 +2494,25 @@ INCREMENT can be positive or negative to increase or decrease the time filter."
     (message "Elfeed filter set to: %s" current-filter)))
 #+end_src
 
+**** elfeed-goodies
+Elfeed-goodies is a package which enhances the Elfeed experience.
+Aside from running its setup command as soon as possible, I also set
+in this code block all my keybinds for Elfeed here.
+#+begin_src emacs-lisp
+(use-package elfeed-goodies
+  :defer t
+  :after elfeed
+  :commands elfeed-goodies/setup
+  :straight (:build t)
+  :init
+  (elfeed-goodies/setup)
+  :custom
+  (elfeed-goodies/feed-source-column-width 28)
+  (elfeed-goodies/tag-column-width 28)
+  :config
+  (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
+#+end_src
+
 **** Youtube
 I don’t want YouTube videos to be open with my web browser when I
 invoke ~elfeed-show-visit~, so I’ll advise this function to make it
@@ -2508,25 +2540,6 @@ A future improvement to be made is to let the user chose the
 resolution of the video before it is launched. I may not always have
 the best internet connection, and viewing 4K videos on a 1080p display
 is not something very useful.
-**** elfeed-goodies
-Elfeed-goodies is a package which enhances the Elfeed experience.
-Aside from running its setup command as soon as possible, I also set
-in this code block all my keybinds for Elfeed here.
-#+begin_src emacs-lisp
-(use-package elfeed-goodies
-  :defer t
-  :after elfeed
-  :commands elfeed-goodies/setup
-  :straight (:build t)
-  :init
-  (elfeed-goodies/setup)
-  :custom
-  (elfeed-goodies/feed-source-column-width 28)
-  (elfeed-goodies/tag-column-width 28)
-  :config
-  (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
-#+end_src
-
 **** elfeed-org
 Last but not least, my Elfeed configuration is stored in an org file
 thanks to ~elfeed-org~.
@@ -2640,7 +2653,7 @@ Use hnread to show HN threads for a URL at point
   (setq-local hnreader-view-comments-in-same-window t)
   (hnreader-comment (format "%s" (url-get-url-at-point))))
 #+end_src
-**** rdrview
+**** COMMENT rdrview
 #+begin_src emacs-lisp
 ;; From https://github.com/SqrtMinusOne/dotfiles
 (defun sqrtminusone/rdrview-get (url callback)
@@ -2756,6 +2769,21 @@ Call CALLBACK with the output."
 
 #+end_src
 
+** epa-file
+
+Configure GPG assistant
+
+#+begin_src emacs-lisp
+(use-package epa-file
+  :config
+  (setq
+   epa-file-encrypt-to '("BF2828095372F24D")
+   password-cache nil
+   password-cache-expiry nil
+   epa-pinentry-mode 'ask)
+  :custom
+  (epa-file-select-keys 'silent))
+#+end_src
 ** Email
 *** mu4e
 **** General config
@@ -3115,21 +3143,6 @@ I often want to reply without the original message:
  gnus-sum-thread-tree-vertical "│")
 #+end_src
 
-** epa-file
-
-Configure GPG assistant
-
-#+begin_src emacs-lisp
-(use-package epa-file
-  :config
-  (setq
-   epa-file-encrypt-to '("BF2828095372F24D")
-   password-cache nil
-   password-cache-expiry nil
-   epa-pinentry-mode 'ask)
-  :custom
-  (epa-file-select-keys 'silent))
-#+end_src
 ** VC
 *** browse-at-remote
 #+begin_src emacs-lisp
