@@ -3291,7 +3291,7 @@ Basic configuration
   (org-edit-src-content-indentation t) ; indent the content of src blocks
   (org-edit-src-turn-on-auto-save t) ; auto-save org-edit-src
   (org-fontify-quote-and-verse-blocks t)
-  (org-id-locations-file (concat minemacs-cache-dir "org/id-locations.el"))
+  (org-id-locations-file (concat minemacs-config-dir "id-locations.el"))
   (org-pretty-entities t)
   (org-pretty-entities-include-sub-superscripts nil)
   (org-special-ctrl-a/e t)
@@ -3351,6 +3351,7 @@ Basic configuration
         '((heading . nil)
           (plain-list-item . nil))))
 #+end_src
+
 ** org-agenda
 #+begin_src emacs-lisp
 (use-package org-agenda
