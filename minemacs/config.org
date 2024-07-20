@@ -1859,13 +1859,7 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   (focus-mode))
 
 (defhydra sk/hydra-org-jump (:color pink :hint nil :pre sk/before-hydra)
-  "
- ^Outline^          ^Item^   ^Table^   ^Block^   ^Link^
- ^^^^^^^^^^^-------------------------------------------------------------------------------
- ^ ^ _k_ ^ ^   ^ ^ _K_ ^ ^   ^ ^ _u_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _p_ ^ ^   ^ ^ _P_ ^ ^    _q_ quit
- _h_ ^+^ _l_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^   _b_ ^+^ _f_   ^ ^ ^+^ ^ ^   ^ ^ ^+^ ^ ^
- ^ ^ _j_ ^ ^   ^ ^ _J_ ^ ^   ^ ^ _d_ ^ ^   ^ ^ ^ ^ ^ ^   ^ ^ _n_ ^ ^   ^ ^ _N_ ^ ^
-"
+  ""
   ("J" outline-next-visible-heading)
   ("K" outline-previous-visible-heading)
   ("L" org-down-element)
