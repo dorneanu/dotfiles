@@ -1724,7 +1724,6 @@ standard keybindings.
   (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
 #+end_src
 ** Hydra
-**
 Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
 
 #+begin_src emacs-lisp
@@ -1858,22 +1857,49 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   "Function to run before the Hydra gets executed."
   (focus-mode))
 
+(defun sk/org-jump-next-heading-and-scroll ()
+  "Move to the next same-level heading and scroll line to top."
+  (interactive)
+  (org-forward-heading-same-level)
+  (evil-scroll-line-to-top)
+  (message "Next heading and scrolled to top"))
+
 (defhydra sk/hydra-org-jump (:color pink :hint nil :pre sk/before-hydra)
-  ""
-  ("J" outline-next-visible-heading)
-  ("K" outline-previous-visible-heading)
+  ;; ("J" outline-next-visible-heading)
+  ("J" (lambda ()
+         (interactive)
+         (outline-next-visible-heading 1)
+         (call-interactively 'evil-scroll-line-to-top)
+         (org-cycle)))
+
+  ;; ("K" outline-previous-visible-heading)
+  ("K" (lambda ()
+         (interactive)
+         (outline-previous-visible-heading 1)
+         (call-interactively 'evil-scroll-line-to-top)
+         (org-cycle)))
   ("L" org-down-element)
   ("H" org-up-element)
-  ("j" org-forward-heading-same-level)
-  ("k" org-backward-heading-same-level)
-  ("u" org-next-item)
-  ("d" org-previous-item)
-  ("f" org-table-next-field)
-  ("b" org-table-previous-field)
-  ("n" org-next-block)
-  ("p" org-previous-block)
-  ("N" org-next-link)
-  ("P" org-previous-link)
+  ;; ("j" org-forward-heading-same-level)
+  ("j" (lambda ()
+         (interactive)
+         (org-forward-heading-same-level 1)
+         (call-interactively 'evil-scroll-line-to-top)
+         (org-cycle)))
+  ;; ("k" org-backward-heading-same-level)
+  ("k" (lambda ()
+         (interactive)
+         (org-backward-heading-same-level 1)
+         (call-interactively 'evil-scroll-line-to-top)
+         (org-cycle)))
+  ;; ("u" org-next-item)
+  ;; ("d" org-previous-item)
+  ;; ("f" org-table-next-field)
+  ;; ("b" org-table-previous-field)
+  ;; ("n" org-next-block)
+  ;; ("p" org-previous-block)
+  ;; ("N" org-next-link)
+  ;; ("P" org-previous-link)
   ("q" nil :color blue))
 #+end_src
 
