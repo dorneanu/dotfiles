@@ -1869,14 +1869,14 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   ("J" (lambda ()
          (interactive)
          (outline-next-visible-heading 1)
-         (call-interactively 'evil-scroll-line-to-top)
+         ;; (call-interactively 'evil-scroll-line-to-top)
          (org-cycle)))
 
   ;; ("K" outline-previous-visible-heading)
   ("K" (lambda ()
          (interactive)
          (outline-previous-visible-heading 1)
-         (call-interactively 'evil-scroll-line-to-top)
+         ;; (call-interactively 'evil-scroll-line-to-top)
          (org-cycle)))
   ("L" org-down-element)
   ("H" org-up-element)
@@ -1897,9 +1897,9 @@ From [[https://sriramkswamy.github.io/dotemacs/]]
   ;; ("f" org-table-next-field)
   ;; ("b" org-table-previous-field)
   ;; ("n" org-next-block)
-  ;; ("p" org-previous-block)
+  ("p" forward-paragraph)
   ;; ("N" org-next-link)
-  ;; ("P" org-previous-link)
+  ("P" backward-paragraph)
   ("q" nil :color blue))
 #+end_src
 
