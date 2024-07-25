@@ -3262,7 +3262,12 @@ Some keybindings for *paragraphs*:
   "srh"   #'my/rg-org-roam-directory-huberman
   "sro"   #'my/rg-org-roam-directory)
 #+end_src
-
+** tabs
+#+begin_src emacs-lisp
+(+map!
+  ;; ====== Tabs ======
+  "TAB SPC"   #'tab-bar-switch-to-recent-tab)
+#+end_src
 ** evil-org
 #+begin_src emacs-lisp
 (with-eval-after-load 'evil-org-agenda
