@@ -394,7 +394,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   ;; You can set `minemacs-disabled-packages' to disable some packages. For
   ;; example, if you want to use the `me-ui' module, but you want to disable the
   ;; `focus' package. You can use:
-  ;; (push 'embark minemacs-disabled-packages)
+  ;; (push 'embark minemacs-disabled-packages')
   ;; (push 'eglot minemacs-disabled-packages)
 
   ;; Adding a package to `minemacs-disabled-packages' guarantees disabling its
@@ -411,6 +411,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   (push '(citar-org-roam citar tempel tempel-collection) minemacs-disabled-packages)
   (push '(org org-agenda org-modern) minemacs-disabled-packages)
   (push '(marginalia) minemacs-disabled-packages)
+  (push '(flymake) minemacs-disabled-packages)
   ;;; Using the obsolete modules
   ;; You can use the obsolete packages configurations by adding the
   ;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
@@ -615,7 +616,7 @@ without having to go through =dired=.
 
   (use-package embark
     :straight t
-    :bind (("M-i" . embark-act)
+    :bind (("C-." . embark-act)
            :map embark-file-map
            ("V" . cust/vsplit-file-open)
            ("X" . cust/split-file-open))
@@ -660,12 +661,8 @@ Further functions:
 #+begin_src emacs-lisp
   (use-package consult-org-roam
     :straight t
-    ;; :init
-    ;; (+map! :infix "n"
-    ;;        "s" #'consult-org-roam-search
-    ;;        "l" #'consult-org-roam-forward-links
-    ;;        "b" #'consult-org-roam-backlinks
-    ;;        "F" #'consult-org-roam-file-find)
+    :bind (("M-g rn" . consult-org-roam-file-find)
+           ("M-g rs" . consult-org-roam-search))
     :custom
     (consult-org-roam-grep-func #'consult-ripgrep)
     (consult-org-roam-buffer-narrow-key ?r) ; custom narrow key for `consult-buffer'
@@ -675,6 +672,7 @@ Further functions:
     ;; Eventually suppress previewing for certain functions
     (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
 #+end_src
+
 *** vertico-multiform
 #+begin_src emacs-lisp
   (use-package vertico-multiform
@@ -994,8 +992,8 @@ or some I write myself.
     (go-mode . apheleia-mode)
     :bind (:map go-mode-map
                 ("M-?" . godoc-at-point)
-                ("M-." . godef-jump)
-                ("M-*" . pop-tag-mark)  ;; Jump back after godef-jump
+                ("M-." . xref-find-definitions)
+                ;; ("M-*" . pop-tag-mark) ;; Jump back after godef-jump
                 ("C-c m r" . go-run))
     :custom
     (gofmt-command "goimports"))
@@ -1014,6 +1012,10 @@ or some I write myself.
   (add-hook 'go-mode-hook (lambda ()
                             (setq-local completion-at-point-functions
                                         (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+
+  ;; (add-hook 'go-mode-hook (lambda ()
+  ;;                         (flycheck-add-next-checker 'golangci-lint)
+  ;;                         (flycheck-add-next-checker 'go-vet)))
 
   (use-package gotest
     :straight t
@@ -1304,7 +1306,14 @@ modifications.
     :straight t
     :defer t)
 #+end_src
+** flycheck
+#+begin_src emacs-lisp
+(use-package flycheck
+  :straight t)
 
+(use-package consult-flycheck
+  :straight t)
+#+end_src
 * Buffer Management
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1531,6 +1540,102 @@ Configure custom searches
     :config
     (global-evil-surround-mode 1))
 #+end_src
+** meow
+#+begin_src emacs-lisp
+(use-package meow
+  :straight t
+  :config
+  (meow-setup)
+  (meow-global-mode 1))
+
+(defun meow-setup ()
+  (interactive)
+  (require 'meow)
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-motion-overwrite-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev)
+   '("<escape>" . ignore))
+  (meow-leader-define-key
+   ;; SPC j/k will run the original command in MOTION state.
+   '("j" . "H-j")
+   '("k" . "H-k")
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("0" . meow-digit-argument)
+   '("/" . meow-keypad-describe-key)
+   '("?" . meow-cheatsheet))
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("-" . negative-argument)
+   '(";" . meow-reverse)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("a" . meow-append)
+   '("A" . meow-open-below)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-change)
+   '("d" . meow-delete)
+   '("D" . meow-backward-delete)
+   '("e" . meow-next-word)
+   '("E" . meow-next-symbol)
+   '("f" . meow-find)
+   '("g" . meow-cancel-selection)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("i" . meow-insert)
+   '("I" . meow-open-above)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("m" . meow-join)
+   '("n" . meow-search)
+   '("o" . meow-block)
+   '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("q" . meow-quit)
+   '("Q" . meow-goto-line)
+   '("r" . meow-replace)
+   '("R" . meow-swap-grab)
+   '("s" . meow-kill)
+   '("t" . meow-till)
+   '("u" . meow-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-visit)
+   '("w" . meow-mark-word)
+   '("W" . meow-mark-symbol)
+   '("x" . meow-line)
+   '("X" . meow-goto-line)
+   '("y" . meow-save)
+   '("Y" . meow-sync-grab)
+   '("z" . meow-pop-selection)
+   '("'" . repeat)
+   '("<escape>" . ignore)))
+#+end_src
 * Reading
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1587,49 +1692,41 @@ Configure custom searches
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
-** COMMENT dirvish
+** dirvish
 #+begin_src emacs-lisp
-  (use-package dirvish
-    :straight t
-    :demand minemacs-started-with-extra-args-p
-    :init
-    (dirvish-override-dired-mode)
-    (+map!
-     ;; Open
-     "o-" #'dirvish
-     "op" #'dirvish-side
-     "oq" #'dirvish-quick-access
-     ;; ;; Search
-     ;; "sd" #'dirvish-fd)
-     :custom
-     (dirvish-side-width 40)
-     (dirvish-attributes '(subtree-state nerd-icons file-size))
-     (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
-      '(("r" "~/work/repos"   "Repos (work)")
-        ("b" "~/sync/blog"    "Blog")))
-     :config
-     ;; (setq dirvish-attributes '(vc-state subtree-state all-the-icons collapse git-msg file-time file-size))
-     :bind (
-            :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
-            ("a"   . dirvish-quick-access)
-            ("f"   . dirvish-file-info-menu)
-            ("y"   . dirvish-yank-menu)
-            ("N"   . dirvish-narrow)
-            ("^"   . dirvish-history-last)
-            ("h"   . dirvish-history-jump) ; remapped `describe-mode'
-            ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
-            ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
-            ("TAB" . dirvish-subtree-toggle)
-            ("M-f" . dirvish-history-go-forward)
-            ("M-b" . dirvish-history-go-backward)
-            ("M-l" . dirvish-ls-switches-menu)
-            ("M-m" . dirvish-mark-menu)
-            ("M-t" . dirvish-layout-toggle)
-            ("M-s" . dirvish-setup-menu)
-            ("M-e" . dirvish-emerge-menu)
-            ("M-j" . dirvish-fd-jump)))
-
+(use-package dirvish
+  :straight t
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-attributes '(subtree-state nerd-icons file-size))
+  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+   '(("r" "~/work/repos"   "Repos (work)")
+     ("b" "~/sync/blog"    "Blog")))
+  :config
+  (setq dirvish-side-width 40)
+  ;; (setq dirvish-attributes '(vc-state subtree-state all-the-icons collapse git-msg file-time file-size))
+  :bind (("C-c a d" . dirvish-side)
+         :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+         ("a"   . dirvish-quick-access)
+         ("f"   . dirvish-file-info-menu)
+         ("y"   . dirvish-yank-menu)
+         ("N"   . dirvish-narrow)
+         ("^"   . dirvish-history-last)
+         ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+         ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+         ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+         ("TAB" . dirvish-subtree-toggle)
+         ("M-f" . dirvish-history-go-forward)
+         ("M-b" . dirvish-history-go-backward)
+         ("M-l" . dirvish-ls-switches-menu)
+         ("M-m" . dirvish-mark-menu)
+         ("M-t" . dirvish-layout-toggle)
+         ("M-s" . dirvish-setup-menu)
+         ("M-e" . dirvish-emerge-menu)
+         ("M-j" . dirvish-fd-jump)))
 #+end_src
+
 * Helpful
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1714,12 +1811,9 @@ standard keybindings.
           (add-hook 'pre-command-hook 'keycast--update t)
         (remove-hook 'pre-command-hook 'keycast--update)))
     (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
-#+end_#+begin_src
-
 #+end_src
 ** Hydra
 Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
-
 #+begin_src emacs-lisp
   (use-package hydra
     :straight t)
@@ -1747,7 +1841,6 @@ Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/confi
       "Display an icon from the GitHub Octicons."
       (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
 #+end_src
-
 *** Hydra / Windows
 
 Group window-related commands.
@@ -1944,7 +2037,6 @@ Group Merge commands.
                          ("r" smerge-resolve "resolve")
                          ("k" smerge-kill-current "kill current"))))
 #+end_src
-jk
 *** Hydra / smerge
 From https://github.com/dakra/dmacs/blob/nil/init.org
 
@@ -2784,14 +2876,12 @@ Use hnread to show HN threads for a URL at point
 #+end_src
 
 ** epa-file
-
 Configure GPG assistant
-
 #+begin_src emacs-lisp
   (use-package epa-file
     :config
     (setq
-     epa-file-encrypt-to '("BF2828095372F24D")
+     epa-file-encrypt-to '("B97574F0096F8AFAA099E1FB2FE40B159E04B416")
      password-cache nil
      password-cache-expiry nil
      epa-pinentry-mode 'ask)
@@ -3162,7 +3252,8 @@ I often want to reply without the original message:
 #+begin_src emacs-lisp
   (use-package browse-at-remote
     :straight t
-    :bind (("C-c G" . browse-at-remote))
+    :bind (("C-c go" . browse-at-remote)
+           ("C-c gy" . browse-at-remote-kill))
     )
 #+end_src
 
@@ -3194,6 +3285,12 @@ Some keybindings for *paragraphs*:
   (global-set-key (kbd "s-i") #'forward-paragraph)
   (global-set-key (kbd "s-u") #'backward-paragraph)
 #+end_src
+** globals
+Disable keyboard-escape-quit as it always closes windows in a nasty way:
+
+#+begin_src emacs-lisp
+  (keymap-global-unset "<escape>" #'keyboard-escape-quit)
+#+end_src
 ** MacOS
 #+begin_src emacs-lisp
   (setq mac-command-modifier      'super
@@ -3207,11 +3304,13 @@ Some keybindings for *paragraphs*:
 ** toggles
 #+begin_src emacs-lisp
   (keymap-global-set "M-g t o" #'olivetti-mode)
+  (keymap-global-set "M-g t F" #'focus-mode)
   (keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
   (keymap-global-set "M-g t n" #'display-line-numbers-mode)
   (keymap-global-set "M-g t f" #'fringe-mode)
   (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 #+end_src
+
 ** COMMENT inserts
 #+begin_src emacs-lisp
   (+map!
@@ -3241,14 +3340,10 @@ Some keybindings for *paragraphs*:
    "j'"   #'avy-resume
    )
 #+end_src
-** COMMENT projects
+** projects
 #+begin_src emacs-lisp
-  (+map!
-   ;; ====== Projects ======
-   "pe"   #'projectile-run-eshell
-   "oT"   #'treemacs
-   )
-p#+end_src
+  ;; (keymap-global-set "C-x p o d" #'dirvish-side)
+#+end_src
 ** COMMENT searches
 #+begin_src emacs-lisp
 (+map!
@@ -3295,7 +3390,7 @@ position and resume whenever the same video is played again (read [[https://unix
 
 #+end_src
 
-* COMMENT ORG mode
+* ORG mode
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
 :end:
@@ -3342,7 +3437,7 @@ Basic configuration
         org-src-preserve-indentation       t
         org-adapt-indentation              nil
         org-log-done                       'time
-        org-directory                      "~/work/repos/org/"
+        org-directory                      "~/repos/priv/org/"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
 
   ;; Set TODO keywords
@@ -3717,13 +3812,6 @@ If prefix ARG, copy instead of move."
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
   ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
   ;; (org-roam-completion-everywhere t)
-  :init
-  (+map! :infix "n"
-    "f" #'org-roam-node-find
-    "r" #'org-roam-ref-find
-    "i" #'org-roam-node-insert
-    "R" #'org-roam-node-random
-    "B" #'org-roam-buffer-display-dedicated)
   :config
   (org-roam-db-autosync-mode 1)
   (setq org-roam-capture-templates
@@ -3762,11 +3850,17 @@ If prefix ARG, copy instead of move."
           ))
   )
 #+end_src
+
 ** org-babel
 #+begin_src emacs-lisp
+;; Install ob-go
+(use-package ob-go
+  :straight t)
+
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((sql . t)))
+ '((sql . t)
+   (go . t)))
 #+end_src
 ** counsel-org-tag
 Use counsel-org-tag (I couldn't find any alternative for consult):
@@ -3774,7 +3868,7 @@ Use counsel-org-tag (I couldn't find any alternative for consult):
 #+begin_src emacs-lisp
 (global-set-key [remap org-set-tags-command] #'counsel-org-tag)
 #+end_src
-** keybindings
+** COMMENT keybindings
 #+begin_src emacs-lisp
 (+map!
   ;; ====== ORG ======
