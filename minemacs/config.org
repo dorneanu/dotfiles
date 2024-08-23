@@ -1592,6 +1592,7 @@ Configure custom searches
    '("]" . meow-end-of-thing)
    '("a" . meow-append)
    '("A" . meow-open-below)
+   '("ä" . meow-kill-whole-line)
    '("b" . meow-back-word)
    '("B" . meow-back-symbol)
    '("c" . meow-change)
@@ -3300,6 +3301,12 @@ Some keybindings for *paragraphs*:
 #+begin_src emacs-lisp
   (global-set-key (kbd "s-i") #'forward-paragraph)
   (global-set-key (kbd "s-u") #'backward-paragraph)
+#+end_src
+
+For buffers:
+#+begin_src emacs-lisp
+  (keymap-global-set "C-c b h" #'previous-buffer)
+  (keymap-global-set "C-c b l" #'next-buffer)
 #+end_src
 ** globals
 Disable keyboard-escape-quit as it always closes windows in a nasty way:
