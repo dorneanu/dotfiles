@@ -1687,7 +1687,14 @@ Configure custom searches
     :config
     (setq nov-text-width 95))
 #+end_src
-
+* Navigation
+** link-hint
+#+begin_src emacs-lisp
+(use-package link-hint
+  :straight t
+  :bind (("C-c l o" . link-hint-open-link)
+         ("C-c l c" . link-hint-copy-link)))
+#+end_src
 * Files
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -2425,36 +2432,45 @@ For ChatGPT:
 : gptel-send
 
 ** Feeds
-*** COMMENT elfeed
+*** elfeed
 #+begin_src emacs-lisp
-  (use-package elfeed
-    :defer t
-    :straight t
-    ;; :config
-    ;; <<elfeed-open-youtube-with-mpv>>
-    :init
-    (+nmap! :keymaps 'elfeed-show-mode-map
-            "q" #'elfeed-kill-buffer
-            "u" #'elfeed-show-tag--unread
-            "y" #'elfeed-show-yank)
-    (+nmap! :keymaps 'elfeed-search-mode-map
-            "fj" #'dorneanu/elfeed-cycle-filters-forward
-            "fJ" #'dorneanu/elfeed-cycle-filters-backward
-            "fk" #'dorneanu/elfeed-increase-time-filter
-            "fK" #'dorneanu/elfeed-decrease-time-filter
-            "fuu" #'elfeed-update
-            "fuU" #'elfeed-search-update--force
-            "y"  #'elfeed-show-yank
-            "mgr" #'my/elfeed-reddit-show-comments
-            "mgh" #'my/elfeed-hn-show-comments
-            "ox"  #'dorneanu/elfeed-search-browse-url-xwidget
-            "or" #'sqrtminusone/rdrview-elfeed-show)
-    :custom
-    ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
-     (elfeed-db-directory "~/.elfeed")
-     (elfeed-goodies/wide-threshold 0.2)
-     (elfeed-set-timeout 36000)))
+(use-package elfeed
+  :defer t
+  :straight t
+  :config
+  ;; Global keybindings for elfeed
+  (keymap-global-set "C-c e e" #'elfeed)
+  (keymap-global-set "C-c e u" #'elfeed-update)
+  (keymap-global-set "C-c e s" #'elfeed-search)
+
+  ;; Keybindings for elfeed-search-mode
+  (keymap-set elfeed-search-mode-map "g" #'elfeed-search-update--force)
+  (keymap-set elfeed-search-mode-map "f j" #'dorneanu/elfeed-cycle-filters-forward)
+  (keymap-set elfeed-search-mode-map "f J" #'dorneanu/elfeed-cycle-filters-backward)
+  (keymap-set elfeed-search-mode-map "f k" #'dorneanu/elfeed-increase-time-filter)
+  (keymap-set elfeed-search-mode-map "f K" #'dorneanu/elfeed-decrease-time-filter)
+  (keymap-set elfeed-search-mode-map "f u" #'elfeed-update)
+  (keymap-set elfeed-search-mode-map "f U" #'elfeed-search-update--force)
+  (keymap-set elfeed-search-mode-map "y" #'elfeed-show-yank)
+  (keymap-set elfeed-search-mode-map "m g r" #'my/elfeed-reddit-show-comments)
+  (keymap-set elfeed-search-mode-map "m g h" #'my/elfeed-hn-show-comments)
+  (keymap-set elfeed-search-mode-map "o x" #'dorneanu/elfeed-search-browse-url-xwidget)
+  (keymap-set elfeed-search-mode-map "o r" #'sqrtminusone/rdrview-elfeed-show)
+
+  ;; Keybindings for elfeed-show-mode
+  (keymap-set elfeed-show-mode-map "q" #'elfeed-kill-buffer)
+  (keymap-set elfeed-show-mode-map "u" #'elfeed-show-tag--unread)
+  (keymap-set elfeed-show-mode-map "y" #'elfeed-show-yank)
+  ;; <<elfeed-open-youtube-with-mpv>>
+  :custom
+  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
+   (elfeed-db-directory "~/.elfeed")
+   (elfeed-goodies/wide-threshold 0.2)
+   (elfeed-set-timeout 36000)))
 #+end_src
+
+#+results:
+
 **** Custom functions
 
 #+begin_src emacs-lisp
@@ -2888,7 +2904,7 @@ Configure GPG assistant
     :custom
     (epa-file-select-keys 'silent))
 #+end_src
-** COMMENT Email
+** Email
 *** mu4e
 **** General config
 #+begin_src emacs-lisp
@@ -3303,12 +3319,12 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
 #+end_src
 ** toggles
 #+begin_src emacs-lisp
-  (keymap-global-set "M-g t o" #'olivetti-mode)
-  (keymap-global-set "M-g t F" #'focus-mode)
-  (keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
-  (keymap-global-set "M-g t n" #'display-line-numbers-mode)
-  (keymap-global-set "M-g t f" #'fringe-mode)
-  (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
+(keymap-global-set "M-g t o" #'olivetti-mode)
+(keymap-global-set "M-g t F" #'focus-mode)
+(keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
+(keymap-global-set "M-g t n" #'display-line-numbers-mode)
+(keymap-global-set "M-g t f" #'fringe-mode)
+(keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 #+end_src
 
 ** COMMENT inserts
@@ -3329,17 +3345,13 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
    "xfs"   #'dorneanu/set-font-size
    )
 #+end_src
-** COMMENT jumps
+** jumps
 #+begin_src emacs-lisp
-  (+map!
-   ;; ====== Jumps ======
-   "jol"   #'link-hint-open-link
-   "jc"   #'avy-goto-char
-   "jw"   #'avy-goto-word-1
-   "jl"   #'avy-goto-line
-   "j'"   #'avy-resume
-   )
+(keymap-global-set "C-x j c" #'avy-goto-char)
+(keymap-global-set "C-x j w" #'avy-goto-word-1)
+(keymap-global-set "C-x j j" #'crux-top-join-line)
 #+end_src
+
 ** projects
 #+begin_src emacs-lisp
   ;; (keymap-global-set "C-x p o d" #'dirvish-side)
@@ -3855,6 +3867,9 @@ If prefix ARG, copy instead of move."
 #+begin_src emacs-lisp
 ;; Install ob-go
 (use-package ob-go
+  :straight t)
+
+(use-package jq-mode
   :straight t)
 
 (org-babel-do-load-languages
