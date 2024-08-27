@@ -446,6 +446,8 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   ;;          obsolete/me-yasnippet      ; Yasnippet (yasnippet, cape-yasnippet, yasnippet-snippets, ...)
   ;;         )))
 
+          #+end_#+begin_src
+
           #+end_src
 * Autocompletion
 :properties:
@@ -1286,17 +1288,8 @@ hand.
            (scss-mode . emmet-mode)
            (web-mode  . emmet-mode))
     :config
-    (general-define-key
-     :keymaps 'emmet-mode-keymap
-     "M-RET" #'emmet-expand-yas)
-    (phundrak/major-leader-key
-     :keymaps 'web-mode-map
-     :packages '(web-mode emmet-mode)
-     "e" '(:ignore t :which-key "emmet")
-     "ee" #'emmet-expand-line
-     "ep" #'emmet-preview
-     "eP" #'emmet-preview-mode
-     "ew" #'emmet-wrap-with-markup))
+
+    )
 #+end_src
 **** impatient-mode
 Impatient mode serves web buffers live over HTTP, including your live
@@ -1309,11 +1302,14 @@ modifications.
 ** flycheck
 #+begin_src emacs-lisp
 (use-package flycheck
-  :straight t)
+  :straight t
+  :hook (prog-mode . flycheck-mode))
 
 (use-package consult-flycheck
-  :straight t)
+  :straight t
+  :bind (("M-g f" . consult-flycheck)))
 #+end_src
+
 * Buffer Management
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1486,7 +1482,6 @@ Extended ~isearch~
     ;; search in org roam folder where I have transcripts from the Huberman Lab
     (rg-define-search my/rg-org-roam-directory-huberman
                       :query ask
-
                       :format regexp
                       :files "everything"
                       :dir (concat org-roam-directory "/rez/huberman-lab")
@@ -1616,7 +1611,7 @@ Configure custom searches
    '("m" . meow-join)
    '("n" . meow-search)
    '("o" . meow-block)
-   '("O" . meow-to-block)
+   ;; '("O" . meow-to-block)
    '("p" . meow-yank)
    '("q" . meow-quit)
    '("Q" . meow-goto-line)
@@ -1636,6 +1631,118 @@ Configure custom searches
    '("z" . meow-pop-selection)
    '("'" . repeat)
    '("<escape>" . ignore)))
+#+end_src
+*** meow for org
+#+begin_src emacs-lisp
+;; From https://aatmunbaxi.netlify.app/comp/meow_state_org_speed/
+(setq meow-org-motion-keymap (make-keymap))
+(meow-define-state org-motion
+  "Org-mode structural motion"
+  :lighter "[O]"
+  :keymap meow-org-motion-keymap)
+
+(meow-define-keys 'org-motion
+  '("<escape>" . meow-normal-mode)
+  '("i" . meow-insert-mode)
+  '("g" . meow-normal-mode)
+  '("u" .  meow-undo)
+  ;; Moving between headlines
+  '("k" .  org-previous-visible-heading)
+  '("j" .  org-next-visible-heading)
+  ;; Moving between headings at the same level
+  '("p" .  org-backward-heading-same-level)
+  '("n" .  org-forward-heading-same-level)
+  ;; Moving subtrees themselves
+  '("K" .  org-subtree-up)
+  '("J" .  org-subtree-down)
+  ;; Subtree de/promotion
+  '("L" .  org-demote-subtree)
+  '("H" .  org-promote-subtree)
+  ;; Completion-style search of headings
+  '("v" .  consult-org-heading)
+  ;; Setting subtree metadata
+  '("l" .  org-set-property)
+  '("t" .  org-todo)
+  '("d" .  org-deadline)
+  '("s" .  org-schedule)
+  '("e" .  org-set-effort)
+  ;; Block navigation
+  '("b" .  org-previous-block)
+  '("f" .  org-next-block)
+  ;; Narrowing/widening
+  '("N" .  org-narrow-to-subtree)
+  '("W" .  widen))
+
+(meow-define-keys 'normal
+  '("O" . meow-org-motion-mode))
+#+end_src
+** smartparens
+#+begin_src emacs-lisp
+(use-package smartparens-config
+  :after smartparens
+  :config
+  ;; don't create a pair with single quote in minibuffer
+  (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
+
+  ;; indent after inserting any kinds of parens
+  (defun my/smartparens-pair-newline-and-indent (id action context)
+    (save-excursion
+      (newline)
+      (indent-according-to-mode))
+    (indent-according-to-mode))
+  (sp-pair "(" nil :post-handlers
+           '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  (sp-pair "{" nil :post-handlers
+           '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  (sp-pair "[" nil :post-handlers
+           '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  )
+
+(use-package smartparens
+  :straight t
+  :hook (after-init . show-smartparens-global-mode)
+  :bind (:map smartparens-mode-map
+              ;; paredit bindings
+              ("C-M-f" . sp-forward-sexp)
+              ("C-M-b" . sp-backward-sexp)
+              ("C-M-d" . sp-down-sexp)
+              ("C-M-u" . sp-backward-up-sexp)
+              ("C-M-n" . sp-up-sexp)
+              ("C-M-p" . sp-backward-down-sexp)
+              ;; ("M-s" . sp-splice-sexp)
+              ("M-<up>" . sp-splice-sexp-killing-backward)
+              ("M-<down>" . sp-splice-sexp-killing-forward)
+              ;; ("M-r" . sp-splice-sexp-killing-around)
+              ("M-(" . sp-wrap-round)
+              ("M-{" . sp-wrap-curly)
+              ("C-)" . sp-forward-slurp-sexp)
+              ("C-<right>" . sp-forward-slurp-sexp)
+              ("C-}" . sp-forward-barf-sexp)
+              ("C-<left>" . sp-forward-barf-sexp)
+              ("C-(" . sp-backward-slurp-sexp)
+              ("C-M-<left>" . sp-backward-slurp-sexp)
+              ("C-{" . sp-backward-barf-sexp)
+              ("C-M-<right>" . sp-backward-barf-sexp)
+              ;; ("M-S" . sp-split-sexp)
+              ;; mine
+              ("C-M-k" . sp-kill-sexp)
+              ("C-M-w" . sp-copy-sexp)
+              ("M-@" . sp-mark-sexp)
+              )
+  :diminish smartparens-mode
+  :init
+  (setq sp-show-pair-delay 0.2
+        ;; avoid slowness when editing inside a comment for modes with
+        ;; parenthesized comments (e.g. coq)
+        sp-show-pair-from-inside nil
+        sp-cancel-autoskip-on-backward-movement nil
+        sp-highlight-pair-overlay nil
+        sp-highlight-wrap-overlay nil
+        sp-highlight-wrap-tag-overlay nil)
+  ;; :config
+  )
+#+end_#+begin_src
+
 #+end_src
 * Reading
 :properties:
@@ -3305,8 +3412,8 @@ Some keybindings for *paragraphs*:
 
 For buffers:
 #+begin_src emacs-lisp
-  (keymap-global-set "C-c b h" #'previous-buffer)
-  (keymap-global-set "C-c b l" #'next-buffer)
+(keymap-global-set "C-c b h" #'previous-buffer)
+(keymap-global-set "C-c b l" #'next-buffer)
 #+end_src
 ** globals
 Disable keyboard-escape-quit as it always closes windows in a nasty way:
@@ -3318,12 +3425,12 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
 #+begin_src emacs-lisp
   (setq mac-command-modifier      'super
         ns-command-modifier       'meta
-        mac-option-modifier       'meta
+        mac-option-modifier       'super
         ns-option-modifier        'super
         mac-right-option-modifier 'none
         ns-right-option-modifier  'none)
-
 #+end_src
+
 ** toggles
 #+begin_src emacs-lisp
 (keymap-global-set "M-g t o" #'olivetti-mode)
@@ -3356,13 +3463,16 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
 #+begin_src emacs-lisp
 (keymap-global-set "C-x j c" #'avy-goto-char)
 (keymap-global-set "C-x j w" #'avy-goto-word-1)
-(keymap-global-set "C-x j j" #'crux-top-join-line)
+;; This doesn't fit here
+(keymap-global-set "M-j" #'crux-top-join-line)
 #+end_src
 
 ** projects
 #+begin_src emacs-lisp
-  ;; (keymap-global-set "C-x p o d" #'dirvish-side)
+(keymap-global-set "M-g 0" #'dirvish-side)
+(keymap-global-set "C-M-0" #'indent-region)
 #+end_src
+
 ** COMMENT searches
 #+begin_src emacs-lisp
 (+map!
@@ -3994,7 +4104,3 @@ Insert images easily into ORG mode files
   :straight t)
 #+end_src
 * internal :no-export:
-
-# Local Variables:
-# after-save-hook: (org-babel-tangle)
-# End:
