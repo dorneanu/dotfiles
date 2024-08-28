@@ -381,7 +381,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
           me-tty            ; Emacs from terminal (xclip, ...)
           ;; me-fun            ; Games and funny packages (xkcd, speed-type, wordel, ...)
           me-media          ; Multimedia (empv, emms, ...)
-          ;;me-workspaces  ; Workspace separation (tabspaces, ...)
+          ;; obsolete/me-tabspaces  ; Workspace separation (tabspaces, ...)
           ;; me-binary         ; Display binary files in hex or decompile them
           me-window         ; Frame & window tweaks
           me-search
@@ -403,7 +403,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   ;; you've also disabled its dependent packages (see `M-x straight-dependents'),
   ;; otherwise it will get installed as a dependency.
   ;;
-  ;; You can also `push' (or `add-to-list') multiple packages at once (as a list).
+  ;; You can also `push' ( `add-to-list') multiple packages at once (as a list).
   ;; For example, to completely disable `iedit' and its dependencies
   ;; `evil-multiedit' and `evil-iedit-state', you can use:
   ;; (push '(iedit evil-multiedit evil-iedit-state) minemacs-disabled-packages)
@@ -445,8 +445,6 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   ;;          obsolete/me-writeroom      ; Replacement for `+writing-mode' (writeroom-mode, ...)
   ;;          obsolete/me-yasnippet      ; Yasnippet (yasnippet, cape-yasnippet, yasnippet-snippets, ...)
   ;;         )))
-
-          #+end_#+begin_src
 
           #+end_src
 * Autocompletion
@@ -739,6 +737,14 @@ Disable truncating lines
     :defer t
     :after lsp
     :straight t)
+#+end_src
+*** treemacs-lsp
+#+begin_src emacs-lisp
+(use-package lsp-treemacs
+  :straight t
+  :defer t
+  :custom
+  (lsp-treemacs-theme "Iconless"))
 #+end_src
 ** Tools
 *** highlight-indent-guides
@@ -1309,7 +1315,13 @@ modifications.
   :straight t
   :bind (("M-g f" . consult-flycheck)))
 #+end_src
-
+** VC
+*** forge
+#+begin_src emacs-lisp
+(use-package forge
+  :straight t
+  :after magit)
+#+end_src
 * Buffer Management
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1340,33 +1352,40 @@ Used for popups (eshell, scratch buffer etc.)
 Install additional themes:
 
 #+begin_src emacs-lisp
-  ;; (use-package doom-themes
-  ;;   :straight (:build t)
-  ;;   :defer t
-  ;;   ;; :init (load-theme 'doom-nord-aurora t)
-  ;;  )
+;; (use-package doom-themes
+;;   :straight (:build t)
+;;   :defer t
+;;   ;; :init (load-theme 'doom-nord-aurora t)
+;;  )
 
-  ;; Install kaolin themes
-  (use-package kaolin-themes
-    :straight t
-    :defer t)
+;; Install kaolin themes
+(use-package kaolin-themes
+  :straight t
+  :defer t)
 
-  ;; Install moe-theme
-  (use-package moe-theme
-    :straight t)
+;; Install moe-theme
+(use-package moe-theme
+  :straight t)
 
-  (use-package ef-themes
-    :straight t)
+(use-package ef-themes
+  :straight t)
 
-  (use-package modus-themes
-    :straight t)
+(use-package modus-themes
+  :straight t)
 
-  (use-package solarized-theme
-    :straight t)
+(use-package solarized-theme
+  :straight t)
 
-  ;; Install sanityinc tomorrow
-  (use-package color-theme-sanityinc-tomorrow
-    :straight t)
+(use-package lambda-themes
+  :straight (:type git :host github :repo "lambda-emacs/lambda-themes")
+  :custom
+  (lambda-themes-set-italic-comments t)
+  (lambda-themes-set-italic-keywords t)
+  (lambda-themes-set-variable-pitch t))
+
+;; Install sanityinc tomorrow
+(use-package color-theme-sanityinc-tomorrow
+  :straight t)
 #+end_src
 ** alpha-background
 #+begin_src emacs-lisp
@@ -1439,6 +1458,48 @@ Don't use relative numbers
     :straight t
     :demand t)
 #+end_src
+** tab-line-mode
+Disable tab-line-mode for specific modes/buffers:
+#+begin_src emacs-lisp
+(use-package tab-line
+  :straight (:type built-in)
+  :demand t
+  :config
+  ;; Exclude tab-line in specific modes
+  (add-to-list 'tab-line-exclude-modes 'dired-mode)
+  (add-to-list 'tab-line-exclude-modes 'imenu-list-major-mode)
+  ;; Some UI changes
+  (setq tab-line-new-button-show nil)  ;; do not show add-new button
+  (setq tab-line-close-button-show nil)  ;; do not show close button
+  (setq tab-line-separator " ")  ;; set it to empty
+  ;; (defvar my/tab-height 15)
+  ;; (defvar my/tab-left (powerline-wave-right 'tab-line nil my/tab-height))
+  ;; (defvar my/tab-right (powerline-wave-left nil 'tab-line my/tab-height))
+
+  ;; (defun my/tab-line-tab-name-buffer (buffer &optional _buffers)
+  ;;   (require 'powerline)
+  ;;   (powerline-render (list my/tab-left
+  ;;                           (format "%s" (buffer-name buffer))
+  ;;                           my/tab-right)))
+  ;; (setq tab-line-tab-name-function #'my/tab-line-tab-name-buffer)
+
+  ;; tab color settings
+  (set-face-attribute 'tab-line nil ;; background behind tabs
+                      :background "gray20"
+                      :foreground "gray60" :distant-foreground "gray50"
+                      :height 1.0 :box nil)
+  (set-face-attribute 'tab-line-tab nil ;; active tab in another window
+                      :inherit 'tab-line
+                      :foreground "gray70" :background "gray90" :box nil)
+  (set-face-attribute 'tab-line-tab-current nil ;; active tab in current window
+                      :background "#b34cb3" :foreground "white" :box nil)
+  (set-face-attribute 'tab-line-tab-inactive nil ;; inactive tab
+                      :background "gray60" :foreground "black" :box nil)
+  (set-face-attribute 'tab-line-highlight nil ;; mouseover
+                      :background "white" :foreground 'unspecified)
+  (global-tab-line-mode 1))
+#+end_src
+
 * Editing
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1666,6 +1727,10 @@ Configure custom searches
   '("d" .  org-deadline)
   '("s" .  org-schedule)
   '("e" .  org-set-effort)
+  ;; Refiling
+  '("rv" .  +org/refile-to-visible)
+  '("rf" .  +org/refile-to-current-file)
+  '("rr" .  org-refile)
   ;; Block navigation
   '("b" .  org-previous-block)
   '("f" .  org-next-block)
@@ -1676,6 +1741,7 @@ Configure custom searches
 (meow-define-keys 'normal
   '("O" . meow-org-motion-mode))
 #+end_src
+
 ** smartparens
 #+begin_src emacs-lisp
 (use-package smartparens-config
@@ -1741,8 +1807,6 @@ Configure custom searches
         sp-highlight-wrap-tag-overlay nil)
   ;; :config
   )
-#+end_#+begin_src
-
 #+end_src
 * Reading
 :properties:
@@ -3389,19 +3453,18 @@ I often want to reply without the original message:
 Now some keybindings for the ~Super_L~ key:
 
 #+begin_src emacs-lisp
-  ;; lower case “s” is for super Use windows key (super) for window navigation
-  (global-set-key (kbd "s-h") #'windmove-left)
-  (global-set-key (kbd "s-l") #'windmove-right)
-  (global-set-key (kbd "s-k") #'windmove-up)
-  (global-set-key (kbd "s-j") #'windmove-down)
+;; lower case “s” is for super Use windows key (super) for window navigation
+(global-set-key (kbd "s-h") #'windmove-left)
+(global-set-key (kbd "s-l") #'windmove-right)
+(global-set-key (kbd "s-k") #'windmove-up)
+(global-set-key (kbd "s-j") #'windmove-down)
 
-  ;; Tab navigation
-  (global-set-key (kbd "s-.") #'tab-next)
-  (global-set-key (kbd "s-,") #'tab-previous)
+;; Tab navigation
+(global-set-key (kbd "s-.") #'tab-next)
+(global-set-key (kbd "s-,") #'tab-previous)
+(global-set-key (kbd "s-1") #'tab-line-switch-to-prev-tab)
+(global-set-key (kbd "s-2") #'tab-line-switch-to-next-tab)
 #+end_src
-
-#+results:
-: tab-previous
 
 Some keybindings for *paragraphs*:
 
@@ -3432,8 +3495,11 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
 #+end_src
 
 ** toggles
+
 #+begin_src emacs-lisp
 (keymap-global-set "M-g t o" #'olivetti-mode)
+(keymap-global-set "M-g t t b" #'tab-bar-mode)
+(keymap-global-set "M-g t t n" #'global-tab-line-mode)
 (keymap-global-set "M-g t F" #'focus-mode)
 (keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
 (keymap-global-set "M-g t n" #'display-line-numbers-mode)
