@@ -412,6 +412,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   (push '(org org-agenda org-modern) minemacs-disabled-packages)
   (push '(marginalia) minemacs-disabled-packages)
   (push '(flymake) minemacs-disabled-packages)
+  (push '(corfu corfu-popup) minemacs-disabled-packages)
   ;;; Using the obsolete modules
   ;; You can use the obsolete packages configurations by adding the
   ;; `obsolete/me-*' modules to `minemacs-modules'. However, these modules, as
@@ -535,7 +536,141 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'lsp-completion-at-point (cape-company-to-capf #'company-go)))))
 #+end_src
-*** yasnippet
+*** corfu
+Some useful resources:
+- https://www.skfwe.cn/p/corfu-orderless-dabbrev-use/
+- https://kristofferbalintona.me/posts/202203130102/
+#+begin_src emacs-lisp
+(use-package corfu
+  :straight t
+  :demand t
+  :hook ((global-corfu-mode . corfu-popupinfo-mode)
+         (lsp-completion-mode . dorneanu/corfu-setup-lsp) ; Use corfu for lsp completion
+         )
+  ;; Use TAB for cycling, default is `corfu-complete'.
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-complete)
+        ([tab] . corfu-complete))
+  ;; :bind (("C-c . p" . completion-at-point)
+  ;;        :map corfu-map
+  ;;        ("TAB" . corfu-next)
+  ;;        ([tab] . corfu-next)
+  ;;        ("S-TAB" . corfu-previous)
+  ;;        ([backtab] . corfu-previous)
+  ;;        ("<escape>" . corfu-quit)
+  ;;        ("<return>" . corfu-insert)
+  ;;        ("M-d"      . corfu-info-documentation)
+  ;;        ("M-l"      . corfu-info-location)
+  ;;        ("M-."      . corfu-move-to-minibuffer))
+  :custom
+  (tab-always-indent 'complete)
+  (completion-cycle-threshold t)      ; Always show candidates in menu
+
+  ;; Only use `corfu' when calling `completion-at-point' or
+  ;; `indent-for-tab-command'
+  (corfu-auto t)
+  (corfu-auto-prefix 2)
+  (corfu-auto-delay 0.25)
+
+  (corfu-min-width 50)
+  (corfu-max-width corfu-min-width)     ; Always have the same width
+  ;; (corfu-count 14)
+  ;; (corfu-scroll-margin 4)
+  (corfu-cycle t)
+  (corfu-preselect 'prompt)
+
+  ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
+  ;; `corfu-quit-at-boundary' = nil behavior. Set this to separator if using
+  ;; `corfu-auto' = `t' workflow (in that case, make sure you also set up
+  ;; `corfu-separator' and a keybind for `corfu-insert-separator', which my
+  ;; configuration already has pre-prepared). Necessary for manual corfu usage with
+  ;; orderless, otherwise first component is ignored, unless `corfu-separator'
+  ;; is inserted.
+  (corfu-quit-at-boundary nil)
+  (corfu-separator ?\s)            ; Use space
+  (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
+  (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
+  (corfu-preselect-first t)        ; Preselect first candidate?
+  ;; (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
+  :init
+  (global-corfu-mode)
+  :preface
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active) ; Useful if I ever use MCT
+                (bound-and-true-p vertico--input))
+      (setq-local corfu-auto nil)       ; Ensure auto completion is disabled
+      (corfu-mode 1)))
+
+  ;; Move corfu to minibuffer
+  (defun corfu-move-to-minibuffer ()
+    (interactive)
+    (pcase completion-in-region--data
+      (`(,beg ,end ,table ,pred ,extras)
+       (let ((completion-extra-properties extras)
+             completion-cycle-threshold completion-cycling)
+         (consult-completion-in-region beg end table pred)))))
+  (keymap-set corfu-map "M-m" #'corfu-move-to-minibuffer)
+  (add-to-list 'corfu-continue-commands #'corfu-move-to-minibuffer)
+  :config
+
+  ;; Enable Corfu more generally for every minibuffer, as long as no other
+  ;; completion UI is active. If you use Mct or Vertico as your main
+  ;; minibuffer completion UI. From
+  ;; https://github.com/minad/corfu#completing-with-corfu-in-the-minibuffer
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+
+  ;; Setup lsp to use corfu for lsp completion
+  (defun dorneanu/corfu-setup-lsp ()
+    "Use orderless completion style with lsp-capf instead of the default lsp-passthrough."
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+
+  ;; Let eshell also do auto-completion
+  (add-hook 'eshell-mode-hook
+            (lambda ()
+              (setq-local corfu-auto nil)
+              (corfu-mode)))
+
+  ;; Free the RET key for less intrusive behavior.
+  ;; Option 1: Unbind RET completely
+  ;; (keymap-unset corfu-map "RET")
+  ;; Option 2: Use RET only in shell modes
+  (keymap-set corfu-map "RET" `( menu-item "" nil :filter
+                                 ,(lambda (&optional _)
+                                    (and (derived-mode-p 'eshell-mode 'comint-mode)
+                                     #'corfu-send))))
+  )
+#+end_src
+
+#+results:
+: corfu-complete
+
+****** kind-icon
+#+begin_src emacs-lisp
+(use-package kind-icon
+  :straight
+  :after corfu
+  ;; :custom
+  ;; (kind-icon-default-face 'corfu-default) ; Have background color be the same as `corfu' face background
+  ;; (kind-icon-blend-background nil)  ; Use midpoint color between foreground and background colors ("blended")?
+  ;; (kind-icon-blend-frac 0.08)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter) ; Enable `kind-icon'
+  )
+#+end_src
+
+#+results:
+
+****** nerd-icons-corfu
+#+begin_src emacs-elisp
+(use-package nerd-icons-corfu
+  :straight t
+  :after corfu
+  :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+#+end_src
+***** yasnippet
 #+begin_src emacs-lisp
   (use-package yasnippet
     :straight t
@@ -589,7 +724,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   ;;   (license-snippets-init))
 
 #+end_src
-**** consult-yasnippet
+****** consult-yasnippet
 Use ~consult-yasnippet~:
 #+begin_src emacs-lisp
   (use-package consult-yasnippet
@@ -597,7 +732,7 @@ Use ~consult-yasnippet~:
     :bind (("M-g y" . consult-yasnippet)))
 #+end_src
 
-*** embark
+***** embark
 Finally, [[https://github.com/oantolin/embark/][embark]] is great if like me you like to interact directly with your
 files (e.g., for renaming, deleting and copying) through your completion system
 without having to go through =dired=.
@@ -647,17 +782,17 @@ Further functions:
       ))
 
 #+end_src
-*** counsel
+***** counsel
 #+begin_src emacs-lisp
   (use-package counsel
     :straight t)
 #+end_src
-*** marginalia
+***** marginalia
 #+begin_src emacs-lisp
   (use-package marginalia
     :straight t)
 #+end_src
-*** consult-org-roam
+***** consult-org-roam
 #+begin_src emacs-lisp
   (use-package consult-org-roam
     :straight t
@@ -673,7 +808,7 @@ Further functions:
     (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
 #+end_src
 
-*** vertico-multiform
+***** vertico-multiform
 #+begin_src emacs-lisp
   (use-package vertico-multiform
     :straight (:type built-in)
@@ -1001,6 +1136,7 @@ or some I write myself.
     :bind (:map go-mode-map
                 ("M-?" . godoc-at-point)
                 ("M-." . xref-find-definitions)
+                ("M-_" . xref-find-references)
                 ;; ("M-*" . pop-tag-mark) ;; Jump back after godef-jump
                 ("C-c m r" . go-run))
     :custom
@@ -1468,9 +1604,11 @@ Disable tab-line-mode for specific modes/buffers:
   ;; Exclude tab-line in specific modes
   (add-to-list 'tab-line-exclude-modes 'dired-mode)
   (add-to-list 'tab-line-exclude-modes 'imenu-list-major-mode)
+  (add-to-list 'tab-line-exclude-modes 'magit-revision-mode)
+  (add-to-list 'tab-line-exclude-modes 'eshell-mode)
   ;; Some UI changes
   (setq tab-line-new-button-show nil)  ;; do not show add-new button
-  (setq tab-line-close-button-show nil)  ;; do not show close button
+  (setq tab-line-close-button-show t)  ;; do not show close button
   (setq tab-line-separator " ")  ;; set it to empty
   ;; (defvar my/tab-height 15)
   ;; (defvar my/tab-left (powerline-wave-right 'tab-line nil my/tab-height))
@@ -1864,6 +2002,7 @@ Configure custom searches
 #+begin_src emacs-lisp
 (use-package link-hint
   :straight t
+  :demand t
   :bind (("C-c l o" . link-hint-open-link)
          ("C-c l c" . link-hint-copy-link)))
 #+end_src
@@ -2627,6 +2766,7 @@ For ChatGPT:
   (keymap-set elfeed-search-mode-map "m g r" #'my/elfeed-reddit-show-comments)
   (keymap-set elfeed-search-mode-map "m g h" #'my/elfeed-hn-show-comments)
   (keymap-set elfeed-search-mode-map "o x" #'dorneanu/elfeed-search-browse-url-xwidget)
+  (keymap-set elfeed-search-mode-map "o b" #'elfeed-search-browse-url)
   (keymap-set elfeed-search-mode-map "o r" #'sqrtminusone/rdrview-elfeed-show)
 
   ;; Keybindings for elfeed-show-mode
@@ -3516,14 +3656,9 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
    "iot"    #'counsel-org-tag)
 #+end_src
 
-** COMMENT hydras
+** hydras
 #+begin_src emacs-lisp
-  (+map!
-   ;; ====== Hydras ======
-   "xoj"   #'sk/hydra-org-jump/body
-   "xw"    #'+hydra/window-nav/body
-   "xfs"   #'dorneanu/set-font-size
-   )
+(keymap-global-set "M-g t . w" #'+window-adjust-size-transient)
 #+end_src
 ** jumps
 #+begin_src emacs-lisp
