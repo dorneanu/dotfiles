@@ -726,9 +726,9 @@ Some useful resources:
 ****** consult-yasnippet
 Use ~consult-yasnippet~:
 #+begin_src emacs-lisp
-  (use-package consult-yasnippet
-    :straight t
-    :bind (("M-g y" . consult-yasnippet)))
+(use-package consult-yasnippet
+  :straight t
+  :bind (("M-g y" . consult-yasnippet)))
 #+end_src
 
 ***** embark
@@ -1885,14 +1885,14 @@ Configure custom searches
    ;; Use SPC (0-9) for digit arguments.
    '("1" . centaur-tabs-backward)
    '("2" . centaur-tabs-forward)
-   '("3" . meow-digit-argument)
+   '("3" . crux-switch-to-previous-buffer)
    '("4" . meow-digit-argument)
    '("5" . meow-digit-argument)
    '("6" . meow-digit-argument)
    '("7" . meow-digit-argument)
    '("8" . meow-digit-argument)
-   '("9" . meow-digit-argument)
-   '("0" . meow-digit-argument)
+   '("9" . tab-switch)
+   '("0" . tab-bar-switch-to-recent-tab)
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet))
   (meow-normal-define-key
@@ -1965,6 +1965,7 @@ Configure custom searches
   (meow-setup)
   (meow-global-mode 1))
 #+end_src
+
 *** meow for org
 #+begin_src emacs-lisp
 ;; From https://aatmunbaxi.netlify.app/comp/meow_state_org_speed/
@@ -3904,6 +3905,7 @@ Basic configuration
         org-src-preserve-indentation       t
         org-adapt-indentation              nil
         org-log-done                       'time
+        org-log-into-drawer                nil     ;; Does this make sense?
         org-directory                      "~/repos/priv/org/"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
 
@@ -4242,10 +4244,68 @@ If prefix ARG, copy instead of move."
      ("done" . (:inherit org-verbatim :weight semi-bold :foreground "black" :background "lightgray")))))
 #+end_src
 
+
+** org-capture
+#+begin_src emacs-lisp
+(use-package org-capture
+  :bind (("C-c _" . org-capture))
+  :ensure nil
+  :preface
+  (defvar my/org-appointment
+    (concat "* TODO %^{Appointment} :appt:\n"
+            "SCHEDULED: %t\n") "Template for appointment task.")
+  (defvar my/org-active-task-template
+    (concat "* NEXT %^{Task}\n"
+            ":PROPERTIES:\n"
+            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
+            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
+            ":END:") "Template for basic task.")
+  (defvar my/org-meeting
+    (concat "* MEETING %^{Meeting}\n"
+            "SCHEDULED: %t\n") "Template for meetings")
+
+  (defvar my/org-weekly
+    (concat "* wk" (format-time-string "%V") "       " ":wk" (format-time-string "%V") ":")
+    "Template for weeklies")
+
+  (defvar my/org-basic-task-template
+    (concat "* TODO %^{Task}\n"
+            ":PROPERTIES:\n"
+            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
+            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
+            ":END:") "Template for basic task.")
+  :custom
+  (org-capture-templates
+   `(
+     ("a" "Appointment" entry (file+headline "inbox.org" "Appointments"),
+      my/org-appointment
+      :empty-lines 1)
+
+     ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
+      my/org-meeting
+      :empty-lines 1)
+
+     ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
+      "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
+
+     ("t" "New Task")
+     ("ta" "Active" entry (file+headline "inbox.org" "Active"),
+      my/org-active-task-template
+      :empty-lines 1
+      :clock-in t)
+     ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
+      my/org-basic-task-template
+      :empty-lines 1)
+
+     ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
+      my/org-weekly
+      :empty-lines 1))))
+#+end_src
+
 #+results:
+: org-capture
 
 ** org-timeblock                                                       :todo:
-**
 #+begin_src emacs-lisp
 (use-package org-timeblock
   :straight t
