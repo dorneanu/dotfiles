@@ -3,6 +3,8 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 #+property: header-args:emacs-lisp+ :results silent
 #+startup: indent overview
+to:
+Bcc:
 
 * MinEmacs Config
 This section will be ~tangled~ to ~$HOME/.minemacs.d~
@@ -375,7 +377,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
           me-docs           ; Documents (pdf-tools, pdf-view-restore, nov, crdt, edraw, markdown-mode, ...)
           ;; me-calendar    ; Calendar (calfw, calfw-org, calfw-ical, ...)
           ;; me-latex          ; LaTeX (auctex, auctex-latexmk, LaTeX-preview-pane, ...)
-          me-biblio         ; Bibliography & citations (citar, citar-embark, org-re-reveal-citeproc, ...)
+          ;; me-biblio         ; Bibliography & citations (citar, citar-embark, org-re-reveal-citeproc, ...)
           me-natural-langs  ; Natural language stuff (jinx, spell-fu, go-translate, eglot-ltex, ...)
           me-files          ; Files and directories (dirvish, vlf, sudo-edit, ztree, ...)
           me-tools          ; System tools (vterm, tldr, ssh-deploy, docker, logview, with-editor, ...)
@@ -411,8 +413,8 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
   (push '(cape-yasnippet treesit-auto lsp-mode) minemacs-disabled-packages)
   (push '(citar-org-roam citar tempel tempel-collection) minemacs-disabled-packages)
   (push '(org org-agenda org-modern) minemacs-disabled-packages)
-  (push '(marginalia) minemacs-disabled-packages)
-  (push '(flymake) minemacs-disabled-packages)
+  ;; (push '(marginalia) minemacs-disabled-packages)
+  (push '(flymake repeat-mode) minemacs-disabled-packages)
   (push '(corfu corfu-popup) minemacs-disabled-packages)
   ;;; Using the obsolete modules
   ;; You can use the obsolete packages configurations by adding the
@@ -740,12 +742,12 @@ without having to go through =dired=.
   ;; Some usefull functions
   (defun cust/vsplit-file-open (f)
     (let ((evil-vsplit-window-right t))
-      (evil-window-vsplit)
+      (split-window-vertically)
       (find-file f)))
 
   (defun cust/split-file-open (f)
     (let ((evil-split-window-below t))
-      (evil-window-split)
+      (split-window-horizontally)
       (find-file f)))
 
   (use-package embark
@@ -1479,6 +1481,15 @@ modifications.
   :straight t
   :after magit)
 #+end_src
+*** code-review
+#+begin_src emacs-lisp
+(use-package code-review
+  :straight t
+  :after magit
+  :config
+  (setq code-review-auth-login-marker 'forge))
+#+end_src
+
 * Buffer Management
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1686,15 +1697,15 @@ Disable tab-line-mode for specific modes/buffers:
         centaur-tabs-show-count nil
         ;; centaur-tabs-label-fixed-length 15
         ;; centaur-tabs-gray-out-icons 'buffer
-        ;; centaur-tabs-plain-icons t
+        centaur-tabs-plain-icons t
         x-underline-at-descent-line t
         centaur-tabs-left-edge-margin nil)
   (centaur-tabs-change-fonts (face-attribute 'default :font) 110)
   (centaur-tabs-headline-match)
-  ;; (centaur-tabs-enable-buffer-alphabetical-reordering)
+  (centaur-tabs-enable-buffer-alphabetical-reordering)
   ;; (setq centaur-tabs-adjust-buffer-order t)
   (centaur-tabs-mode t)
-  (centaur-tabs-group-by-projectile-project)
+  ;; (centaur-tabs-group-by-projectile-project)
   (setq uniquify-separator "/")
   (setq uniquify-buffer-name-style 'forward)
   (defun centaur-tabs-buffer-groups ()
@@ -1743,9 +1754,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (calendar-mode . centaur-tabs-local-mode)
   (org-agenda-mode . centaur-tabs-local-mode)
   (prog-mode . centaur-tabs-mode)
-  :bind
-  ("s-1" . centaur-tabs-backward)
-  ("s-2" . centaur-tabs-forward)
+  (eshell-mode . centaur-tabs-local-mode)
+  ;; :bind
+  ;; ("s-1" . centaur-tabs-backward)
+  ;; ("s-2" . centaur-tabs-forward)
   ;; ("s-S h" . centaur-tabs-move-current-tab-to-left)
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
@@ -1789,7 +1801,7 @@ Extended ~isearch~
     (setq swiper-action-center t))
 #+end_src
 
-** rg.el
+*** rg.el
 #+begin_src emacs-lisp
   (use-package rg
     :straight t
@@ -1989,6 +2001,9 @@ Configure custom searches
   ;; Moving subtrees themselves
   '("K" .  org-subtree-up)
   '("J" .  org-subtree-down)
+  ;; Navigating paragraphs
+  '("0" .  forward-paragraph)
+  '("9" .  backward-paragraph)
   ;; Subtree de/promotion
   '("L" .  org-demote-subtree)
   '("H" .  org-promote-subtree)
@@ -2029,13 +2044,10 @@ Configure custom searches
       (newline)
       (indent-according-to-mode))
     (indent-according-to-mode))
-  (sp-pair "(" nil :post-handlers
-           '(:add (my/smartparens-pair-newline-and-indent "RET")))
-  (sp-pair "{" nil :post-handlers
-           '(:add (my/smartparens-pair-newline-and-indent "RET")))
-  (sp-pair "[" nil :post-handlers
-           '(:add (my/smartparens-pair-newline-and-indent "RET")))
-  )
+  
+  (sp-pair "(" nil :post-handlers '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  (sp-pair "{" nil :post-handlers '(:add (my/smartparens-pair-newline-and-indent "RET")))
+  (sp-pair "[" nil :post-handlers '(:add (my/smartparens-pair-newline-and-indent "RET"))))
 
 (use-package smartparens
   :straight t
@@ -2064,27 +2076,72 @@ Configure custom searches
               ("C-M-<right>" . sp-backward-barf-sexp)
               ;; ("M-S" . sp-split-sexp)
               ;; mine
-              ("C-M-k" . sp-kill-sexp)
-              ("C-M-w" . sp-copy-sexp)
+              ("C-M-k" . sp-kill-sexp) ("C-M-w" . sp-copy-sexp)
               ("M-@" . sp-mark-sexp)
               )
   :diminish smartparens-mode
   :init
   (setq sp-show-pair-delay 0.2
         ;; avoid slowness when editing inside a comment for modes with
-        ;; parenthesized comments (e.g. coq)
+        ;; parenthesized comments e.g. coq
         sp-show-pair-from-inside nil
         sp-cancel-autoskip-on-backward-movement nil
         sp-highlight-pair-overlay nil
         sp-highlight-wrap-overlay nil
         sp-highlight-wrap-tag-overlay nil)
-  ;; :config
+  :config
+  (require 'smartparens-org)
+
+  ;; Define pairs for Org mode
+  (sp-local-pair 'org-mode "*" "*")
+  (sp-local-pair 'org-mode "/" "/")
+  (sp-local-pair 'org-mode "_" "_")
+  (sp-local-pair 'org-mode "=" "=")
+  (sp-local-pair 'org-mode "~" "~")
+  (sp-local-pair 'org-mode "+" "+")
+
+  ;; Auto-indent
+  ;; from https://xenodium.com/emacs-smartparens-auto-indent/
+  (defun indent-between-pair (&rest _ignored)
+    (newline)
+    (indent-according-to-mode)
+    (forward-line -1)
+    (indent-according-to-mode))
+
+  (sp-local-pair 'prog-mode "{" nil :post-handlers '((indent-between-pair "RET")))
+  (sp-local-pair 'prog-mode "[" nil :post-handlers '((indent-between-pair "RET")))
+  (sp-local-pair 'prog-mode "(" nil :post-handlers '((indent-between-pair "RET")))
+
   )
 #+end_src
-* Reading
-:properties:
-:header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
-:end:
+
+** multiple-cursors
+#+begin_src emacs-lisp
+(use-package multiple-cursors
+  :straight t
+  :hook ((multiple-cursors-mode-enabled-hook . (lambda () (corfu-mode -1)))
+         (multiple-cursors-mode-disabled-hook . (lambda () (corfu-mode 1))))
+  :bind
+  (("C-c m l" . mc/edit-lines)
+   ("C-c m b" . mc/edit-beginnings-of-lines)
+   ("C-c m e" . mc/edit-ends-of-lines)
+   ("C-c m a" . mc/mark-all-dwim)
+   ("C-c m s" . mc/mark-all-symbols-like-this)
+   ("C-c m w" . mc/mark-all-words-like-this)
+   ("C-c m r" . mc/mark-all-in-region)
+   ("C-c m R" . mc/mark-all-in-region-regexp)
+   ("C-c m d" . mc/mark-all-like-this-in-defun)
+   ("C-c m S" . mc/mark-all-symbols-like-this-in-defun)
+   ("C-c m W" . mc/mark-all-words-like-this-in-defun)
+   ("C-c m i" . mc/insert-numbers)
+   ("C-c m n" . mc/mark-next-like-this)
+   ("C-c m p" . mc/mark-previous-like-this)
+   ("C-c m N" . mc/skip-to-next-like-this)
+   ("C-c m P" . mc/skip-to-previous-like-this)
+   ("C-c m M-n" . mc/unmark-next-like-this)
+   ("C-c m M-p" . mc/unmark-previous-like-this)))
+#+end_src
+
 ** olivetti
 #+begin_src emacs-lisp
   (use-package olivetti
@@ -2713,6 +2770,31 @@ Add here circled digits like: ②
     ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
     ("m" (dakra/insert-unicode "MICRO SIGN")))
 #+end_src
+*** Hydra / multiple-cursors
+#+begin_src emacs-lisp
+(defhydra multiple-cursors-hydra (:columns 3 :idle 1.0)
+  "Multiple cursors"
+  ("l" mc/edit-lines "Edit lines in region" :exit t)
+  ("b" mc/edit-beginnings-of-lines "Edit beginnings of lines in region" :exit t)
+  ("e" mc/edit-ends-of-lines "Edit ends of lines in region" :exit t)
+  ("a" mc/mark-all-dwim "Mark all dwim" :exit t)
+  ("S" mc/mark-all-symbols-like-this "Mark all symbols likes this" :exit t)
+  ("w" mc/mark-all-words-like-this "Mark all words like this" :exit t)
+  ("r" mc/mark-all-in-region "Mark all in region" :exit t)
+  ("R" mc/mark-all-in-region-regexp "Mark all in region (regexp)" :exit t)
+  ("d" mc/mark-all-like-this-in-defun "Mark all like this in defun" :exit t)
+  ("s" mc/mark-all-symbols-like-this-in-defun "Mark all symbols like this in defun" :exit t)
+  ("W" mc/mark-all-words-like-this-in-defun "Mark all words like this in defun" :exit t)
+  ("i" mc/insert-numbers "Insert numbers" :exit t)
+  ("n" mc/mark-next-like-this "Mark next like this")
+  ("N" mc/skip-to-next-like-this "Skip to next like this")
+  ("M-n" mc/unmark-next-like-this "Unmark next like this")
+  ("p" mc/mark-previous-like-this "Mark previous like this")
+  ("P" mc/skip-to-previous-like-this "Skip to previous like this")
+  ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
+  ("q" nil "Quit" :exit t))
+#+end_src
+
 ** explain-pause-mode
 #+begin_src emacs-lisp
   (use-package explain-pause-mode
@@ -3126,32 +3208,44 @@ thanks to ~elfeed-org~.
 #+end_src
 **** elfeed-tube
 #+begin_src emacs-lisp
-  (use-package elfeed-tube
-    :straight t
-    :after elfeed
-    :config
-    (elfeed-tube-setup)
-    :bind (:map elfeed-show-mode-map
-                ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
-                ("C-c C-x f" . elfeed-tube-fetch)
-                ([remap save-buffer] . elfeed-tube-save)
-                :map elfeed-search-mode-map
-                ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
-                ("C-c C-x f" . elfeed-tube-fetch)
-                ([remap save-buffer] . elfeed-tube-save)))
+(use-package elfeed-tube
+  :straight t
+  :after elfeed
+  :config
+  (elfeed-tube-setup)
+  :bind (:map elfeed-show-mode-map
+              ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+              ("C-c C-x f" . elfeed-tube-fetch)
+              ([remap save-buffer] . elfeed-tube-save)
+              :map elfeed-search-mode-map
+              ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+              ("C-c C-x f" . elfeed-tube-fetch)
+              ([remap save-buffer] . elfeed-tube-save)))
 
-  ;; https://github.com/skeeto/elfeed/issues/267
-  (defun dorneanu/elfeed-play-with-mpv ()
-    "Play entry link with mpv."
-    (interactive)
-    (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
-          (quality-arg "")
-          (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
-      (setq quality-val (string-to-number quality-val))
-      (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
-      (when (< 0 quality-val)
-        (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
-      (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
+;; https://github.com/skeeto/elfeed/issues/267
+(defun dorneanu/elfeed-play-with-mpv ()
+  "Play entry link with mpv."
+  (interactive)
+  (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
+        (quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
+
+;; A more genric function
+(defun dorneanu/play-video-with-mpv (url)
+  "Play a video URL with mpv."
+  (interactive "sEnter video URL: ")
+  (let ((quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." url quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
 #+end_src
 
 **** functions
@@ -3760,9 +3854,45 @@ For buffers:
 Disable keyboard-escape-quit as it always closes windows in a nasty way:
 
 #+begin_src emacs-lisp
-  (keymap-global-unset "<escape>" #'keyboard-escape-quit)
+;; Don't forget to handle minibuffer with "minibuffer-keyboard-quit".
+(global-set-key (kbd "<escape>") 'keyboard-quit)
+
+;; Avoid entering the ~repeat-complex-cammand~ when quiting everything with ~C-x~.
+(global-unset-key (kbd "C-x <escape> <escape>")) ; repeat-complex-command
+
 #+end_src
-** MacOS
+*** Change from horizotanl split to vertical split
+#+begin_src emacs-lisp
+;; https://stackoverflow.com/questions/14881020/emacs-shortcut-to-switch-from-a-horizontal-split-to-a-vertical-split-in-one-move
+(defun toggle-window-split ()
+  (interactive)
+  (if (= (count-windows) 2)
+      (let* ((this-win-buffer (window-buffer))
+         (next-win-buffer (window-buffer (next-window)))
+         (this-win-edges (window-edges (selected-window)))
+         (next-win-edges (window-edges (next-window)))
+         (this-win-2nd (not (and (<= (car this-win-edges)
+                     (car next-win-edges))
+                     (<= (cadr this-win-edges)
+                     (cadr next-win-edges)))))
+         (splitter
+          (if (= (car this-win-edges)
+             (car (window-edges (next-window))))
+          'split-window-horizontally
+        'split-window-vertically)))
+    (delete-other-windows)
+    (let ((first-win (selected-window)))
+      (funcall splitter)
+      (if this-win-2nd (other-window 1))
+      (set-window-buffer (selected-window) this-win-buffer)
+      (set-window-buffer (next-window) next-win-buffer)
+      (select-window first-win)
+      (if this-win-2nd (other-window 1))))))
+
+(global-set-key (kbd "C-x |") 'toggle-window-split)
+#+end_src
+
+**** MacOS
 #+begin_src emacs-lisp
 (setq mac-command-modifier      'super
       ns-command-modifier       'meta
@@ -3772,7 +3902,7 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
       ns-right-option-modifier  'none)
 #+end_src
 
-** toggles
+**** toggles
 
 #+begin_src emacs-lisp
 (keymap-global-set "M-g t o" #'olivetti-mode)
@@ -3785,54 +3915,104 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 #+end_src
 
-** COMMENT inserts
+**** COMMENT inserts
 #+begin_src emacs-lisp
-  (+map!
-   ;; ====== Inserts ======
-   "ii"     #'org-download-clipboard
-   "ioc"    #'dorneanu/org-insert-link-from-clipboard
-   "iot"    #'counsel-org-tag)
+(+map!
+ ;; ====== Inserts ======
+ "ii"     #'org-download-clipboard
+ "ioc"    #'dorneanu/org-insert-link-from-clipboard
+ "iot"    #'counsel-org-tag)
 #+end_src
 
-** hydras
+**** hydras
 #+begin_src emacs-lisp
 (keymap-global-set "M-g t . w" #'+window-adjust-size-transient)
 #+end_src
-** jumps
+**** jumps
 #+begin_src emacs-lisp
 (keymap-global-set "C-x j c" #'avy-goto-char)
 (keymap-global-set "C-x j w" #'avy-goto-word-1)
+(keymap-global-set "C-x j t" #'centaur-tabs-ace-jump)
 ;; This doesn't fit here
 (keymap-global-set "M-j" #'crux-top-join-line)
 #+end_src
 
-** projects
+**** projects
 #+begin_src emacs-lisp
 (keymap-global-set "M-g 0" #'dirvish-side)
 (keymap-global-set "C-M-0" #'indent-region)
 #+end_src
 
-** COMMENT searches
+**** COMMENT searches
 #+begin_src emacs-lisp
 (+map!
-  ;; ====== Searches ======
-  "srd"   #'my/rg-dotemacs
-  "srh"   #'my/rg-org-roam-directory-huberman
-  "sro"   #'my/rg-org-roam-directory)
+ ;; ====== Searches ======
+ "srd"   #'my/rg-dotemacs
+ "srh"   #'my/rg-org-roam-directory-huberman
+ "sro"   #'my/rg-org-roam-directory)
 #+end_src
-** COMMENT tabs
+**** COMMENT tabs
 #+begin_src emacs-lisp
 (+map!
-  ;; ====== Tabs ======
-  "TAB SPC"   #'tab-bar-switch-to-recent-tab)
+ ;; ====== Tabs ======
+ "TAB SPC"   #'tab-bar-switch-to-recent-tab)
 #+end_src
-** COMMENT evil-org
+**** COMMENT evil-org
 #+begin_src emacs-lisp
 (with-eval-after-load 'evil-org-agenda
   ;; Disable SPC key in org-agenda
   ;; (define-key org-agenda-mode-map (kbd "SPC") nil)
   (evil-define-key 'motion org-agenda-mode-map (kbd "SPC") nil))
 #+end_src
+**** COMMENT org-mode
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  (define-prefix-command 'dorneanu/my-org-mode-map)
+  (define-key org-mode-map (kbd "C-c o") 'dorneanu/my-org-mode-map)
+
+  (defun dorneanu/my-org-key (key)
+    "Create a key sequence for org-mode custom bindings."
+    (kbd (concat "C-c o " key)))
+
+  ;; Basic structure
+  (define-key org-mode-map (dorneanu/my-org-key "i h") #'org-insert-heading)
+  (define-key org-mode-map (dorneanu/my-org-key "i s") #'org-insert-subheading)
+  (define-key org-mode-map (dorneanu/my-org-key "i t") #'org-insert-todo-heading)
+  (define-key org-mode-map (dorneanu/my-org-key "i c") #'dorneanu/org-insert-link-from-clipboard)
+
+  ;; Clocking
+  (define-key org-mode-map (dorneanu/my-org-key "c i") #'org-clock-in)
+  (define-key org-mode-map (dorneanu/my-org-key "c o") #'org-clock-out)
+  (define-key org-mode-map (dorneanu/my-org-key "c m") #'dorneanu/org-clock-enter-manually)
+
+  ;; Navigation
+  (define-key org-mode-map (dorneanu/my-org-key "n n") #'org-next-visible-heading)
+  (define-key org-mode-map (dorneanu/my-org-key "n p") #'org-previous-visible-heading)
+
+  ;; Todo state
+  (define-key org-mode-map (dorneanu/my-org-key "t t") #'org-todo)
+  (define-key org-mode-map (dorneanu/my-org-key "t d") #'org-deadline)
+  (define-key org-mode-map (dorneanu/my-org-key "t s") #'org-schedule)
+
+  ;; Tags and properties
+  (define-key org-mode-map (dorneanu/my-org-key ":") #'org-set-tags-command)
+  (define-key org-mode-map (dorneanu/my-org-key "p") #'org-set-property)
+
+  ;; Formatting
+  ;; (define-key org-mode-map (dorneanu/my-org-key "b") #'org-bold)
+  ;; (define-key org-mode-map (dorneanu/my-org-key "i") #'org-italic)
+  ;; (define-key org-mode-map (dorneanu/my-org-key "u") #'org-underline)
+  (define-key org-mode-map (dorneanu/my-org-key "ff") #'org-emphasize)
+
+  ;; Export
+  (define-key org-mode-map (dorneanu/my-org-key "e e") #'org-export-dispatch)
+
+  ;; Misc
+  (define-key org-mode-map (dorneanu/my-org-key "a") #'org-archive-subtree)
+  (define-key org-mode-map (dorneanu/my-org-key "r") #'org-refile)
+  (define-key org-mode-map (dorneanu/my-org-key "l") #'org-insert-link))
+#+end_src
+
 * Media
 ** empv
 Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
@@ -3869,8 +4049,47 @@ Basic configuration
 (use-package org
   :straight (:type built-in)
   :hook ((org-mode . toggle-truncate-lines))
+  :bind (
+         :map org-mode-map
+         ;; Basic structure
+         ("C-c o i h" . org-insert-heading)
+         ("C-c o i s" . org-insert-subheading)
+         ("C-c o i t" . org-insert-todo-heading)
+         ("C-c o i c" . dorneanu/org-insert-link-from-clipboard)
+
+         ;; Clocking
+         ("C-c o c i" . org-clock-in)
+         ("C-c o c o" . org-clock-out)
+         ("C-c o c m" . dorneanu/org-clock-enter-manually)
+
+         ;; Navigation
+         ("C-c o n n" . org-next-visible-heading)
+         ("C-c o n p" . org-previous-visible-heading)
+
+         ;; Todo state
+         ("C-c o t t" . org-todo)
+         ("C-c o t d" . org-deadline)
+         ("C-c o t s" . org-schedule)
+
+         ;; Tags and properties
+         ("C-c o :" . org-set-tags-command)
+         ("C-c o p" . org-set-property)
+
+         ;; Formatting
+         ;; ("C-c o b" . org-bold)
+         ;; ("C-c o i" . org-italic)
+         ;; ("C-c o u" . org-underline)
+         ("C-c o f f" . org-emphasize)
+
+         ;; Export
+         ("C-c o e e" . org-export-dispatch)
+
+         ;; Misc
+         ("C-c o a" . org-archive-subtree)
+         ("C-c o r" . org-refile)
+         ("C-c o l" . org-insert-link))
   :custom
-  (org-auto-align-tags nil)
+  (org-auto-align-tags t)
   (org-edit-src-content-indentation t) ; indent the content of src blocks
   (org-edit-src-turn-on-auto-save t) ; auto-save org-edit-src
   (org-fontify-quote-and-verse-blocks t)
@@ -3903,7 +4122,7 @@ Basic configuration
         org-src-fontify-natively           t
         org-src-tab-acts-natively          t
         org-src-preserve-indentation       t
-        org-adapt-indentation              nil
+        org-adapt-indentation              t
         org-log-done                       'time
         org-log-into-drawer                nil     ;; Does this make sense?
         org-directory                      "~/repos/priv/org/"
@@ -3921,7 +4140,7 @@ Basic configuration
            "DONE(d)"
            "CANCELED(c)")
           (sequence
-           "PROJ(p)"
+           "PROJ(P)"
            "MEETING(m)"
            "REVIEW(r)"
            "IDEA(i)")))
@@ -3947,6 +4166,7 @@ Basic configuration
                      (lambda (f) (concat org-directory f))
                      '("inbox.org"
                        "work.org.gpg"
+                       "sap.org.gpg"
                        "private.org.gpg"
                        "projects.org.gpg"))
 
@@ -4014,6 +4234,10 @@ Basic configuration
   ;;             (display-line-numbers-mode 0)))
   )
 #+end_src
+
+#+results:
+: t
+
 ** org-super-agenda
 Define custom org agenda commands.
 Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
