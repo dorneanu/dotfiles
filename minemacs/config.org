@@ -842,6 +842,19 @@ Further functions:
     (vertico-multiform-mode 1))
 
 #+end_src
+*** vertico-posframe
+#+begin_src emacs-lisp
+(use-package vertico-posframe
+  :straight t
+  :demand t
+  ;; :hook (vertico-mode . vertico-posframe-mode)
+  :config
+  (vertico-posframe-mode 1)
+  (setq vertico-posframe-border-width 2
+        vertico-posframe-parameters '((internal-border-width . 2)))
+  ;; (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe)))
+  )
+#+end_src
 * Programming
 :properties:
 :header-args:emacs-lisp: :tangle ~/.minemacs.d/config.el
@@ -1558,8 +1571,8 @@ Install additional themes:
 ** alpha-background
 #+begin_src emacs-lisp
   ;; From https://www.emacswiki.org/emacs/TransparentEmacs
-  (set-frame-parameter (selected-frame) 'alpha '(95 . 70))
-  (add-to-list 'default-frame-alist '(alpha . (95 . 70)))
+  (set-frame-parameter (selected-frame) 'alpha '(95 . 90))
+  (add-to-list 'default-frame-alist '(alpha . (95 . 90)))
 
   (defun dorneanu/toggle-transparency ()
     (interactive)
@@ -1571,7 +1584,7 @@ Install additional themes:
                       ;; Also handle undocumented (<active> <inactive>) form.
                       ((numberp (cadr alpha)) (cadr alpha)))
                 100)
-           '(95 . 70) '(100 . 100)))))
+           '(95 . 90) '(100 . 100)))))
 #+end_src
 ** COMMENT spacious-padding
 Make the echo / minibuffer area smaller:
@@ -1581,19 +1594,21 @@ Make the echo / minibuffer area smaller:
       (plist-put spacious-padding-widths :internal-border-width 1))
 #+end_src
 
-** COMMENT solaire-mode
+** solaire-mode
 I'm still not sure if I like it
 #+begin_src emacs-lisp
   (use-package solaire-mode
-    :straight t)
+    :straight t
+    :init
+    (solaire-global-mode))
 #+end_src
-** display-line-numbers
+** COMMENT display-line-numbers
 Don't use relative numbers
 #+begin_src emacs-lisp
   (with-eval-after-load 'display-line-numbers
     (setq display-line-numbers-type 'absolute))
 #+end_src
-** treemacs
+** COMMENT treemacs
 #+begin_src emacs-lisp
   (use-package treemacs
     :straight t
@@ -1626,7 +1641,7 @@ Don't use relative numbers
     :straight t
     :demand t)
 #+end_src
-** powerline
+** COMMENT powerline
 #+begin_src emacs-lisp
 (use-package powerline
   :straight t
