@@ -1502,6 +1502,26 @@ modifications.
   :config
   (setq code-review-auth-login-marker 'forge))
 #+end_src
+*** diff-hl
+#+begin_src emacs-lisp
+(use-package diff-hl
+  :init
+  (global-diff-hl-mode)
+  :config
+  ;; Added in https://github.com/dgutov/diff-hl/pull/207
+  (setq diff-hl-update-async t)
+  (diff-hl-flydiff-mode +1)
+
+  ;; Automatic diff-hl-margin-mode in terminal.
+  ;; See https://github.com/dgutov/diff-hl/issues/155.
+  (add-hook 'diff-hl-mode-on-hook
+            (lambda ()
+              (unless (display-graphic-p)
+                (diff-hl-margin-local-mode))))
+  :hook
+  (magit-pre-refresh . diff-hl-magit-pre-refresh)
+  (magit-post-refresh . diff-hl-magit-post-refresh))
+#+end_src
 
 * Buffer Management
 :properties:
@@ -1785,7 +1805,7 @@ I still use the mouse for scrolling, changing frame sizes:
   (xterm-mouse-mode 1))
 
 ;; Automatically focus frame
-(setq mouse-autoselect-window nil)
+(setq mouse-autoselect-window t)
 
 ;; Some keybindings
 (global-set-key (kbd "C-S-<wheel-up>") 'enlarge-window-horizontally)
