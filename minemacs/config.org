@@ -1494,23 +1494,38 @@ modifications.
   :straight t
   :after magit)
 #+end_src
-*** code-review
+*** COMMENT code-review
+Not working for now
 #+begin_src emacs-lisp
 (use-package code-review
-  :straight t
-  :after magit
+  :straight (code-review :host github
+                         :repo "wandersoncferreira/code-review"
+                         :commit "26f426e99221a1f9356aabf874513e9105b68140")
   :config
-  (setq code-review-auth-login-marker 'forge))
+  (setq code-review-auth-login-marker 'forge)
+  )
+
+(use-package closql
+  :straight (closql :host github
+                    :repo "magit/closql"
+                    :commit "0a7226331ff1f96142199915c0ac7940bac4afdd"))
+
+;; (use-package code-review
+;;   :load-path "~/.minemacs.d/projects/code-review/"
+;;   :after magit
+;;   :config
+;;   (setq code-review-auth-login-marker 'forge))
 #+end_src
+
 *** diff-hl
 #+begin_src emacs-lisp
 (use-package diff-hl
   :init
-  (global-diff-hl-mode)
+  (global-diff-hl-mode -1)
   :config
   ;; Added in https://github.com/dgutov/diff-hl/pull/207
   (setq diff-hl-update-async t)
-  (diff-hl-flydiff-mode +1)
+  ;; (diff-hl-flydiff-mode +1)
 
   ;; Automatic diff-hl-margin-mode in terminal.
   ;; See https://github.com/dgutov/diff-hl/issues/155.
@@ -1530,20 +1545,20 @@ modifications.
 ** popper
 Used for popups (eshell, scratch buffer etc.)
 #+begin_src emacs-lisp
-  (use-package popper
-    :straight t
-    :bind (("C-#"   . popper-toggle)
-           ("M-#"   . popper-cycle)
-           ("C-M-#" . popper-toggle-type))
-    :init
-    (setq popper-reference-buffers
-          '("\\*Messages\\*"
-            "Output\\*$"
-            "\\*Async Shell Command\\*"
-            help-mode
-            compilation-mode))
-    (popper-mode +1)
-    (popper-echo-mode +1))                ; For echo area hints
+(use-package popper
+  :straight t
+  :bind (("C-#"   . popper-toggle)
+         ("M-#"   . popper-cycle)
+         ("C-M-#" . popper-toggle-type))
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          "\\*Async Shell Command\\*"
+          help-mode
+          compilation-mode))
+  (popper-mode +1)
+  (popper-echo-mode +1))                ; For echo area hints
 #+end_src
 * UI
 :properties:
@@ -1590,76 +1605,76 @@ Install additional themes:
 #+end_src
 ** alpha-background
 #+begin_src emacs-lisp
-  ;; From https://www.emacswiki.org/emacs/TransparentEmacs
-  (set-frame-parameter (selected-frame) 'alpha '(95 . 90))
-  (add-to-list 'default-frame-alist '(alpha . (95 . 90)))
+;; From https://www.emacswiki.org/emacs/TransparentEmacs
+(set-frame-parameter (selected-frame) 'alpha '(95 . 90))
+(add-to-list 'default-frame-alist '(alpha . (95 . 90)))
 
-  (defun dorneanu/toggle-transparency ()
-    (interactive)
-    (let ((alpha (frame-parameter nil 'alpha)))
-      (set-frame-parameter
-       nil 'alpha
-       (if (eql (cond ((numberp alpha) alpha)
-                      ((numberp (cdr alpha)) (cdr alpha))
-                      ;; Also handle undocumented (<active> <inactive>) form.
-                      ((numberp (cadr alpha)) (cadr alpha)))
-                100)
-           '(95 . 90) '(100 . 100)))))
+(defun dorneanu/toggle-transparency ()
+  (interactive)
+  (let ((alpha (frame-parameter nil 'alpha)))
+    (set-frame-parameter
+     nil 'alpha
+     (if (eql (cond ((numberp alpha) alpha)
+                    ((numberp (cdr alpha)) (cdr alpha))
+                    ;; Also handle undocumented (<active> <inactive>) form.
+                    ((numberp (cadr alpha)) (cadr alpha)))
+              100)
+         '(95 . 90) '(100 . 100)))))
 #+end_src
 ** COMMENT spacious-padding
 Make the echo / minibuffer area smaller:
 
 #+begin_src emacs-lisp
-  (with-eval-after-load 'spacious-padding
-      (plist-put spacious-padding-widths :internal-border-width 1))
+(with-eval-after-load 'spacious-padding
+    (plist-put spacious-padding-widths :internal-border-width 1))
 #+end_src
 
 ** solaire-mode
 I'm still not sure if I like it
 #+begin_src emacs-lisp
-  (use-package solaire-mode
-    :straight t
-    :init
-    (solaire-global-mode))
+(use-package solaire-mode
+  :straight t
+  :init
+  (solaire-global-mode))
 #+end_src
 ** COMMENT display-line-numbers
 Don't use relative numbers
 #+begin_src emacs-lisp
-  (with-eval-after-load 'display-line-numbers
-    (setq display-line-numbers-type 'absolute))
+(with-eval-after-load 'display-line-numbers
+  (setq display-line-numbers-type 'absolute))
 #+end_src
 ** COMMENT treemacs
 #+begin_src emacs-lisp
-  (use-package treemacs
-    :straight t
-    :custom
-    (treemacs-persist-file (concat minemacs-local-dir "treemacs/persist.el"))
-    (treemacs-last-error-persist-file (concat minemacs-local-dir "treemacs/last-error-persist.el"))
-    (treemacs-width 40)
-    :config
-    ;; Use the same height for the root node (project directory)
-    (set-face-attribute 'treemacs-root-face nil :height 1.0))
+(use-package treemacs
+  :straight t
+  :custom
+  (treemacs-persist-file (concat minemacs-local-dir "treemacs/persist.el"))
+  (treemacs-last-error-persist-file (concat minemacs-local-dir "treemacs/last-error-persist.el"))
+  (treemacs-width 40)
+  :config
+  ;; Use the same height for the root node (project directory)
+  (set-face-attribute 'treemacs-root-face nil :height 1.0))
 
-  (use-package treemacs-nerd-icons
-    :straight t
-    :after treemacs nerd-icons
-    :demand t
-    :config
-    (treemacs-load-theme "nerd-icons"))
+(use-package treemacs-nerd-icons
+  :straight t
+  :after treemacs nerd-icons
+  :demand t
+  :config
+  (treemacs-load-theme "nerd-icons"))
 
-  (use-package treemacs-evil
-    :straight t
-    :after (evil))
+(use-package treemacs-evil
+  :straight t
+  :after (evil))
 
-  (use-package treemacs-projectile
-    :straight t
-    :after (treemacs))
+(use-package treemacs-projectile
+  :straight t
+  :after (treemacs))
 #+end_src
 ** visual-fill-column
 #+begin_src emacs-lisp
-  (use-package visual-fill-column
-    :straight t
-    :demand t)
+(use-package visual-fill-column
+  :straight t
+  :demand t)
 #+end_src
 ** COMMENT powerline
 #+begin_src emacs-lisp
@@ -1735,6 +1750,12 @@ Disable tab-line-mode for specific modes/buffers:
         centaur-tabs-plain-icons t
         x-underline-at-descent-line t
         centaur-tabs-left-edge-margin nil)
+  ;; Exclude some buffers
+  (setq centaur-tabs-excluded-prefixes
+        (append centaur-tabs-excluded-prefixes
+                '("*ginko-output*"
+                  "*new-prefix2*"
+                  "*new-prefix3*")))
   (centaur-tabs-change-fonts (face-attribute 'default :font) 110)
   (centaur-tabs-headline-match)
   (centaur-tabs-enable-buffer-alphabetical-reordering)
@@ -1790,6 +1811,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (org-agenda-mode . centaur-tabs-local-mode)
   (prog-mode . centaur-tabs-mode)
   (eshell-mode . centaur-tabs-local-mode)
+  (popper-mode . centaur-tabs-local-mode)
   ;; :bind
   ;; ("s-1" . centaur-tabs-backward)
   ;; ("s-2" . centaur-tabs-forward)
@@ -1827,93 +1849,93 @@ I still use the mouse for scrolling, changing frame sizes:
 *** swiper
 Extended ~isearch~
 #+begin_src emacs-lisp
-  (use-package swiper
-    :straight t
-    :bind (("M-g s s" . swiper)
-           ("M-g s ."   . swiper-all-thing-at-point))
-    :config
-    ;; Recenter afer jump
-    (setq swiper-action-center t))
+(use-package swiper
+  :straight t
+  :bind (("M-g s s" . swiper)
+         ("M-g s ."   . swiper-all-thing-at-point))
+  :config
+  ;; Recenter afer jump
+  (setq swiper-action-center t))
 #+end_src
 
 *** rg.el
 #+begin_src emacs-lisp
-  (use-package rg
-    :straight t
-    :config
-    (rg-enable-default-bindings)
-    ;; Not sure if I really need this
-    (rg-define-toggle "--multiline --multiline-dotall" "u")
-    (rg-define-toggle "--word-regexp" "w")
-    (rg-define-toggle "--files-with-matches" "L")
+(use-package rg
+  :straight t
+  :config
+  (rg-enable-default-bindings)
+  ;; Not sure if I really need this
+  (rg-define-toggle "--multiline --multiline-dotall" "u")
+  (rg-define-toggle "--word-regexp" "w")
+  (rg-define-toggle "--files-with-matches" "L")
 
-    ;; Highlight longer
-    (setq next-error-highlight-no-select t)
+  ;; Highlight longer
+  (setq next-error-highlight-no-select t)
 
-    ;; Custom searches
-    ;; search in org roam folder
-    (rg-define-search my/rg-org-roam-directory
-                      :query ask
-                      :format regexp
-                      :files "everything"
-                      :dir org-roam-directory
-                      :confirm prefix)
+  ;; Custom searches
+  ;; search in org roam folder
+  (rg-define-search my/rg-org-roam-directory
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir org-roam-directory
+    :confirm prefix)
 
-    ;; search in org roam folder where I have transcripts from the Huberman Lab
-    (rg-define-search my/rg-org-roam-directory-huberman
-                      :query ask
-                      :format regexp
-                      :files "everything"
-                      :dir (concat org-roam-directory "/rez/huberman-lab")
-                      :confirm prefix)
+  ;; search in org roam folder where I have transcripts from the Huberman Lab
+  (rg-define-search my/rg-org-roam-directory-huberman
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir (concat org-roam-directory "/rez/huberman-lab")
+    :confirm prefix)
 
-    (setq dotemacs-directory "/cs/priv/repos/dotemacs")
-    (rg-define-search my/rg-dotemacs
-                      :query ask
-                      :format regexp
-                      :files "everything"
-                      :dir dotemacs-directory
-                      :confirm prefix)
+  (setq dotemacs-directory "/cs/priv/repos/dotemacs")
+  (rg-define-search my/rg-dotemacs
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir dotemacs-directory
+    :confirm prefix)
 
-    (add-hook 'next-error-hook #'recenter)
-    (add-hook 'next-error-hook #'focus-mode))
+  (add-hook 'next-error-hook #'recenter)
+  (add-hook 'next-error-hook #'focus-mode))
 #+end_src
 
 Configure custom searches
 #+begin_src emacs-lisp
-  ;; search in org roam folder
-  (rg-define-search my/rg-org-roam-directory
-                    :query ask
-                    :format regexp
-                    :files "everything"
-                    :dir org-roam-directory
-                    :confirm prefix)
+;; search in org roam folder
+(rg-define-search my/rg-org-roam-directory
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir org-roam-directory
+  :confirm prefix)
 
-  ;; search in org roam folder where I have transcripts from the Huberman Lab
-  (rg-define-search my/rg-org-roam-directory-huberman
-                    :query ask
-                    :format regexp
-                    :files "everything"
-                    :dir (concat org-roam-directory "/rez/huberman-lab")
-                    :confirm prefix)
+;; search in org roam folder where I have transcripts from the Huberman Lab
+(rg-define-search my/rg-org-roam-directory-huberman
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir (concat org-roam-directory "/rez/huberman-lab")
+  :confirm prefix)
 
-  (setq dotemacs-directory "/cs/priv/repos/dotemacs")
-  (rg-define-search my/rg-dotemacs
-                    :query ask
-                    :format regexp
-                    :files "everything"
-                    :dir dotemacs-directory
-                    :confirm prefix)
+(setq dotemacs-directory "/cs/priv/repos/dotemacs")
+(rg-define-search my/rg-dotemacs
+  :query ask
+  :format regexp
+  :files "everything"
+  :dir dotemacs-directory
+  :confirm prefix)
 #+end_src
 
 ** COMMENT evil
 *** evil-surround
 #+begin_src emacs-lisp
-  (use-package evil-surround
-    :straight t
-    :demand t
-    :config
-    (global-evil-surround-mode 1))
+(use-package evil-surround
+  :straight t
+  :demand t
+  :config
+  (global-evil-surround-mode 1))
 #+end_src
 ** meow
 #+begin_src emacs-lisp
@@ -1941,6 +1963,8 @@ Configure custom searches
    '("9" . tab-switch)
    '("0" . tab-bar-switch-to-recent-tab)
    '("/" . meow-keypad-describe-key)
+   '("bi" . ibuffer)
+   '("om" . magit)
    '("?" . meow-cheatsheet))
   (meow-normal-define-key
    '("0" . meow-expand-0)
@@ -2244,18 +2268,20 @@ Configure custom searches
 #+begin_src emacs-lisp
 (use-package dirvish
   :straight t
+  :after dired
   :init
   (dirvish-override-dired-mode)
   :custom
-  (dirvish-attributes '(subtree-state nerd-icons file-size))
-  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
-   '(("r" "~/work/repos"   "Repos (work)")
-     ("b" "~/sync/blog"    "Blog")))
+  (dirvish-attributes '(subtree-state file-size vc-state))
+  ;; (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+  ;;  '(("r" "~/work/repos"   "Repos (work)")
+  ;;    ("b" "~/sync/blog"    "Blog")))
   :config
   (setq dirvish-side-width 40)
   ;; (setq dirvish-attributes '(vc-state subtree-state all-the-icons collapse git-msg file-time file-size))
   :bind (("C-c a d" . dirvish-side)
-         :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+         :map
+         dirvish-mode-map ; Dirvish inherits `dired-mode-map'
          ("a"   . dirvish-quick-access)
          ("f"   . dirvish-file-info-menu)
          ("y"   . dirvish-yank-menu)
@@ -2996,6 +3022,110 @@ For ChatGPT:
 
 #+results:
 : gptel-send
+*** TODO COMMENT emacs-copilot
+#+begin_src emacs-lisp
+(use-package emacs-copilot
+  :straight (:type git :host github :repo "jart/emacs-copilot"))
+
+(defcustom copilot-bin
+  "/bin/sh"
+  "Path of llamafile executable with LLM weights."
+  :type 'string
+  :group 'copilot)
+
+(defun copilot-complete ()
+  (interactive)
+  (let* ((spot (point))
+         (inhibit-quit t)
+         (curfile (buffer-file-name))
+         (cash (concat curfile ".cache"))
+         (hist (concat curfile ".prompt"))
+         (lang (file-name-extension curfile))
+
+         ;; extract current line, to left of caret
+         ;; and the previous line, to give the llm
+         (code (save-excursion
+                 (dotimes (i 2)
+                   (when (> (line-number-at-pos) 1)
+                     (previous-line)))
+                 (beginning-of-line)
+                 (buffer-substring-no-properties (point) spot)))
+
+         ;; create new prompt for this interaction
+         (system "\
+You are an Emacs code generator. \
+Writing comments is forbidden. \
+Writing test code is forbidden. \
+Writing English explanations is forbidden. ")
+         (prompt (format
+                  "[INST]%sGenerate %s code to complete:[/INST]\n```%s\n%s"
+                  (if (file-exists-p cash) "" system) lang lang code)))
+
+    ;; iterate text deleted within editor then purge it from prompt
+    (when kill-ring
+      (save-current-buffer
+        (find-file hist)
+        (dotimes (i 10)
+          (let ((substring (current-kill i t)))
+            (when (and substring (string-match-p "\n.*\n" substring))
+              (goto-char (point-min))
+              (while (search-forward substring nil t)
+                (delete-region (- (point) (length substring)) (point))))))
+        (save-buffer 0)
+        (kill-buffer (current-buffer))))
+
+    ;; append prompt for current interaction to the big old prompt
+    (write-region prompt nil hist 'append 'silent)
+
+    ;; run llamafile streaming stdout into buffer catching ctrl-g
+    (with-local-quit
+      (call-process "ape"
+                    "/Users/I748851/bin/mistral-7b-instruct-v0.2.Q4_0.llamafile"
+                    nil (list (current-buffer) nil) t
+                    "--prompt-cache" (format "%s" cash)
+                    "--prompt-cache-all"
+                    "--silent-prompt"
+                    "--temp" "0"
+                    "-c" "1024"
+                    "-ngl" "35"
+                    "-r" "```"
+                    "-r" "\n}"
+                    "-f" (format "%s" hist)))
+
+
+    ;; get rid of most markdown syntax
+    (let ((end (point)))
+      (save-excursion
+        (goto-char spot)
+        (while (search-forward "\\_" end t)
+          (backward-char)
+          (delete-backward-char 1 nil)
+          (setq end (- end 1)))
+        (goto-char spot)
+        (while (search-forward "```" end t)
+          (delete-backward-char 3 nil)
+          (setq end (- end 3))))
+
+      ;; append generated code to prompt
+      (write-region spot end hist 'append 'silent))))
+#+end_src
+
+#+results:
+: copilot-complete
+*** ollama
+#+begin_src emacs-lisp
+(use-package ellama
+  :straight t
+  :init
+  ;; setup key bindings
+  (setopt ellama-keymap-prefix "C-c x")
+  ;; language you want ellama to translate to
+  (setopt ellama-language "English")
+  (require 'llm-ollama)
+  (setopt ellama-provider
+		  (make-llm-ollama
+		   :chat-model "codellama" :embedding-model "codellama")))
+#+end_src
 
 ** Feeds
 *** elfeed
