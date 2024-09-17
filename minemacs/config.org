@@ -3127,6 +3127,8 @@ Writing English explanations is forbidden. ")
 		   :chat-model "codellama" :embedding-model "codellama")))
 #+end_src
 
+
+
 ** Feeds
 *** elfeed
 #+begin_src emacs-lisp
@@ -3980,6 +3982,16 @@ I often want to reply without the original message:
     :bind (("C-c go" . browse-at-remote)
            ("C-c gy" . browse-at-remote-kill))
     )
+#+end_src
+** wakatime
+#+begin_src emacs-lisp
+(use-package wakatime-mode
+  :straight t
+  :config
+  (setq
+   wakatime-python-bin "~/.pyenv/versions/emacs/bin/python"
+   wakatime-cli-path "~/.pyenv/versions/emacs/bin/wakatime")
+  (global-wakatime-mode))
 #+end_src
 
 * Keybindings
