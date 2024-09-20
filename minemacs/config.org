@@ -459,7 +459,7 @@ This section will be ~tangled~ to ~$HOME/.minemacs.d~
 #+begin_src emacs-lisp
   (use-package cape
     :straight t
-    :demand t
+    :after (corfu)
     :hook ((org-mode . dorneanu/set-org-capf))
     ;; :hook ((prog-mode . dorneanu/set-basic-capf)
     ;;        (text-mode . dorneanu/set-basic-capf)
@@ -578,9 +578,9 @@ Some useful resources:
 
   (corfu-min-width 50)
   (corfu-max-width corfu-min-width)     ; Always have the same width
-  ;; (corfu-count 14)
+  ;; (corfu-count 20)
   ;; (corfu-scroll-margin 4)
-  (corfu-cycle t)
+  (corfu-cycle nil)
   (corfu-preselect 'first)
 
   ;; `nil' means to ignore `corfu-separator' behavior, that is, use the older
@@ -593,8 +593,8 @@ Some useful resources:
   (corfu-quit-at-boundary nil)
   (corfu-separator ?\s)            ; Use space
   (corfu-quit-no-match 'separator) ; Don't quit if there is `corfu-separator' inserted
-  (corfu-preview-current 'insert)  ; Preview first candidate. Insert on input if only one
-  (corfu-preselect-first t)        ; Preselect first candidate?
+  (corfu-preview-current t)  ; Preview first candidate. Insert on input if only one
+  (corfu-preselect-first prompt)        ; Preselect first candidate?
   (lsp-completion-provider :none)       ; Use corfu instead for lsp completions
   :init
   (global-corfu-mode)
@@ -3112,10 +3112,11 @@ Writing English explanations is forbidden. ")
 
 #+results:
 : copilot-complete
-*** ollama
+*** ellama
 #+begin_src emacs-lisp
 (use-package ellama
   :straight t
+  :after eglot
   :init
   ;; setup key bindings
   (setopt ellama-keymap-prefix "C-c x")
