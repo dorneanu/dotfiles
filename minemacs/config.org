@@ -1758,8 +1758,9 @@ Disable tab-line-mode for specific modes/buffers:
                   "*new-prefix3*")))
   (centaur-tabs-change-fonts (face-attribute 'default :font) 110)
   (centaur-tabs-headline-match)
-  (centaur-tabs-enable-buffer-alphabetical-reordering)
+  ;; (centaur-tabs-enable-buffer-alphabetical-reordering)
   ;; (setq centaur-tabs-adjust-buffer-order t)
+  (setq centaur-tabs-adjust-buffer-order 'left)
   (centaur-tabs-mode t)
   ;; (centaur-tabs-group-by-projectile-project)
   (setq uniquify-separator "/")
@@ -1819,6 +1820,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
 #+end_src
+
 ** mouse
 I still use the mouse for scrolling, changing frame sizes:
 
@@ -4807,12 +4809,18 @@ If prefix ARG, copy instead of move."
 (use-package jq-mode
   :straight t)
 
+(use-package ob-mermaid
+  :straight t)
+
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((sql . t)
    (go . t)
+   (plantuml . t)
+   (mermaid . t)
    (shell . t)))
 #+end_src
+
 ** counsel-org-tag
 Use counsel-org-tag (I couldn't find any alternative for consult):
 
