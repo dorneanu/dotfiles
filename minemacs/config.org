@@ -4242,6 +4242,10 @@ Basic configuration
          ("C-c o c o" . org-clock-out)
          ("C-c o c m" . dorneanu/org-clock-enter-manually)
 
+         ;; Demote / Promote
+         ("C-c o d +" . org-do-promote)
+         ("C-c o d -" . org-do-demote)
+
          ;; Navigation
          ("C-c o n n" . org-next-visible-heading)
          ("C-c o n p" . org-previous-visible-heading)
