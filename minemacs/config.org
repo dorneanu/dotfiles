@@ -1224,8 +1224,14 @@ or some I write myself.
 **** ginkgo
 #+begin_src emacs-lisp
 (use-package ginkgo
-  :straight (:type git :host github :repo "garslo/ginkgo-mode"))
+  :straight (:type git :host github :repo "garslo/ginkgo-mode")
+  :init
+  (setq ginkgo-use-pwd-as-test-dir t
+        ginkgo-use-default-keys t))
 #+end_src
+
+#+results:
+
 *** Python
 :end:
 First, we need to set up the main Python mode. With this, we’ll also
@@ -1762,7 +1768,7 @@ Disable tab-line-mode for specific modes/buffers:
   ;; (setq centaur-tabs-adjust-buffer-order t)
   (setq centaur-tabs-adjust-buffer-order 'left)
   (centaur-tabs-mode t)
-  ;; (centaur-tabs-group-by-projectile-project)
+  (centaur-tabs-group-by-projectile-project)
   (setq uniquify-separator "/")
   (setq uniquify-buffer-name-style 'forward)
   (defun centaur-tabs-buffer-groups ()
@@ -2871,6 +2877,8 @@ Add here circled digits like: ②
     :config
     (exec-path-from-shell-initialize))
 #+end_src
+
+
 ** COMMENT crux
 Various useful utilities
 #+begin_src emacs-lisp
@@ -3024,7 +3032,7 @@ For ChatGPT:
 
 #+results:
 : gptel-send
-*** TODO COMMENT emacs-copilot
+*** COMMENT emacs-copilot
 #+begin_src emacs-lisp
 (use-package emacs-copilot
   :straight (:type git :host github :repo "jart/emacs-copilot"))
@@ -3114,6 +3122,16 @@ Writing English explanations is forbidden. ")
 
 #+results:
 : copilot-complete
+*** COMMENT copilot
+#+begin_src emacs-lisp
+(use-package copilot
+  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  :ensure t)
+
+(add-hook 'prog-mode-hook 'copilot-mode)
+(define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+(define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+#+end_src
 *** ellama
 #+begin_src emacs-lisp
 (use-package ellama
