@@ -1,0 +1,617 @@
+#+title: Minimal Emacs — Config
+#+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
+#+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
+#+property: header-args:emacs-lisp+ :results silent
+#+startup: indent overview
+
+* Basics
+** pre-init
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
+:end:
+
+#+begin_src emacs-lisp
+;; Straight
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+#+end_src
+
+** Vertico & Co.
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+
+#+begin_src emacs-lisp
+;; Tip: You can remove the `vertico-mode' use-package and replace it
+;;      with the built-in `fido-vertical-mode'.
+(use-package vertico
+  ;; (Note: It is recommended to also enable the savehist package.)
+  :straight t
+  :defer t
+  :commands vertico-mode
+  :hook (after-init . vertico-mode))
+
+(use-package orderless
+  ;; Vertico leverages Orderless' flexible matching capabilities, allowing users
+  ;; to input multiple patterns separated by spaces, which Orderless then
+  ;; matches in any order against the candidates.
+  :straight t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles partial-completion)))))
+
+(use-package marginalia
+  ;; Marginalia allows Embark to offer you preconfigured actions in more contexts.
+  ;; In addition to that, Marginalia also enhances Vertico by adding rich
+  ;; annotations to the completion candidates displayed in Vertico's interface.
+  :straight t
+  :defer t
+  :commands (marginalia-mode marginalia-cycle)
+  :hook (after-init . marginalia-mode))
+
+(use-package embark
+  ;; Embark is an Emacs package that acts like a context menu, allowing
+  ;; users to perform context-sensitive actions on selected items
+  ;; directly from the completion interface.
+  :straight t
+  :defer t
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package embark-consult
+  :straight t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package consult
+  :straight t
+  :bind (;; C-c bindings in `mode-specific-map'
+         ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)
+         ("C-x b" . consult-buffer)
+         ("C-x 4 b" . consult-buffer-other-window)
+         ("C-x 5 b" . consult-buffer-other-frame)
+         ("C-x t b" . consult-buffer-other-tab)
+         ("C-x r b" . consult-bookmark)
+         ("C-x p b" . consult-project-buffer)
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)
+         ;; M-g bindings in `goto-map'
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)
+         ("M-g g" . consult-goto-line)
+         ("M-g M-g" . consult-goto-line)
+         ("M-g o" . consult-outline)
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings in `search-map'
+         ("M-s d" . consult-find)
+         ("M-s c" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)
+         ("M-s e" . consult-isearch-history)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)
+         ("M-r" . consult-history))
+
+  ;; Enable automatic preview at point in the *Completions* buffer.
+  :hook (completion-list-mode . consult-preview-at-point-mode)
+
+  :init
+  ;; Optionally configure the register formatting. This improves the register
+  (setq register-preview-delay 0.5
+        register-preview-function #'consult-register-format)
+
+  ;; Optionally tweak the register preview window.
+  (advice-add #'register-preview :override #'consult-register-window)
+
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
+  :config
+  (consult-customize
+   consult-theme :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-bookmark consult--source-file-register
+   consult--source-recent-file consult--source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
+  (setq consult-narrow-key "<"))
+#+end_src
+
+* Autocompletion
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+** cape
+#+begin_src emacs-lisp
+  (use-package cape
+    :straight t
+    :defer t
+    :commands (cape-dabbrev cape-file cape-elisp-block)
+    :bind ("C-c p" . cape-prefix-map)
+    :init
+    ;; Add to the global default value of `completion-at-point-functions' which is
+    ;; used by `completion-at-point'.
+    (add-hook 'completion-at-point-functions #'cape-dabbrev)
+    (add-hook 'completion-at-point-functions #'cape-file)
+    (add-hook 'completion-at-point-functions #'cape-elisp-block))
+#+end_src
+** corfu
+#+begin_src emacs-lisp
+  (use-package corfu
+    :straight t
+    :defer t
+    :commands (corfu-mode global-corfu-mode)
+
+    :hook ((prog-mode . corfu-mode)
+           (shell-mode . corfu-mode)
+           (eshell-mode . corfu-mode))
+
+    :custom
+    ;; Hide commands in M-x which do not apply to the current mode.
+    (read-extended-command-predicate #'command-completion-default-include-p)
+    ;; Disable Ispell completion function. As an alternative try `cape-dict'.
+    (text-mode-ispell-word-completion nil)
+    (tab-always-indent 'complete)
+
+    ;; Enable Corfu
+    :config
+    (global-corfu-mode))
+#+end_src
+* Projects
+** project
+#+begin_src emacs-lisp
+  (use-package project
+    :straight t)
+#+end_src
+* Buffer Management
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+** popper
+Used for popups (eshell, scratch buffer etc.)
+#+begin_src emacs-lisp
+  (use-package popper
+    :straight t
+    :bind (("C-#"   . popper-toggle)
+           ("M-#"   . popper-cycle)
+           ("C-M-#" . popper-toggle-type))
+    :init
+    (setq popper-reference-buffers
+          '("\\*Messages\\*"
+            "Output\\*$"
+            "\\*Async Shell Command\\*"
+            help-mode
+            compilation-mode))
+    (popper-mode +1)
+    (popper-echo-mode +1))                ; For echo area hints
+#+end_src
+
+* Editing
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+** meow
+#+begin_src emacs-lisp
+(defun meow-setup ()
+  (interactive)
+  (require 'meow)
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-motion-overwrite-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev)
+   '("<escape>" . ignore))
+  (meow-leader-define-key
+   ;; SPC j/k will run the original command in MOTION state.
+   '("j" . "H-j")
+   '("k" . "H-k")
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . centaur-tabs-backward)
+   '("2" . centaur-tabs-forward)
+   '("3" . crux-switch-to-previous-buffer)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . tab-switch)
+   '("0" . tab-bar-switch-to-recent-tab)
+   '("/" . meow-keypad-describe-key)
+   '("?" . meow-cheatsheet))
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("-" . negative-argument)
+   '(";" . meow-reverse)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("a" . meow-append)
+   '("A" . meow-open-below)
+   '("ä" . meow-kill-whole-line)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-change)
+   '("d" . meow-delete)
+   '("D" . meow-backward-delete)
+   '("e" . meow-next-word)
+   '("E" . meow-next-symbol)
+   '("f" . meow-find)
+   '("g" . meow-cancel-selection)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("i" . meow-insert)
+   '("I" . meow-open-above)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("m" . meow-join)
+   '("n" . meow-search)
+   '("o" . meow-block)
+   ;; '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("q" . meow-quit)
+   '("Q" . meow-goto-line)
+   '("r" . meow-replace)
+   '("R" . meow-swap-grab)
+   '("s" . meow-kill)
+   '("t" . meow-till)
+   '("u" . meow-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-visit)
+   '("w" . meow-mark-word)
+   '("W" . meow-mark-symbol)
+   '("x" . meow-line)
+   '("X" . meow-goto-line)
+   '("y" . meow-save)
+   '("Y" . meow-sync-grab)
+   '("z" . meow-pop-selection)
+   '("'" . repeat)))
+
+(use-package meow
+  :straight t
+  :demand t
+  :config
+  (meow-setup)
+  (meow-global-mode 1))
+#+end_src
+*** meow for org
+#+begin_src emacs-lisp
+;; From https://aatmunbaxi.netlify.app/comp/meow_state_org_speed/
+(setq meow-org-motion-keymap (make-keymap))
+(meow-define-state org-motion
+  "Org-mode structural motion"
+  :lighter "[O]"
+  :keymap meow-org-motion-keymap)
+
+(meow-define-keys 'org-motion
+  '("<escape>" . meow-normal-mode)
+  '("i" . meow-insert-mode)
+  '("g" . meow-normal-mode)
+  '("u" .  meow-undo)
+  ;; Moving between headlines
+  '("k" .  org-previous-visible-heading)
+  '("j" .  org-next-visible-heading)
+  ;; Moving between headings at the same level
+  '("p" .  org-backward-heading-same-level)
+  '("n" .  org-forward-heading-same-level)
+  ;; Moving subtrees themselves
+  '("K" .  org-subtree-up)
+  '("J" .  org-subtree-down)
+  ;; Navigating paragraphs
+  '("0" .  forward-paragraph)
+  '("9" .  backward-paragraph)
+  ;; Subtree de/promotion
+  '("L" .  org-demote-subtree)
+  '("H" .  org-promote-subtree)
+  ;; Completion-style search of headings
+  '("v" .  consult-org-heading)
+  ;; Setting subtree metadata
+  '("l" .  org-set-property)
+  '("t" .  org-todo)
+  '("d" .  org-deadline)
+  '("s" .  org-schedule)
+  '("e" .  org-set-effort)
+  ;; Refiling
+  '("rv" .  +org/refile-to-visible)
+  '("rf" .  +org/refile-to-current-file)
+  '("rr" .  org-refile)
+  ;; Block navigation
+  '("b" .  org-previous-block)
+  '("f" .  org-next-block)
+  ;; Narrowing/widening
+  '("N" .  org-narrow-to-subtree)
+  '("W" .  widen))
+
+(meow-define-keys 'normal
+  '("O" . meow-org-motion-mode))
+#+end_src
+** expand-region
+#+begin_src emacs-lisp
+  (use-package expand-region
+    :straight t
+    :bind
+    (("M-g =" . er/expand-region)
+     ("M-g - " . er/contract-region)
+     :map mode-specific-map
+     :prefix-map region-prefix-map
+     :prefix "r"
+     ("(" . er/mark-inside-pairs)
+     (")" . er/mark-outside-pairs)
+     ("'" . er/mark-inside-quotes)
+     ([34] . er/mark-outside-quotes) ; it's just a quotation mark
+     ("o" . er/mark-org-parent)
+     ("u" . er/mark-url)
+     ("b" . er/mark-org-code-block)
+     ("." . er/mark-method-call)
+     (">" . er/mark-next-accessor)
+     ("w" . er/mark-word)
+     ("d" . er/mark-defun)
+     ("e" . er/mark-email)
+     ("," . er/mark-symbol)
+     ("<" . er/mark-symbol-with-prefix)
+     (";" . er/mark-comment)
+     ("s" . er/mark-sentence)
+     ("S" . er/mark-text-sentence)
+     ("p" . er/mark-paragraph)
+     ("P" . er/mark-text-paragraph)))
+#+end_src
+** olivetti
+#+begin_src emacs-lisp
+  (use-package olivetti
+    :straight t
+    :custom
+    (olivetti-body-width 0.68))
+#+end_src
+** undo-fu
+#+begin_src emacs-lisp
+  (use-package undo-fu
+    :straight t
+    :commands (undo-fu-only-undo
+               undo-fu-only-redo
+               undo-fu-only-redo-all
+               undo-fu-disable-checkpoint)
+    :custom
+    ;; 3 times the default values
+    (undo-limit (* 3 160000))
+    (undo-strong-limit (* 3 240000)))
+
+  (use-package undo-fu-session
+    :straight t
+    :config
+    (undo-fu-session-global-mode))
+#+end_src
+* Programming
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+** Languages
+*** Golang
+#+begin_src emacs-lisp
+  (use-package company-go
+    :straight t
+    :after (company go-mode))
+
+  (use-package go-mode
+    :straight t
+    :mode "\\.go\\'"
+    ;; :hook
+    ;; ;; (before-save . gofmt-before-save)
+    ;; (go-mode . gofmt-before-save)
+    :bind (:map go-mode-map
+                ("M-?" . godoc-at-point)
+                ("M-." . xref-find-definitions)
+                ("M-_" . xref-find-references)
+                ;; ("M-*" . pop-tag-mark) ;; Jump back after godef-jump
+                ("C-c m r" . go-run))
+    :custom
+    (gofmt-command "goimports"))
+
+  ;; Setup capf
+  (add-hook 'go-ts-mode-hook (lambda ()
+                               (setq-local completion-at-point-functions
+                                           (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+  (add-hook 'go-mode-hook (lambda ()
+                            (setq-local completion-at-point-functions
+                                        (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+
+  ;; (add-hook 'go-mode-hook (lambda ()
+  ;;                         (flycheck-add-next-checker 'golangci-lint)
+  ;;                         (flycheck-add-next-checker 'go-vet)))
+
+  (use-package gotest
+    :straight t
+    :after go-mode
+    :bind (:map go-mode-map
+                ("C-c t f" . go-test-current-file)
+                ("C-c t t" . go-test-current-test)
+                ("C-c t j" . go-test-current-project)
+                ("C-c t b" . go-test-current-benchmark)
+                ("C-c t c" . go-test-current-coverage)
+                ("C-c t x" . go-run)))
+
+  (use-package go-guru
+    :straight t
+    :hook
+    (go-mode . go-guru-hl-identifier-mode))
+
+  ;; (use-package go-projectile
+  ;;   :straight t
+  ;;   :after (projectile go-mode))
+
+  (use-package flycheck-golangci-lint
+    :straight t
+    :hook
+    (go-mode . flycheck-golangci-lint-setup))
+
+  (use-package go-eldoc
+    :straight t
+    :hook
+    (go-mode . go-eldoc-setup))
+
+  (use-package go-tag
+    :straight t
+    :bind (:map go-mode-map
+                ("C-c t a" . go-tag-add)
+                ("C-c t r" . go-tag-remove))
+    :init (setq go-tag-args (list "-transform" "camelcase")))
+
+  (use-package go-fill-struct
+    :straight t)
+
+  (use-package go-impl
+    :straight t)
+#+end_src
+**** ginkgo
+#+begin_src emacs-lisp
+(use-package ginkgo
+  :straight (:type git :host github :repo "garslo/ginkgo-mode"))
+#+end_src
+** LSP
+*** eglot
+#+begin_src emacs-lisp
+  (use-package eglot
+    :straight t
+    :commands (eglot
+               eglot-rename
+               eglot-ensure
+               eglot-rename
+               eglot-format-buffer)
+    :hook (eglot-managed-mode . eglot-inlay-hints-mode)
+    :custom
+    (eglot-autoshutdown t) ; shutdown after closing the last managed buffer
+    (eglot-sync-connect 0) ; async, do not block
+    (eglot-extend-to-xref t) ; can be interesting!
+    (eglot-report-progress nil) ; disable annoying messages in echo area!
+    :defer t
+    ;; :config
+    ;; ;; Optimizations
+    ;; (fset #'jsonrpc--log-event #'ignore)
+    ;; (setq jsonrpc-event-hook nil)
+    )
+
+  #+end_src
+** Debugging
+*** COMMENT dape
+#+begin_src emacs-lisp
+(use-package dape
+  :straight t
+  :config
+  ;; Pulse source line (performance hit)
+  ;; (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
+
+  ;; To not display info and/or buffers on startup
+  ;; (remove-hook 'dape-start-hook 'dape-info)
+  (remove-hook 'dape-start-hook 'dape-repl))
+
+;; Enable repeat mode for more ergonomic `dape' use
+(use-package repeat
+  :straight t
+  :config
+  (repeat-mode))
+#+end_src
+
+
+* Misc
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+#+begin_src emacs-lisp
+  ;; Hide warnings and display only errors
+  (setq warning-minimum-level :error)
+
+  (use-package which-key
+    :ensure t
+    :config
+    (which-key-mode))
+
+  (pixel-scroll-precision-mode)
+
+  (display-time-mode)
+  (show-paren-mode +1)  ; Paren match highlighting
+  (winner-mode 1)
+  (pixel-scroll-precision-mode 1)
+
+  ;; Configure Emacs to ask for confirmation before exiting
+  (setq confirm-kill-emacs 'y-or-n-p)
+
+  (use-package uniquify
+    :ensure nil
+    :custom
+    (uniquify-buffer-name-style 'reverse)
+    (uniquify-separator "•")
+    (uniquify-after-kill-buffer-p t)
+    (uniquify-ignore-buffers-re "^\\*"))
+
+  ;; Window dividers separate windows visually. Window dividers are bars that can
+  ;; be dragged with the mouse, thus allowing you to easily resize adjacent
+  ;; windows.
+  ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Window-Dividers.html
+  (add-hook 'after-init-hook #'window-divider-mode)
+#+end_src
