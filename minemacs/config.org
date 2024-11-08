@@ -3,8 +3,6 @@
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 #+property: header-args:emacs-lisp+ :results silent
 #+startup: indent overview
-to:
-Bcc:
 
 * MinEmacs Config
 This section will be ~tangled~ to ~$HOME/.minemacs.d~
