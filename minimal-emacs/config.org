@@ -7,52 +7,64 @@
 Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 
 * Basics
+** pre-early-init
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-early-init.el
+:end:
+#+begin_src emacs-lisp
+  ;;; pre-earlly-init.el --- Pre Early Init -*- no-byte-compile: t; lexical-binding: t; -*-
+
+  ;; Activate debugging
+  (setq minimal-emacs-debug t)
+#+end_src
+
 ** pre-init
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
 :end:
-
+*** straight.el
 #+begin_src emacs-lisp
-;;; pre-init.el --- Pre Init -*- no-byte-compile: t; lexical-binding: t; -*-
+  ;;; pre-init.el --- Pre Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
-(setq
- ;; Add Emacs version and the Git hash to the build directory to avoid problems
- straight-build-dir (format "build-%s%s" emacs-version (if emacs-repository-version (format "-%s" (substring emacs-repository-version 0 8)) ""))
- ;; Use the "develop" branch on straight.el's repo.
- straight-repository-branch "develop"
- ;; Do not slow startup by checking for package modifs, check only on demand
- straight-check-for-modifications '(check-on-save find-when-checking))
+  ;; straight.el options
+  (setq straight-repository-branch "develop"        ; Use develop branch of straight.el
+        straight-use-package-by-default t          ; Make `straight-use-package' the default
+        straight-check-for-modifications '(check-on-save find-when-checking) ; Check for modified files
+        ;; straight-vc-git-default-clone-depth 1      ; Shallow clone to save space
+        straight-enable-use-package-integration t   ; Enable use-package integration
+        straight-cache-autoloads t                 ; Cache autoloads to improve startup time
+        )
 
-;; Bootstrapping straight.el
-;; See: github.com/radian-software/straight.el#bootstrapping-straightel
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+  ;; Bootstrapping straight.el
+  ;; See: github.com/radian-software/straight.el#bootstrapping-straightel
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name
+          "straight/repos/straight.el/bootstrap.el"
+          (or (bound-and-true-p straight-base-dir)
+              user-emacs-directory)))
+        (bootstrap-version 7))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
 
-;; Configure `use-package'
-(unless (require 'use-package nil t)
-  (straight-use-package 'use-package))
+  ;; Configure `use-package'
+  (straight-use-package 'use-package)
 
-;; Fixes eglot problem ("Feature provided by other file: ...")
-(straight-use-package '(project :type built-in))
-(straight-use-package '(xref :type built-in))
+  ;; Enable verbose logging for debugging
+  (setq use-package-verbose t
+        use-package-compute-statistics t  ; Generate loading statistics
+        debug-on-error t)                 ; Show the debugger on errors
 
-(setq
- use-package-verbose t)
-
-#+end_src
+  ;; Fixes eglot problem ("Feature provided by other file: ...")
+  (straight-use-package '(project :type built-in))
+  (straight-use-package '(xref :type built-in))
+  #+end_src
 
 ** Vertico & Co.
 :properties:
@@ -60,8 +72,7 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 :end:
 
 #+begin_src emacs-lisp
-  ;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
-
+;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
 ;; Tip: You can remove the `vertico-mode' use-package and replace it
 ;;      with the built-in `fido-vertical-mode'.
 (use-package vertico
@@ -238,7 +249,20 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 (use-package counsel
   :straight t)
 #+end_src
-
+*** epa-file
+Configure GPG assistant
+#+begin_src emacs-lisp
+  (use-package epa-file
+    :straight (:type built-in)
+    :config
+    (setq
+     epa-file-encrypt-to '("B97574F0096F8AFAA099E1FB2FE40B159E04B416")
+     password-cache nil
+     password-cache-expiry nil
+     epa-pinentry-mode 'ask)
+    :custom
+    (epa-file-select-keys 'silent))
+#+end_src
 * Autocompletion
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -585,32 +609,33 @@ Used for popups (eshell, scratch buffer etc.)
   :config
   (undo-fu-session-global-mode))
 #+end_src
-** COMMENT multiple-cursors
+** TODO multiple-cursors
 #+begin_src emacs-lisp
 (use-package multiple-cursors
   :straight t
   :defer t
   :hook ((multiple-cursors-mode-enabled-hook . (lambda () (corfu-mode -1)))
          (multiple-cursors-mode-disabled-hook . (lambda () (corfu-mode 1))))
-  :bind
-  (("C-c m l" . mc/edit-lines)
-   ("C-c m b" . mc/edit-beginnings-of-lines)
-   ("C-c m e" . mc/edit-ends-of-lines)
-   ("C-c m a" . mc/mark-all-dwim)
-   ("C-c m s" . mc/mark-all-symbols-like-this)
-   ("C-c m w" . mc/mark-all-words-like-this)
-   ("C-c m r" . mc/mark-all-in-region)
-   ("C-c m R" . mc/mark-all-in-region-regexp)
-   ("C-c m d" . mc/mark-all-like-this-in-defun)
-   ("C-c m S" . mc/mark-all-symbols-like-this-in-defun)
-   ("C-c m W" . mc/mark-all-words-like-this-in-defun)
-   ("C-c m i" . mc/insert-numbers)
-   ("C-c m n" . mc/mark-next-like-this)
-   ("C-c m p" . mc/mark-previous-like-this)
-   ("C-c m N" . mc/skip-to-next-like-this)
-   ("C-c m P" . mc/skip-to-previous-like-this)
-   ("C-c m M-n" . mc/unmark-next-like-this)
-   ("C-c m M-p" . mc/unmark-previous-like-this)))
+  ;; :bind
+  ;; (("C-c m l" . mc/edit-lines)
+  ;;  ("C-c m b" . mc/edit-beginnings-of-lines)
+  ;;  ("C-c m e" . mc/edit-ends-of-lines)
+  ;;  ("C-c m a" . mc/mark-all-dwim)
+  ;;  ("C-c m s" . mc/mark-all-symbols-like-this)
+  ;;  ("C-c m w" . mc/mark-all-words-like-this)
+  ;;  ("C-c m r" . mc/mark-all-in-region)
+  ;;  ("C-c m R" . mc/mark-all-in-region-regexp)
+  ;;  ("C-c m d" . mc/mark-all-like-this-in-defun)
+  ;;  ("C-c m S" . mc/mark-all-symbols-like-this-in-defun)
+  ;;  ("C-c m W" . mc/mark-all-words-like-this-in-defun)
+  ;;  ("C-c m i" . mc/insert-numbers)
+  ;;  ("C-c m n" . mc/mark-next-like-this)
+  ;;  ("C-c m p" . mc/mark-previous-like-this)
+  ;;  ("C-c m N" . mc/skip-to-next-like-this)
+  ;;  ("C-c m P" . mc/skip-to-previous-like-this)
+  ;;  ("C-c m M-n" . mc/unmark-next-like-this)
+  ;;  ("C-c m M-p" . mc/unmark-previous-like-this))
+  )
 #+end_src
 ** Search
 *** isearch
@@ -759,6 +784,31 @@ Install additional themes:
   (use-package color-theme-sanityinc-tomorrow
     :straight t)
 #+end_src
+** Fonts
+Set default font
+#+begin_src emacs-lisp
+(set-face-attribute 'default nil :family "JetBrains Mono")
+#+end_src
+** Modeline
+*** doom-modeline
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :straight (:type git :host github :repo "seagle0128/doom-modeline") 
+  :init
+  :custom
+  (doom-modeline-height 15)
+  (doom-modeline-enable-word-count t)
+  (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+  (doom-modeline-mu4e nil)
+  (doom-modeline-project-detection nil)
+  (doom-modeline-env-version t)
+  (doom-modeline-persp-name nil)
+  (doom-modeline-persp-icon nil)
+  (doom-modeline-buffer-file-name-style 'truncate-upto-project)
+  :config
+  (setq find-file-visit-truename t)
+  (doom-modeline-mode 1))
+#+end_src
 ** Folding
 *** hideshow
 #+begin_src emacs-lisp
@@ -851,7 +901,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
      (cond
       ;; ((not (eq (file-remote-p (buffer-file-name)) nil))
       ;; "Remote")
-      ((or (string-equal "*" (substring (buffer-name) 0 1))
+      ((or (string-equal "*" (substr
            (memq major-mode '(magit-process-mode
                               magit-status-mode
                               magit-diff-mode
@@ -880,7 +930,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
                           diary-mode))
        "OrgMode")
       (t
-       (centaur-tabs-get-group-name (current-buffer))))))
+       (centaur-tabs-get-group-name (current-buffer))))))))
   :hook
   (dashboard-mode . centaur-tabs-local-mode)
   (term-mode . centaur-tabs-local-mode)
@@ -997,8 +1047,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     :custom
     (gofmt-command "goimports"))
 
+ 
   ;; Configure gopls for go-mode
-  
+
   ;; Setup capf
   ;; (add-hook 'go-ts-mode-hook (lambda ()
   ;;                              (setq-local completion-at-point-functions
@@ -1077,6 +1128,36 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (add-hook 'makefile-mode-hook #'my/local-tab-indent)
 #+end_src
 
+*** PlantUML
+#+begin_src emacs-lisp
+  (use-package plantuml-mode
+    :straight t
+    :defer t
+    :mode ("\\.\\(pum\\|puml\\)\\'" . plantuml-mode)
+    :after ob
+    :init
+    (add-to-list 'org-babel-load-languages '(plantuml . t))
+    :config
+    (setq plantuml-default-exec-mode 'jar
+          plantuml-jar-path "~/.local/bin/plantuml.jar"
+          org-plantuml-jar-path "~/.local/bin/plantuml.jar"
+          plantuml-indent-level 4))
+#+end_src
+*** Toml
+#+begin_src emacs-lisp
+  (use-package toml-mode
+    :straight t
+    :defer t
+    :mode "/\\(Cargo.lock\\|\\.cargo/config\\)\\'")
+#+end_src
+*** Yaml
+#+begin_src emacs-lisp
+  (use-package yaml-mode
+    :straight t
+    :defer t
+    :mode "\\.yml\\'"
+    :mode "\\.yaml\\'")
+#+end_src
 ** LSP
 *** eglot
 #+begin_src emacs-lisp
@@ -1238,8 +1319,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 #+begin_src emacs-lisp
   (use-package dape
     :straight t
-    :defer t
-    :hook ((go-mode . dape-mode))
     :config
     ;; Pulse source line (performance hit)
     (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
@@ -1310,7 +1389,14 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh))
 #+end_src
-
+*** browse-at-remote
+#+begin_src emacs-lisp
+  (use-package browse-at-remote
+    :straight t
+    :bind (("C-c go" . browse-at-remote)
+           ("C-c gy" . browse-at-remote-kill))
+    )
+#+end_src
 * ORG mode
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -1746,59 +1832,60 @@ If prefix ARG, copy instead of move."
 
 ** org-capture
 #+begin_src emacs-lisp
-(use-package org-capture
-  :bind (("C-c _" . org-capture))
-  :ensure nil
-  :preface
-  (defvar my/org-appointment
-    (concat "* TODO %^{Appointment} :appt:\n"
-            "SCHEDULED: %t\n") "Template for appointment task.")
-  (defvar my/org-active-task-template
-    (concat "* NEXT %^{Task}\n"
-            ":PROPERTIES:\n"
-            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
-            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
-            ":END:") "Template for basic task.")
-  (defvar my/org-meeting
-    (concat "* MEETING %^{Meeting}\n"
-            "SCHEDULED: %t\n") "Template for meetings")
+  (use-package org-capture
+    :after org
+    :straight (:type built-in)
+    :bind (("C-c _" . org-capture))
+    :preface
+    (defvar my/org-appointment
+      (concat "* TODO %^{Appointment} :appt:\n"
+              "SCHEDULED: %t\n") "Template for appointment task.")
+    (defvar my/org-active-task-template
+      (concat "* NEXT %^{Task}\n"
+              ":PROPERTIES:\n"
+              ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
+              ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
+              ":END:") "Template for basic task.")
+    (defvar my/org-meeting
+      (concat "* MEETING %^{Meeting}\n"
+              "SCHEDULED: %t\n") "Template for meetings")
 
-  (defvar my/org-weekly
-    (concat "* wk" (format-time-string "%V") "       " ":wk" (format-time-string "%V") ":")
-    "Template for weeklies")
+    (defvar my/org-weekly
+      (concat "* wk" (format-time-string "%V") "       " ":wk" (format-time-string "%V") ":")
+      "Template for weeklies")
 
-  (defvar my/org-basic-task-template
-    (concat "* TODO %^{Task}\n"
-            ":PROPERTIES:\n"
-            ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
-            ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
-            ":END:") "Template for basic task.")
-  :custom
-  (org-capture-templates
-   `(
-     ("a" "Appointment" entry (file+headline "inbox.org" "Appointments"),
-      my/org-appointment
-      :empty-lines 1)
+    (defvar my/org-basic-task-template
+      (concat "* TODO %^{Task}\n"
+              ":PROPERTIES:\n"
+              ":Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}\n"
+              ":CAPTURED: %<%Y-%m-%d %H:%M>\n"
+              ":END:") "Template for basic task.")
+    :custom
+    (org-capture-templates
+     `(
+       ("a" "Appointment" entry (file+headline "inbox.org" "Appointments"),
+        my/org-appointment
+        :empty-lines 1)
 
-     ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
-      my/org-meeting
-      :empty-lines 1)
+       ("m" "Meeting" entry (file+headline "inbox.org" "Meetings"),
+        my/org-meeting
+        :empty-lines 1)
 
-     ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
-      "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
+       ("M" "Active meeting" entry (file+headline "inbox.org" "Meetings")
+        "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
 
-     ("t" "New Task")
-     ("ta" "Active" entry (file+headline "inbox.org" "Active"),
-      my/org-active-task-template
-      :empty-lines 1
-      :clock-in t)
-     ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
-      my/org-basic-task-template
-      :empty-lines 1)
+       ("t" "New Task")
+       ("ta" "Active" entry (file+headline "inbox.org" "Active"),
+        my/org-active-task-template
+        :empty-lines 1
+        :clock-in t)
+       ("tb" "Backlog" entry (file+headline "inbox.org" "Backlog"),
+        my/org-basic-task-template
+        :empty-lines 1)
 
-     ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
-      my/org-weekly
-      :empty-lines 1))))
+       ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
+        my/org-weekly
+        :empty-lines 1))))
 #+end_src
 
 #+results:
@@ -1829,7 +1916,7 @@ If prefix ARG, copy instead of move."
   (other-window 1)
   (org-timeblock))
 #+end_src
-** org-roam
+** COMMENT org-roam
 #+begin_src emacs-lisp
 (use-package org-roam
   :straight t
@@ -1912,6 +1999,7 @@ If prefix ARG, copy instead of move."
  '((sql . t)
    (go . t)
    (plantuml . t)
+   (emacs-lisp . t)
    (mermaid . t)
    (shell . t)))
 #+end_src
@@ -2266,7 +2354,7 @@ Some keybindings for MacOS
   (setq confirm-kill-emacs 'y-or-n-p)
 
   (use-package uniquify
-    :ensure nil
+    :straight (:type built-in)
     :custom
     (uniquify-buffer-name-style 'reverse)
     (uniquify-separator "•")
@@ -2293,6 +2381,15 @@ Various useful utilities
          ([(shift return)] . crux-smart-open-line)
          ([(control shift return)] . crux-smart-open-line-above)))
 #+end_src
+** link-hint
+#+begin_src emacs-lisp
+(use-package link-hint
+  :straight t
+  :demand t
+  :bind (("C-c l o" . link-hint-open-link)
+         ("C-c l c" . link-hint-copy-link)))
+#+end_src
+
 * Helpful
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -2383,15 +2480,24 @@ standard keybindings.
         (remove-hook 'pre-command-hook 'keycast--update)))
     (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
 #+end_src
+*** wakatime
+#+begin_src emacs-lisp
+  (use-package wakatime-mode
+    :straight t
+    :defer t
+    :config
+    (setq
+     wakatime-python-bin "~/.pyenv/versions/emacs/bin/python"
+     wakatime-cli-path "~/.pyenv/versions/emacs/bin/wakatime"))
+    ;; (global-wakatime-mode))
+#+end_src
 ** Hydra
 Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
 #+begin_src emacs-lisp
   (use-package hydra
     :straight t)
 
-  (use-package hydra-examples
-    :ensure nil)
-
+    
   (use-package major-mode-hydra
     :straight t
     :after hydra
@@ -2893,3 +2999,357 @@ Change default font size
     (message "Directory local variables reloaded for %s" 
              (buffer-name))))
 #+end_src
+* Media
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+** empv
+Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
+position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
+
+#+begin_src emacs-lisp
+(use-package empv
+  :straight t
+  :after (embark browse-url)
+  :config
+
+  (setq empv-invidious-instance "https://yewtu.be/")
+  (add-to-list 'empv-mpv-args "--ytdl-format=best")
+
+  (defun dorneanu/empv-play-url (url &optional _)
+    (interactive)
+    (empv-toggle-video)
+    (empv-play url)))
+
+;; Handle youtube links using mpv
+(with-eval-after-load 'browse-url
+  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
+#+end_src
+* Email
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+** mu4e
+**** General config
+#+begin_src emacs-lisp
+  ;; Make sure we find the mu4e package
+  (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+  (use-package mu4e
+    :straight (:type built-in)
+    :defer t
+    :commands (mu4e)
+    :bind (("C-c a m" . mu4e)
+           :map mu4e-main-mode-map
+           ("U" . mu4e-update-mail-and-index-background)
+           :map mu4e-headers-mode-map
+           ("TAB" . mu4e-headers-next-unread)
+           ("j" . mu4e-view-headers-next)
+           ("k" . mu4e-view-headers-prev)
+           ("J" . mu4e-search-maildir)
+           ;; ("j" . mu4e-move-to-junk)
+           ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+           :map mu4e-view-mode-map
+           ("A" . mu4e-view-attachment-action)
+           ("M-o" . ace-link-mu4e)
+           ("o" . ace-link-mu4e)
+           ("n" . mu4e-scroll-up)
+           ("p" . mu4e-scroll-down)
+           ("J" . mu4e-view-headers-next)
+           ("K" . mu4e-view-headers-prev)
+           ;; ("j" . mu4e-move-to-junk)
+           )
+    :init
+    ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+    ;; (defun mu4e--main-action-str (name func)
+    ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
+    ;;   "mu4e-main-action")
+    ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
+
+    ;; Prefer text over html/ritchtext
+    (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
+
+    ;; Use completing-read (which is ivy) instead of ido
+    (setq mu4e-completing-read-function 'completing-read)
+
+    ;; set mu4e as default mail client
+    (setq mail-user-agent 'mu4e-user-agent)
+
+    ;; SMTP related
+    (setq message-send-mail-function        'smtpmail-send-it
+          smtpmail-stream-type              'tls)
+
+    :config
+    ;; Set mu binary
+    (setq mu4e-mu-binary "/usr/bin/mu")
+
+    ;; Use passwords from password-store
+    (setq auth-sources '(password-store))
+    (setq auth-source-debug t)
+
+    ;; Choose which fields to show
+    (setq mu4e-headers-fields
+          '(
+            (:maildir    . 13)
+            (:human-date . 12)
+            (:flags      . 6)
+            (:from       . 22)
+            (:subject    . nil)))
+
+    ;; Refresh mail using isync every 10 minutes
+    (setq mu4e-update-interval (* 10 60))
+
+    ;; Command used to retrieve new mails
+    (setq mu4e-get-mail-command "mbsync -a")
+
+    ;; Defaults
+    (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
+    (setq-default mu4e-drafts-folder "/private/Drafts")
+    (setq-default mu4e-sent-folder   "/private/Sent")
+    (setq-default mu4e-trash-folder  "/private/Trash")
+
+    ;; Set citation settings
+    (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+    (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+    ;; Fancy stuff
+    (setq mu4e-use-fancy-chars t)
+    ;; <<mu4e-fancy-marks>>
+
+    ;; And change default threading characters to some "nicer" looking chars
+    (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+    (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+    (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+    (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+    (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+    ;; Also change to some nicer characters for marks
+    ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
+    (setq mu4e-headers-passed-mark  '("P" . "›"))
+    (setq mu4e-headers-replied-mark '("R" . "‹"))
+    (setq mu4e-headers-seen-mark   '("S" . ""))
+    ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
+    (setq mu4e-headers-personal-mark '("p" . ""))
+    ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
+
+    ;; Set date format (header view)
+    (setq mu4e-headers-date-format "%F")
+
+    ;; How should html context be converted
+    ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+    (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
+
+    ;; Improve rendering of rich-text messages (html)
+    (setq shr-color-visible-luminance-min 80)
+
+    ;; Show email address as well and not only the name
+    (setq-default mu4e-view-show-addresses t)
+
+    ;; Don't reply to self
+    (setq mu4e-compose-dont-reply-to-self t)
+
+    ;; Setup some handy shortcuts
+    ;; you can quickly switch to your Inbox -- press ``ji''
+    ;; then, when you want archive some messages, move them to
+    ;; the 'All Mail' folder by pressing ``ma''.
+
+    ;; View mail in browser with "a V"
+    (add-to-list 'mu4e-view-actions
+                 '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+    (add-to-list 'mu4e-view-actions
+                 '("fViewInChrome" . mu4e-action-view-in-chrome) t)
+    (add-to-list 'mu4e-view-actions
+                 '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
+
+    (setq mu4e-maildir-shortcuts
+          '(
+            ("/variomedia/inbox"   . ?v)
+            ("/gmail/inbox"    . ?g)
+            ("/cashlink/inbox"   . ?c)
+            ("/private/Trash"   . ?t)
+            ("/private/Drafts"  . ?d)
+            ("/private/Junk"    . ?j)
+            ("/private/Archive" . ?a)))
+
+    ;; Set contexts
+    (dorneanu/set-mu4e-contexts)
+    )
+
+  ;; (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
+**** Bookmarks
+#+begin_src emacs-lisp
+  (setq mu4e-bookmarks
+        `(
+          ("maildir:/Sent" "Sent messages" ?s)
+          ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
+          ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
+          ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
+          ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
+          ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
+          ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
+          ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
+          ("from:jira@*" "Jira" ?j)
+          ("from:notifications@github.com" "Github" ?g)
+          ;; (,(s-join " "
+          ;;           '("OR noreply@tagesspiegel.de"
+          ;;             "OR support@lagedernation.org"
+          ;;             "OR hello@blinkist.com"
+          ;;             "OR info@smarticular.net"
+          ;;             "OR newsletter@*"
+          ;;             "OR support@xeroshoes.com"))
+          ;;  "Newletter" ?n)
+          ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
+#+end_src
+
+**** Fancy stuff
+From https://github.com/Phundrak/dotfiles
+
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
+
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+  (mapconcat (lambda (line)
+               (let ((mark (car line))
+                     (flag (cadr line))
+                     (icon (caddr line)))
+                 (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
+                         mark
+                         flag
+                         icon)))
+             table
+             "\n")
+#+end_src
+
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
+
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
+  (setq mu4e-use-fancy-chars t
+        <<mu4e-fancy-marks-gen()>>)
+#+end_src
+
+**** View mode
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
+  (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
+**** Contexts
+Set contexts
+#+begin_src emacs-lisp
+  (defun dorneanu/set-mu4e-contexts ()
+    "Set mail contexts for mu4e"
+    (interactive)
+    (setq mu4e-contexts
+          `( ,(make-mu4e-context
+               :name "gmail"
+               :enter-func (lambda () (mu4e-message "Entering gmail context"))
+               :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+               ;; we match based on the contact-fields of the message
+               :match-func
+               (lambda (msg)
+                 (when msg
+                   (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+               :vars `((user-mail-address . ,(password-store-get "mail/gmail/personal/username"))
+                       (user-full-name    . "Cyneox")
+                       (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
+                       (smtpmail-smtp-server  . "smtp.gmail.com")
+                       (smtpmail-default-smtp-server  . "smtp.gmail.com")
+                       (smtpmail-smtp-service . 465)
+                       (smtpmail-stream-type  . ssl)
+                       (mu4e-compose-signature . "Cyneox via Gmail")
+                       (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                       (mu4e-sent-folder  . "/[Gmail]/sent")
+                       (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                       (mu4e-trash-folder  . "/[Gmail]/bin")))
+             ,(make-mu4e-context
+               :name "variomedia"
+               :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+               :match-func
+               (lambda (msg)
+                 (when msg
+                   (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+               :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
+                       (user-full-name    . "Victor Dorneanu")
+                       (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                       (smtpmail-default-smtp-server  . "smtp.variomedia.de")
+                       (smtpmail-smtp-service . 465)
+                       (smtpmail-stream-type  . ssl)
+                       (mu4e-compose-signature . "Victor via Emacs")
+                       (mu4e-drafts-folder  . "/variomedia/drafts")
+                       (mu4e-sent-folder  . "/variomedia/sent")
+                       (mu4e-trash-folder  . "/variomedia/bin")))
+             ,(make-mu4e-context
+               :name "cashlink"
+               :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+               :match-func
+               (lambda (msg)
+                 (when msg
+                   (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
+               :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
+                       (user-full-name    . "Victor Dorneanu")
+                       (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
+                       (smtpmail-smtp-server  . "smtp.gmail.com")
+                       (smtpmail-smtp-service . 465)
+                       (smtpmail-stream-type  . ssl)
+                       (mu4e-drafts-folder  . "/cashlink/drafts")
+                       (mu4e-sent-folder  . "/cashlink/sent")
+                       (mu4e-trash-folder  . "/cashlink/bin")
+                       (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                       ))))
+    )
+
+#+end_src
+
+#+results:
+: dorneanu/set-mu4e-contexts
+**** Reply
+I often want to reply without the original message:
+#+begin_src emacs-lisp
+  ;; From https://github.com/djcb/mu/issues/2345
+  ;; (after! mu4e
+  ;;   (defun dorneanu/mu4e-delete-citation ()
+  ;;     (delete-region (point) (point-max)))
+
+  ;;   (defun dorneanu/mu4e-reply (prefix)
+  ;;     (interactive "P")
+  ;;     (setq mu4e-compose-cite-function (if prefix
+  ;;                                          #'dorneanu/mu4e-delete-citation
+  ;;                                        #'message-cite-original-without-signature))
+  ;;     (mu4e-compose-reply))
+
+  ;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+  ;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+  ;;   )
+#+end_src
+
