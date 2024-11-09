@@ -1,8 +1,10 @@
 #+title: Minimal Emacs — Config
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
-#+property: header-args:emacs-lisp+ :results silent
+#+property: header-args:emacs-lisp+ :results none
 #+startup: indent overview
+
+Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 
 * Basics
 ** pre-init
@@ -60,151 +62,152 @@
 #+begin_src emacs-lisp
   ;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
-  ;; Tip: You can remove the `vertico-mode' use-package and replace it
-  ;;      with the built-in `fido-vertical-mode'.
-  (use-package vertico
-    ;; (Note: It is recommended to also enable the savehist package.)
-    :straight t
-    :defer t
-    :commands vertico-mode
-    :hook ((after-init . vertico-mode)
-           (vertico-mode . vertico-multiform-mode)))
+;; Tip: You can remove the `vertico-mode' use-package and replace it
+;;      with the built-in `fido-vertical-mode'.
+(use-package vertico
+  ;; (Note: It is recommended to also enable the savehist package.)
+  :straight t
+  :defer t
+  :commands vertico-mode
+  :hook ((after-init . vertico-mode)
+         (vertico-mode . vertico-multiform-mode)))
 
-  (use-package vertico-posframe
-    :straight t
-    :demand t
-    ;; :hook (vertico-mode . vertico-posframe-mode)
-    :config
-    (vertico-posframe-mode 1)
-    (setq vertico-posframe-border-width 2
-          vertico-posframe-parameters '((internal-border-width . 2))))
-    ;; (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
+(use-package vertico-posframe
+  :straight t
+  :demand t
+  ;; :hook (vertico-mode . vertico-posframe-mode)
+  :config
+  (vertico-posframe-mode 1)
+  (setq vertico-posframe-border-width 2
+        vertico-posframe-parameters '((internal-border-width . 2))))
+;; (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
 
-  (use-package orderless
-    ;; Vertico leverages Orderless' flexible matching capabilities, allowing users
-    ;; to input multiple patterns separated by spaces, which Orderless then
-    ;; matches in any order against the candidates.
-    :straight t
-    :custom
-    (completion-styles '(orderless basic))
-    (completion-category-defaults nil)
-    (completion-category-overrides '((file (styles partial-completion)))))
+(use-package orderless
+  ;; Vertico leverages Orderless' flexible matching capabilities, allowing users
+  ;; to input multiple patterns separated by spaces, which Orderless then
+  ;; matches in any order against the candidates.
+  :straight t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles partial-completion)))))
 
-  (use-package marginalia
-    ;; Marginalia allows Embark to offer you preconfigured actions in more contexts.
-    ;; In addition to that, Marginalia also enhances Vertico by adding rich
-    ;; annotations to the completion candidates displayed in Vertico's interface.
-    :straight t
-    :defer t
-    :commands (marginalia-mode marginalia-cycle)
-    :hook (after-init . marginalia-mode))
+(use-package marginalia
+  ;; Marginalia allows Embark to offer you preconfigured actions in more contexts.
+  ;; In addition to that, Marginalia also enhances Vertico by adding rich
+  ;; annotations to the completion candidates displayed in Vertico's interface.
+  :straight t
+  :defer t
+  :commands (marginalia-mode marginalia-cycle)
+  :hook (after-init . marginalia-mode))
 
-  (use-package embark
-    ;; Embark is an Emacs package that acts like a context menu, allowing
-    ;; users to perform context-sensitive actions on selected items
-    ;; directly from the completion interface.
-    :straight t
-    :defer t
-    :bind
-    (("C-." . embark-act)         ;; pick some comfortable binding
-     ("C-;" . embark-dwim)        ;; good alternative: M-.
-     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+(use-package embark
+  ;; Embark is an Emacs package that acts like a context menu, allowing
+  ;; users to perform context-sensitive actions on selected items
+  ;; directly from the completion interface.
+  :straight t
+  :defer t
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
 
-    :init
-    (setq prefix-help-command #'embark-prefix-help-command)
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command)
 
-    :config
-    ;; Hide the mode line of the Embark live/completions buffers
-    (add-to-list 'display-buffer-alist
-                 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                   nil
-                   (window-parameters (mode-line-format . none)))))
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 
-  (use-package embark-consult
-    :straight t
-    :hook
-    (embark-collect-mode . consult-preview-at-point-mode))
+(use-package embark-consult
+  :straight t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
-  (use-package consult
-    :straight t
-    :bind (;; C-c bindings in `mode-specific-map'
-           ("C-c M-x" . consult-mode-command)
-           ("C-c h" . consult-history)
-           ("C-c k" . consult-kmacro)
-           ("C-c m" . consult-man)
-           ("C-c i" . consult-info)
-           ([remap Info-search] . consult-info)
-           ;; C-x bindings in `ctl-x-map'
-           ("C-x M-:" . consult-complex-command)
-           ("C-x b" . consult-buffer)
-           ("C-x 4 b" . consult-buffer-other-window)
-           ("C-x 5 b" . consult-buffer-other-frame)
-           ("C-x t b" . consult-buffer-other-tab)
-           ("C-x r b" . consult-bookmark)
-           ("C-x p b" . consult-project-buffer)
-           ;; Custom M-# bindings for fast register access
-           ("M-#" . consult-register-load)
-           ("M-'" . consult-register-store)
-           ("C-M-#" . consult-register)
-           ;; Other custom bindings
-           ("M-y" . consult-yank-pop)
-           ;; M-g bindings in `goto-map'
-           ("M-g e" . consult-compile-error)
-           ("M-g f" . consult-flymake)
-           ("M-g g" . consult-goto-line)
-           ("M-g M-g" . consult-goto-line)
-           ("M-g o" . consult-outline)
-           ("M-g m" . consult-mark)
-           ("M-g k" . consult-global-mark)
-           ("M-g i" . consult-imenu)
-           ("M-g I" . consult-imenu-multi)
-           ;; M-s bindings in `search-map'
-           ("M-s d" . consult-find)
-           ("M-s c" . consult-locate)
-           ("M-s g" . consult-grep)
-           ("M-s G" . consult-git-grep)
-           ("M-s r" . consult-ripgrep)
-           ("M-s l" . consult-line)
-           ("M-s L" . consult-line-multi)
-           ("M-s k" . consult-keep-lines)
-           ("M-s u" . consult-focus-lines)
-           ;; Isearch integration
-           ("M-s e" . consult-isearch-history)
-           :map isearch-mode-map
-           ("M-e" . consult-isearch-history)
-           ("M-s e" . consult-isearch-history)
-           ("M-s l" . consult-line)
-           ("M-s L" . consult-line-multi)
-           ;; Minibuffer history
-           :map minibuffer-local-map
-           ("M-s" . consult-history)
-           ("M-r" . consult-history))
+(use-package consult
+  :straight t
+  :bind (;; C-c bindings in `mode-specific-map'
+         ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)
+         ("C-x b" . consult-buffer)
+         ("C-x 4 b" . consult-buffer-other-window)
+         ("C-x 5 b" . consult-buffer-other-frame)
+         ("C-x t b" . consult-buffer-other-tab)
+         ("C-x r b" . consult-bookmark)
+         ("C-x p b" . consult-project-buffer)
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)
+         ;; M-g bindings in `goto-map'
+         ("M-g C" . consult-theme)
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)
+         ("M-g g" . consult-goto-line)
+         ("M-g M-g" . consult-goto-line)
+         ("M-g o" . consult-outline)
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings in `search-map'
+         ("M-s d" . consult-find)
+         ("M-s c" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)
+         ("M-s e" . consult-isearch-history)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)
+         ("M-r" . consult-history))
 
-    ;; Enable automatic preview at point in the *Completions* buffer.
-    :hook (completion-list-mode . consult-preview-at-point-mode)
+  ;; Enable automatic preview at point in the *Completions* buffer.
+  :hook (completion-list-mode . consult-preview-at-point-mode)
 
-    :init
-    ;; Optionally configure the register formatting. This improves the register
-    (setq register-preview-delay 0.5
-          register-preview-function #'consult-register-format)
+  :init
+  ;; Optionally configure the register formatting. This improves the register
+  (setq register-preview-delay 0.5
+        register-preview-function #'consult-register-format)
 
-    ;; Optionally tweak the register preview window.
-    (advice-add #'register-preview :override #'consult-register-window)
+  ;; Optionally tweak the register preview window.
+  (advice-add #'register-preview :override #'consult-register-window)
 
-    ;; Use Consult to select xref locations with preview
-    (setq xref-show-xrefs-function #'consult-xref
-          xref-show-definitions-function #'consult-xref)
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
 
-    :config
-    (consult-customize
-     consult-theme :preview-key '(:debounce 0.2 any)
-     consult-ripgrep consult-git-grep consult-grep
-     consult-bookmark consult-recent-file consult-xref
-     consult--source-bookmark consult--source-file-register
-     consult--source-recent-file consult--source-project-recent-file
-     ;; :preview-key "M-."
-     :preview-key '(:debounce 0.4 any))
-    (setq consult-narrow-key "<"))
+  :config
+  (consult-customize
+   consult-theme :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-bookmark consult--source-file-register
+   consult--source-recent-file consult--source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
+  (setq consult-narrow-key "<"))
 #+end_src
 
 ** Defaults
@@ -341,6 +344,9 @@
     :init
     (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 #+end_src
+
+#+RESULTS:
+
 * Projects
 ** project
 #+begin_src emacs-lisp
@@ -979,8 +985,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (use-package go-mode
     :straight t
     :mode "\\.go\\'"
-    ;; :hook
-    ;; (before-save . gofmt-before-save)
+    :hook ((before-save . gofmt-before-save))
     ;; ((go-mode . gofmt-before-save)
     ;;  (go-mode . eglot-ensure)
     :bind (:map go-mode-map
@@ -1049,6 +1054,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (use-package go-impl
     :straight t)
 #+end_src
+
 **** ginkgo
 #+begin_src emacs-lisp
 (use-package ginkgo-mode
@@ -1074,76 +1080,106 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 ** LSP
 *** eglot
 #+begin_src emacs-lisp
-  (use-package eglot
-    :ensure nil
-    :defer t
-    :commands (eglot
-               eglot-rename
-               eglot-ensure
-               eglot-rename
-               eglot-format-buffer)
-    :custom
-    (eglot-report-progress nil)  ; Prevent minibuffer spam
-    (eglot-autoshutdown t) ; shutdown after closing the last managed buffer
-    (eglot-sync-connect 0) ; async, do not block
-    (eglot-extend-to-xref t) ; can be interesting!
-    (eglot-report-progress nil) ; disable annoying messages in echo area!
-    :config
-    ;; Optimizations
-    (fset #'jsonrpc--log-event #'ignore)
-    (setq jsonrpc-event-hook nil)
-    ;; Enable eglot for different modes
-    (add-hook 'go-mode-hook 'eglot-ensure))
+(use-package eglot
+  :ensure nil
+  :defer t
+  :commands (eglot
+             eglot-rename
+             eglot-ensure
+             eglot-rename
+             eglot-format-buffer)
+  :custom
+  (eglot-report-progress nil)  ; Prevent minibuffer spam
+  (eglot-autoshutdown t) ; shutdown after closing the last managed buffer
+  (eglot-sync-connect 0) ; async, do not block
+  (eglot-extend-to-xref t) ; can be interesting!
+  (eglot-report-progress nil) ; disable annoying messages in echo area!
+  :config
+  ;; Optimizations
+  (fset #'jsonrpc--log-event #'ignore)
+  (setq jsonrpc-event-hook nil)
+
+  ;; Not sure if this really helps
+  ;; Enable completion capabilities
+  (setq completion-category-overrides '((eglot (styles orderless))))
+  ;; Configure tab for completion
+  (setq tab-always-indent 'complete)
+  ;; Don't prompt for server-initiated edits
+  (setq eglot-confirm-server-initiated-edits nil)
+  ;; Enable snippet/template support
+  (setq eglot-insert-completion-annotations t)
+  ;; Extend completion capabilities
+  (setq eglot-extended-capabilities
+        '(:completionItem (:snippetSupport t
+                                           :resolveSupport (:properties ["documentation"
+                                                                         "details"
+                                                                         "additionalTextEdits"])
+                                           :insertReplaceSupport t)
+                          :textDocument (:completion (:completionItem (:snippetSupport t
+                                                                                       :insertReplaceSupport t)))))
+  ;; Enable eglot for different modes
+  (add-hook 'go-mode-hook 'eglot-ensure))
 #+end_src
-**** testing
+
+#+RESULTS:
+: t
+
+**** TODO testing
 #+begin_src emacs-lisp
-  ;; Manual reload sequence
-  (defun my-reload-eglot ()
-    (interactive)
-    ;; Shutdown current server
-    (eglot-shutdown-all)
-    ;; Clear workspace configuration
-    (setq eglot-workspace-configuration nil)
-    ;; Restart eglot
-    (eglot-ensure))
+;; Manual reload sequence
+(defun my-reload-eglot ()
+  (interactive)
+  ;; Shutdown current server
+  (eglot-shutdown-all)
+  ;; Clear workspace configuration
+  (setq eglot-workspace-configuration nil)
+  ;; Restart eglot
+  (eglot-ensure))
 
-  ;; Bind to a key for quick testing
-  (global-set-key (kbd "C-c e r") 'my-reload-eglot)
+;; Bind to a key for quick testing
+(global-set-key (kbd "C-c e r") 'my-reload-eglot)
 
 
-  (defun my-test-eglot-config (config)
-    "Test different eglot configurations."
-    (interactive)
-    (when (eglot-managed-p)
-      (eglot-shutdown-all))
+(defun my-test-eglot-config (config)
+  "Test different eglot configurations."
+  (interactive)
+  (when (eglot-managed-p)
+    (eglot-shutdown-all))
 
-    (pcase config
-      ('default
-       (setq-local eglot-workspace-configuration nil))
-      ('go-aggressive
-       (setq-local eglot-workspace-configuration
-                   '(:gopls
-                     ((usePlaceholders . t)
-                      (completeFunctionCalls . t)
-                      (completeUnimported . t)
-                      (completionBudget . "1s")))))
-      ('go-conservative
-       (setq-local eglot-workspace-configuration
-                   '(:gopls
-                     ((usePlaceholders . nil)
-                      (completeUnimported . nil)
-                      (staticcheck . t))))))
+  (pcase config
+    ('default
+     (setq-local eglot-workspace-configuration nil))
+    ('go-aggressive
+     (add-to-list 'completion-styles 'flex)
+     (setq eglot-debug-server-messages t)
+     (setq eglot-ignored-server-capabilities '())
+     (setq eglot-events-buffer-size 0)
+     (setq-local eglot-workspace-configuration
+                 '(:gopls
+                   ((usePlaceholders . t)
+                    ;; (completeFunctionCalls . t)
+                    ;; (experimentalPostfixCompletions . t)
+                    ;; (completeUnimported . t)
+                    ;; (completionBudget . "1s")
+                    ;; (matcher . "CaseSensitive")          ; Better matching
+                    ))))
+    ('go-conservative
+     (setq-local eglot-workspace-configuration
+                 '(:gopls
+                   ((usePlaceholders . nil)
+                    (completeUnimported . nil)
+                    (staticcheck . t))))))
 
-    ;; Restart eglot
-    (eglot-ensure))
+  ;; Restart eglot
+  (eglot-ensure))
 
-  ;; Quick keybindings for testing
-  (define-key go-mode-map (kbd "C-c e d") 
-              (lambda () (interactive) 
-                (my-test-eglot-config 'default)))
-  (define-key go-mode-map (kbd "C-c e a") 
-              (lambda () (interactive) 
-                (my-test-eglot-config 'go-aggressive)))
+;; Quick keybindings for testing
+(define-key go-mode-map (kbd "C-c e d") 
+            (lambda () (interactive) 
+              (my-test-eglot-config 'default)))
+(define-key go-mode-map (kbd "C-c e a") 
+            (lambda () (interactive) 
+              (my-test-eglot-config 'go-aggressive)))
 #+end_src
 
 #+RESULTS:
@@ -1224,6 +1260,24 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     :straight (imenu-list :type git :host github :repo "bmag/imenu-list")
     :defer t)
 #+end_src
+*** flycheck
+#+begin_src emacs-lisp
+(use-package flycheck
+  :straight t
+  :hook (prog-mode . flycheck-mode))
+
+(use-package consult-flycheck
+  :straight t
+  :bind (("M-g f" . consult-flycheck)))
+#+end_src
+*** highlight-indent-guides
+#+begin_src emacs-lisp
+  (use-package highlight-indent-guides
+    :straight t
+    ;; :hook (prog-mode . highlight-indent-guides-mode)
+    :custom (highlight-indent-guides-method 'character))
+#+end_src
+
 ** VC
 *** magit
 #+begin_src emacs-lisp
@@ -1256,7 +1310,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh))
 #+end_src
-
 
 * ORG mode
 :properties:
@@ -2079,12 +2132,13 @@ Some keybindings for MacOS
 
 **** toggles
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results none
 (keymap-global-set "M-g t o" #'olivetti-mode)
 (keymap-global-set "M-g t t b" #'tab-bar-mode)
 (keymap-global-set "M-g t t n" #'global-tab-line-mode)
 (keymap-global-set "M-g t F" #'focus-mode)
 (keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
+(keymap-global-set "M-g t H" #'hl-line-mode)
 (keymap-global-set "M-g t n" #'display-line-numbers-mode)
 (keymap-global-set "M-g t f" #'fringe-mode)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
