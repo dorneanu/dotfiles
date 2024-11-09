@@ -746,8 +746,8 @@ Configure custom searches
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
 ** Theme
-Install additional themes:
 
+Install additional themes:
 #+begin_src emacs-lisp
   (use-package doom-themes
     :straight (:build t)
@@ -784,6 +784,12 @@ Install additional themes:
   (use-package color-theme-sanityinc-tomorrow
     :straight t)
 #+end_src
+
+Load theme
+#+begin_src emacs-lisp
+(load-theme 'doom-monokai-pro t)
+#+end_src
+
 ** Fonts
 Set default font
 #+begin_src emacs-lisp
@@ -1100,7 +1106,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     :init (setq go-tag-args (list "-transform" "camelcase")))
 
   (use-package go-fill-struct
-    :straight t)
+    :defer t)
 
   (use-package go-impl
     :straight t)
@@ -1521,6 +1527,7 @@ Basic configuration
 #+begin_src emacs-lisp
 (use-package org-agenda
   :straight (:type built-in)
+  :defer t
   :config
   (setq
    ;; Set agenda files
@@ -1986,13 +1993,16 @@ If prefix ARG, copy instead of move."
 #+begin_src emacs-lisp
 ;; Install ob-go
 (use-package ob-go
-  :straight t)
+  :straight t
+  :defer t)
 
 (use-package jq-mode
-  :straight t)
+  :straight t
+  :defer t)
 
 (use-package ob-mermaid
-  :straight t)
+  :straight t
+  :defer t)
 
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -2015,7 +2025,8 @@ Use counsel-org-tag (I couldn't find any alternative for consult):
 Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
 #+begin_src emacs-lisp
 (use-package org-re-reveal
-   :straight t)
+   :straight t
+   :defer t)
 #+end_src
 ** exporters
 *** hugo
