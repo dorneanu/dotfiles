@@ -1191,17 +1191,16 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
              eglot-rename
              eglot-format-buffer)
   :custom
-  (eglot-report-progress nil)  ; Prevent minibuffer spam
+  (eglot-report-progress t)  ; Prevent minibuffer spam
   (eglot-autoshutdown t) ; shutdown after closing the last managed buffer
   (eglot-sync-connect 0) ; async, do not block
   (eglot-extend-to-xref t) ; can be interesting!
   (eglot-report-progress nil) ; disable annoying messages in echo area!
+  (eglot-events-buffer-size 0)
   :config
   ;; Optimizations
   (fset #'jsonrpc--log-event #'ignore)
   (setq jsonrpc-event-hook nil)
-  (setq eglot-events-buffer-size 0)
-
   ;; Not sure if this really helps
   ;; Enable completion capabilities
   ;; (setq completion-category-overrides '((eglot (styles orderless))))
@@ -1209,9 +1208,26 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (setq tab-always-indent 'complete)
   ;; Enable snippet/template support
   (setq eglot-insert-completion-annotations t)
+
+  ;; Enable eglot for certain modes
   (add-hook 'go-mode-hook 'eglot-ensure))
 #+end_src
+*** TODO eldoc
+Need to add some keybindings here: 
+#+begin_src emacs-lisp
+(use-package eldoc
+  :straight (:type built-in)
+  :hook (prog-mode-hook . eldoc-mode)
+  :init
+  (global-eldoc-mode 1))
 
+(use-package eldoc-box
+  :straight t
+  :hook (eldoc-mode-hook . eldoc-box-hover-mode)
+  :init
+  (setq eldoc-box-position-function #'eldoc-box--default-upper-corner-position-function
+        eldoc-box-clear-with-C-g t))
+#+end_src
 *** COMMENT lsp-mode
 #+begin_src emacs-lisp
 
@@ -1316,7 +1332,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     ('go-aggressive
      (add-to-list 'completion-styles 'flex)
      (setq eglot-debug-server-messages t)
-     (setq eglot-ignored-server-capabilities '())
+     ;; (setq eglot-ignored-server-capabilities '())
      (setq eglot-events-buffer-size 0)
      (setq-local eglot-workspace-configuration
                  '(:gopls
