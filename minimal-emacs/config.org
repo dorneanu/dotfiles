@@ -65,7 +65,11 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (straight-use-package '(project :type built-in))
   (straight-use-package '(xref :type built-in))
   #+end_src
-
+** customizations
+#+begin_src emacs-lisp
+;; Load the custom variables file if it exists
+(when (file-exists-p custom-file) (+load custom-file))
+#+end_src
 ** Vertico & Co.
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -147,6 +151,8 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
          ("C-c m" . consult-man)
          ("C-c i" . consult-info)
          ([remap Info-search] . consult-info)
+         ([remap recentf-open-files] . consult-recent-file)
+         ([remap recentf] . consult-recent-file)
          ;; C-x bindings in `ctl-x-map'
          ("C-x M-:" . consult-complex-command)
          ("C-x b" . consult-buffer)
@@ -220,7 +226,6 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
    :preview-key '(:debounce 0.4 any))
   (setq consult-narrow-key "<"))
 #+end_src
-
 ** Defaults
 #+begin_src emacs-lisp
   ;; Auto-revert in Emacs is a feature that automatically updates the
@@ -787,7 +792,7 @@ Install additional themes:
 
 Load theme
 #+begin_src emacs-lisp
-(load-theme 'doom-monokai-pro t)
+(load-theme 'ef-owl t)
 #+end_src
 
 ** Fonts
@@ -969,7 +974,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     (tabspaces-todo-file-name "project-todo.org")
     ;; sessions
     (tabspaces-session t)
-    (tabspaces-session-auto-restore t)
+    (tabspaces-session-auto-restore nil)
     (tab-bar-new-tab-choice "*scratch*"))
 #+end_src
 * Files
@@ -1034,82 +1039,92 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 ** Languages
 *** Golang
 #+begin_src emacs-lisp
-  (use-package company-go
-    :straight t
-    :after (company go-mode))
+(use-package company-go
+  :straight t
+  :after (company go-mode))
 
-  (use-package go-mode
-    :straight t
-    :mode "\\.go\\'"
-    :hook ((before-save . gofmt-before-save))
-    ;; ((go-mode . gofmt-before-save)
-    ;;  (go-mode . eglot-ensure)
-    :bind (:map go-mode-map
-                ("M-?" . godoc-at-point)
-                ("M-." . xref-find-definitions)
-                ("M-_" . xref-find-references)
-                ;; ("M-*" . pop-tag-mark) ;; Jump back after godef-jump
-                ("C-c m r" . go-run))
-    :custom
-    (gofmt-command "goimports"))
+(use-package go-mode
+  :straight t
+  :mode "\\.go\\'"
+  :hook ((before-save . gofmt-before-save))
+  ;; ((go-mode . gofmt-before-save)
+  ;;  (go-mode . eglot-ensure)
+  :bind (:map go-mode-map
+              ("M-?" . godoc-at-point)
+              ("M-." . xref-find-definitions)
+              ("M-_" . xref-find-references)
+              ;; ("M-*" . pop-tag-mark) ;; Jump back after godef-jump
+              ("C-c m r" . go-run))
+  :custom
+  (gofmt-command "goimports"))
 
- 
-  ;; Configure gopls for go-mode
 
-  ;; Setup capf
-  ;; (add-hook 'go-ts-mode-hook (lambda ()
-  ;;                              (setq-local completion-at-point-functions
-  ;;                                          (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
-  ;; (add-hook 'go-mode-hook (lambda ()
-  ;;                           (setq-local completion-at-point-functions
-  ;;                                       (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+;; Configure gopls for go-mode
 
-  ;; (add-hook 'go-mode-hook (lambda ()
-  ;;                         (flycheck-add-next-checker 'golangci-lint)
-  ;;                         (flycheck-add-next-checker 'go-vet)))
+;; Setup capf
+;; (add-hook 'go-ts-mode-hook (lambda ()
+;;                              (setq-local completion-at-point-functions
+;;                                          (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
+;; (add-hook 'go-mode-hook (lambda ()
+;;                           (setq-local completion-at-point-functions
+;;                                       (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
 
-  (use-package gotest
-    :straight t
-    :after go-mode
-    :bind (:map go-mode-map
-                ("C-c t f" . go-test-current-file)
-                ("C-c t t" . go-test-current-test)
-                ("C-c t j" . go-test-current-project)
-                ("C-c t b" . go-test-current-benchmark)
-                ("C-c t c" . go-test-current-coverage)
-                ("C-c t x" . go-run)))
+;; (add-hook 'go-mode-hook (lambda ()
+;;                         (flycheck-add-next-checker 'golangci-lint)
+;;                         (flycheck-add-next-checker 'go-vet)))
 
-  (use-package go-guru
-    :straight t
-    :hook
-    (go-mode . go-guru-hl-identifier-mode))
+(use-package gotest
+  :straight t
+  :after go-mode
+  :bind (:map go-mode-map
+              ("C-c t f" . go-test-current-file)
+              ("C-c t t" . go-test-current-test)
+              ("C-c t j" . go-test-current-project)
+              ("C-c t b" . go-test-current-benchmark)
+              ("C-c t c" . go-test-current-coverage)
+              ("C-c t x" . go-run)))
 
-  ;; (use-package go-projectile
-  ;;   :straight t
-  ;;   :after (projectile go-mode))
+(use-package go-guru
+  :straight t
+  :hook
+  (go-mode . go-guru-hl-identifier-mode))
 
-  (use-package flycheck-golangci-lint
-    :straight t
-    :hook
-    (go-mode . flycheck-golangci-lint-setup))
+;; (use-package go-projectile
+;;   :straight t
+;;   :after (projectile go-mode))
 
-  (use-package go-eldoc
-    :straight t
-    :hook
-    (go-mode . go-eldoc-setup))
+(use-package flycheck-golangci-lint
+  :straight t
+  :hook
+  (go-mode . flycheck-golangci-lint-setup))
 
-  (use-package go-tag
-    :straight t
-    :bind (:map go-mode-map
-                ("C-c t a" . go-tag-add)
-                ("C-c t r" . go-tag-remove))
-    :init (setq go-tag-args (list "-transform" "camelcase")))
+(use-package go-eldoc
+  :straight t
+  :hook
+  (go-mode . go-eldoc-setup))
 
-  (use-package go-fill-struct
-    :defer t)
+(use-package go-tag
+  :straight t
+  :bind (:map go-mode-map
+              ("C-c t a" . go-tag-add)
+              ("C-c t r" . go-tag-remove))
+  :init (setq go-tag-args (list "-transform" "camelcase")))
 
-  (use-package go-impl
-    :straight t)
+(use-package go-fill-struct
+  :straight t
+  :defer t
+  ;; :bind (:map go-mode-map
+  ;;             ("C-c f" . go-fill-struct))
+  )
+
+(use-package go-impl
+  :straight t)
+
+(use-package go-playground
+  :straight t
+  ;; :bind (:map go-mode-map
+  ;;             ("C-c p" . go-playground))
+)
 #+end_src
 
 **** ginkgo
@@ -1185,32 +1200,94 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; Optimizations
   (fset #'jsonrpc--log-event #'ignore)
   (setq jsonrpc-event-hook nil)
+  (setq eglot-events-buffer-size 0)
 
   ;; Not sure if this really helps
   ;; Enable completion capabilities
-  (setq completion-category-overrides '((eglot (styles orderless))))
+  ;; (setq completion-category-overrides '((eglot (styles orderless))))
   ;; Configure tab for completion
   (setq tab-always-indent 'complete)
-  ;; Don't prompt for server-initiated edits
-  (setq eglot-confirm-server-initiated-edits nil)
   ;; Enable snippet/template support
   (setq eglot-insert-completion-annotations t)
-  ;; Extend completion capabilities
-  (setq eglot-extended-capabilities
-        '(:completionItem (:snippetSupport t
-                                           :resolveSupport (:properties ["documentation"
-                                                                         "details"
-                                                                         "additionalTextEdits"])
-                                           :insertReplaceSupport t)
-                          :textDocument (:completion (:completionItem (:snippetSupport t
-                                                                                       :insertReplaceSupport t)))))
-  ;; Enable eglot for different modes
   (add-hook 'go-mode-hook 'eglot-ensure))
 #+end_src
 
-#+RESULTS:
-: t
+*** COMMENT lsp-mode
+#+begin_src emacs-lisp
 
+(use-package lsp-mode
+  :straight t
+  :config
+  (setq lsp-idle-delay 0.5
+        lsp-enable-symbol-highlighting t
+        lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
+        ;; lsp-disabled-clients '(eslint)
+        lsp-pyls-plugins-flake8-enabled t)
+  :hook (
+         (go-mode . lsp-deferred)
+         ;; (typescript-mode . lsp)
+         ;; (js-mode . lsp)
+         ;; (vue-mode . lsp)
+         ;; (svelte-mode . lsp)
+         ;; (python-mode . lsp)
+         ;; (json-mode . lsp)
+         ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
+         ;; (lsp-mode . lsb-enable-which-key-integration))
+         )
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-print-io nil)
+  (lsp-trace nil)
+  (lsp-print-performance nil)
+  (lsp-prefer-flymake t))
+#+end_src
+
+
+*** COMMENT lsp-ui
+#+begin_src emacs-lisp
+(use-package lsp-ui
+  :straight t
+  :config
+  (setq
+        lsp-ui-sideline-show-hover nil
+        ;; lsp-ui-sideline-delay 0.5
+        ;; lsp-ui-sideline-ignore-duplicates t
+        lsp-ui-doc-delay 0.5
+        lsp-ui-doc-position 'bottom
+        lsp-ui-doc-alignment 'frame
+        lsp-ui-doc-header nil
+        lsp-ui-doc-include-signature t
+        lsp-ui-doc-use-childframe t)
+  :commands lsp-ui-mode
+  :custom
+  ;; lsp-ui-doc
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-header t)
+  (lsp-ui-doc-include-signature t)
+  (lsp-ui-doc-position 'top) ;; top, bottom, or at-point
+  (lsp-ui-doc-max-width 120)
+  (lsp-ui-doc-max-height 30)
+  (lsp-ui-doc-use-childframe t)
+  (lsp-ui-doc-use-webkit t)
+  ;; signature
+  (lsp-signature-auto-activate t)
+  (lsp-signature-render-documentation t)
+  (lsp-eldoc-hook t)
+
+  :bind
+  (:map lsp-ui-mode-map
+              ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ;; ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c C-r" . lsp-ui-peek-find-references)
+              ("C-c C-j" . lsp-ui-peek-find-definitions)
+              ("C-c i"   . lsp-ui-peek-find-implementation)
+              ("C-c u" . lsp-ui-imenu)
+              ("C-c d" . lsp-ui-doc-glance)
+              ("C-c e" . lsp-treemacs-errors-list)
+              ("C-c D" . lsp-ui-doc-show)
+              ("C-c o" . lsp-describe-thing-at-point)
+              ("C-c s"   . lsp-ui-sideline-mode)))
+#+end_src
 **** TODO testing
 #+begin_src emacs-lisp
 ;; Manual reload sequence
@@ -1806,15 +1883,13 @@ If prefix ARG, copy instead of move."
 
   ;; Save all buffers after refilling
   (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers))))
-
-
 #+end_src
 ** org-modern
 #+begin_src emacs-lisp
 (use-package org-modern
   :straight t
-  ;; :hook (org-mode . org-modern-mode)
-  ;; :hook (org-agenda-finalize . org-modern-agenda)
+  :hook (org-mode . org-modern-mode)
+  :hook (org-agenda-finalize . org-modern-agenda)
   ;; :custom-face
   ;; ;; force monospaced font for tags
   ;; (org-modern-tag ((t (:inherit org-verbatim :foreground "black" :background "lightgray" :box "black"))))
@@ -1923,7 +1998,15 @@ If prefix ARG, copy instead of move."
   (other-window 1)
   (org-timeblock))
 #+end_src
-** COMMENT org-roam
+** exporters
+*** hugo
+#+begin_src emacs-lisp
+(use-package ox-hugo
+  :defer t
+  :after ox
+  :straight t)
+#+end_src
+** org-roam
 #+begin_src emacs-lisp
 (use-package org-roam
   :straight t
@@ -1989,6 +2072,22 @@ If prefix ARG, copy instead of move."
 #+results:
 : org-roam-dailies-goto-today
 
+*** consult-org-roam
+#+begin_src emacs-lisp
+(use-package consult-org-roam
+  :straight t
+  :bind (("M-g rn" . consult-org-roam-file-find)
+         ("M-g rs" . consult-org-roam-search))
+  :custom
+  (consult-org-roam-grep-func #'consult-ripgrep)
+  (consult-org-roam-buffer-narrow-key ?r) ; custom narrow key for `consult-buffer'
+  (consult-org-roam-buffer-after-buffers t)
+  :config
+  (consult-org-roam-mode 1)
+  ;; Eventually suppress previewing for certain functions
+  (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
+#+end_src
+
 ** org-babel
 #+begin_src emacs-lisp
 ;; Install ob-go
@@ -2027,14 +2126,6 @@ Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating present
 (use-package org-re-reveal
    :straight t
    :defer t)
-#+end_src
-** exporters
-*** hugo
-#+begin_src emacs-lisp
-(use-package ox-hugo
-  :defer t
-  :after ox
-  :straight t)
 #+end_src
 ** custom elisp
 *** Enter clock data manually
@@ -2156,6 +2247,13 @@ Disable keyboard-escape-quit as it always closes windows in a nasty way:
 (global-unset-key (kbd "C-x <escape> <escape>")) ; repeat-complex-command
 
 #+end_src
+
+Something I use a lot:
+
+#+begin_src emacs-lisp
+;; (bind-key "C-c d" 'delete-pair)
+#+end_src
+
 *** MacOS
 Some keybindings for MacOS
 #+begin_src emacs-lisp
@@ -3036,6 +3134,479 @@ position and resume whenever the same video is played again (read [[https://unix
 (with-eval-after-load 'browse-url
   (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
 #+end_src
+** Feeds
+*** elfeed
+#+begin_src emacs-lisp
+(use-package elfeed
+  :defer t
+  :straight t
+  :config
+  ;; Global keybindings for elfeed
+  (keymap-global-set "C-c e e" #'elfeed)
+  (keymap-global-set "C-c e u" #'elfeed-update)
+  (keymap-global-set "C-c e s" #'elfeed-search)
+
+  ;; Keybindings for elfeed-search-mode
+  (keymap-set elfeed-search-mode-map "g" #'elfeed-search-update--force)
+  (keymap-set elfeed-search-mode-map "f j" #'dorneanu/elfeed-cycle-filters-forward)
+  (keymap-set elfeed-search-mode-map "f J" #'dorneanu/elfeed-cycle-filters-backward)
+  (keymap-set elfeed-search-mode-map "f k" #'dorneanu/elfeed-increase-time-filter)
+  (keymap-set elfeed-search-mode-map "f K" #'dorneanu/elfeed-decrease-time-filter)
+  (keymap-set elfeed-search-mode-map "f u" #'elfeed-update)
+  (keymap-set elfeed-search-mode-map "f U" #'elfeed-search-update--force)
+  (keymap-set elfeed-search-mode-map "y" #'elfeed-show-yank)
+  (keymap-set elfeed-search-mode-map "m g r" #'my/elfeed-reddit-show-comments)
+  (keymap-set elfeed-search-mode-map "m g h" #'my/elfeed-hn-show-comments)
+  (keymap-set elfeed-search-mode-map "o x" #'dorneanu/elfeed-search-browse-url-xwidget)
+  (keymap-set elfeed-search-mode-map "o b" #'elfeed-search-browse-url)
+  (keymap-set elfeed-search-mode-map "o r" #'sqrtminusone/rdrview-elfeed-show)
+
+  ;; Keybindings for elfeed-show-mode
+  (keymap-set elfeed-show-mode-map "q" #'elfeed-kill-buffer)
+  (keymap-set elfeed-show-mode-map "u" #'elfeed-show-tag--unread)
+  (keymap-set elfeed-show-mode-map "y" #'elfeed-show-yank)
+  ;; <<elfeed-open-youtube-with-mpv>>
+  :custom
+  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
+   (elfeed-db-directory "~/.elfeed")
+   (elfeed-goodies/wide-threshold 0.2)
+   (elfeed-set-timeout 36000)))
+#+end_src
+
+#+results:
+
+**** Custom functions
+
+#+begin_src emacs-lisp
+  (defun hp/elfeed-entry-line-draw (entry)
+    "Print ENTRY to the buffer."
+    (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+           (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+           (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+           (feed (elfeed-entry-feed entry))
+           (feed-title
+            (when feed
+              (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+           (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+           (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
+           (title-width (- (window-width) elfeed-goodies/feed-source-column-width
+                           elfeed-goodies/tag-column-width 4))
+           (title-column (elfeed-format-column
+                          title (elfeed-clamp
+                                 elfeed-search-title-min-width
+                                 title-width
+                                 title-width)
+                          :left))
+           (tag-column (elfeed-format-column
+                        tags-str (elfeed-clamp (length tags-str)
+                                               elfeed-goodies/tag-column-width
+                                               elfeed-goodies/tag-column-width)
+                        :left))
+           (feed-column (elfeed-format-column
+                         feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                                  elfeed-goodies/feed-source-column-width
+                                                  elfeed-goodies/feed-source-column-width)
+                         :left))
+           ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
+           ;; (entry-authors (concatenate-authors
+           ;;                 (elfeed-meta entry :authors)))
+           ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
+           )
+      (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
+          (progn
+            ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
+            (insert (propertize date 'face 'elfeed-search-date-face) " ")
+            (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+            (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+            ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
+            (insert (propertize title 'face title-faces 'kbd-help title))
+            )
+        (insert (propertize title 'face title-faces 'kbd-help title))))
+    )
+
+#+end_src
+
+xwidget related:
+
+#+begin_src emacs-lisp
+  (defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
+    "open with xwidget"
+    (interactive "P")
+    ;; Split window and focus there
+    (split-window-right)
+    (balance-windows)
+    (other-window 1)
+    (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+      (elfeed-search-browse-url use-generic-p)))
+#+end_src
+
+**** Filter cycling
+Cycle through different filters:
+
+#+begin_src emacs-lisp
+  (defvar dorneanu/elfeed-custom-filters
+    '("@1-week-ago +unread +daily -devto -youtube -hn"
+      "@1-week-ago +unread +daily -devto -youtube -hn +blogs"
+      "@1-week-ago +unread +daily -devto -youtube -hn +security"
+      "@1-week-ago +unread +reddit +top"
+      "@1-week-ago +unread -hn +news +lage"
+      "@1-week-ago +unread -hn +news +correctiv"
+      "@1-week-ago +unread +finance"
+      "@1-week-ago +unread +daily -devto +youtube +y1"
+      "@1-week-ago +unread +daily -devto +hn +points")
+    "List of elfeed filters to cycle through.")
+
+  (defvar dorneanu/elfeed-current-filter-index 0
+    "Current index of `my-elfeed-filters` list.")
+
+  ;; Regular expression to match the time filter
+  (defvar dorneanu/time-filter-regex "@\\([0-9]+\\)-week-ago"
+    "Regex to match the time filter in elfeed.")
+
+  (defun dorneanu/elfeed-cycle-filters-forward ()
+    "Cycle forward through `dorneanu/elfeed-custom-filters` and apply the current filter."
+    (interactive)
+    (setq dorneanu/elfeed-current-filter-index
+          (mod (1+ dorneanu/elfeed-current-filter-index)
+               (length dorneanu/elfeed-custom-filters)))
+    (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
+      (elfeed-search-set-filter current-filter)
+      (message "Elfeed filter set to: %s" current-filter)))
+
+  (defun dorneanu/elfeed-cycle-filters-backward ()
+    "Cycle backward through `dorneanu/elfeed-custom-filters` and apply the current filter."
+    (interactive)
+    (setq dorneanu/elfeed-current-filter-index
+          (mod (1- dorneanu/elfeed-current-filter-index)
+               (length dorneanu/elfeed-custom-filters)))
+    (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
+      (elfeed-search-set-filter current-filter)
+      (message "Elfeed filter set to: %s" current-filter)))
+
+  (defun dorneanu/elfeed-adjust-time-filter (increment)
+    "Adjust the time filter in the current elfeed filter.
+  INCREMENT can be positive or negative to increase or decrease the time filter."
+    (let* ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters))
+           (new-filter (replace-regexp-in-string
+                        "@\\([0-9]+\\)-week-ago"
+                        (lambda (match)
+                          (let ((current-weeks (string-to-number (match-string 1 match))))
+                            (concat "@" (number-to-string (max 1 (+ current-weeks increment))) "-week-ago")))
+                        current-filter)))
+      ;; Update the filter list with the new filter
+      (setf (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters) new-filter)
+      ;; Apply the new filter
+      (elfeed-search-set-filter new-filter)
+      (message "Elfeed filter set to: %s" new-filter)))
+
+  (defun dorneanu/elfeed-increase-time-filter ()
+    "Increase the time filter (e.g., from @1-week-ago to @2-week-ago)."
+    (interactive)
+    (dorneanu/elfeed-adjust-time-filter 1))
+
+  (defun dorneanu/elfeed-decrease-time-filter ()
+    "Decrease the time filter (e.g., from @2-week-ago to @1-week-ago)."
+    (interactive)
+    (dorneanu/elfeed-adjust-time-filter -1))
+
+  (defun dorneanu/elfeed-cycle-filters ()
+    "Cycle through `dorneanu/elfeed-custom-filters` and apply the current filter."
+    (interactive)
+    (setq dorneanu/elfeed-current-filter-index
+          (mod (1+ dorneanu/elfeed-current-filter-index)
+               (length dorneanu/elfeed-custom-filters)))
+    (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
+      (elfeed-search-set-filter current-filter)
+      (message "Elfeed filter set to: %s" current-filter)))
+#+end_src
+
+**** elfeed-goodies
+Elfeed-goodies is a package which enhances the Elfeed experience.
+Aside from running its setup command as soon as possible, I also set
+in this code block all my keybinds for Elfeed here.
+#+begin_src emacs-lisp
+  (use-package elfeed-goodies
+    :defer t
+    :after elfeed
+    :commands elfeed-goodies/setup
+    :straight (:build t)
+    :init
+    (elfeed-goodies/setup)
+    :custom
+    (elfeed-goodies/feed-source-column-width 28)
+    (elfeed-goodies/tag-column-width 28)
+    :config
+    (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
+#+end_src
+
+**** Youtube
+I don’t want YouTube videos to be open with my web browser when I
+invoke ~elfeed-show-visit~, so I’ll advise this function to make it
+possible to modify the behaviour of said function. Oh, and I already
+made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
+[[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
+
+#+name: elfeed-open-youtube-with-mpv
+#+begin_src emacs-lisp
+  (defun my/elfeed-filter-youtube-videos (orig-fun &rest args)
+    "Open with mpv the video leading to PATH"
+    (let ((link (elfeed-entry-link elfeed-show-entry)))
+      (when link
+        (if (string-match-p ".*youtube\.com.*watch.*" link)
+            ;; This is a YouTube video, open it with mpv
+            (progn
+              (require 'ytplay)
+              (ytplay link))
+          (apply orig-fun args)))))
+
+  (advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
+#+end_src
+
+A future improvement to be made is to let the user chose the
+resolution of the video before it is launched. I may not always have
+the best internet connection, and viewing 4K videos on a 1080p display
+is not something very useful.
+**** elfeed-org
+Last but not least, my Elfeed configuration is stored in an org file
+thanks to ~elfeed-org~.
+#+begin_src emacs-lisp
+  (use-package elfeed-org
+    :after elfeed
+    :straight t
+    :init
+    (elfeed-org)
+    :config
+    (setq rmh-elfeed-org-files (list (concat org-directory "elfeed.org.gpg"))))
+#+end_src
+**** elfeed-tube
+#+begin_src emacs-lisp
+(use-package elfeed-tube
+  :straight t
+  :after elfeed
+  :config
+  (elfeed-tube-setup)
+  :bind (:map elfeed-show-mode-map
+              ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+              ("C-c C-x f" . elfeed-tube-fetch)
+              ([remap save-buffer] . elfeed-tube-save)
+              :map elfeed-search-mode-map
+              ("C-c C-x m" . #'dorneanu/elfeed-play-with-mpv)
+              ("C-c C-x f" . elfeed-tube-fetch)
+              ([remap save-buffer] . elfeed-tube-save)))
+
+;; https://github.com/skeeto/elfeed/issues/267
+(defun dorneanu/elfeed-play-with-mpv ()
+  "Play entry link with mpv."
+  (interactive)
+  (let ((entry (if (eq major-mode 'elfeed-show-mode) elfeed-show-entry (elfeed-search-selected :single)))
+        (quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." (elfeed-entry-link entry) quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg (elfeed-entry-link entry))))
+
+;; A more genric function
+(defun dorneanu/play-video-with-mpv (url)
+  "Play a video URL with mpv."
+  (interactive "sEnter video URL: ")
+  (let ((quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." url quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
+#+end_src
+
+**** functions
+#+begin_src emacs-lisp
+  (defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
+    "open with xwidget"
+    (interactive "P")
+    ;; Split window and focus there
+    (split-window-right)
+    (balance-windows)
+    (other-window 1)
+    (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
+      (elfeed-search-browse-url use-generic-p)))
+#+end_src
+**** reddigg
+Use reddigg to show reddit threads.
+
+#+begin_src emacs-lisp
+  (use-package reddigg
+    :straight t
+    :after (elfeed))
+
+  (defun my/elfeed-reddit-show-comments (&optional link)
+    (interactive)
+    (require 'reddigg)
+    (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                      elfeed-show-entry
+                    (elfeed-search-selected :ignore-region)))
+           (link (if link link (elfeed-entry-link entry))))
+      (reddigg-view-comments link)))
+#+end_src
+
+**** hnreader
+#+begin_src emacs-lisp
+  (use-package hnreader
+    :straight t
+    :after (elfeed))
+#+end_src
+
+Open in same window
+
+#+begin_src emacs-lisp
+  (setq hnreader-view-comments-in-same-window nil)
+#+end_src
+
+Use hnreader to show HN threads
+
+#+begin_src emacs-lisp
+  (defun my/elfeed-hn-show-comments (&optional link)
+    (interactive)
+    (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                      elfeed-show-entry
+                    (elfeed-search-selected :ignore-region)))
+           (link (if link link (elfeed-entry-link entry)))
+           (content (elfeed-deref (elfeed-entry-content entry)))
+           ;; Regex to match the Comments URL
+           (comments-url (and content
+                              (string-match "Comments URL: <a href=\"\\(https://news.ycombinator.com/item\\?id=[0-9]+\\)\">" content)
+                              (match-string 1 content))))
+      (message comments-url)
+      (setq-local hnreader-view-comments-in-same-window nil)
+      (hnreader-promise-comment (format "%s" comments-url))))
+#+end_src
+
+Use hnread to show HN threads for a URL at point
+
+#+begin_src emacs-lisp
+  (defun my/elfeed-hn-show-comments-at-point ()
+    "Kill the url at point."
+    (interactive)
+    (setq-local hnreader-view-comments-in-same-window t)
+    (hnreader-comment (format "%s" (url-get-url-at-point))))
+#+end_src
+**** COMMENT rdrview
+#+begin_src emacs-lisp
+  ;; From https://github.com/SqrtMinusOne/dotfiles
+  (defun sqrtminusone/rdrview-get (url callback)
+    "Get the rdrview representation of URL.
+
+  Call CALLBACK with the output."
+    (let* ((buffer (generate-new-buffer "rdrview"))
+           (proc (start-process "rdrview" buffer "rdrview"
+                                url "-T" "title,sitename,body"
+                                "-H")))
+      (set-process-sentinel
+       proc
+       (lambda (process _msg)
+         (let ((status (process-status process))
+               (code (process-exit-status process)))
+           (cond ((and (eq status 'exit) (= code 0))
+                  (progn
+                    (funcall callback
+                             (with-current-buffer (process-buffer process)
+                               (buffer-string)))
+                    (kill-buffer (process-buffer process))) )
+                 ((or (and (eq status 'exit) (> code 0))
+                      (eq status 'signal))
+                  (let ((err (with-current-buffer (process-buffer process)
+                               (buffer-string))))
+                    (kill-buffer (process-buffer process))
+                    (user-error "Error in rdrview: %s" err)))))))
+      proc))
+
+  (defun sqrtminusone/rdrview-parse (dom-string)
+    (let ((dom (with-temp-buffer
+                 (insert dom-string)
+                 (libxml-parse-html-region (point-min) (point-max)))))
+      (let (title sitename content (i 0))
+        (dolist (child (dom-children (car (dom-by-id dom "readability-page-1"))))
+          (when (listp child)
+            (cond
+             ((eq (car child) 'h1)
+              (setq title (dom-text child)))
+             ((eq (car child) 'h2)
+              (setq sitename (dom-text child)))
+             ((eq (car child) 'div)
+              (setq content child)))))
+        (while (and
+                (not (dom-by-tag content 'h1))
+                (dom-search
+                 content
+                 (lambda (el)
+                   (when (listp el)
+                     (pcase (car el)
+                       ('h2 (setf (car el) 'h1))
+                       ('h3 (setf (car el) 'h2))
+                       ('h4 (setf (car el) 'h3))
+                       ('h5 (setf (car el) 'h4))
+                       ('h6 (setf (car el) 'h5))))))))
+        `((title . ,title)
+          (sitename . ,sitename)
+          (content . ,(with-temp-buffer
+                        (dom-print content)
+                        (buffer-string)))))))
+
+  (defvar-local my/elfeed-show-rdrview-html nil)
+
+  (defun sqrtminusone/rdrview-elfeed-show ()
+    (interactive)
+    (unless elfeed-show-entry
+      (user-error "No elfeed entry in this buffer!"))
+    (sqrtminusone/rdrview-elfeed-show/rdrview-get
+     (elfeed-entry-link elfeed-show-entry)
+     (lambda (result)
+       (let* ((data (sqrtminusone/rdrview-parse result))
+              (inhibit-read-only t)
+              (title (elfeed-entry-title elfeed-show-entry))
+              (date (seconds-to-time (elfeed-entry-date elfeed-show-entry)))
+              (authors (elfeed-meta elfeed-show-entry :authors))
+              (link (elfeed-entry-link elfeed-show-entry))
+              (tags (elfeed-entry-tags elfeed-show-entry))
+              (tagsstr (mapconcat #'symbol-name tags ", "))
+              (nicedate (format-time-string "%a, %e %b %Y %T %Z" date))
+              (content (alist-get 'content data))
+              (feed (elfeed-entry-feed elfeed-show-entry))
+              (feed-title (elfeed-feed-title feed))
+              (base (and feed (elfeed-compute-base (elfeed-feed-url feed)))))
+         (erase-buffer)
+         (insert (format (propertize "Title: %s\n" 'face 'message-header-name)
+                         (propertize title 'face 'message-header-subject)))
+         (when elfeed-show-entry-author
+           (dolist (author authors)
+             (let ((formatted (elfeed--show-format-author author)))
+               (insert
+                (format (propertize "Author: %s\n" 'face 'message-header-name)
+                        (propertize formatted 'face 'message-header-to))))))
+         (insert (format (propertize "Date: %s\n" 'face 'message-header-name)
+                         (propertize nicedate 'face 'message-header-other)))
+         (insert (format (propertize "Feed: %s\n" 'face 'message-header-name)
+                         (propertize feed-title 'face 'message-header-other)))
+         (when tags
+           (insert (format (propertize "Tags: %s\n" 'face 'message-header-name)
+                           (propertize tagsstr 'face 'message-header-other))))
+         (insert (propertize "Link: " 'face 'message-header-name))
+         (elfeed-insert-link link link)
+         (insert "\n")
+         (cl-loop for enclosure in (elfeed-entry-enclosures elfeed-show-entry)
+                  do (insert (propertize "Enclosure: " 'face 'message-header-name))
+                  do (elfeed-insert-link (car enclosure))
+                  do (insert "\n"))
+         (insert "\n")
+         (if content
+             (elfeed-insert-html content base)
+           (insert (propertize "(empty)\n" 'face 'italic)))
+         (setq-local my/elfeed-show-rdrview-html content)
+         (goto-char (point-min))))))
+
+#+end_src
+
 * Email
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
