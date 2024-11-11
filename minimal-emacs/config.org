@@ -337,10 +337,10 @@ Configure GPG assistant
     ;; Option 1: Unbind RET completely
     ;; (keymap-unset corfu-map "RET")
     ;; Option 2: Use RET only in shell modes
-    ;; (keymap-set corfu-map "RET" `( menu-item "" nil :filter
-    ;;                                ,(lambda (&optional _)
-    ;;                                   (and (derived-mode-p 'eshell-mode 'comint-mode)
-                                           ;; #'corfu-send))))
+    (keymap-set corfu-map "RET" `( menu-item "" nil :filter
+                                   ,(lambda (&optional _)
+                                      (and (derived-mode-p 'eshell-mode 'comint-mode)
+                                           #'corfu-send))))
     ;; Bind TAB to the new completion function
     (define-key corfu-map [tab] #'my/corfu-complete-full)
     (define-key corfu-map (kbd "TAB") #'my/corfu-complete-full)
@@ -373,8 +373,6 @@ Configure GPG assistant
     :init
     (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 #+end_src
-
-#+RESULTS:
 
 * Projects
 ** project
@@ -1050,14 +1048,43 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ((go-mode . gofmt-before-save)
   ;;  (go-mode . eglot-ensure)
   :bind (:map go-mode-map
+              ("C-c e h" . eldoc-box-hover-mode)
+              ("C-c l e" . my-switch-to-eglot)
+              ("C-c l l" . my-switch-to-lsp)
               ("M-?" . godoc-at-point)
               ("M-." . xref-find-definitions)
               ("M-_" . xref-find-references)
               ;; ("M-*" . pop-tag-mark) ;; Jump back after godef-jump
               ("C-c m r" . go-run))
   :custom
-  (gofmt-command "goimports"))
+  (gofmt-command "goimports")
+  :config
+  ;; Configure LSP profiles
+  (defun my-switch-to-eglot ()
+    "Switch to eglot for the current Go buffer."
+    (interactive)
+    ;; Configure and start eglot
+    (add-to-list 'completion-styles 'flex)
+    (setq-local eglot-debug-server-messages t)
+    (setq-local eglot-events-buffer-size 0)
+    (setq-local eglot-workspace-configuration
+                '(:gopls
+                  ((usePlaceholders . t))))
+    
+    ;; Start eglot
+    (eglot-ensure))
 
+  (defun my-switch-to-lsp ()
+    "Switch to lsp-mode for the current Go buffer."
+    (interactive)
+    ;; Configure and start lsp-mode
+    (add-to-list 'completion-styles 'flex)
+    (setq-local lsp-log-io t)
+    (setq-local lsp-idle-delay 0.1)
+    (setq-local lsp-enable-snippet t)
+    
+    ;; Start LSP
+    (lsp-deferred)))
 
 ;; Configure gopls for go-mode
 
@@ -1088,10 +1115,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :straight t
   :hook
   (go-mode . go-guru-hl-identifier-mode))
-
-;; (use-package go-projectile
-;;   :straight t
-;;   :after (projectile go-mode))
 
 (use-package flycheck-golangci-lint
   :straight t
@@ -1126,6 +1149,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;;             ("C-c p" . go-playground))
 )
 #+end_src
+
+#+RESULTS:
+: #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8125 data (:use-package (26417 62316 517790 0) :init (26417 62316 517786 0) :config (26417 62316 517666 0) :config-secs (0 0 4 0) :init-secs (0 0 694 0) :use-package-secs (0 0 5334 0)))
 
 **** ginkgo
 #+begin_src emacs-lisp
@@ -1228,7 +1254,7 @@ Need to add some keybindings here:
   (setq eldoc-box-position-function #'eldoc-box--default-upper-corner-position-function
         eldoc-box-clear-with-C-g t))
 #+end_src
-*** COMMENT lsp-mode
+*** lsp-mode
 #+begin_src emacs-lisp
 
 (use-package lsp-mode
@@ -1239,17 +1265,17 @@ Need to add some keybindings here:
         lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
         ;; lsp-disabled-clients '(eslint)
         lsp-pyls-plugins-flake8-enabled t)
-  :hook (
-         (go-mode . lsp-deferred)
-         ;; (typescript-mode . lsp)
-         ;; (js-mode . lsp)
-         ;; (vue-mode . lsp)
-         ;; (svelte-mode . lsp)
-         ;; (python-mode . lsp)
-         ;; (json-mode . lsp)
-         ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
-         ;; (lsp-mode . lsb-enable-which-key-integration))
-         )
+  ;; :hook (
+  ;;        ;; (go-mode . lsp-deferred)
+  ;;        ;; (typescript-mode . lsp)
+  ;;        ;; (js-mode . lsp)
+  ;;        ;; (vue-mode . lsp)
+  ;;        ;; (svelte-mode . lsp)
+  ;;        ;; (python-mode . lsp)
+  ;;        ;; (json-mode . lsp)
+  ;;        ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
+  ;;        ;; (lsp-mode . lsb-enable-which-key-integration))
+  ;;        )
   :commands (lsp lsp-deferred)
   :custom
   (lsp-print-io nil)
@@ -1259,7 +1285,7 @@ Need to add some keybindings here:
 #+end_src
 
 
-*** COMMENT lsp-ui
+*** lsp-ui
 #+begin_src emacs-lisp
 (use-package lsp-ui
   :straight t
@@ -2024,10 +2050,11 @@ If prefix ARG, copy instead of move."
 #+end_src
 ** org-roam
 #+begin_src emacs-lisp
+(require 'ox-hugo)
 (use-package org-roam
   :straight t
   :custom
-  (org-roam-directory "~/repos/roam")
+  (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
   ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
   ;; (org-roam-completion-everywhere t)
@@ -2119,6 +2146,8 @@ If prefix ARG, copy instead of move."
   :straight t
   :defer t)
 
+(setq org-src-preserve-indentation t)
+(setq org-src-tab-acts-natively nil)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((sql . t)
@@ -2143,6 +2172,42 @@ Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating present
    :straight t
    :defer t)
 #+end_src
+*** org-present
+#+begin_src emacs-lisp
+(use-package org-present
+  :straight t
+  :commands (org-present)
+  :config
+  (setq  org-present-startup-folded t)
+  (setq org-present-mode-hook
+        (list (lambda ()
+                (blink-cursor-mode 0)
+                (org-present-big)
+                (org-overview)
+                ;; (org-display-inline-images)
+                ;; (org-present-hide-cursor)
+                (org-present-read-only)
+                (display-line-numbers-mode 0)
+                ;; (org-latex-preview '(16))
+                ;; TODO ^somehow this stucks at running LaTeX^
+                (setq-local olivetti-body-width 70)
+                (olivetti-mode 1))))
+  (setq org-present-mode-quit-hook
+        (list (lambda ()
+                (blink-cursor-mode 1)
+                (org-present-small)
+                ;; (org-remove-inline-images)
+                (org-present-show-cursor)
+                (org-present-read-write)
+                (display-line-numbers-mode 1)
+                (olivetti-mode -1)
+                (setq-local olivetti-body-width (default-value 'olivetti-body-width))))))
+#+end_src
+
+#+RESULTS:
+: #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8125 data (:use-package (26417 39284 13743 0) :init (26417 39284 13740 0) :init-secs (0 0 4529 0) :use-package-secs (0 0 21692 0) :config (26417 39284 13726 0) :config-secs (0 0 4511 0)))
+
+
 ** custom elisp
 *** Enter clock data manually
 From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
