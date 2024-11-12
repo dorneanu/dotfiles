@@ -65,6 +65,26 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (straight-use-package '(project :type built-in))
   (straight-use-package '(xref :type built-in))
   #+end_src
+** Extras
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
+:end:
+#+begin_src emacs-lisp
+;; From https://github.com/abougouffa/minemacs/blob/main/core/me-lib-extra.el
+;;;###autoload
+(defun +region-or-thing-at-point (&optional leave-region-marked)
+  "Return the region or the thing at point.
+
+  If LEAVE-REGION-MARKED is no-nil, don't call `desactivate-mark'
+  when a region is selected."
+  (when-let* ((thing (ignore-errors
+                       (or (prog1 (thing-at-point 'region t)
+                             (unless leave-region-marked (deactivate-mark)))
+                           (cl-some (+apply-partially-right #'thing-at-point t)
+                                    '(symbol email number string word))))))
+    ;; If the matching thing has multi-lines, join them
+    (string-join (string-lines thing))))
+#+end_src
 ** customizations
 #+begin_src emacs-lisp
 ;; Load the custom variables file if it exists
@@ -268,23 +288,6 @@ Configure GPG assistant
      epa-pinentry-mode 'ask)
     :custom
     (epa-file-select-keys 'silent))
-#+end_src
-** Extras
-#+begin_src emacs-lisp
-;; From https://github.com/abougouffa/minemacs/blob/main/core/me-lib-extra.el
-;;;###autoload
-(defun +region-or-thing-at-point (&optional leave-region-marked)
-  "Return the region or the thing at point.
-
-If LEAVE-REGION-MARKED is no-nil, don't call `desactivate-mark'
-when a region is selected."
-  (when-let* ((thing (ignore-errors
-                       (or (prog1 (thing-at-point 'region t)
-                             (unless leave-region-marked (deactivate-mark)))
-                           (cl-some (+apply-partially-right #'thing-at-point t)
-                                    '(symbol email number string word))))))
-    ;; If the matching thing has multi-lines, join them
-    (string-join (string-lines thing))))
 #+end_src
 * Autocompletion
 :properties:
@@ -1659,7 +1662,7 @@ An Emacs "jump to definition" package for 50+ languages
 #+begin_src emacs-lisp
 (use-package breadcrumb
   :straight t
-  :hook ((go-mode c-mode c++-mode c-ts-mode c++-ts-mode python-mode python-ts-mode rust-mode rust-ts-mode sh-mode bash-ts-mode) . breadcrumb-local-mode))
+  :hook ((go-mode org-mode c-mode c++-mode c-ts-mode c++-ts-mode python-mode python-ts-mode rust-mode rust-ts-mode sh-mode bash-ts-mode) . breadcrumb-local-mode))
 #+end_src
 ** VC
 *** magit
@@ -2336,7 +2339,17 @@ If prefix ARG, copy instead of move."
    (mermaid . t)
    (shell . t)))
 #+end_src
-
+** org-drawio
+#+begin_src emacs-lisp
+(use-package org-drawio
+  :commands (org-drawio-add
+             org-drawio-open)
+  :custom ((org-drawio-input-dir "./draws")
+           (org-drawio-output-dir "./images")
+           (org-drawio-output-page "0")
+           ;; set to t, if you want to crop the image.
+           (org-drawio-crop nil)))
+#+end_src
 ** counsel-org-tag
 Use counsel-org-tag (I couldn't find any alternative for consult):
 
@@ -4243,5 +4256,20 @@ I often want to reply without the original message:
   ;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
   ;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
   ;;   )
+#+end_src
+* Applications
+** AI
+*** copilot
+#+begin_src emacs-lisp
+(use-package copilot
+  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  :after corfu
+  :hook (prog-mode . copilot-mode)
+  :bind ((:map prog-mode-map
+               ("M-k" . copilot-complete))
+         (:map copilot-completion-map
+               ("M-l" . copilot-accept-completion)
+               ("C-l" . copilot-accept-completion-by-line)
+               ("C-w" . copilot-accept-completion-by-word))))
 #+end_src
 
