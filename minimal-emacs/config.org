@@ -64,7 +64,7 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   ;; Fixes eglot problem ("Feature provided by other file: ...")
   (straight-use-package '(project :type built-in))
   (straight-use-package '(xref :type built-in))
-  #+end_src
+#+end_src
 ** Extras
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
@@ -88,7 +88,7 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ** customizations
 #+begin_src emacs-lisp
 ;; Load the custom variables file if it exists
-(when (file-exists-p custom-file) (+load custom-file))
+;; (when (file-exists-p custom-file) (+load custom-file))
 #+end_src
 ** Vertico & Co.
 :properties:
@@ -698,6 +698,18 @@ Used for popups (eshell, scratch buffer etc.)
     :custom
     (olivetti-body-width 0.68))
 #+end_src
+** drag-stuff
+#+begin_src emacs-lisp
+(use-package drag-stuff
+  :straight t
+  :bind (("C-M-ö" . drag-stuff-up)
+         ("C-M-ä" . drag-stuff-down))
+  :diminish
+  :hook (prog-mode . drag-stuff-mode)
+  :config
+  (add-to-list 'drag-stuff-except-modes 'org-mode)
+  (drag-stuff-define-keys))
+#+end_src
 ** undo-fu
 #+begin_src emacs-lisp
 (use-package undo-fu
@@ -938,6 +950,12 @@ Load theme
 Set default font
 #+begin_src emacs-lisp
 (set-face-attribute 'default nil :family "JetBrains Mono")
+#+end_src
+** visual-fill-column
+#+begin_src emacs-lisp
+(use-package visual-fill-column
+  :straight t
+  :demand t)
 #+end_src
 ** Modeline
 *** doom-modeline
@@ -1339,6 +1357,83 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     :straight t
     :defer t
     :mode "/\\(Cargo.lock\\|\\.cargo/config\\)\\'")
+#+end_src
+*** Web
+**** web-mode
+#+begin_src emacs-lisp
+(use-package web-mode
+  :straight t
+  :defer t
+  :mode (("\\.phtml\\'"      . web-mode)
+         ("\\.tpl\\.php\\'"  . web-mode)
+         ("\\.twig\\'"       . web-mode)
+         ("\\.xml\\'"        . web-mode)
+         ("\\.html\\'"       . web-mode)
+         ("\\.htm\\'"        . web-mode)
+         ("\\.[gj]sp\\'"     . web-mode)
+         ("\\.as[cp]x?\\'"   . web-mode)
+         ("\\.eex\\'"        . web-mode)
+         ("\\.erb\\'"        . web-mode)
+         ("\\.mustache\\'"   . web-mode)
+         ("\\.handlebars\\'" . web-mode)
+         ("\\.hbs\\'"        . web-mode)
+         ("\\.eco\\'"        . web-mode)
+         ("\\.ejs\\'"        . web-mode)
+         ("\\.svelte\\'"     . web-mode)
+         ("\\.ctp\\'"        . web-mode)
+         ("\\.djhtml\\'"     . web-mode)
+         ("\\.vue\\'"        . web-mode))
+  :bind (:map web-mode-map
+        ;; Quick actions with direct M-g prefix
+        ("M-g /" . web-mode-element-close)
+        ("M-g k" . web-mode-element-kill)
+        ("M-g s" . web-mode-element-select)
+        
+        ;; Tag operations (M-g t prefix)
+        ("M-g t n" . web-mode-tag-next)
+        ("M-g t p" . web-mode-tag-previous)
+        ("M-g t m" . web-mode-tag-match)
+        ("M-g t s" . web-mode-tag-select)
+        ("M-g t b" . web-mode-tag-beginning)
+        ("M-g t e" . web-mode-tag-end)
+        
+        ;; Element operations (M-g e prefix)
+        ("M-g e n" . web-mode-element-next)
+        ("M-g e p" . web-mode-element-previous)
+        ("M-g e u" . web-mode-element-parent)
+        ("M-g e d" . web-mode-element-child)
+        ("M-g e k" . web-mode-element-kill)
+        ("M-g e w" . web-mode-element-wrap)
+        ("M-g e s" . web-mode-element-select)
+        ("M-g e c" . web-mode-element-clone)
+        ("M-g e r" . web-mode-element-rename)
+        
+        ;; Attribute operations (M-g a prefix)
+        ("M-g a n" . web-mode-attribute-next)
+        ("M-g a p" . web-mode-attribute-previous)
+        ("M-g a k" . web-mode-attribute-kill)
+        ("M-g a i" . web-mode-attribute-insert)
+        ("M-g a s" . web-mode-attribute-select))
+  :config
+  (setq web-mode-markup-indent-offset 2
+        web-mode-code-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-enable-auto-pairing t
+        web-mode-enable-css-colorization t))
+#+end_src
+**** emmet-mode
+#+begin_src emacs-lisp
+(use-package emmet-mode
+  :straight t
+  :defer t
+  :hook ((css-mode  . emmet-mode)
+         (html-mode . emmet-mode)
+         (web-mode  . emmet-mode)
+         (sass-mode . emmet-mode)
+         (scss-mode . emmet-mode)
+         (web-mode  . emmet-mode))
+  :bind (:map emmet-mode-keymap
+        (("M-RET" . 'emmet-expand-yas))))
 #+end_src
 *** Yaml
 #+begin_src emacs-lisp
@@ -2238,8 +2333,7 @@ If prefix ARG, copy instead of move."
 *** hugo
 #+begin_src emacs-lisp
 (use-package ox-hugo
-  :defer t
-  :after ox
+  :after org
   :straight t)
 #+end_src
 ** org-roam
@@ -2485,7 +2579,9 @@ Insert images easily into ORG mode files
 *** org-web-tools
 #+begin_src emacs-lisp
 (use-package org-web-tools
-  :straight t)
+  :straight t
+  :config
+  (setq org-web-tools-pandoc-sleep-time 10))
 #+end_src
 
 * Keybindings
@@ -2771,7 +2867,7 @@ Various useful utilities
          ("C-c u" . crux-view-url)
          ("C-c f r" . crux-rename-buffer-and-file)
          ("C-c f d" . crux-delete-file-and-buffer)
-         ("C-c f s" . create-scratch-buffer)
+         ("C-x C-b" . create-scratch-buffer)
          ("s-k"   . crux-kill-whole-line)
          ;;("s-o"   . crux-smart-open-line-above)
          ("C-a"   . crux-move-beginning-of-line)
@@ -3484,37 +3580,121 @@ position and resume whenever the same video is played again (read [[https://unix
 (use-package elfeed
   :defer t
   :straight t
-  :config
-  ;; Global keybindings for elfeed
-  (keymap-global-set "C-c e e" #'elfeed)
-  (keymap-global-set "C-c e u" #'elfeed-update)
-  (keymap-global-set "C-c e s" #'elfeed-search)
-
-  ;; Keybindings for elfeed-search-mode
-  (keymap-set elfeed-search-mode-map "g" #'elfeed-search-update--force)
-  (keymap-set elfeed-search-mode-map "f j" #'dorneanu/elfeed-cycle-filters-forward)
-  (keymap-set elfeed-search-mode-map "f J" #'dorneanu/elfeed-cycle-filters-backward)
-  (keymap-set elfeed-search-mode-map "f k" #'dorneanu/elfeed-increase-time-filter)
-  (keymap-set elfeed-search-mode-map "f K" #'dorneanu/elfeed-decrease-time-filter)
-  (keymap-set elfeed-search-mode-map "f u" #'elfeed-update)
-  (keymap-set elfeed-search-mode-map "f U" #'elfeed-search-update--force)
-  (keymap-set elfeed-search-mode-map "y" #'elfeed-show-yank)
-  (keymap-set elfeed-search-mode-map "m g r" #'my/elfeed-reddit-show-comments)
-  (keymap-set elfeed-search-mode-map "m g h" #'my/elfeed-hn-show-comments)
-  (keymap-set elfeed-search-mode-map "o x" #'dorneanu/elfeed-search-browse-url-xwidget)
-  (keymap-set elfeed-search-mode-map "o b" #'elfeed-search-browse-url)
-  (keymap-set elfeed-search-mode-map "o r" #'sqrtminusone/rdrview-elfeed-show)
-
-  ;; Keybindings for elfeed-show-mode
-  (keymap-set elfeed-show-mode-map "q" #'elfeed-kill-buffer)
-  (keymap-set elfeed-show-mode-map "u" #'elfeed-show-tag--unread)
-  (keymap-set elfeed-show-mode-map "y" #'elfeed-show-yank)
-  ;; <<elfeed-open-youtube-with-mpv>>
-  :custom
-  ((elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
+  :bind (;; Global bindings
+        ("C-c e e" . elfeed)
+        ("C-c e u" . elfeed-update)
+        ("C-c e s" . elfeed-search)
+        ("C-c e b" . elfeed-search-browse-bookmark)
+        ("C-c e l" . elfeed-search-live-filter)
+   
+        ;; Search mode bindings
+        :map elfeed-search-mode-map
+        ("g" . elfeed-search-update--force)
+        ("f j" . dorneanu/elfeed-cycle-filters-forward)
+        ("f J" . dorneanu/elfeed-cycle-filters-backward)
+        ("f k" . dorneanu/elfeed-increase-time-filter)
+        ("f K" . dorneanu/elfeed-decrease-time-filter)
+        ("f u" . elfeed-update)
+        ("f U" . elfeed-search-update--force)
+        ("y" . elfeed-show-yank)
+        ("s" . elfeed-search-live-filter)
+        ("b" . elfeed-search-browse-bookmark)
+        ("c" . org-capture)
+        ("F" . elfeed-search-fetch-visible)
+        ("t t" . elfeed-search-toggle-all)
+        ("v" . elfeed-search-view-animation)
+        ("C-c C-e" . elfeed-search-export-entries)
+        ("f d" . elfeed-search-tag-all-default)
+        ("m g r" . my/elfeed-reddit-show-comments)
+        ("m g h" . my/elfeed-hn-show-comments)
+        ("o x" . dorneanu/elfeed-search-browse-url-xwidget)
+        ("o b" . elfeed-search-browse-url)
+        ("o r" . sqrtminusone/rdrview-elfeed-show)
+   
+        ;; Show mode bindings
+        :map elfeed-show-mode-map
+        ("q" . elfeed-kill-buffer)
+        ("u" . elfeed-show-tag--unread)
+        ("y" . elfeed-show-yank)
+        ("n" . elfeed-show-next)
+        ("p" . elfeed-show-prev)
+        ("+" . elfeed-show-tag)
+        ("-" . elfeed-show-untag)
+        ("s" . elfeed-show-save)
+        ("b" . elfeed-show-bookmark)
+        ("r" . elfeed-show-refresh)
+        ("h" . elfeed-show-visit-html-file))
+   :custom
+   ((elfeed-search-title-min-width 70)
+   (elfeed-search-title-max-width 100)
+   (elfeed-search-trailing-width 30)
+   (elfeed-search-date-format '("%Y-%m-%d %H:%M" 16 :left))
+   ;; Cache content for offline reading
+   (elfeed-use-curl t)
+   (elfeed-curl-max-connections 10)
+   (elfeed-search-filter "@1-week-ago +unread +daily -devto -youtube -hn")
    (elfeed-db-directory "~/.elfeed")
    (elfeed-goodies/wide-threshold 0.2)
-   (elfeed-set-timeout 36000)))
+   (elfeed-set-timeout 36000))
+   :config
+   (custom-set-faces
+    ;; Title styling
+    '(elfeed-show-title-face ((t :height 1.5 
+                                 :weight bold 
+                                 :family "Variable Serif" 
+                                 :foreground "#A6E3A1")))  ; Catppuccin green
+    ;; Author and feed info
+    '(elfeed-show-author-face ((t :height 1.2 
+                                  :family "Variable Sans" 
+                                  :foreground "#F9E2AF")))  ; Catppuccin yellow
+    '(elfeed-show-feed-face ((t :height 1.1 
+                                :family "Variable Sans" 
+                                :foreground "#89B4FA")))    ; Catppuccin blue
+    ;; Tags and metadata
+    '(elfeed-show-tag-face ((t :box (:line-width 1)       ; Boxed tags
+                               :foreground "#F5C2E7")))     ; Catppuccin pink
+    ;; Link styling
+    '(elfeed-show-link-face ((t :height 1.1 
+                                :underline (:style line)
+                                :foreground "#89DCEB"))))   ; Catppuccin sky
+
+                                ;; Function to enhance show buffer readability
+  (defun my/elfeed-show-buffer-setup ()
+    "Enhance the readability of elfeed show buffer."
+    ;; Basic buffer settings
+    (setq-local line-spacing 0.2)            ; Increase line spacing
+    (setq-local left-margin-width 2)         ; Add left margin
+    (setq-local right-margin-width 2)        ; Add right margin
+    (setq-local header-line-format nil)      ; Clean header line
+    (setq-local cursor-type 'bar)            ; Thin cursor
+    
+    ;; Enable useful minor modes
+    (variable-pitch-mode t)                  ; Use variable-pitch fonts
+    (visual-line-mode t)                     ; Wrap lines at window edge
+    (visual-fill-column-mode t)              ; Center content
+    (display-line-numbers-mode -1)           ; Disable line numbers
+    (olivetti-mode t)                        ; Center content with margins
+    
+    ;; Apply text scaling
+    (text-scale-set 1)
+    
+    ;; Set max content width
+    (setq-local visual-fill-column-width 100)
+    (setq-local visual-fill-column-center-text t)
+    
+    ;; Custom font locks for better content structure
+    (font-lock-add-keywords
+     nil
+     '(("^\\*+ .*$" . '(:height 1.2 :weight bold))   ; Headlines
+       ("^[-*] .*$" . '(:height 1.1))                ; List items
+       ("`\\(.*?\\)`" . '(:family "Monospace"))      ; Inline code
+       ("^> .*$" . '(:slant italic :foreground "#C6A0F6")))))  ; Blockquotes
+
+   ;; Hooks
+   (add-hook 'elfeed-show-mode-hook #'my/elfeed-show-buffer-setup)
+   (add-hook 'elfeed-search-mode-hook
+            (lambda ()
+              (setq-local tooltip-function #'elfeed-search-show-entry-tooltip))))
 #+end_src
 
 #+results:
@@ -3522,51 +3702,150 @@ position and resume whenever the same video is played again (read [[https://unix
 **** Custom functions
 
 #+begin_src emacs-lisp
-  (defun hp/elfeed-entry-line-draw (entry)
-    "Print ENTRY to the buffer."
-    (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
-           (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
-           (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
-           (feed (elfeed-entry-feed entry))
-           (feed-title
-            (when feed
-              (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
-           (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
-           (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
-           (title-width (- (window-width) elfeed-goodies/feed-source-column-width
-                           elfeed-goodies/tag-column-width 4))
-           (title-column (elfeed-format-column
-                          title (elfeed-clamp
-                                 elfeed-search-title-min-width
-                                 title-width
-                                 title-width)
-                          :left))
-           (tag-column (elfeed-format-column
-                        tags-str (elfeed-clamp (length tags-str)
-                                               elfeed-goodies/tag-column-width
-                                               elfeed-goodies/tag-column-width)
+(defun hp/elfeed-entry-line-draw (entry)
+  "Enhanced print function for ENTRY in the elfeed-search buffer."
+  (let* (;; Basic entry information
+         (date (elfeed-search-format-date (elfeed-entry-date entry)))
+         (title (or (elfeed-meta entry :title) 
+                    (elfeed-entry-title entry) 
+                    ""))
+         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+         
+         ;; Feed information
+         (feed (elfeed-entry-feed entry))
+         (feed-title (when feed
+                       (or (elfeed-meta feed :title) 
+                           (elfeed-feed-title feed))))
+         
+         ;; Tags formatting
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
+         
+         ;; Width calculations
+         (title-width (- (window-width) 
+                         elfeed-goodies/feed-source-column-width
+                         elfeed-goodies/tag-column-width 
+                         10  ; date width
+                         4)) ; spacing
+         
+         ;; Column formatting
+         (title-column (elfeed-format-column
+                        title 
+                        (elfeed-clamp elfeed-search-title-min-width
+                                      title-width
+                                      title-width)
                         :left))
-           (feed-column (elfeed-format-column
-                         feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
-                                                  elfeed-goodies/feed-source-column-width
-                                                  elfeed-goodies/feed-source-column-width)
-                         :left))
-           ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
-           ;; (entry-authors (concatenate-authors
-           ;;                 (elfeed-meta entry :authors)))
-           ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
-           )
-      (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
-          (progn
-            ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
-            (insert (propertize date 'face 'elfeed-search-date-face) " ")
-            (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
-            (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
-            ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
-            (insert (propertize title 'face title-faces 'kbd-help title))
-            )
-        (insert (propertize title 'face title-faces 'kbd-help title))))
-    )
+         (tag-column (elfeed-format-column
+                      tags-str 
+                      (elfeed-clamp (length tags-str)
+                                    elfeed-goodies/tag-column-width
+                                    elfeed-goodies/tag-column-width)
+                      :left))
+         (feed-column (elfeed-format-column
+                       feed-title 
+                       (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                     elfeed-goodies/feed-source-column-width
+                                     elfeed-goodies/feed-source-column-width)
+                       :left))
+         
+         ;; Reading time calculation
+         (content (elfeed-deref (elfeed-entry-content entry)))
+         (word-count (when content 
+                       (with-temp-buffer
+                         (insert content)
+                         (count-words (point-min) (point-max)))))
+         (reading-time (when word-count 
+                         (format "%dm" (/ word-count 200))))
+         
+         ;; Age calculations
+         (age-in-days (/ (- (float-time) 
+                            (float-time (elfeed-entry-date entry))) 
+                         86400))
+         (age-face (cond ((> age-in-days 365) 'font-lock-comment-face)
+                         ((> age-in-days 30) 'font-lock-keyword-face)
+                         (t 'font-lock-string-face))))
+    
+    ;; Display logic based on window width
+    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
+        ;; Wide format
+        (progn
+          ;; Date and reading time
+          (insert (propertize date 'face 'elfeed-search-date-face) " ")
+          (when reading-time
+            (insert (propertize (format "[%s] " reading-time) 
+                                'face 'font-lock-comment-face)))
+          
+          ;; Feed and tags
+          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+          
+          ;; Title and age
+          (insert (propertize title 'face title-faces 'kbd-help title))
+          (when (> age-in-days 7)
+            (insert " " (propertize (format "(%d days old)" (round age-in-days)) 
+                                    'face age-face))))
+      
+      ;; Narrow format
+      (insert (propertize title 'face title-faces 'kbd-help title)))))
+
+;; Add mouseover tooltips
+(defun elfeed-search-show-entry-tooltip ()
+  (when-let* ((entry (elfeed-search-selected :single))
+              (content (elfeed-deref (elfeed-entry-content entry))))
+    (let ((summary (with-temp-buffer
+                     (insert content)
+                     (goto-char (point-min))
+                     (forward-paragraph)
+                     (buffer-substring (point-min) (point)))))
+      (format "Title: %s\nFeed: %s\nSummary: %s" 
+              (elfeed-entry-title entry)
+              (elfeed-feed-title (elfeed-entry-feed entry))
+              (truncate-string-to-width summary 200)))))
+(defun hp/elfeed-entry-line-draw (entry)
+  "Print ENTRY to the buffer."
+  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+         (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+         (feed (elfeed-entry-feed entry))
+         (feed-title
+          (when feed
+            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
+         (title-width (- (window-width) elfeed-goodies/feed-source-column-width
+                         elfeed-goodies/tag-column-width 4))
+         (title-column (elfeed-format-column
+                        title (elfeed-clamp
+                               elfeed-search-title-min-width
+                               title-width
+                               title-width)
+                        :left))
+         (tag-column (elfeed-format-column
+                      tags-str (elfeed-clamp (length tags-str)
+                                             elfeed-goodies/tag-column-width
+                                             elfeed-goodies/tag-column-width)
+                      :left))
+         (feed-column (elfeed-format-column
+                       feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width
+                                                elfeed-goodies/feed-source-column-width)
+                       :left))
+         ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
+         ;; (entry-authors (concatenate-authors
+         ;;                 (elfeed-meta entry :authors)))
+         ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
+         )
+    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
+        (progn
+          ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize date 'face 'elfeed-search-date-face) " ")
+          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+          ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
+          (insert (propertize title 'face title-faces 'kbd-help title))
+          )
+      (insert (propertize title 'face title-faces 'kbd-help title))))
+  )
 
 #+end_src
 
@@ -4279,6 +4558,9 @@ I often want to reply without the original message:
   ;;   )
 #+end_src
 * Applications
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** AI
 *** copilot
 #+begin_src emacs-lisp
