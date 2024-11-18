@@ -527,6 +527,7 @@ Used for popups (eshell, scratch buffer etc.)
     (meow-setup)
     (meow-global-mode 1))
 #+end_src
+
 *** meow for org
 #+begin_src emacs-lisp
 ;; From https://aatmunbaxi.netlify.app/comp/meow_state_org_speed/
@@ -542,11 +543,11 @@ Used for popups (eshell, scratch buffer etc.)
   '("g" . meow-normal-mode)
   '("u" .  meow-undo)
   ;; Moving between headlines
-  '("k" .  org-previous-visible-heading)
-  '("j" .  org-next-visible-heading)
+  '("k" .  (lambda () (interactive) (org-previous-visible-heading 1) (pulsar-recenter-center)))
+  '("j" .  (lambda () (interactive) (org-next-visible-heading 1) (pulsar-recenter-center)))
   ;; Moving between headings at the same level
-  '("p" .  org-backward-heading-same-level)
-  '("n" .  org-forward-heading-same-level)
+  '("p" .  (lambda () (interactive) (org-backward-heading-same-level 1) (pulsar-recenter-center)))
+  '("n" .  (lambda () (interactive) (org-forward-heading-same-level 1) (pulsar-recenter-center)))
   ;; Moving subtrees themselves
   '("K" .  org-subtree-up)
   '("J" .  org-subtree-down)
@@ -578,6 +579,7 @@ Used for popups (eshell, scratch buffer etc.)
 (meow-define-keys 'normal
   '("O" . meow-org-motion-mode))
 #+end_src
+
 ** expand-region
 #+begin_src emacs-lisp
   (use-package expand-region
@@ -976,6 +978,20 @@ Set default font
   :config
   (setq find-file-visit-truename t)
   (doom-modeline-mode 1))
+#+end_src
+** pulsar
+#+begin_src emacs-lisp
+(use-package pulsar
+  :straight t
+  :hook (after-init-hook . pulsar-global-mode)
+  :hook ((next-error xref-after-return) . pulsar-pulse-line) ; only pulse, don't recenter
+  :hook ((consult-after-jump imenu-after-jump xref-after-jump) . pulsar-recenter-center) ; pulse and recenter
+  :hook ((consult-after-jump imenu-after-jump xref-after-jump xref-after-return) . pulsar-reveal-entry) ; reveal if hidden
+  :custom
+  (pulsar-face 'pulsar-red)
+  :config
+  (cl-callf append pulsar-pulse-functions
+    '(what-cursor-position scroll-up-command scroll-down-command kill-whole-line yank-from-kill-ring yank yank-pop)))
 #+end_src
 ** Folding
 *** hideshow
@@ -1687,7 +1703,8 @@ Need to add some keybindings here:
     (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
     (setq dape-buffer-window-arrangement 'left)
     ;; Showing inlay hints
-    (setq dape-inlay-hints t))
+    (setq dape-inlay-hints t)
+    (setq dape-minibuffer-hint t))
 
   ;; Enable repeat mode for more ergonomic `dape' use
   (use-package repeat
@@ -3539,7 +3556,7 @@ Change default font size
 #+end_src
 *** reload directory variables
 #+begin_src emacs-lisp
-(defun reload-dir-locals ()
+(defun dorneanu/reload-dir-locals ()
   "Reload directory local variables for the current buffer."
   (interactive)
   (let ((enable-local-variables :all))
