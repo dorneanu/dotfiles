@@ -194,6 +194,7 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
          ("M-g g" . consult-goto-line)
          ("M-g M-g" . consult-goto-line)
          ("M-g o" . consult-outline)
+         ("M-g O" . consult-org-heading)
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
@@ -730,34 +731,62 @@ Used for popups (eshell, scratch buffer etc.)
   :config
   (undo-fu-session-global-mode))
 #+end_src
-** TODO multiple-cursors
+** copy-as-format
+#+begin_src emacs-lisp
+(use-package copy-as-format
+      :straight t
+      :defer t
+      :custom
+      (copy-as-format-default "slack" "or Telegram")
+      :bind
+      (:map mode-specific-map
+            :prefix-map copy-as-format-prefix-map
+            :prefix "f"
+            ("f" . copy-as-format)
+            ("a" . copy-as-format-asciidoc)
+            ("b" . copy-as-format-bitbucket)
+            ("d" . copy-as-format-disqus)
+            ("g" . copy-as-format-github)
+            ("l" . copy-as-format-gitlab)
+            ("c" . copy-as-format-hipchat)
+            ("h" . copy-as-format-html)
+            ("j" . copy-as-format-jira)
+            ("m" . copy-as-format-markdown)
+            ("w" . copy-as-format-mediawiki)
+            ("o" . copy-as-format-org-mode)
+            ("p" . copy-as-format-pod)
+            ("r" . copy-as-format-rst)
+            ("s" . copy-as-format-slack)))
+#+end_src
+** multiple-cursors
 #+begin_src emacs-lisp
 (use-package multiple-cursors
   :straight t
-  :defer t
-  :hook ((multiple-cursors-mode-enabled-hook . (lambda () (corfu-mode -1)))
+  :hook ((multiple-cursors-mode-enabled-hook . (lambda() (corfu-mode -1)))
          (multiple-cursors-mode-disabled-hook . (lambda () (corfu-mode 1))))
-  ;; :bind
-  ;; (("C-c m l" . mc/edit-lines)
-  ;;  ("C-c m b" . mc/edit-beginnings-of-lines)
-  ;;  ("C-c m e" . mc/edit-ends-of-lines)
-  ;;  ("C-c m a" . mc/mark-all-dwim)
-  ;;  ("C-c m s" . mc/mark-all-symbols-like-this)
-  ;;  ("C-c m w" . mc/mark-all-words-like-this)
-  ;;  ("C-c m r" . mc/mark-all-in-region)
-  ;;  ("C-c m R" . mc/mark-all-in-region-regexp)
-  ;;  ("C-c m d" . mc/mark-all-like-this-in-defun)
-  ;;  ("C-c m S" . mc/mark-all-symbols-like-this-in-defun)
-  ;;  ("C-c m W" . mc/mark-all-words-like-this-in-defun)
-  ;;  ("C-c m i" . mc/insert-numbers)
-  ;;  ("C-c m n" . mc/mark-next-like-this)
-  ;;  ("C-c m p" . mc/mark-previous-like-this)
-  ;;  ("C-c m N" . mc/skip-to-next-like-this)
-  ;;  ("C-c m P" . mc/skip-to-previous-like-this)
-  ;;  ("C-c m M-n" . mc/unmark-next-like-this)
-  ;;  ("C-c m M-p" . mc/unmark-previous-like-this))
-  )
+  :bind
+  (:map prog-mode-map
+        ("C-c m l" . mc/edit-lines)
+        ("C-c m b" . mc/edit-beginnings-of-lines)
+        ("C-c m e" . mc/edit-ends-of-lines)
+        ("C-c m a" . mc/mark-all-dwim)
+        ("C-c m s" . mc/mark-all-symbols-like-this)
+        ("C-c m h" . multiple-cursors-hydra/body)
+        ("C-c m w" . mc/mark-all-words-like-this)
+        ("C-c m r" . mc/mark-all-in-region)
+        ("C-c m R" . mc/mark-all-in-region-regexp)
+        ("C-c m d" . mc/mark-all-like-this-in-defun)
+        ("C-c m S" . mc/mark-all-symbols-like-this-in-defun)
+        ("C-c m W" . mc/mark-all-words-like-this-in-defun)
+        ("C-c m i" . mc/insert-numbers)
+        ("C-c m n" . mc/mark-next-like-this)
+        ("C-c m p" . mc/mark-previous-like-this)
+        ("C-c m N" . mc/skip-to-next-like-this)
+        ("C-c m P" . mc/skip-to-previous-like-this)
+        ("C-c m M-n" . mc/unmark-next-like-this)
+        ("C-c m M-p" . mc/unmark-previous-like-this)))
 #+end_src
+
 ** Search
 *** isearch
 
@@ -1205,12 +1234,48 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     ;; Enable `recentf-mode' to remember recent files
     (recentf-mode 1))
 #+end_src
+** treemacs
+#+begin_src emacs-lisp
+(use-package treemacs
+  :straight t
+  :config
+  (setq treemacs-follow-after-init          t
+        treemacs-width                      35
+        treemacs-indentation                2
+        treemacs-git-integration            t
+        treemacs-collapse-dirs              3
+        treemacs-silent-refresh             nil
+        treemacs-change-root-without-asking nil
+        treemacs-sorting                    'alphabetic-desc
+        treemacs-show-hidden-files          t
+        treemacs-never-persist              nil
+        treemacs-is-never-other-window      nil
+        treemacs-goto-tag-strategy          'refetch-index)
+
+  (treemacs-follow-mode t)
+  (treemacs-filewatch-mode t))
+  
+(use-package treemacs-projectile
+    :straight t
+    :after treemacs projectile
+    :config
+    (setq treemacs-header-function #'treemacs-projectile-create-header))
+    
+(use-package treemacs-icons-dired
+    :after treemacs dired
+    :straight t
+    :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+    :after treemacs magit
+    :straight t)
+#+end_src
 * Programming
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
 ** Languages
-*** Golang
+*** golang
 #+begin_src emacs-lisp
 (use-package company-go
   :straight t
@@ -1453,11 +1518,16 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 #+end_src
 *** Yaml
 #+begin_src emacs-lisp
-  (use-package yaml-mode
-    :straight t
-    :defer t
-    :mode "\\.yml\\'"
-    :mode "\\.yaml\\'")
+ (use-package yaml-mode
+   :straight t
+   :defer t
+   :mode "\\.yml\\'"
+   :mode "\\.yaml\\'")
+
+;; (use-package yaml-pro
+;;   :straight t
+;;   :mode "\\.yml\\'"
+;;   :mode "\\.yaml\\'")
 #+end_src
 ** LSP
 *** eglot
@@ -2417,9 +2487,6 @@ If prefix ARG, copy instead of move."
 
 #+end_src
 
-#+results:
-: org-roam-dailies-goto-today
-
 *** consult-org-roam
 #+begin_src emacs-lisp
 (use-package consult-org-roam
@@ -2625,8 +2692,8 @@ Now some keybindings for the ~Super_L~ key:
 Some keybindings for *paragraphs*:
 
 #+begin_src emacs-lisp
-  (global-set-key (kbd "s-i") #'forward-paragraph)
-  (global-set-key (kbd "s-u") #'backward-paragraph)
+(global-set-key (kbd "s-i") #'forward-paragraph)
+(global-set-key (kbd "s-u") #'backward-paragraph)
 #+end_src
 
 For buffers:
@@ -3700,12 +3767,13 @@ position and resume whenever the same video is played again (read [[https://unix
     (setq-local visual-fill-column-center-text t)
     
     ;; Custom font locks for better content structure
-    (font-lock-add-keywords
-     nil
-     '(("^\\*+ .*$" . '(:height 1.2 :weight bold))   ; Headlines
-       ("^[-*] .*$" . '(:height 1.1))                ; List items
-       ("`\\(.*?\\)`" . '(:family "Monospace"))      ; Inline code
-       ("^> .*$" . '(:slant italic :foreground "#C6A0F6")))))  ; Blockquotes
+    ;; (font-lock-add-keywords             ;
+    ;;  nil
+    ;;  '(("^\\*+ .*$" . '(:height 1.2 :weight bold))   ; Headlines
+    ;;    ("^[-*] .*$" . '(:height 1.1))                ; List items
+    ;;    ("`\\(.*?\\)`" . '(:family "Monospace"))      ; Inline code
+    ;;    ("^> .*$" . '(:slant italic :foreground "#C6A0F6"))))
+       )  ; Blockquotes
 
    ;; Hooks
    (add-hook 'elfeed-show-mode-hook #'my/elfeed-show-buffer-setup)
