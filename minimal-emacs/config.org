@@ -1945,6 +1945,27 @@ Keep lisp code always indented.
            ("C-c gy" . browse-at-remote-kill))
     )
 #+end_src
+* DevOps
+** k8s
+*** k8s-mode
+#+begin_src emacs-lisp
+(use-package k8s-mode
+  :ensure t
+  :defer t
+  :hook (k8s-mode . yas-minor-mode))
+#+end_src
+*** COMMENT kubed
+#+begin_src emacs-lisp
+(use-package kubed
+  :straight t)
+#+end_src
+* Shells
+** COMMENT vterm
+#+begin_src emacs-lisp
+(use-package vterm
+  :straight t
+  :defer t)
+#+end_src
 * ORG mode
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -2155,7 +2176,8 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 
 #+begin_src emacs-lisp
 (use-package org-super-agenda
-  :straight t)
+  :straight t
+  :defer t)
 
 (with-eval-after-load 'org-agenda
   ;; Enable it
@@ -2475,6 +2497,8 @@ If prefix ARG, copy instead of move."
 (require 'ox-hugo)
 (use-package org-roam
   :straight t
+  :defer t
+  :commands (consult-org-roam-search consult-org-roam-find)
   :custom
   (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
