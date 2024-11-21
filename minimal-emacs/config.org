@@ -429,7 +429,14 @@ Used for popups (eshell, scratch buffer etc.)
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
+** transient
+Create nice looking menus
+#+begin_src emacs-lisp
+(use-package transient
+  :demand t)
+#+end_src
 ** meow
+** TODO 
 #+begin_src emacs-lisp
 (defun meow-setup ()
   (interactive)
@@ -611,6 +618,15 @@ Used for popups (eshell, scratch buffer etc.)
      ("p" . er/mark-paragraph)
      ("P" . er/mark-text-paragraph)))
 #+end_src
+** Avy
+#+BEGIN_SRC emacs-lisp
+(use-package avy
+  :bind ("C-;" . avy-goto-char-timer)
+  :config
+  (setq avy-background t)
+  (setq avy-style 'at-full)
+  (setq avy-timeout-seconds 0.2))
+#+END_SRC
 ** smartparens
 #+begin_src emacs-lisp
 (use-package smartparens-config
@@ -786,7 +802,38 @@ Used for popups (eshell, scratch buffer etc.)
         ("C-c m M-n" . mc/unmark-next-like-this)
         ("C-c m M-p" . mc/unmark-previous-like-this)))
 #+end_src
-
+** lasgun.el
+#+begin_src emacs-lisp
+(use-package lasgun
+  :straight (:type git :host github :repo "aatmunbaxi/lasgun.el")
+  :config
+  ;; Defines some lasgun actions
+  (define-lasgun-action lasgun-action-upcase-word t upcase-word)
+  (define-lasgun-action lasgun-action-downcase-word t downcase-word)
+  (define-lasgun-action lasgun-action-kill-word nil kill-word)
+  (define-lasgun-action lasgun-action-kill-whole-line nil kill-whole-line)
+  (define-lasgun-action lasgun-action-comment-line t comment-line)
+  (transient-define-prefix lasgun-transient ()
+    "Main transient for lasgun."
+    [["marks"
+      ("c" "Char timer" lasgun-mark-char-timer :transient t)
+      ("w" "Word" lasgun-mark-word-0 :transient t)
+      ("l" "Begin of line" lasgun-mark-line :transient t)
+      ("s" "Symbol" lasgun-mark-symbol-1 :transient t)
+      ("o" "Whitespace end" lasgun-mark-whitespace-end :transient t)
+      ("x" "Clear lasgun mark ring" lasgun-clear-lasgun-mark-ring :transient t)
+      ("u" "Undo lasgun mark" lasgun-pop-lasgun-mark :transient t)]
+     ["Actions"
+      ("SPC" "Make cursors" lasgun-make-multiple-cursors)
+      ("." "Embark act all" lasgun-embark-act-all)
+      ("c" "Comment line" lasgun-action-comment-line)
+      ("U" "Upcase" lasgun-action-upcase-word)
+      ("l" "Downcase" lasgun-action-downcase-word)
+      ("k" "Kill whole line" lasgun-action-kill-whole-line)
+      ("K" "Kill word" lasgun-action-kill-word)
+      ("q" "Quit" transient-quit-one)]]))
+      
+#+end_src
 ** Search
 *** isearch
 
@@ -2739,6 +2786,8 @@ Some keybindings for MacOS
 (keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
 (keymap-global-set "M-g t n" #'display-line-numbers-mode)
 (keymap-global-set "M-g t F" #'fringe-mode)
+(keymap-global-set "M-g t l" #'lasgun-transient)
+(keymap-global-set "M-g t L" #'hydra-lasgun-marks/body)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 #+end_src
 
@@ -3591,7 +3640,51 @@ Add here circled digits like: ②
   ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
   ("q" nil "Quit" :exit t))
 #+end_src
+*** Hydra / lasgun
+#+begin_src emacs-lisp
+(defhydra hydra-lasgun-marks (:color red :hint nil)
+  "
+                              LASGUN MARKS
+^^^^───────────────────────────────────────────────────────────
+^^^^Basic Marks                    ^^^^Directional Marks
+^^^^^^─────────────────────────    ^^^^^^────────────────────────
+_l_: Line start                   _W_: Word above     _n_: Word below
+_e_: Line end                     _S_: Symbol above   _m_: Symbol below
+_w_: Word                         _C_: Char above     _v_: Char below
+_s_: Symbol                       _H_: Space above    _b_: Space below
+_c_: Char (2)
+_t_: Char timer
+^^^^Special Marks
+^^^^^^─────────────────────────
+_0_: Subword-0   _1_: Subword-1   _h_: Whitespace end
 
+_q_: Quit
+"
+  ("l" lasgun-mark-line :exit nil)
+  ("e" lasgun-mark-end-of-line :exit nil)
+  ("w" lasgun-mark-word :exit nil)
+  ("s" lasgun-mark-symbol-1 :exit nil)
+  ("c" lasgun-mark-char-2 :exit nil)
+  ("t" lasgun-mark-char-timer :exit nil)
+  
+  ;; Above variants - using capital letters
+  ("W" lasgun-mark-word-0-above :exit nil)
+  ("S" lasgun-mark-symbol-1-above :exit nil)
+  ("C" lasgun-mark-char-2-above :exit nil)
+  ("H" lasgun-mark-whitespace-end-above :exit nil)
+  
+  ;; Below variants - using available lowercase letters
+  ("n" lasgun-mark-word-0-below :exit nil)
+  ("m" lasgun-mark-symbol-1-below :exit nil)
+  ("v" lasgun-mark-char-2-below :exit nil)
+  ("b" lasgun-mark-whitespace-end-below :exit nil)
+  
+  ("0" lasgun-mark-subword-0 :exit nil)
+  ("1" lasgun-mark-subword-1 :exit nil)
+  ("h" lasgun-mark-whitespace-end :exit nil)
+  
+  ("q" nil :exit t))
+#+end_src
 ** explain-pause-mode
 #+begin_src emacs-lisp
   (use-package explain-pause-mode
