@@ -136,31 +136,6 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :commands (marginalia-mode marginalia-cycle)
   :hook (after-init . marginalia-mode))
 
-(use-package embark
-  ;; Embark is an Emacs package that acts like a context menu, allowing
-  ;; users to perform context-sensitive actions on selected items
-  ;; directly from the completion interface.
-  :straight t
-  :defer t
-  :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-
-  :init
-  (setq prefix-help-command #'embark-prefix-help-command)
-
-  :config
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none)))))
-
-(use-package embark-consult
-  :straight t
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package consult
   :straight t
@@ -248,6 +223,48 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
    :initial (+region-or-thing-at-point))
   (setq consult-narrow-key "<"))
 #+end_src
+** embark
+#+begin_src emacs-lisp
+;; Some usefull functions
+(defun dorneanu/vsplit-file-open (f)
+  (let ((evil-vsplit-window-right t))
+    (split-window-vertically)
+    (find-file f)))
+
+(defun dorneanu/split-file-open (f)
+  (let ((evil-split-window-below t))
+    (split-window-horizontally)
+    (find-file f)))
+
+(use-package embark
+  ;; Embark is an Emacs package that acts like a context menu, allowing
+  ;; users to perform context-sensitive actions on selected items
+  ;; directly from the completion interface.
+  :straight t
+  :defer t
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)  ;; alternative for describe-bindings
+   :map embark-file-map
+   ("V" . dorneanu/vsplit-file-open)
+   ("X" . dorneanu/split-file-open))
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package embark-consult
+  :straight t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+  #+end_src
+
 ** Defaults
 #+begin_src emacs-lisp
   ;; Auto-revert in Emacs is a feature that automatically updates the
@@ -435,8 +452,17 @@ Create nice looking menus
 (use-package transient
   :demand t)
 #+end_src
+*** casual
+A collection of opinionated keyboard-driven user interfaces for various built-in Emacs modes. (built on transient)
+#+begin_src emacs-lisp
+(use-package casual
+  :straight t)
+
+(use-package casual-avy
+  :straight t
+  :bind ("M-g a" . casual-avy-tmenu))
+#+end_src
 ** meow
-** TODO 
 #+begin_src emacs-lisp
 (defun meow-setup ()
   (interactive)
@@ -3770,10 +3796,21 @@ position and resume whenever the same video is played again (read [[https://unix
     (interactive)
     (empv-toggle-video)
     (empv-play url)))
+    
+  (defun dorneanu/play-video-with-mpv-browse (url &optional _)
+  "Play a video URL with mpv."
+  (interactive "sEnter video URL: ")
+  (let ((quality-arg "")
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
+    (setq quality-val (string-to-number quality-val))
+    (message "Opening %s with height≤%s with mpv..." url quality-val)
+    (when (< 0 quality-val)
+      (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
+    (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
 
 ;; Handle youtube links using mpv
 (with-eval-after-load 'browse-url
-  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/empv-play-url)))
+  (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/play-video-with-mpv-browse)))
 #+end_src
 ** Feeds
 *** elfeed
