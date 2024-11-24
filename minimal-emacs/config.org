@@ -1474,6 +1474,160 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :straight (:type git :host github :repo "garslo/ginkgo-mode")
   :defer t)
 #+end_src
+*** python
+#+begin_src emacs-lisp
+  (use-package python
+    :defer t
+    :straight t
+    :after ob
+    :mode (("SConstruct\\'" . python-mode)
+           ("SConscript\\'" . python-mode)
+           ("[./]flake8\\'" . conf-mode)
+           ("/Pipfile\\'"   . conf-mode))
+    :init
+    (setq python-indent-guess-indent-offset-verbose nil)
+    (add-hook 'python-mode-local-vars-hook #'lsp)
+    :config
+    (setq python-indent-guess-indent-offset-verbose nil)
+    (when (and (executable-find "python3")
+               (string= python-shell-interpreter "python"))
+      (setq python-shell-interpreter "python3")))
+#+end_src
+**** pytest
+#+begin_src emacs-lisp
+  (use-package pytest
+    :defer t
+    :straight t
+    :commands (pytest-one
+               pytest-pdb-one
+               pytest-all
+               pytest-pdb-all
+               pytest-last-failed
+               pytest-pdb-last-failed
+               pytest-module
+               pytest-pdb-module)
+    :config
+    (add-to-list 'pytest-project-root-files "setup.cfg"))
+#+end_src
+**** poetry
+#+begin_src emacs-lisp
+  (use-package poetry
+    :defer t
+    :straight t
+    :commands (poetry-venv-toggle
+               poetry-tracking-mode)
+    :config
+    (setq poetry-tracking-strategy 'switch-buffer)
+    (add-hook 'python-mode-hook #'poetry-tracking-mode))
+#+end_src
+
+**** pip-requirements
+This package will bring a new major mode for editing pip requirements.
+#+begin_src emacs-lisp
+  (use-package pip-requirements
+    :defer t
+    :straight t)
+#+end_src
+
+#+end_src
+**** pipenv
+This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
+#+begin_src emacs-lisp
+  (use-package pipenv
+    :defer t
+    :straight t
+    :commands (pipenv-activate
+               pipenv-deactivate
+               pipenv-shell
+               pipenv-open
+               pipenv-install
+               pipenv-uninstall)
+    :hook (python-mode . pipenv-mode)
+    :init (setq pipenv-with-projectile nil))
+#+end_src
+**** pyenv
+This integrates ~pyenv~ into ~python-mode~.
+#+begin_src emacs-lisp
+  (use-package pyenv
+    :defer t
+    :straight t
+    :config
+    (add-hook 'python-mode-hook #'pyenv-track-virtualenv)
+    (add-to-list 'global-mode-string
+                 '(pyenv-virtual-env-name (" venv:" pyenv-virtual-env-name " "))
+                 'append))
+#+end_src
+**** pyenv-mode
+Let’s also add a mode for ~pyenv~:
+#+begin_src emacs-lisp
+  (use-package pyenv-mode
+    :defer t
+    :after python
+    :straight t
+    :if (executable-find "pyenv")
+    :commands (pyenv-mode-versions))
+#+end_src
+**** pyimport
+This package automatically imports packages we forgot to import.
+#+begin_src emacs-lisp
+  (use-package pyimport
+    :defer t
+    :straight t)
+#+end_src
+**** py-isort
+On the other hand, this one sorts our imports to make them more readable.
+#+begin_src emacs-lisp
+  (use-package py-isort
+    :defer t
+    :straight t)
+#+end_src
+**** COMMENT sphinx-doc
+This generates Python documentation that is meant to be compatible
+with Sphinx, a documentation generation for Python.
+#+begin_src emacs-lisp
+  (use-package sphinx-doc
+    :defer t
+    :straight t
+    :init
+    (add-hook 'python-mode-hook #'sphinx-doc-mode))
+#+end_src
+**** COMMENT cython-mode
+Cython is a Python to C compiler. It also introduces the extended
+Cython programming language which makes writing C for Python easier.
+This package is a major mode for the Cython programming language.
+#+begin_src emacs-lisp
+  (use-package cython-mode
+    :defer t
+    :straight t
+    :mode "\\.p\\(yx\\|x[di]\\)\\'"
+    :config
+    (setq cython-default-compile-format "cython -a %s"))
+#+end_src
+**** COMMENT flycheck-cython
+Flycheck can also be enabled for Cython:
+#+begin_src emacs-lisp
+  (use-package flycheck-cython
+    :defer t
+    :straight t
+    :after cython-mode)
+#+end_src
+**** blacken
+Blacken uses the ~black~ formatter backend to format Python buffers.
+#+begin_src emacs-lisp
+  (use-package blacken
+    :defer t
+    :straight t
+    :init
+    (add-hook 'python-mode-hook #'blacken-mode))
+#+end_src
+**** COMMENT pyright
+Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP backend for Python.
+#+begin_src emacs-lisp
+  ;; (use-package lsp-pyright
+  ;;   :after lsp-mode
+  ;;   :defer t
+  ;;   :straight (:buidl t))
+#+end_src
 *** Yaml
 #+begin_src emacs-lisp
   (use-package yaml-mode
