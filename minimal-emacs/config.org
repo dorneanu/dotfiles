@@ -681,6 +681,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
               ("C-M-f" . sp-forward-sexp)
               ("C-M-b" . sp-backward-sexp)
               ("C-M-d" . sp-down-sexp)
+              ("C-M-e" . sp-end-of-sexp)
               ("C-M-u" . sp-backward-up-sexp)
               ("C-M-n" . sp-up-sexp)
               ("C-M-p" . sp-backward-down-sexp)
