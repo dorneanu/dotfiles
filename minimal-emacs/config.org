@@ -106,7 +106,18 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :defer t
   :commands vertico-mode
   :hook ((after-init . vertico-mode)
-         (vertico-mode . vertico-multiform-mode)))
+         (vertico-mode . vertico-multiform-mode))
+  :hook (minibuffer-setup . vertico-repeat-save)
+  :bind (("M-R" . vertico-repeat)
+         :map vertico-map
+         ("RET" . vertico-directory-enter)
+         ("DEL" . vertico-directory-delete-char)
+         ("M-DEL" . vertico-directory-delete-word))
+  :custom
+  (vertico-cycle t)
+  (vertico-resize nil)
+  (vertico-count 12))
+
 
 (use-package vertico-posframe
   :straight t
@@ -213,9 +224,12 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
         xref-show-definitions-function #'consult-xref)
 
   :config
+  ;; Don't preview GPG encrypted files to avoid asking about the decryption password
+  (push "\\.gpg$" consult-preview-excluded-files)
+
   (consult-customize
    consult-theme :preview-key '(:debounce 0.2 any)
-   consult-ripgrep consult-git-grep consult-grep
+   consult-ripgrep consult-git-grep consult-grep consult-find consult-grep consult-fd
    consult-bookmark consult-recent-file consult-xref
    consult--source-bookmark consult--source-file-register
    consult--source-recent-file consult--source-project-recent-file
@@ -238,10 +252,8 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
     (find-file f)))
 
 (use-package embark
-  ;; Embark is an Emacs package that acts like a context menu, allowing
-  ;; users to perform context-sensitive actions on selected items
-  ;; directly from the completion interface.
   :straight t
+  :demand t
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
    ("C-;" . embark-dwim)        ;; good alternative: M-.
@@ -307,6 +319,11 @@ Configure GPG assistant
    epa-pinentry-mode 'ask)
   :custom
   (epa-file-select-keys 'silent))
+#+end_src
+** Locals
+Make sure we load host specific settings
+#+begin_src emacs-lisp
+(minimal-emacs-load-user-init "local.el")
 #+end_src
 * Autocompletion
 :properties:
@@ -716,7 +733,9 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
 ** Avy
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :bind ("C-;" . avy-goto-char-timer)
+  :bind (("C-x j c" . avy-goto-char)
+         ("C-x j w" . avy-goto-word-1)
+         ("C-x j l" . avy-goto-line))
   :config
   (setq avy-background t)
   (setq avy-style 'at-full)
@@ -806,10 +825,28 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   (sp-local-pair 'prog-mode "[" nil :post-handlers '((indent-between-pair "RET")))
   (sp-local-pair 'prog-mode "(" nil :post-handlers '((indent-between-pair "RET"))))
 #+end_src
+** ediff
+#+begin_src emacs-lisp
+(use-package ediff
+  :straight (:type built-in)
+  :defer t
+  :hook(;; show org ediffs unfolded
+        (ediff-prepare-buffer . outline-show-all)
+        ;; restore window layout when done
+        (ediff-quit . winner-undo))
+  :config
+  (setq
+   ;; Do everything in one frame
+   ediff-window-setup-function 'ediff-setup-windows-plain
+   ;; Split ediff windows horizontally by default
+   ediff-split-window-function 'split-window-horizontally
+   ediff-merge-split-window-function 'split-window-horizontally))
+#+end_src
 ** olivetti
 #+begin_src emacs-lisp
 (use-package olivetti
   :straight t
+  :commands (olivetti-mode)
   :custom
   (olivetti-body-width 0.68))
 #+end_src
@@ -906,8 +943,75 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
         ("C-c m N" . mc/skip-to-next-like-this)
         ("C-c m P" . mc/skip-to-previous-like-this)
         ("C-c m M-n" . mc/unmark-next-like-this)
-        ("C-c m M-p" . mc/unmark-previous-like-this)))
+        ("C-c m M-p" . mc/unmark-previous-like-this)
+        ("s-<mouse-1>"   . mc/add-cursor-on-click)
+        ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 #+end_src
+** iedit
+#+begin_src emacs-lisp
+(use-package iedit
+  :straight t
+  :init (setq iedit-toggle-key-default nil)
+  :bind (("C-c C-:" . iedit-mode)
+         ("C-x r RET" . iedit-rectangle-mode)
+         :map isearch-mode-map ("C-;" . iedit-mode-from-isearch)
+         :map esc-map ("C-;" . iedit-execute-last-modification)
+         :map help-map ("C-;" . iedit-mode-toggle-on-function)))
+#+end_src
+** rainbow-delimiters
+Different color for each parenthesis level
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters
+  :straight t
+  :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode cider-repl-mode sql-mode) . rainbow-delimiters-mode))
+#+END_SRC
+** TODO COMMENT Selected
+One key keybindings for regions when selection active
+https://github.com/Kungsgeten/selected.el
+#+BEGIN_SRC emacs-lisp
+(use-package selected
+  :straight t
+  :hook ((text-mode prog-mode) . selected-minor-mode)
+  :init (defvar selected-org-mode-map (make-sparse-keymap))
+  :bind (:map selected-keymap
+              ("q" . selected-off)
+              ("u" . upcase-region)
+              ("d" . downcase-region)
+              ("w" . count-words-region)
+              ("m" . apply-macro-to-region-lines)
+              ;; multiple cursors
+              ("v" . mc/vertical-align-with-space)
+              ("a" . mc/mark-all-dwim)
+              ("A" . mc/mark-all-like-this)
+              ("m" . mc/mark-more-like-this-extended)
+              ("p" . mc/mark-previous-like-this)
+              ("P" . mc/unmark-previous-like-this)
+              ("S" . mc/skip-to-previous-like-this)
+              ("n" . mc/mark-next-like-this)
+              ("N" . mc/unmark-next-like-this)
+              ("s" . mc/skip-to-next-like-this)
+              ("r" . mc/edit-lines)
+              :map selected-org-mode-map
+              ("t" . org-table-convert-region)))
+#+END_SRC
+** hippie-exp
+Expand by fuzzy matching text in open buffers
+#+BEGIN_SRC emacs-lisp
+(use-package hippie-exp
+  :straight t
+  :bind (("M-/" . hippie-expand))
+  :config
+  (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                           try-expand-dabbrev-all-buffers
+                                           try-expand-dabbrev-from-kill
+                                           try-complete-file-name-partially
+                                           try-complete-file-name
+                                           try-expand-all-abbrevs
+                                           try-expand-list
+                                           try-expand-line
+                                           try-complete-lisp-symbol-partially
+                                           try-complete-lisp-symbol)))
+#+END_SRC
 ** lasgun.el
 #+begin_src emacs-lisp
 (use-package lasgun
@@ -1266,6 +1370,29 @@ Set default font
     "l" #'windmove-right)
   (keymap-global-set "C-c w" +windmove-keys))
 #+end_src
+** COMMENT Symbol-overlay
+#+BEGIN_SRC emacs-lisp
+(use-package symbol-overlay
+  :hook ((prog-mode html-mode css-mode) . symbol-overlay-mode)
+  :bind (("C-c s" . symbol-overlay-put)
+         :map symbol-overlay-mode-map
+         ("M-n" . symbol-overlay-jump-next)
+         ("M-p" . symbol-overlay-jump-prev)
+         :map symbol-overlay-map
+         ("M-n" . symbol-overlay-jump-next)
+         ("M-p" . symbol-overlay-jump-prev)
+         ("C-c C-s r" . symbol-overlay-rename)
+         ("C-c C-s k" . symbol-overlay-remove-all)
+         ("C-c C-s q" . symbol-overlay-query-replace)
+         ("C-c C-s t" . symbol-overlay-toggle-in-scope)
+         ("C-c C-s n" . symbol-overlay-jump-next)
+         ("C-c C-s p" . symbol-overlay-jump-prev))
+  :init (setq symbol-overlay-scope t)
+  :config
+  ;;(set-face-background 'symbol-overlay-temp-face "gray30")
+  ;; Remove all default bindings
+  (setq symbol-overlay-map (make-sparse-keymap)))
+#+END_SRC
 ** Tabs
 *** centaur-tabs
 #+begin_src emacs-lisp
@@ -1432,7 +1559,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; Enable `recentf-mode' to remember recent files
   (recentf-mode 1))
 #+end_src
-** treemacs
+** COMMENT treemacs
 #+begin_src emacs-lisp
 (use-package treemacs
   :straight t
@@ -1551,32 +1678,37 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 
 (use-package go-guru
   :straight t
+  :after go-mode
   :hook
   (go-mode . go-guru-hl-identifier-mode))
 
 (use-package flycheck-golangci-lint
   :straight t
+  :after go-mode
   :hook
   (go-mode . flycheck-golangci-lint-setup))
 
 (use-package go-eldoc
   :straight t
+  :after go-mode
   :hook
   (go-mode . go-eldoc-setup))
 
 (use-package go-tag
   :straight t
+  :after go-mode
   :bind (:map go-mode-map
               ("C-c t a" . go-tag-add)
               ("C-c t r" . go-tag-remove))
   :init (setq go-tag-args (list "-transform" "camelcase")))
 
-(use-package go-fill-struct
-  :straight t
-  :defer t
-  ;; :bind (:map go-mode-map
-  ;;             ("C-c f" . go-fill-struct))
-  )
+;; Not needed anymore: Use eglot-clode-actions > Fill <struct>
+;; (use-package go-fill-struct
+;;   :straight t
+;;   :defer t
+;;   ;; :bind (:map go-mode-map
+;;   ;;             ("C-c f" . go-fill-struct))
+;;   )
 
 ;; (use-package go-imenu
 ;;   :straight t
@@ -1584,10 +1716,12 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 ;;   (add-hook 'go-mode-hook 'go-imenu-setup))
 
 (use-package go-impl
-  :straight t)
+  :straight t
+  :after go-mode)
 
 (use-package go-playground
   :straight t
+  :after go-mode
   ;; :bind (:map go-mode-map
   ;;             ("C-c p" . go-playground))
   )
@@ -1769,7 +1903,33 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
   (setq-local indent-tabs-mode 1))
 (add-hook 'makefile-mode-hook #'my/local-tab-indent)
 #+end_src
+*** Elisp
+#+begin_src emacs-lisp
+(use-package elisp-mode
+  :straight (:type built-in)
+  :bind (:map emacs-lisp-mode-map
+              ("C-c C-c" . eval-defun)
+              ("C-c C-b" . eval-buffer)
+              ("C-c C-k" . eval-buffer)
+              ("C-c ;"   . eval-print-as-comment)
+              :map lisp-interaction-mode-map  ; Scratch buffer
+              ("C-c C-c" . eval-defun)
+              ("C-c C-b" . eval-buffer)
+              ("C-c C-k" . eval-buffer)
+              ("C-c ;"   . eval-print-as-comment))
+  :config
+  (defvar eval-print-as-comment-prefix ";;=> ")
 
+  (defun eval-print-as-comment (&optional arg)
+    (interactive "P")
+    (let ((start (point)))
+      (eval-print-last-sexp arg)
+      (save-excursion
+        (goto-char start)
+        (save-match-data
+          (re-search-forward "[[:space:]\n]*" nil t)
+          (insert eval-print-as-comment-prefix))))))
+#+end_src
 *** PlantUML
 #+begin_src emacs-lisp
 (use-package plantuml-mode
@@ -1911,6 +2071,7 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
 #+begin_src emacs-lisp
 (use-package eglot
   :ensure nil
+  :bind (("C-c C-." . eglot-code-actions))
   :defer t
   :commands (eglot
              eglot-rename
@@ -1985,7 +2146,6 @@ Need to add some keybindings here:
   (lsp-prefer-flymake t))
 #+end_src
 
-
 *** lsp-ui
 #+begin_src emacs-lisp
 (use-package lsp-ui
@@ -2033,60 +2193,26 @@ Need to add some keybindings here:
 #+end_src
 **** TODO testing
 #+begin_src emacs-lisp
-;; Manual reload sequence
-(defun my-reload-eglot ()
-  (interactive)
-  ;; Shutdown current server
-  (eglot-shutdown-all)
-  ;; Clear workspace configuration
-  (setq eglot-workspace-configuration nil)
-  ;; Restart eglot
-  (eglot-ensure))
+  ;; Manual reload sequence
+  (defun my-reload-eglot ()
+    (interactive)
+    ;; Shutdown current server
+    (eglot-shutdown-all)
+    ;; Clear workspace configuration
+    (setq eglot-workspace-configuration nil)
+    ;; Restart eglot
+    (eglot-ensure))
 
-;; Bind to a key for quick testing
-(global-set-key (kbd "C-c e r") 'my-reload-eglot)
+  ;; Bind to a key for quick testing
+  (global-set-key (kbd "C-c e r") 'my-reload-eglot)
 
 
-(defun my-test-eglot-config (config)
-  "Test different eglot configurations."
-  (interactive)
-  (when (eglot-managed-p)
-    (eglot-shutdown-all))
-
-  (pcase config
-    ('default
-     (setq-local eglot-workspace-configuration nil))
-    ('go-aggressive
-     (add-to-list 'completion-styles 'flex)
-     (setq eglot-debug-server-messages t)
-     ;; (setq eglot-ignored-server-capabilities '())
-     (setq eglot-events-buffer-size 0)
-     (setq-local eglot-workspace-configuration
-                 '(:gopls
-                   ((usePlaceholders . t)
-                    ;; (completeFunctionCalls . t)
-                    ;; (experimentalPostfixCompletions . t)
-                    ;; (completeUnimported . t)
-                    ;; (completionBudget . "1s")
-                    ;; (matcher . "CaseSensitive")          ; Better matching
-                    ))))
-    ('go-conservative
-     (setq-local eglot-workspace-configuration
-                 '(:gopls
-                   ((usePlaceholders . nil)
-                    (completeUnimported . nil)
-                    (staticcheck . t))))))
-
-  ;; Restart eglot
-  (eglot-ensure))
-
-;; Quick keybindings for testing
-(define-key go-mode-map (kbd "C-c e d") 
-            (lambda () (interactive) 
-              (my-test-eglot-config 'default)))
-(define-key go-mode-map (kbd "C-c e a") 
-            (lambda () (interactive) 
-              (my-test-eglot-config 'go-aggressive)))
+   ;; (define-key go-mode-map (kbd "C-c e d") 
+  ;;             (lambda () (interactive) 
+  ;;               (my-test-eglot-config 'default)))
+  ;; (define-key go-mode-map (kbd "C-c e a") 
+  ;;             (lambda () (interactive) 
+  ;;               (my-test-eglot-config 'go-aggressive)))
 #+end_src
 
 #+RESULTS:
@@ -2145,6 +2271,7 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package dape
   :straight t
+  :after (prog-mode)
   :config
   ;; Pulse source line (performance hit)
   (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
@@ -2284,9 +2411,11 @@ Keep lisp code always indented.
          ("C-c gy" . browse-at-remote-kill))
   )
 #+end_src
+*** pr-review
 #+begin_src emacs-lisp
 (use-package pr-review
-  :straight t)
+  :straight t
+  :after magit)
 #+end_src
 * DevOps
 ** k8s
@@ -2301,9 +2430,15 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package kubed
   :straight t
-  :hook ((kubed-display-resource-mode . highlight-indent-guides-mode))
-  :defer t)
+  :defer t
+  :hook ((kubed-display-resource-mode . highlight-indent-guides-mode)))
 #+end_src
+*** Kubel (Kubernetes interface)
+#+BEGIN_SRC emacs-lisp
+(use-package kubel
+  :straight t
+  :defer t)
+#+END_SRC
 * Shells
 ** COMMENT vterm
 #+begin_src emacs-lisp
@@ -2848,7 +2983,8 @@ If prefix ARG, copy instead of move."
 *** slack
 #+begin_src emacs-lisp
 (use-package ox-slack
-  :straight t)
+  :straight t
+  :defer t)
 #+end_src
 ** org-roam
 #+begin_src emacs-lisp
@@ -2858,9 +2994,9 @@ If prefix ARG, copy instead of move."
   :defer t
   :commands (consult-org-roam-search consult-org-roam-find)
   :custom
-  (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
+  ;; (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
-  ;; (org-roam-directory (expand-file-name "org/roam/" (getenv "HOME")))
+  (org-roam-directory (expand-file-name "repos/priv/roam/" (getenv "HOME")))
   ;; (org-roam-completion-everywhere t)
   :config
   (org-roam-db-autosync-mode 1)
@@ -3185,6 +3321,7 @@ Some keybindings for MacOS
 (keymap-global-set "M-g t l" #'lasgun-transient)
 (keymap-global-set "M-g t L" #'hydra-lasgun-marks/body)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
+(keymap-global-set "M-g t w" #'hydra-windows/body)
 #+end_src
 
 *** jumps
@@ -3249,6 +3386,7 @@ Some keybindings for MacOS
 (keymap-global-set "M-g t n" #'display-line-numbers-mode)
 (keymap-global-set "M-g t f" #'fringe-mode)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
+(keymap-global-set "M-g t w" #'hydra-windows/body)
 #+end_src
 
 **** COMMENT inserts
@@ -3602,7 +3740,7 @@ Group window-related commands.
 
 #+begin_src emacs-lisp
 (pretty-hydra-define hydra-windows
-  (:hint nil :forein-keys warn :quit-key "q" :title (with-faicon "windows" "Windows" 1 -0.05))
+  (:hint nil :forein-keys warn :quit-key "q" :title "Windows")
   ("Window"
    (("b" balance-windows "balance")
     ("c" centered-window-mode "center")
@@ -4084,7 +4222,8 @@ _q_: Quit
 ** explain-pause-mode
 #+begin_src emacs-lisp
 (use-package explain-pause-mode
-  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode"))
+  :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode")
+  :defer t)
 #+end_src
 ** exec-path-from-shell
 #+begin_src emacs-lisp
@@ -4282,7 +4421,6 @@ position and resume whenever the same video is played again (read [[https://unix
               (setq-local tooltip-function #'elfeed-search-show-entry-tooltip))))
 #+end_src
 
-#+results:
 
 **** Custom functions
 
@@ -4453,7 +4591,9 @@ Cycle through different filters:
 
 #+begin_src emacs-lisp
 (defvar dorneanu/elfeed-custom-filters
-  '("@1-week-ago +unread +daily -devto -youtube -hn"
+  '("+2read"
+    "+unread +golang"
+    "@1-week-ago +unread +daily -devto -youtube -hn"
     "@1-week-ago +unread +daily -devto -youtube -hn +blogs"
     "@1-week-ago +unread +daily -devto -youtube -hn +security"
     "@1-week-ago +unread +reddit +top"
@@ -5185,5 +5325,3 @@ I often want to reply without the original message:
                         :models '("llama3"))
         gptel-model "llama3"))
 #+end_src
-
-
