@@ -8,22 +8,22 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 
 * Basics
 ** pre-early-init
-   :properties:
-   :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-early-init.el
-   :end:
-   #+begin_src emacs-lisp
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-early-init.el
+:end:
+#+begin_src emacs-lisp
   ;;; pre-earlly-init.el --- Pre Early Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
 ;; Activate debugging
 (setq minimal-emacs-debug t)
-   #+end_src
+#+end_src
 
 ** pre-init
-   :properties:
-   :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
-   :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
+:end:
 *** straight.el
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;;; pre-init.el --- Pre Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
 ;; straight.el options
@@ -64,9 +64,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ;; Fixes eglot problem ("Feature provided by other file: ...")
 (straight-use-package '(project :type built-in))
 (straight-use-package '(xref :type built-in))
-    #+end_src
+#+end_src
 *** Extras
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://github.com/abougouffa/minemacs/blob/main/core/me-lib-extra.el
 ;;;###autoload
 (defun +region-or-thing-at-point (&optional leave-region-marked)
@@ -81,33 +81,33 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
                                     '(symbol email number string word))))))
     ;; If the matching thing has multi-lines, join them
     (string-join (string-lines thing))))
-    #+end_src
+#+end_src
 ** post-init
-   :properties:
-   :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-   :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 
-   Header: 
-   #+begin_src emacs-lisp
+Header: 
+#+begin_src emacs-lisp
 ;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
-   #+end_src
+#+end_src
 
-   Measure time: 
-   #+begin_src emacs-lisp
+Measure time: 
+#+begin_src emacs-lisp
 (defvar before-user-init-time (current-time)
   "Value of `current-time' when Emacs begins loading `user-init-file'.")
 (message "Loading Emacs...done (%.3fs)"
          (float-time (time-subtract before-user-init-time
                                     before-init-time)))
-   #+end_src
+#+end_src
 *** customizations
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Load the custom variables file if it exists
 ;; (when (file-exists-p custom-file) (+load custom-file))
-    #+end_src
+#+end_src
 *** completion
 **** vertico
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package vertico
   :straight t
   :defer t
@@ -124,9 +124,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (vertico-cycle t)
   (vertico-resize nil)
   (vertico-count 12))
-     #+end_src
+#+end_src
 **** vertico-posframe
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package vertico-posframe
   :straight t
   :demand t
@@ -136,10 +136,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (setq vertico-posframe-border-width 2
         vertico-posframe-parameters '((internal-border-width . 2))))
 ;; (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
-     #+end_src
+#+end_src
 
 **** orderless
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package orderless
   ;; Vertico leverages Orderless' flexible matching capabilities, allowing users
   ;; to input multiple patterns separated by spaces, which Orderless then
@@ -149,9 +149,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (completion-styles '(orderless basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles partial-completion)))))
-     #+end_src
+#+end_src
 **** marginalia
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package marginalia
   ;; Marginalia allows Embark to offer you preconfigured actions in more contexts.
   ;; In addition to that, Marginalia also enhances Vertico by adding rich
@@ -164,10 +164,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :commands (marginalia-mode marginalia-cycle)
   :hook (after-init . marginalia-mode))
 
-     #+end_src
+#+end_src
 
 **** consult
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package consult
   :straight t
   :hook (embark-collect-mode . consult-preview-at-point-mode)
@@ -261,9 +261,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
    :preview-key '(:debounce 0.4 any)
    :initial (+region-or-thing-at-point))
   (setq consult-narrow-key "<"))
-     #+end_src
+#+end_src
 **** embark
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Some usefull functions
 (defun dorneanu/vsplit-file-open (f)
   (let ((evil-vsplit-window-right t))
@@ -300,17 +300,17 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :straight t
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
-     #+end_src
+#+end_src
 
 **** counsel
-     I only need ~counsel-org-tag~
-     #+begin_src emacs-lisp
+I only need ~counsel-org-tag~
+#+begin_src emacs-lisp
 (use-package counsel
   :straight t
   :commands (counsel-org-tag))
-     #+end_src
+#+end_src
 ** Defaults
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Auto-revert in Emacs is a feature that automatically updates the
 ;; contents of a buffer to reflect changes made to the underlying file
 ;; on disk.
@@ -331,10 +331,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ;; upon reopening. This feature is particularly beneficial for resuming work at
 ;; the precise point where you previously left off.
 ;; (add-hook 'after-init-hook #'save-place-mode)
-   #+end_src
+#+end_src
 *** epa-file
-    Configure GPG assistant
-    #+begin_src emacs-lisp
+Configure GPG assistant
+#+begin_src emacs-lisp
 (use-package epa-file
   :straight (:type built-in)
   :config
@@ -345,19 +345,19 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
    epa-pinentry-mode 'ask)
   :custom
   (epa-file-select-keys 'silent))
-    #+end_src
+#+end_src
 ** Locals
-   Make sure we load host specific settings
-   #+begin_src emacs-lisp
+Make sure we load host specific settings
+#+begin_src emacs-lisp
 (minimal-emacs-load-user-init "local.el")
-   #+end_src
+#+end_src
 * Emacs Defaults
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 
-  From https://github.com/dakra/dmacs/blob/nil/init.org#L700
-  #+BEGIN_SRC emacs-lisp
+From https://github.com/dakra/dmacs/blob/nil/init.org#L700
+#+BEGIN_SRC emacs-lisp
 ;; Don't quit Emacs on C-x C-c
 (when (daemonp)
   (global-set-key (kbd "C-x C-c") 'kill-buffer-and-window))
@@ -433,48 +433,48 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ;; Increase the limit to catch infinite recursions.
 ;; Large scala files need sometimes more and this value can safely be increased.
 (setq max-lisp-eval-depth 32768)
-  #+END_SRC
+#+END_SRC
 * Emacs Built-in Packages
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** Simple
-   Change some default keybiding
-   #+begin_src emacs-lisp
-  (use-package simple
-    :straight (:type built-in)
-    :bind (("C-z"   . undo-only)
-           ("C-S-z" . undo-redo)
-           ("C-x k" . kill-current-buffer))
-    :hook ((mu4e-compose-mode markdown-mode rst-mode git-commit-setup) . +text-mode-autofill-setup)
-    :config
-    ;; Hide commands in M-x which do not apply to the current mode.
-    (setq read-extended-command-predicate #'command-completion-default-include-p)
+Change some default keybiding
+#+begin_src emacs-lisp
+(use-package simple
+  :straight (:type built-in)
+  :bind (("C-z"   . undo-only)
+         ("C-S-z" . undo-redo)
+         ("C-x k" . kill-current-buffer))
+  :hook ((mu4e-compose-mode markdown-mode rst-mode git-commit-setup) . +text-mode-autofill-setup)
+  :config
+  ;; Hide commands in M-x which do not apply to the current mode.
+  (setq read-extended-command-predicate #'command-completion-default-include-p)
 
-    (defun +text-mode-autofill-setup ()
-      "Set fill-column to 68 and turn on auto-fill-mode."
-      (setq-local fill-column 68)
-      (auto-fill-mode))
+  (defun +text-mode-autofill-setup ()
+    "Set fill-column to 68 and turn on auto-fill-mode."
+    (setq-local fill-column 68)
+    (auto-fill-mode))
 
-    ;; Autofill (e.g. M-x autofill-paragraph or M-q) to 80 chars (default 70)
-    (setq-default fill-column 90))
-   #+end_src
+  ;; Autofill (e.g. M-x autofill-paragraph or M-q) to 80 chars (default 70)
+  (setq-default fill-column 90))
+#+end_src
 ** Saveplace
-   Remember your location in a file
-   #+BEGIN_SRC emacs-lisp
-  (use-package saveplace
-    :straight (:type built-in)
-    :unless noninteractive
-    :config
-    (setq save-place-limit 1000)
-    (save-place-mode))
-   #+END_SRC
+Remember your location in a file
+#+BEGIN_SRC emacs-lisp
+(use-package saveplace
+  :straight (:type built-in)
+  :unless noninteractive
+  :config
+  (setq save-place-limit 1000)
+  (save-place-mode))
+#+END_SRC
 * Autocompletion
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** cape
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package cape
   :straight t
   :defer t
@@ -486,9 +486,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
   (add-hook 'completion-at-point-functions #'cape-file)
   (add-hook 'completion-at-point-functions #'cape-elisp-block))
-   #+end_src
+#+end_src
 ** corfu
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package corfu
   :straight t
   :defer t
@@ -573,21 +573,20 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :after corfu
   :init
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
-   #+end_src
-
+#+end_src
 * Projects
 ** project
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package project
   :straight t)
-   #+end_src
+#+end_src
 * Buffer Management
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** popper
-   Used for popups (eshell, scratch buffer etc.)
-   #+begin_src emacs-lisp
+Used for popups (eshell, scratch buffer etc.)
+#+begin_src emacs-lisp
 (use-package popper
   :straight t
   :bind (("C-#"   . popper-toggle)
@@ -602,9 +601,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
           compilation-mode))
   (popper-mode +1)
   (popper-echo-mode +1))                ; For echo area hints
-   #+end_src
+#+end_src
 ** persistent-scratch
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; (use-package persistent-scratch
 ;;   :straight t
 ;;   :demand t
@@ -617,29 +616,29 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ;;   (persistent-scratch-autosave-mode)
 ;;   (with-demoted-errors "Error: %S"
 ;;     (persistent-scratch-setup-default)))
-   #+end_src
+#+end_src
 * Editing
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** transient
-   Create nice looking menus
-   #+begin_src emacs-lisp
+Create nice looking menus
+#+begin_src emacs-lisp
 (use-package transient
   :demand t)
-   #+end_src
+#+end_src
 *** casual
-    A collection of opinionated keyboard-driven user interfaces for various built-in Emacs modes. (built on transient)
-    #+begin_src emacs-lisp
+A collection of opinionated keyboard-driven user interfaces for various built-in Emacs modes. (built on transient)
+#+begin_src emacs-lisp
 (use-package casual
   :straight t)
 
 (use-package casual-avy
   :straight t
   :bind ("M-g a" . casual-avy-tmenu))
-    #+end_src
+#+end_src
 ** meow
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun meow-setup ()
   (interactive)
   (require 'meow)
@@ -728,7 +727,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
    '("y" . meow-save)
    '("Y" . meow-sync-grab)
    '("z" . meow-pop-selection)
-   '("'" . repeat)))
+   '("(" . meow-wrap-round)
+   '("{" . meow-wrap-curly)
+   '("[" . meow-wrap-square)
+   '("'" . meow-wrap-string)))
 
 (use-package meow
   :straight t
@@ -736,10 +738,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :config
   (meow-setup)
   (meow-global-mode 1))
-   #+end_src
+#+end_src
 
 *** meow for org
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://aatmunbaxi.netlify.app/comp/meow_state_org_speed/
 (setq meow-org-motion-keymap (make-keymap))
 (meow-define-state org-motion
@@ -788,10 +790,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 
 (meow-define-keys 'normal
   '("O" . meow-org-motion-mode))
-    #+end_src
+#+end_src
 
 ** expand-region
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package expand-region
   :straight t
   :bind
@@ -819,9 +821,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
    ("S" . er/mark-text-sentence)
    ("p" . er/mark-paragraph)
    ("P" . er/mark-text-paragraph)))
-   #+end_src
+#+end_src
 ** smartparens
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package smartparens-config
   :straight (:type built-in)
   :after smartparens
@@ -844,21 +846,19 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :straight t
   :hook (after-init . show-smartparens-global-mode)
   :bind (:map smartparens-mode-map
-              ;; paredit bindings
-              ("C-M-f" . sp-forward-sexp)
+              ;; This is the paredit mode map minus a few key bindings
+              ;; that I use in other modes (e.g. M-?)
+              ("C-M-f" . sp-forward-sexp) ;; navigation
               ("C-M-b" . sp-backward-sexp)
-              ("C-M-d" . sp-down-sexp)
-              ("C-M-e" . sp-end-of-sexp)
               ("C-M-u" . sp-backward-up-sexp)
-              ("C-M-n" . sp-up-sexp)
+              ("C-M-d" . sp-down-sexp)
               ("C-M-p" . sp-backward-down-sexp)
-              ;; ("M-s" . sp-splice-sexp)
-              ("M-<up>" . sp-splice-sexp-killing-backward)
-              ("M-<down>" . sp-splice-sexp-killing-forward)
-              ;; ("M-r" . sp-splice-sexp-killing-around)
+              ("C-M-n" . sp-up-sexp)
+              ;; ("C-w" . whole-line-or-region-sp-kill-region)
+              ("M-s" . sp-splice-sexp) ;; depth-changing commands
+              ("M-r" . sp-splice-sexp-killing-around)
               ("M-(" . sp-wrap-round)
-              ("M-{" . sp-wrap-curly)
-              ("C-)" . sp-forward-slurp-sexp)
+              ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
               ("C-<right>" . sp-forward-slurp-sexp)
               ("C-}" . sp-forward-barf-sexp)
               ("C-<left>" . sp-forward-barf-sexp)
@@ -866,11 +866,36 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
               ("C-M-<left>" . sp-backward-slurp-sexp)
               ("C-{" . sp-backward-barf-sexp)
               ("C-M-<right>" . sp-backward-barf-sexp)
-              ;; ("M-S" . sp-split-sexp)
-              ;; mine
-              ("C-M-k" . sp-kill-sexp) ("C-M-w" . sp-copy-sexp)
-              ("M-@" . sp-mark-sexp)
-              )
+              ("M-S" . sp-split-sexp) ;; misc
+              ("M-j" . sp-join-sexp))
+  ;; :bind (:map smartparens-mode-map
+  ;;             ;; paredit bindings
+  ;;             ("C-M-f" . sp-forward-sexp)
+  ;;             ("C-M-b" . sp-backward-sexp)
+  ;;             ("C-M-d" . sp-down-sexp)
+  ;;             ("C-M-e" . sp-end-of-sexp)
+  ;;             ("C-M-u" . sp-backward-up-sexp)
+  ;;             ("C-M-n" . sp-up-sexp)
+  ;;             ("C-M-p" . sp-backward-down-sexp)
+  ;;             ;; ("M-s" . sp-splice-sexp)
+  ;;             ("M-<up>" . sp-splice-sexp-killing-backward)
+  ;;             ("M-<down>" . sp-splice-sexp-killing-forward)
+  ;;             ;; ("M-r" . sp-splice-sexp-killing-around)
+  ;;             ("M-(" . sp-wrap-round)
+  ;;             ("M-{" . sp-wrap-curly)
+  ;;             ("C-)" . sp-forward-slurp-sexp)
+  ;;             ("C-<right>" . sp-forward-slurp-sexp)
+  ;;             ("C-}" . sp-forward-barf-sexp)
+  ;;             ("C-<left>" . sp-forward-barf-sexp)
+  ;;             ("C-(" . sp-backward-slurp-sexp)
+  ;;             ("C-M-<left>" . sp-backward-slurp-sexp)
+  ;;             ("C-{" . sp-backward-barf-sexp)
+  ;;             ("C-M-<right>" . sp-backward-barf-sexp)
+  ;;             ;; ("M-S" . sp-split-sexp)
+  ;;             ;; mine
+  ;;             ("C-M-k" . sp-kill-sexp) ("C-M-w" . sp-copy-sexp)
+  ;;             ("M-@" . sp-mark-sexp)
+  ;;             )
   :diminish smartparens-mode
   :init
   (setq sp-show-pair-delay 0.2
@@ -883,6 +908,13 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
         sp-highlight-wrap-tag-overlay nil)
   :config
   (require 'smartparens-org)
+  
+  (setq sp-base-key-bindings 'paredit)
+  (setq sp-autoskip-closing-pair 'always)
+
+  ;; Always highlight matching parens
+  (show-smartparens-global-mode +1)
+  (setq blink-matching-paren t) 
 
   ;; Define pairs for Org mode
   (sp-local-pair 'org-mode "*" "*")
@@ -891,46 +923,56 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (sp-local-pair 'org-mode "=" "=")
   (sp-local-pair 'org-mode "~" "~")
   (sp-local-pair 'org-mode "+" "+")
+  
+  ;; Create keybindings to wrap symbol/region in pairs
+  (defun prelude-wrap-with (s)
+    "Create a wrapper function for smartparens using S."
+    `(lambda (&optional arg)
+       (interactive "P")
+       (sp-wrap-with-pair ,s)))
+  (define-key prog-mode-map (kbd "M-(") (prelude-wrap-with "("))
+  (define-key prog-mode-map (kbd "M-[") (prelude-wrap-with "["))
+  (define-key prog-mode-map (kbd "M-{") (prelude-wrap-with "{"))
+  (define-key prog-mode-map (kbd "M-\"") (prelude-wrap-with "\""))
+  (define-key prog-mode-map (kbd "M-'") (prelude-wrap-with "'"))
+  (define-key prog-mode-map (kbd "M-`") (prelude-wrap-with "`"))
 
-  ;; Auto-indent
-  ;; from https://xenodium.com/emacs-smartparens-auto-indent/
-  (defun indent-between-pair (&rest _ignored)
-    (newline)
-    (indent-according-to-mode)
-    (forward-line -1)
-    (indent-according-to-mode))
+  ;; ;; Auto-indent
+  ;; ;; from https://xenodium.com/emacs-smartparens-auto-indent/
+  ;; (defun indent-between-pair (&rest _ignored)
+  ;;   (newline)
+  ;;   (indent-according-to-mode)
+  ;;   (forward-line -1)
+  ;;   (indent-according-to-mode))
+  ;; 
+  ;; (sp-local-pair 'prog-mode "{" nil :post-handlers '((indent-between-pair "RET")))
+  ;; (sp-local-pair 'prog-mode "[" nil :post-handlers '((indent-between-pair "RET")))
+  ;; (sp-local-pair 'prog-mode "(" nil :post-handlers '((indent-between-pair "RET")))
 
-  (sp-local-pair 'prog-mode "{" nil :post-handlers '((indent-between-pair "RET")))
-  (sp-local-pair 'prog-mode "[" nil :post-handlers '((indent-between-pair "RET")))
-  (sp-local-pair 'prog-mode "(" nil :post-handlers '((indent-between-pair "RET"))))
-   #+end_src
-** ediff
-   #+begin_src emacs-lisp
-(use-package ediff
-  :straight (:type built-in)
-  :defer t
-  :hook(;; show org ediffs unfolded
-        (ediff-prepare-buffer . outline-show-all)
-        ;; restore window layout when done
-        (ediff-quit . winner-undo))
-  :config
-  (setq
-   ;; Do everything in one frame
-   ediff-window-setup-function 'ediff-setup-windows-plain
-   ;; Split ediff windows horizontally by default
-   ediff-split-window-function 'split-window-horizontally
-   ediff-merge-split-window-function 'split-window-horizontally))
-   #+end_src
+  ;; smart curly braces
+  (sp-pair "{" nil :post-handlers
+           '(((lambda (&rest _ignored)
+                (crux-smart-open-line-above)) "RET")))
+  (sp-pair "[" nil :post-handlers
+           '(((lambda (&rest _ignored)
+                (crux-smart-open-line-above)) "RET")))
+  (sp-pair "(" nil :post-handlers
+           '(((lambda (&rest _ignored)
+                (crux-smart-open-line-above)) "RET")))
+  
+  (smartparens-global-mode))
+#+end_src
+
 ** olivetti
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package olivetti
   :straight t
   :commands (olivetti-mode)
   :custom
   (olivetti-body-width 0.68))
-   #+end_src
+#+end_src
 ** drag-stuff
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package drag-stuff
   :straight t
   :bind (("C-M-ö" . drag-stuff-up)
@@ -940,9 +982,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :config
   (add-to-list 'drag-stuff-except-modes 'org-mode)
   (drag-stuff-define-keys))
-   #+end_src
+#+end_src
 ** COMMENT undo-fu
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; (use-package undo-fu
 ;;   :straight t
 ;;   :commands (undo-fu-only-undo
@@ -958,9 +1000,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ;;   :straight t
 ;;   :config
 ;;   (undo-fu-session-global-mode))
-   #+end_src
+#+end_src
 ** vundo
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package vundo
   :straight t
   :bind ("C-x u" . vundo)
@@ -968,9 +1010,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (vundo-compact-display t)
   (vundo-window-max-height 8)
   (vundo-glyph-alist vundo-unicode-symbols))
-   #+end_src
+#+end_src
 ** copy-as-format
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package copy-as-format
   :straight t
   :defer t
@@ -995,9 +1037,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
         ("p" . copy-as-format-pod)
         ("r" . copy-as-format-rst)
         ("s" . copy-as-format-slack)))
-   #+end_src
+#+end_src
 ** multiple-cursors
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package multiple-cursors
   :straight t
   :hook ((multiple-cursors-mode-enabled-hook . (lambda() (corfu-mode -1)))
@@ -1025,9 +1067,23 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
         ("C-c m M-p" . mc/unmark-previous-like-this)
         ("s-<mouse-1>"   . mc/add-cursor-on-click)
         ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
-   #+end_src
+#+end_src
+** electric-pair
+#+begin_src emacs-lisp
+(use-package elec-pair
+  :ensure
+  :hook (after-init . electric-pair-mode)
+  :init (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
+#+end_src
+** discover-my-major
+Display a list of keybindings for the current major mode
+#+BEGIN_SRC emacs-lisp
+(use-package discover-my-major
+  :straight t
+  :bind (("C-h C-m" . discover-my-major)))
+#+END_SRC
 ** iedit
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package iedit
   :straight t
   :init (setq iedit-toggle-key-default nil)
@@ -1036,18 +1092,18 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
          :map isearch-mode-map ("C-;" . iedit-mode-from-isearch)
          :map esc-map ("C-;" . iedit-execute-last-modification)
          :map help-map ("C-;" . iedit-mode-toggle-on-function)))
-   #+end_src
+#+end_src
 ** rainbow-delimiters
-   Different color for each parenthesis level
-   #+BEGIN_SRC emacs-lisp
+Different color for each parenthesis level
+#+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
   :straight t
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode cider-repl-mode sql-mode) . rainbow-delimiters-mode))
-   #+END_SRC
+#+END_SRC
 ** TODO COMMENT Selected
-   One key keybindings for regions when selection active
-   https://github.com/Kungsgeten/selected.el
-   #+BEGIN_SRC emacs-lisp
+One key keybindings for regions when selection active
+https://github.com/Kungsgeten/selected.el
+#+BEGIN_SRC emacs-lisp
 (use-package selected
   :straight t
   :hook ((text-mode prog-mode) . selected-minor-mode)
@@ -1072,10 +1128,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
               ("r" . mc/edit-lines)
               :map selected-org-mode-map
               ("t" . org-table-convert-region)))
-   #+END_SRC
+#+END_SRC
 ** hippie-exp
-   Expand by fuzzy matching text in open buffers
-   #+BEGIN_SRC emacs-lisp
+Expand by fuzzy matching text in open buffers
+#+BEGIN_SRC emacs-lisp
 (use-package hippie-exp
   :straight t
   :bind (("M-/" . hippie-expand))
@@ -1090,9 +1146,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
                                            try-expand-line
                                            try-complete-lisp-symbol-partially
                                            try-complete-lisp-symbol)))
-   #+END_SRC
+#+END_SRC
 ** lasgun.el
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lasgun
   :straight (:type git :host github :repo "aatmunbaxi/lasgun.el")
   :commands (lasgun-transient)
@@ -1124,11 +1180,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
       ("K" "Kill word" lasgun-action-kill-word)
       ("q" "Quit" transient-quit-one)]]))
 
-   #+end_src
-** Search
+#+end_src
+** Search/Replace
 *** isearch
-
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package isearch
   :straight (:type built-in)
   :custom
@@ -1143,11 +1198,12 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
          :map isearch-mode-map
          ("<up>" . isearch-ring-retreat)
          ("<down>" . isearch-ring-advance)
+         ("C-e" . isearch-edit-string)
          ("M-i" . +insert-thing-at-point)))
-    #+end_src
+#+end_src
 *** swiper
-    Extended ~isearch~
-    #+begin_src emacs-lisp
+Extended ~isearch~
+#+begin_src emacs-lisp
 (use-package swiper
   :straight t
   :defer t
@@ -1156,10 +1212,30 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :config
   ;; Recenter afer jump
   (setq swiper-action-center t))
-    #+end_src
+#+end_src
 
+*** Re-builder
+#+BEGIN_SRC emacs-lisp
+(use-package re-builder
+  :defer t
+  :config (setq reb-re-syntax 'string))
+#+END_SRC
+*** Visual-regex
+#+BEGIN_SRC emacs-lisp
+(use-package visual-regexp
+  :bind (:map mode-specific-map
+              :prefix-map visual-regexp-prefix-map
+              :prefix "v"
+              ("r" . vr/query-replace)
+              ("R" . vr/replace)
+              ("m" . vr/mc-mark)
+              ("s" . query-replace)))
+
+(use-package visual-regexp-steroids
+  :after visual-regexp)
+#+END_SRC
 *** rg.el
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package rg
   :straight t
   :defer t
@@ -1200,10 +1276,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 
   (add-hook 'next-error-hook #'recenter)
   (add-hook 'next-error-hook #'focus-mode))
-    #+end_src
+#+end_src
 
-    Configure custom searches
-    #+begin_src emacs-lisp
+Configure custom searches
+#+begin_src emacs-lisp
 ;; search in org roam folder
 (rg-define-search my/rg-org-roam-directory
   :query ask
@@ -1220,16 +1296,17 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :dir (concat org-roam-directory "/rez/huberman-lab")
   :confirm prefix)
 
-(setq dotemacs-directory "/cs/priv/repos/dotemacs")
+(setq dotemacs-directory "~/repos/priv/dotemacs")
 (rg-define-search my/rg-dotemacs
   :query ask
   :format regexp
   :files "everything"
   :dir dotemacs-directory
   :confirm prefix)
-    #+end_src
-*** dogears
-    #+begin_src emacs-lisp
+#+end_src
+*** COMMENT dogears
+Need to invest more time how to use it
+#+begin_src emacs-lisp
 ;; Never lose your place in Emacs again
 (use-package dogears
   :straight t
@@ -1244,20 +1321,27 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (dogears-hooks '(imenu-after-jump-hook xref-after-jump-hook xref-after-return-hook consult-after-jump-hook rtags-jump-hook))
   :config
   (dogears-mode))
-    #+end_src
+#+end_src
 ** Kill ring
+#+begin_src emacs-lisp
+(setq kill-ring-max 200)
+
+;; Save clipboard contents into kill-ring before replace them
+(setq save-interprogram-paste-before-kill t)
+
+#+end_src
 *** easy-kill
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Kill & Mark things easily
 (use-package easy-kill
   :straight t
   :bind (([remap kill-ring-save] . easy-kill)
          ([remap mark-sexp] . easy-mark)))
 
-    #+end_src
+#+end_src
 
 *** browse-kill-ring
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Interactively insert and edit items from kill-ring
 (use-package browse-kill-ring
   :straight t
@@ -1265,30 +1349,32 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :hook (after-init . browse-kill-ring-default-keybindings)
   :init (setq browse-kill-ring-separator "────────────────"
               browse-kill-ring-separator-face 'shadow))
-    #+end_src
+#+end_src
 * Navigation
 ** avy
-   #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package avy
+  :demand t
   :bind (("C-x j c" . avy-goto-char)
          ("C-x j w" . avy-goto-word-1)
          ("C-x j l" . avy-goto-line))
   :config
-  (setq avy-background t)
-  (setq avy-style 'at-full)
-  (setq avy-timeout-seconds 0.2))
-   #+END_SRC
+  (setq avy-all-windows nil
+        avy-all-windows-alt t
+        avy-background t
+        avy-style 'pre))
+#+END_SRC
 ** ace-window
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Quickly switch windows in Emacs
 (use-package ace-window
   :straight t
   :bind (("M-o" . ace-window))
   :custom
   (aw-dispatch-always t))
-   #+end_src
+#+end_src
 ** ibuffer
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package ibuffer
   :defer t
   :commands (ibuffer)
@@ -1357,9 +1443,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   (add-hook 'ibuffer-mode-hook
             #'(lambda ()
                 (ibuffer-switch-to-saved-filter-groups "default"))))
-   #+end_src
+#+end_src
 ** imenu
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package imenu
   :defer t
   :config
@@ -1374,21 +1460,21 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :straight t
   :bind (("M-I" . ivy-imenu-anywhere)
          ("C-c i" . ivy-imenu-anywhere)))
-   #+end_src
+#+end_src
 ** imenu-list
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package inenu-list
   :straight (imenu-list :type git :host github :repo "bmag/imenu-list")
   :defer t)
-   #+end_src
+#+end_src
 * UI
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** Theme
 
-   Install additional themes:
-   #+begin_src emacs-lisp
+Install additional themes:
+#+begin_src emacs-lisp
 (use-package doom-themes
   :straight (:build t)
   :defer t
@@ -1423,27 +1509,27 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 ;; Install sanityinc tomorrow
 (use-package color-theme-sanityinc-tomorrow
   :straight t)
-   #+end_src
+#+end_src
 
-   Load theme
-   #+begin_src emacs-lisp
+Load theme
+#+begin_src emacs-lisp
 (load-theme 'ef-owl t)
-   #+end_src
+#+end_src
 
 ** Fonts
-   Set default font
-   #+begin_src emacs-lisp
+Set default font
+#+begin_src emacs-lisp
 (set-face-attribute 'default nil :family "JetBrains Mono")
-   #+end_src
+#+end_src
 ** visual-fill-column
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package visual-fill-column
   :straight t
   :demand t)
-   #+end_src
+#+end_src
 ** Modeline
 *** doom-modeline
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package doom-modeline
   :straight (:type git :host github :repo "seagle0128/doom-modeline") 
   :init
@@ -1460,9 +1546,9 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :config
   (setq find-file-visit-truename t)
   (doom-modeline-mode 1))
-    #+end_src
+#+end_src
 ** pulsar
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package pulsar
   :straight t
   :hook (after-init-hook . pulsar-global-mode)
@@ -1474,10 +1560,10 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
   :config
   (cl-callf append pulsar-pulse-functions
     '(what-cursor-position scroll-up-command scroll-down-command kill-whole-line yank-from-kill-ring yank yank-pop)))
-   #+end_src
+#+end_src
 ** Folding
 *** hideshow
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package hideshow
   :straight (:type built-in)
   :defer t
@@ -1538,27 +1624,11 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
                      'face '(:inherit shadow :height 0.8))
                     " "))))
   (setq hs-set-up-overlay #'hs-display-code-line-counts))
-    #+end_src
+#+end_src
 
-    #+RESULTS:
-** Windows
-*** windmove
-    #+begin_src emacs-lisp
-(use-package windmove
-  :straight t
-  :demand
-  :config
-  (windmove-default-keybindings 'shift) ; Navigate windows using Shift+Direction
-  (defvar-keymap +windmove-keys
-    ;; :repeat t ; Make it work with `repeat-mode'
-    "k" #'windmove-up
-    "j" #'windmove-down
-    "h" #'windmove-left
-    "l" #'windmove-right)
-  (keymap-global-set "C-c w" +windmove-keys))
-    #+end_src
+#+RESULTS:
 ** Symbol-overlay
-   #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package symbol-overlay
   :hook ((prog-mode html-mode css-mode) . symbol-overlay-mode)
   :bind (("C-c c s" . symbol-overlay-put)
@@ -1576,17 +1646,48 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
          ("C-c C-s p" . symbol-overlay-jump-prev))
   :init
   (setq symbol-overlay-scope t))
-   #+END_SRC
+#+END_SRC
+** Windows
+*** windmove
+Focus and swap windows
+#+begin_src emacs-lisp
+(use-package windmove
+  :straight t
+  :config
+  (windmove-default-keybindings 'shift) ; Navigate windows using Shift+Direction
+  (defvar-keymap +windmove-keys
+    ;; :repeat t ; Make it work with `repeat-mode'
+    "k" #'windmove-up
+    "j" #'windmove-down
+    "h" #'windmove-left
+    "l" #'windmove-right)
+  (keymap-global-set "C-c w" +windmove-keys))
+#+end_src
+*** TODO winner-mode
+** Scrolling
+#+begin_src emacs-lisp
+;; Mouse & Smooth Scroll
+;; Scroll one line at a time (less "jumpy" than defaults)
+(when (display-graphic-p)
+  (setq mouse-wheel-scroll-amount '(1 ((shift) . hscroll))
+        mouse-wheel-scroll-amount-horizontal 1
+        mouse-wheel-progressive-speed nil))
+(setq scroll-step 1
+      scroll-margin 0
+      scroll-conservatively 10
+      auto-window-vscroll nil
+      scroll-preserve-screen-position t)
+#+end_src
 ** Tabs
 *** centaur-tabs
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package centaur-tabs
   :straight t
   :init
   (setq centaur-tabs-enable-key-bindings t)
   :config
   (setq centaur-tabs-style "bar"
-        centaur-tabs-height 13
+        centaur-tabs-height 15
         centaur-tabs-set-icons t
         centaur-tabs-show-new-tab-button t
         centaur-tabs-set-modified-marker t
@@ -1667,9 +1768,13 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ("s-S h" . centaur-tabs-move-current-tab-to-left)
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
-    #+end_src
+#+end_src
+
+#+RESULTS:
+: #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8125 data (:use-package (26446 65533 683315 0) :init (26446 65533 683274 0) :init-secs (0 0 6310 0) :use-package-secs (0 0 49535 0) :config (26446 65533 683245 0) :config-secs (0 0 6273 0)))
+
 *** tabspaces
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package tabspaces
   ;; use this next line only if you also use straight, otherwise ignore it. 
   :straight (:type git :host github :repo "mclear-tools/tabspaces")
@@ -1687,21 +1792,21 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (tabspaces-session t)
   (tabspaces-session-auto-restore nil)
   (tab-bar-new-tab-choice "*scratch*"))
-    #+end_src
+#+end_src
 ** which-key
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package which-key
   :ensure t
   :defer 10
   :config
   (which-key-mode))
-   #+end_src
+#+end_src
 * Files
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** dirvish
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package dirvish
   :straight t
   :after dired
@@ -1714,6 +1819,8 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;;    ("b" "~/sync/blog"    "Blog")))
   :config
   (setq dirvish-side-width 40)
+  (setq dired-omit-files "^\\.?#\\|^\\.$\\|^\\.\\.$\\|^\\.")
+  (setq dired-omit-mode t)
   ;; (setq dirvish-attributes '(vc-state subtree-state all-the-icons collapse git-msg file-time file-size))
   :bind (("C-c a d" . dirvish-side)
          :map
@@ -1735,9 +1842,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
          ("M-s" . dirvish-setup-menu)
          ("M-e" . dirvish-emerge-menu)
          ("M-j" . dirvish-fd-jump)))
-   #+end_src
+#+end_src
 ** recentf
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package recentf
   :custom
   (recentf-max-saved-items 200) ; Increase the maximum number of saved items
@@ -1750,9 +1857,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :init
   ;; Enable `recentf-mode' to remember recent files
   (recentf-mode 1))
-   #+end_src
+#+end_src
 ** COMMENT treemacs
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package treemacs
   :straight t
   :config
@@ -1786,14 +1893,14 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 (use-package treemacs-magit
   :after treemacs magit
   :straight t)
-   #+end_src
+#+end_src
 * Programming
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** Languages
 *** golang
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package company-go
   :straight t
   :after (company go-mode))
@@ -1842,20 +1949,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     
     ;; Start LSP
     (lsp-deferred)))
-
-;; Configure gopls for go-mode
-
-;; Setup capf
-;; (add-hook 'go-ts-mode-hook (lambda ()
-;;                              (setq-local completion-at-point-functions
-;;                                          (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
-;; (add-hook 'go-mode-hook (lambda ()
-;;                           (setq-local completion-at-point-functions
-;;                                       (list (cape-capf-super #'cape-dabbrev #'lsp-completion-at-point (cape-company-to-capf #'company-go) (cape-company-to-capf #'company-yasnippet))))))
-
-;; (add-hook 'go-mode-hook (lambda ()
-;;                         (flycheck-add-next-checker 'golangci-lint)
-;;                         (flycheck-add-next-checker 'go-vet)))
 
 (use-package gotest
   :straight t
@@ -1917,16 +2010,16 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; :bind (:map go-mode-map
   ;;             ("C-c p" . go-playground))
   )
-    #+end_src
+#+end_src
 
 **** ginkgo
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package ginkgo-mode
   :straight (:type git :host github :repo "garslo/ginkgo-mode")
   :defer t)
-     #+end_src
+#+end_src
 *** python
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package python
   :defer t
   :straight t
@@ -1943,9 +2036,12 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (when (and (executable-find "python3")
              (string= python-shell-interpreter "python"))
     (setq python-shell-interpreter "python3")))
-    #+end_src
+
+;; Activate eglot for python-mode
+(add-hook 'python-mode-hook 'eglot-ensure)
+#+end_src
 **** pytest
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package pytest
   :defer t
   :straight t
@@ -1959,9 +2055,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
              pytest-pdb-module)
   :config
   (add-to-list 'pytest-project-root-files "setup.cfg"))
-     #+end_src
+#+end_src
 **** poetry
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package poetry
   :defer t
   :straight t
@@ -1970,20 +2066,20 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :config
   (setq poetry-tracking-strategy 'switch-buffer)
   (add-hook 'python-mode-hook #'poetry-tracking-mode))
-     #+end_src
+#+end_src
 
 **** pip-requirements
-     This package will bring a new major mode for editing pip requirements.
-     #+begin_src emacs-lisp
+This package will bring a new major mode for editing pip requirements.
+#+begin_src emacs-lisp
 (use-package pip-requirements
   :defer t
   :straight t)
-     #+end_src
+#+end_src
 
-     #+end_src
+#+end_src
 **** pipenv
-     This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
-     #+begin_src emacs-lisp
+This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
+#+begin_src emacs-lisp
 (use-package pipenv
   :defer t
   :straight t
@@ -1995,10 +2091,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
              pipenv-uninstall)
   :hook (python-mode . pipenv-mode)
   :init (setq pipenv-with-projectile nil))
-     #+end_src
+#+end_src
 **** pyenv
-     This integrates ~pyenv~ into ~python-mode~.
-     #+begin_src emacs-lisp
+This integrates ~pyenv~ into ~python-mode~.
+#+begin_src emacs-lisp
 (use-package pyenv
   :defer t
   :straight t
@@ -2007,96 +2103,104 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (add-to-list 'global-mode-string
                '(pyenv-virtual-env-name (" venv:" pyenv-virtual-env-name " "))
                'append))
-     #+end_src
+#+end_src
+**** Pippel
+List, install, upgrade packages with pip
+#+BEGIN_SRC emacs-lisp
+;; package-list-packages like interface for python packages
+(use-package pippel
+  :straight t
+  :defer t)
+#+END_SRC
 **** pyenv-mode
-     Let’s also add a mode for ~pyenv~:
-     #+begin_src emacs-lisp
+Let’s also add a mode for ~pyenv~:
+#+begin_src emacs-lisp
 (use-package pyenv-mode
   :defer t
   :after python
   :straight t
   :if (executable-find "pyenv")
   :commands (pyenv-mode-versions))
-     #+end_src
+#+end_src
 **** pyimport
-     This package automatically imports packages we forgot to import.
-     #+begin_src emacs-lisp
+This package automatically imports packages we forgot to import.
+#+begin_src emacs-lisp
 (use-package pyimport
   :defer t
   :straight t)
-     #+end_src
+#+end_src
 **** py-isort
-     On the other hand, this one sorts our imports to make them more readable.
-     #+begin_src emacs-lisp
+On the other hand, this one sorts our imports to make them more readable.
+#+begin_src emacs-lisp
 (use-package py-isort
   :defer t
   :straight t)
-     #+end_src
+#+end_src
+**** blacken
+Blacken uses the ~black~ formatter backend to format Python buffers.
+#+begin_src emacs-lisp
+(use-package blacken
+  :defer t
+  :straight t
+  :init
+  (add-hook 'python-mode-hook #'blacken-mode))
+#+end_src
 **** COMMENT sphinx-doc
-     This generates Python documentation that is meant to be compatible
-     with Sphinx, a documentation generation for Python.
-     #+begin_src emacs-lisp
+This generates Python documentation that is meant to be compatible
+with Sphinx, a documentation generation for Python.
+#+begin_src emacs-lisp
 (use-package sphinx-doc
   :defer t
   :straight t
   :init
   (add-hook 'python-mode-hook #'sphinx-doc-mode))
-     #+end_src
+#+end_src
 **** COMMENT cython-mode
-     Cython is a Python to C compiler. It also introduces the extended
-     Cython programming language which makes writing C for Python easier.
-     This package is a major mode for the Cython programming language.
-     #+begin_src emacs-lisp
+Cython is a Python to C compiler. It also introduces the extended
+Cython programming language which makes writing C for Python easier.
+This package is a major mode for the Cython programming language.
+#+begin_src emacs-lisp
 (use-package cython-mode
   :defer t
   :straight t
   :mode "\\.p\\(yx\\|x[di]\\)\\'"
   :config
   (setq cython-default-compile-format "cython -a %s"))
-     #+end_src
+#+end_src
 **** COMMENT flycheck-cython
-     Flycheck can also be enabled for Cython:
-     #+begin_src emacs-lisp
+Flycheck can also be enabled for Cython:
+#+begin_src emacs-lisp
 (use-package flycheck-cython
   :defer t
   :straight t
   :after cython-mode)
-     #+end_src
-**** blacken
-     Blacken uses the ~black~ formatter backend to format Python buffers.
-     #+begin_src emacs-lisp
-(use-package blacken
-  :defer t
-  :straight t
-  :init
-  (add-hook 'python-mode-hook #'blacken-mode))
-     #+end_src
+#+end_src
 **** COMMENT pyright
-     Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP backend for Python.
-     #+begin_src emacs-lisp
+Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP backend for Python.
+#+begin_src emacs-lisp
 ;; (use-package lsp-pyright
 ;;   :after lsp-mode
 ;;   :defer t
 ;;   :straight (:buidl t))
-     #+end_src
+#+end_src
 *** Yaml
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package yaml-mode
   :straight t
   :defer t
   :hook (kubed-display-resource-mode . yaml-mode)
   :mode "\\.yml\\'"
   :mode "\\.yaml\\'")
-    #+end_src
+#+end_src
 
 *** Makefiles
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun my/local-tab-indent ()
   (setq-local indent-tabs-mode 1))
 (add-hook 'makefile-mode-hook #'my/local-tab-indent)
-    #+end_src
+#+end_src
 *** Elisp
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package elisp-mode
   :straight (:type built-in)
   :bind (:map emacs-lisp-mode-map
@@ -2121,9 +2225,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         (save-match-data
           (re-search-forward "[[:space:]\n]*" nil t)
           (insert eval-print-as-comment-prefix))))))
-    #+end_src
+#+end_src
 *** PlantUML
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package plantuml-mode
   :straight t
   :defer t
@@ -2136,41 +2240,41 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         plantuml-jar-path "~/.local/bin/plantuml.jar"
         org-plantuml-jar-path "~/.local/bin/plantuml.jar"
         plantuml-indent-level 4))
-    #+end_src
+#+end_src
 *** docker
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package docker
   :straight t
   :diminish
   :bind (("C-x C-." . docker)))
-    #+end_src
+#+end_src
 
 **** docker-compose-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package docker-compose-mode
   :straight t
   :bind (:map docker-compose-mode-map
               ("C-c d" . docker-compose))
   :mode "docker-compose.*\.yml\\'")
-     #+end_src
+#+end_src
 
 **** dockerfile-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package dockerfile-mode
   :straight t
   :mode "Dockerfile[a-zA-Z.-]*\\'")
-     #+end_src
+#+end_src
 
 *** Toml
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package toml-mode
   :straight t
   :defer t
   :mode "/\\(Cargo.lock\\|\\.cargo/config\\)\\'")
-    #+end_src
+#+end_src
 *** Web
 **** web-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package web-mode
   :straight t
   :defer t
@@ -2230,9 +2334,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         web-mode-css-indent-offset 2
         web-mode-enable-auto-pairing t
         web-mode-enable-css-colorization t))
-     #+end_src
+#+end_src
 **** emmet-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package emmet-mode
   :straight t
   :defer t
@@ -2244,9 +2348,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
          (web-mode  . emmet-mode))
   :bind (:map emmet-mode-keymap
               (("M-RET" . 'emmet-expand-yas))))
-     #+end_src
+#+end_src
 *** Yaml
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package yaml-mode
   :straight t
   :defer t
@@ -2257,10 +2361,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 ;;   :straight t
 ;;   :mode "\\.yml\\'"
 ;;   :mode "\\.yaml\\'")
-    #+end_src
+#+end_src
 ** LSP
 *** eglot
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package eglot
   :ensure nil
   :bind (("C-c C-." . eglot-code-actions))
@@ -2291,10 +2395,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 
   ;; Enable eglot for certain modes
   (add-hook 'go-mode-hook 'eglot-ensure))
-    #+end_src
+#+end_src
 *** TODO eldoc
-    Need to add some keybindings here: 
-    #+begin_src emacs-lisp
+Need to add some keybindings here: 
+#+begin_src emacs-lisp
 (use-package eldoc
   :straight (:type built-in)
   :hook (prog-mode . eldoc-mode)
@@ -2309,9 +2413,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :init
   (setq eldoc-box-position-function #'eldoc-box--default-upper-corner-position-function
         eldoc-box-clear-with-C-g t))
-    #+end_src
+#+end_src
 *** lsp-mode
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 
 (use-package lsp-mode
   :straight t
@@ -2338,10 +2442,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (lsp-trace nil)
   (lsp-print-performance nil)
   (lsp-prefer-flymake t))
-    #+end_src
+#+end_src
 
 *** lsp-ui
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lsp-ui
   :straight t
   :config
@@ -2384,9 +2488,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         ("C-c D" . lsp-ui-doc-show)
         ("C-c o" . lsp-describe-thing-at-point)
         ("C-c s"   . lsp-ui-sideline-mode)))
-    #+end_src
+#+end_src
 **** TODO testing
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Manual reload sequence
 (defun my-reload-eglot ()
   (interactive)
@@ -2407,13 +2511,13 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 ;; (define-key go-mode-map (kbd "C-c e a") 
 ;;             (lambda () (interactive) 
 ;;               (my-test-eglot-config 'go-aggressive)))
-     #+end_src
+#+end_src
 
-     #+RESULTS:
-     : my-reload-eglot
+#+RESULTS:
+: my-reload-eglot
 
 ** Snippets
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package yasnippet
   :straight t
   :demand t
@@ -2458,11 +2562,11 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (defun +cape-yasnippet--setup-h ()
     (when (bound-and-true-p yas-minor-mode)
       (add-to-list 'completion-at-point-functions #'yasnippet-capf))))
-   #+end_src
+#+end_src
 
 ** Debugging
 *** dape
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package dape
   :straight t
   :after (prog-mode)
@@ -2479,10 +2583,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :straight t
   :config
   (repeat-mode))
-    #+end_src
+#+end_src
 ** Utilities
 *** flycheck
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package flycheck
   :straight t
   :hook (prog-mode . flycheck-mode))
@@ -2490,21 +2594,21 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 (use-package consult-flycheck
   :straight t
   :bind (("M-g f" . consult-flycheck)))
-    #+end_src
+#+end_src
 *** highlight-indent-guides
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package highlight-indent-guides
   :straight t
   :hook (prog-mode . highlight-indent-guides-mode)
   :custom (highlight-indent-guides-method 'character))
-    #+end_src
+#+end_src
 *** hl-line-mode
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package hl-line
   :hook (prog-mode . hl-line-mode))
-    #+end_src
+#+end_src
 *** hl-todo
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Highlight TODO keywords
 (use-package hl-todo
   :straight (:host github :repo "tarsius/hl-todo")
@@ -2518,11 +2622,11 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
       ("INFO"  . "#0e9030")
       ("TWEAK" . "#fe9030")
       ("PERF"  . "#e09030"))))
-    #+end_src
+#+end_src
 *** TODO dumb-jump
-    An Emacs "jump to definition" package for 50+ languages
+An Emacs "jump to definition" package for 50+ languages
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package dumb-jump
   :straight t
   :bind (:map prog-mode-map
@@ -2535,17 +2639,17 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; Use `dumb-jump' as `xref' backend
   ;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   )
-    #+end_src
+#+end_src
 
 *** breadcrumb
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package breadcrumb
   :straight t
   :hook ((go-mode org-mode c-mode c++-mode c-ts-mode c++-ts-mode python-mode python-ts-mode rust-mode rust-ts-mode sh-mode bash-ts-mode) . breadcrumb-local-mode))
-    #+end_src
+#+end_src
 *** aggressive-indent
-    Keep lisp code always indented.
-    #+begin_src emacs-lisp
+Keep lisp code always indented.
+#+begin_src emacs-lisp
 (use-package aggressive-indent
   :straight t
   :commands (aggressive-indent-mode aggressive-indent-global-mode)
@@ -2554,15 +2658,15 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; (clojurescript-mode . aggressive-indent-mode)
   ;; (emacs-lisp-mode . aggressive-indent-mode)
   (lisp-mode . aggressive-indent-mode))
-    #+end_src
+#+end_src
 ** VC
 *** magit
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package magit
   :straight t)
-    #+end_src
+#+end_src
 *** forge
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package forge
   :straight t
   :after magit)
@@ -2570,9 +2674,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
         "github.wdf.sap.corp" forge-github-repository)
       forge-alist)
-    #+end_src
+#+end_src
 *** diff-hl
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package diff-hl
   :straight t
   :hook (prog-mode . diff-hl-mode)
@@ -2590,59 +2694,74 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   :hook
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh))
-    #+end_src
+#+end_src
+*** ediff
+#+begin_src emacs-lisp
+(use-package ediff
+  :straight (:type built-in)
+  :defer t
+  :hook(;; show org ediffs unfolded
+        (ediff-prepare-buffer . outline-show-all)
+        ;; restore window layout when done
+        (ediff-quit . winner-undo))
+  :config
+  (setq
+   ;; Do everything in one frame
+   ediff-window-setup-function 'ediff-setup-windows-plain
+   ;; Split ediff windows horizontally by default
+   ediff-split-window-function 'split-window-horizontally
+   ediff-merge-split-window-function 'split-window-horizontally))
+#+end_src
 *** browse-at-remote
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package browse-at-remote
   :straight t
   :bind (("C-c go" . browse-at-remote)
          ("C-c gy" . browse-at-remote-kill))
   )
-    #+end_src
+#+end_src
 *** pr-review
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package pr-review
   :straight t
   :after magit)
-    #+end_src
+#+end_src
 * DevOps
 ** k8s
 *** k8s-mode
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package k8s-mode
   :ensure t
   :defer t
   :hook (k8s-mode . yas-minor-mode))
-    #+end_src
+#+end_src
 *** COMMENT kubed
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package kubed
   :straight t
   :defer t
   :hook ((kubed-display-resource-mode . highlight-indent-guides-mode)))
-    #+end_src
+#+end_src
 *** Kubel (Kubernetes interface)
-    #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package kubel
   :straight t
-  :commands (kubel)
-  :bind (("C-c a k" . kubel))
-  :defer t)
-    #+END_SRC
+  :bind (("C-c a k" . kubel)))
+#+END_SRC
 * Shells
 ** COMMENT vterm
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package vterm
   :straight t
   :defer t)
-   #+end_src
+#+end_src
 * ORG mode
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** org
-   Basic configuration
-   #+begin_src emacs-lisp
+Basic configuration
+#+begin_src emacs-lisp
 (use-package org
   :straight (:type built-in)
   :hook ((org-mode . toggle-truncate-lines))
@@ -2670,6 +2789,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
          ("M-p" . org-previous-visible-heading)
          ("M-N" . org-forward-heading-same-level)
          ("M-P" . org-backward-heading-same-level)
+         ("M-O" . org-up-element)
 
          ;; Todo state
          ("C-c o t t" . org-todo)
@@ -2763,10 +2883,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (setq org-blank-before-new-entry
         '((heading . nil)
           (plain-list-item . nil))))
-   #+end_src
+#+end_src
 
 ** org-agenda
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-agenda
   :straight (:type built-in)
   :defer t
@@ -2844,16 +2964,16 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;;             (toggle-truncate-lines 1)
   ;;             (display-line-numbers-mode 0)))
   )
-   #+end_src
+#+end_src
 
-   #+results:
-   : t
+#+results:
+: t
 
 ** org-super-agenda
-   Define custom org agenda commands.
-   Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
+Define custom org agenda commands.
+Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-super-agenda
   :straight t
   :after (org-agend))
@@ -2951,11 +3071,11 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
                             (:discard (:anything)))))))))))
 
 
-   #+end_src
+#+end_src
 ** org-refile
-   Some extras copied from Doom Emacs:
+Some extras copied from Doom Emacs:
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun +org-headline-avy ()
   "TODO"
   (require 'avy)
@@ -2972,11 +3092,11 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   "TODO"
   (interactive)
   (goto-char (+org-headline-avy)))
-   #+end_src
+#+end_src
 
-   Now settings for ~org-refile~:
+Now settings for ~org-refile~:
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (with-eval-after-load 'org
   ;; Refiling
   (setq org-refile-use-cache t)
@@ -3049,9 +3169,9 @@ If prefix ARG, copy instead of move."
 
   ;; Save all buffers after refilling
   (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers))))
-   #+end_src
+#+end_src
 ** org-modern
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-modern
   :straight t
   :hook (org-mode . org-modern-mode)
@@ -3076,10 +3196,10 @@ If prefix ARG, copy instead of move."
      ("proj" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "limegreen"))
      ("hold" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "orange"))
      ("done" . (:inherit org-verbatim :weight semi-bold :foreground "black" :background "lightgray")))))
-   #+end_src
+#+end_src
 
 ** org-capture
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-capture
   :after org
   :straight (:type built-in)
@@ -3137,13 +3257,13 @@ If prefix ARG, copy instead of move."
      ("w" "Weekly" entry (file+headline "inbox.org" "Weeklies"),
       my/org-weekly
       :empty-lines 1))))
-   #+end_src
+#+end_src
 
-   #+results:
-   : org-capture
+#+results:
+: org-capture
 
 ** org-timeblock                                                       :todo:
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-timeblock
   :straight t
   :after (org org-agenda)
@@ -3166,22 +3286,22 @@ If prefix ARG, copy instead of move."
   (balance-windows)
   (other-window 1)
   (org-timeblock))
-   #+end_src
+#+end_src
 ** exporters
 *** hugo
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package ox-hugo
   :after org
   :straight t)
-    #+end_src
+#+end_src
 *** slack
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package ox-slack
   :straight t
   :defer t)
-    #+end_src
+#+end_src
 ** org-roam
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (require 'ox-hugo)
 (use-package org-roam
   :straight t
@@ -3229,9 +3349,9 @@ If prefix ARG, copy instead of move."
            :unnarrowed t)
           ))
   )
-   #+end_src
+#+end_src
 *** org-roam-dailies
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-roam-dailies
   :straight (:type built-in)
   :after org
@@ -3244,10 +3364,10 @@ If prefix ARG, copy instead of move."
            :if-new (file+head "%<%Y-%m-%d>.org"
                               "#+TITLE: %<%Y-%m-%d>\n#+DATE: %<%Y-%m-%d>\n#+FILETAGS: journal")))))
 
-    #+end_src
+#+end_src
 
 *** consult-org-roam
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package consult-org-roam
   :straight t
   :bind (("M-g rn" . consult-org-roam-file-find)
@@ -3260,45 +3380,45 @@ If prefix ARG, copy instead of move."
   (consult-org-roam-mode 1)
   ;; Eventually suppress previewing for certain functions
   (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
-    #+end_src
+#+end_src
 
 ** org-babel
-   #+begin_src emacs-lisp
-   (with-eval-after-load 'org
-     ;; (setq org-src-window-setup 'reorganize-frame)
-     (setq org-src-fontify-natively t)  ; syntax highlighting for source code blocks
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  ;; (setq org-src-window-setup 'reorganize-frame)
+  (setq org-src-fontify-natively t)  ; syntax highlighting for source code blocks
 
-     ;; Tab should do indent in code blocks
-     (setq org-src-tab-acts-natively nil)
+  ;; Tab should do indent in code blocks
+  (setq org-src-tab-acts-natively t)
 
-     ;; Don't remove (or add) any extra whitespace
-     (setq org-src-preserve-indentation nil)
-     (setq org-edit-src-content-indentation 0))
+  ;; Don't remove (or add) any extra whitespace
+  (setq org-src-preserve-indentation nil)
+  (setq org-edit-src-content-indentation 0))
 
-   ;; Install ob-go
-   (use-package ob-go
-     :straight t
-     :defer t)
+;; Install ob-go
+(use-package ob-go
+  :straight t
+  :defer t)
 
-   (use-package jq-mode
-     :straight t
-     :defer t)
+(use-package jq-mode
+  :straight t
+  :defer t)
 
-   (use-package ob-mermaid
-     :straight t
-     :defer t)
+(use-package ob-mermaid
+  :straight t
+  :defer t)
 
-   (org-babel-do-load-languages
-    'org-babel-load-languages
-    '((sql . t)
-      (go . t)
-      (plantuml . t)
-      (emacs-lisp . t)
-      (mermaid . t)
-      (shell . t)))
-   #+end_src
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sql . t)
+   (go . t)
+   (plantuml . t)
+   (emacs-lisp . t)
+   (mermaid . t)
+   (shell . t)))
+#+end_src
 ** COMMENT org-drawio
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-drawio
   :commands (org-drawio-add
              org-drawio-open)
@@ -3307,23 +3427,23 @@ If prefix ARG, copy instead of move."
            (org-drawio-output-page "0")
            ;; set to t, if you want to crop the image.
            (org-drawio-crop nil)))
-   #+end_src
+#+end_src
 ** counsel-org-tag
-   Use counsel-org-tag (I couldn't find any alternative for consult):
+Use counsel-org-tag (I couldn't find any alternative for consult):
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (global-set-key [remap org-set-tags-command] #'counsel-org-tag)
-   #+end_src
+#+end_src
 ** packages
 *** org-re-reveal
-    Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
-    #+begin_src emacs-lisp
+Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
+#+begin_src emacs-lisp
 (use-package org-re-reveal
   :straight t
   :defer t)
-    #+end_src
+#+end_src
 *** org-present
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-present
   :straight t
   :commands (org-present)
@@ -3352,16 +3472,16 @@ If prefix ARG, copy instead of move."
                 (display-line-numbers-mode 1)
                 (olivetti-mode -1)
                 (setq-local olivetti-body-width (default-value 'olivetti-body-width))))))
-    #+end_src
+#+end_src
 
-    #+RESULTS:
-    : #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8125 data (:use-package (26417 39284 13743 0) :init (26417 39284 13740 0) :init-secs (0 0 4529 0) :use-package-secs (0 0 21692 0) :config (26417 39284 13726 0) :config-secs (0 0 4511 0)))
+#+RESULTS:
+: #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8125 data (:use-package (26417 39284 13743 0) :init (26417 39284 13740 0) :init-secs (0 0 4529 0) :use-package-secs (0 0 21692 0) :config (26417 39284 13726 0) :config-secs (0 0 4511 0)))
 
 ** custom elisp
 *** Enter clock data manually
-    From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
+From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/org-clock-enter-manually (begin end)
   "Enter a clock item manually."
   (interactive (list (org-read-date t t) (org-read-date t t)))
@@ -3373,9 +3493,9 @@ If prefix ARG, copy instead of move."
     (org-insert-time-stamp begin t t)
     (org-insert-time-stamp end t t "--")
     (org-evaluate-time-range t)))
-    #+end_src
+#+end_src
 *** Auto clock-in when task is started
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://github.com/svetlyak40wt/dot-emacs/blob/master/.emacs.d/lib/org-auto-clock.el
 ;; Auto clock-in when task is marked STARTED
 (defun wicked/org-clock-in-if-starting ()
@@ -3401,9 +3521,9 @@ If prefix ARG, copy instead of move."
     "Set this task's status to 'STARTED'."
     (org-todo "STARTED"))
   (add-hook 'org-after-todo-state-change-hook #'wicked/org-clock-out-if-waiting))
-    #+end_src
+#+end_src
 *** Create ORG heading from clipboard link
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (cl-defun dorneanu/org-insert-link-from-clipboard (&optional (url (org-web-tools--get-first-url)))
   "Extend org-web-tools to create to take URL from clipboard or kill-ring"
   (interactive)
@@ -3412,11 +3532,11 @@ If prefix ARG, copy instead of move."
                                     (libxml-parse-html-region (point-min) (point-max)))))
            (title (cl-caddr (car (dom-by-tag dom 'title)))))
       (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url (org-web-tools--cleanup-title title)))))
-    #+end_src
+#+end_src
 
 ** org-download
-   Insert images easily into ORG mode files
-   #+begin_src emacs-lisp
+Insert images easily into ORG mode files
+#+begin_src emacs-lisp
 (use-package org-download
   :straight t
   :after org
@@ -3424,22 +3544,22 @@ If prefix ARG, copy instead of move."
 
 ;; Drag-and-drop to `dired`
 (add-hook 'dired-mode-hook 'org-download-enable)
-   #+end_src
+#+end_src
 ** org-web-tools
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-web-tools
   :straight t
   :config
   (setq org-web-tools-pandoc-sleep-time 10))
-   #+end_src
+#+end_src
 * Keybindings
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** navigation
-   Now some keybindings for the ~Super_L~ key:
+Now some keybindings for the ~Super_L~ key:
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; lower case “s” is for super Use windows key (super) for window navigation
 (global-set-key (kbd "s-h") #'windmove-left)
 (global-set-key (kbd "s-l") #'windmove-right)
@@ -3451,51 +3571,51 @@ If prefix ARG, copy instead of move."
 (global-set-key (kbd "s-,") #'tab-previous)
 ;; (global-set-key (kbd "s-1") #'tab-line-switch-to-prev-tab)
 ;; (global-set-key (kbd "s-2") #'tab-line-switch-to-next-tab)
-   #+end_src
+#+end_src
 
-   Some keybindings for *paragraphs*:
+Some keybindings for *paragraphs*:
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (global-set-key (kbd "s-i") #'forward-paragraph)
 (global-set-key (kbd "s-u") #'backward-paragraph)
-   #+end_src
+#+end_src
 
-   For buffers:
-   #+begin_src emacs-lisp
+For buffers:
+#+begin_src emacs-lisp
 (keymap-global-set "C-c b h" #'previous-buffer)
 (keymap-global-set "C-c b l" #'next-buffer)
-   #+end_src
+#+end_src
 ** globals
-   Disable keyboard-escape-quit as it always closes windows in a nasty way:
+Disable keyboard-escape-quit as it always closes windows in a nasty way:
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Don't forget to handle minibuffer with "minibuffer-keyboard-quit".
 (global-set-key (kbd "<escape>") 'keyboard-quit)
 
 ;; Avoid entering the ~repeat-complex-cammand~ when quiting everything with ~C-x~.
 (global-unset-key (kbd "C-x <escape> <escape>")) ; repeat-complex-command
 
-   #+end_src
+#+end_src
 
-   Something I use a lot:
+Something I use a lot:
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; (bind-key "C-c d" 'delete-pair)
-   #+end_src
+#+end_src
 
 *** MacOS
-    Some keybindings for MacOS
-    #+begin_src emacs-lisp
+Some keybindings for MacOS
+#+begin_src emacs-lisp
 (setq mac-command-modifier      'super
       ns-command-modifier       'meta
       mac-option-modifier       'super
       ns-option-modifier        'super
       mac-right-option-modifier 'none
       ns-right-option-modifier  'none)
-    #+end_src
+#+end_src
 *** toggles
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (keymap-global-set "M-g t o" #'olivetti-mode)
 (keymap-global-set "M-g t t b" #'tab-bar-mode)
 (keymap-global-set "M-g t t n" #'global-tab-line-mode)
@@ -3508,19 +3628,19 @@ If prefix ARG, copy instead of move."
 (keymap-global-set "M-g t s" #'hydra-scratchpad/body)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 (keymap-global-set "M-g t w" #'hydra-windows/body)
-    #+end_src
+#+end_src
 
 *** jumps
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (keymap-global-set "C-x j c" #'avy-goto-char)
 (keymap-global-set "C-x j w" #'avy-goto-word-1)
 (keymap-global-set "C-x j t" #'centaur-tabs-ace-jump)
 ;; This doesn't fit here
 (keymap-global-set "M-j" #'crux-top-join-line)
-    #+end_src
+#+end_src
 
 *** Change from horizotanl split to vertical split
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; https://stackoverflow.com/questions/14881020/emacs-shortcut-to-switch-from-a-horizontal-split-to-a-vertical-split-in-one-move
 (defun toggle-window-split ()
   (interactive)
@@ -3548,21 +3668,21 @@ If prefix ARG, copy instead of move."
           (if this-win-2nd (other-window 1))))))
 
 (global-set-key (kbd "C-x |") 'toggle-window-split)
-    #+end_src
+#+end_src
 
 **** MacOS
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (setq mac-command-modifier      'super
       ns-command-modifier       'meta
       mac-option-modifier       'super
       ns-option-modifier        'super
       mac-right-option-modifier 'none
       ns-right-option-modifier  'none)
-     #+end_src
+#+end_src
 
 **** toggles
 
-     #+begin_src emacs-lisp :results none
+#+begin_src emacs-lisp :results none
 (keymap-global-set "M-g t o" #'olivetti-mode)
 (keymap-global-set "M-g t t b" #'tab-bar-mode)
 (keymap-global-set "M-g t t n" #'global-tab-line-mode)
@@ -3573,59 +3693,59 @@ If prefix ARG, copy instead of move."
 (keymap-global-set "M-g t f" #'fringe-mode)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 (keymap-global-set "M-g t w" #'hydra-windows/body)
-     #+end_src
+#+end_src
 
 **** COMMENT inserts
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (+map!
  ;; ====== Inserts ======
  "ii"     #'org-download-clipboard
  "ioc"    #'dorneanu/org-insert-link-from-clipboard
  "iot"    #'counsel-org-tag)
-     #+end_src
+#+end_src
 
 **** hydras
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (keymap-global-set "M-g t . w" #'+window-adjust-size-transient)
-     #+end_src
+#+end_src
 **** jumps
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (keymap-global-set "C-x j c" #'avy-goto-char)
 (keymap-global-set "C-x j w" #'avy-goto-word-1)
 (keymap-global-set "C-x j t" #'centaur-tabs-ace-jump)
 ;; This doesn't fit here
 (keymap-global-set "M-j" #'crux-top-join-line)
-     #+end_src
+#+end_src
 
 **** projects
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (keymap-global-set "M-g 0" #'dirvish-side)
 (keymap-global-set "C-M-0" #'indent-region)
-     #+end_src
+#+end_src
 
 **** COMMENT searches
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (+map!
  ;; ====== Searches ======
  "srd"   #'my/rg-dotemacs
  "srh"   #'my/rg-org-roam-directory-huberman
  "sro"   #'my/rg-org-roam-directory)
-     #+end_src
+#+end_src
 **** COMMENT tabs
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (+map!
  ;; ====== Tabs ======
  "TAB SPC"   #'tab-bar-switch-to-recent-tab)
-     #+end_src
+#+end_src
 **** COMMENT evil-org
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (with-eval-after-load 'evil-org-agenda
   ;; Disable SPC key in org-agenda
   ;; (define-key org-agenda-mode-map (kbd "SPC") nil)
   (evil-define-key 'motion org-agenda-mode-map (kbd "SPC") nil))
-     #+end_src
+#+end_src
 **** COMMENT org-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (with-eval-after-load 'org
   (define-prefix-command 'dorneanu/my-org-mode-map)
   (define-key org-mode-map (kbd "C-c o") 'dorneanu/my-org-mode-map)
@@ -3671,13 +3791,13 @@ If prefix ARG, copy instead of move."
   (define-key org-mode-map (dorneanu/my-org-key "a") #'org-archive-subtree)
   (define-key org-mode-map (dorneanu/my-org-key "r") #'org-refile)
   (define-key org-mode-map (dorneanu/my-org-key "l") #'org-insert-link))
-     #+end_src
+#+end_src
 
 * Misc
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
-  #+begin_src emacs-lisp
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+#+begin_src emacs-lisp
 ;; Hide warnings and display only errors
 (setq warning-minimum-level :error)
 
@@ -3698,11 +3818,11 @@ If prefix ARG, copy instead of move."
 ;; windows.
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Window-Dividers.html
 (add-hook 'after-init-hook #'window-divider-mode)
-  #+end_src
+#+end_src
 ** crux
-   Various useful utilities
+Various useful utilities
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package crux
   :straight t
   :bind (("C-x C-d" . crux-duplicate-current-line-or-region)
@@ -3729,37 +3849,37 @@ If prefix ARG, copy instead of move."
   (crux-with-region-or-buffer untabify)
   (crux-with-region-or-point-to-eol kill-ring-save)
   (defalias 'rename-file-and-buffer #'crux-rename-file-and-buffer))
-   #+end_src
+#+end_src
 ** link-hint
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package link-hint
   :straight t
   :demand t
   :bind (("C-c l o" . link-hint-open-link)
          ("C-c l c" . link-hint-copy-link)))
-   #+end_src
+#+end_src
 
 * Helpful
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** leo
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package leo
   :straight t
   :defer t
   :bind (("M-g .l" . leo-translate-word)))
-   #+end_src
+#+end_src
 ** dict.cc
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package dictcc
   :straight t
   :defer t
   :init
   :bind (("M-g .d" . dictcc)))
-   #+end_src
+#+end_src
 ** webjump
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://github.com/abougouffa/minemacs/blob/main/core/me-lib-extra.el
 (defvar +webjump-read-string-initial-query nil)
 
@@ -3799,10 +3919,10 @@ If prefix ARG, copy instead of move."
      ("Youtube"       . [simple-query "www.youtube.com" "www.youtube.com/results?search_query=" ""])
      ("Reddit"        . [simple-query "www.reddit.com" "www.reddit.com/search/?q=" ""])
      ("Wikipedia"     . [simple-query "wikipedia.org" "wikipedia.org/wiki/" ""]))))
-   #+end_src
+#+end_src
 
 ** wordreference
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package wordreference
   :straight t
   :defer t
@@ -3815,25 +3935,88 @@ If prefix ARG, copy instead of move."
   :bind (("M-g .w" . wordreference-search)))
 
 (add-hook 'wordreference-mode-hook #'turn-off-evil-mode)
-   #+end_src
+#+end_src
+** helpful
+#+BEGIN_SRC emacs-lisp
+;; From https://github.com/dakra/dmacs/blob/nil/init.org#L2056
+(use-package helpful
+  :straight t 
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h s" . describe-symbol)
+         ("C-h k" . helpful-key)
+         ;; ("C-c h f" . helpful-callable)
+         ;; ("C-c h v" . helpful-variable)
+         ;; ("C-c h c" . helpful-command)
+         ;; ("C-c h m" . helpful-macro)
+         ("<C-tab>" . backward-button)
+         :map helpful-mode-map
+         ("M-?" . helpful-at-point)
+         ("RET" . helpful-jump-to-org)
+         :map emacs-lisp-mode-map
+         ("M-?" . helpful-at-point)
+         :map lisp-interaction-mode-map  ; Scratch buffer
+         ("M-?" . helpful-at-point))
+  :config
+  (defun helpful-visit-reference ()
+    "Go to the reference at point."
+    (interactive)
+    (let* ((sym helpful--sym)
+           (path (get-text-property (point) 'helpful-path))
+           (pos (get-text-property (point) 'helpful-pos))
+           (pos-is-start (get-text-property (point) 'helpful-pos-is-start)))
+      (when (and path pos)
+        ;; If we're looking at a source excerpt, calculate the offset of
+        ;; point, so we don't just go the start of the excerpt.
+        (when pos-is-start
+          (save-excursion
+            (let ((offset 0))
+              (while (and
+                      (get-text-property (point) 'helpful-pos)
+                      (not (eobp)))
+                (backward-char 1)
+                (setq offset (1+ offset)))
+              ;; On the last iteration we moved outside the source
+              ;; excerpt, so we overcounted by one character.
+              (setq offset (1- offset))
+
+              ;; Set POS so we go to exactly the place in the source
+              ;; code where point was in the helpful excerpt.
+              (setq pos (+ pos offset)))))
+
+        (find-file path)
+        (when (or (< pos (point-min))
+                  (> pos (point-max)))
+          (widen))
+        (goto-char pos)
+        (recenter 0)
+        (save-excursion
+          (let ((defun-end (scan-sexps (point) 1)))
+            (while (re-search-forward
+                    (rx-to-string `(seq symbol-start ,(symbol-name sym) symbol-end))
+                    defun-end t)
+              (helpful--flash-region (match-beginning 0) (match-end 0)))))
+        t))))
+#+END_SRC
+
 ** password-store
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package auth-source
   :straight t)
 (use-package password-store
   :straight t)
 (use-package pass
   :straight t)
-   #+end_src
+#+end_src
 ** focus-mode
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package focus
   :straight t)
-   #+end_src
+#+end_src
 ** COMMENT Screenshots
 *** emacsshot
-    From https://gitlab.com/marcowahl/emacsshot
-    #+begin_src emacs-lisp
+From https://gitlab.com/marcowahl/emacsshot
+#+begin_src emacs-lisp
 (use-package emacsshot
   :straight t
   :bind(("C-x a s f" . my/emacsshot-snap-frame)
@@ -3851,15 +4034,15 @@ If prefix ARG, copy instead of move."
     (emacsshot-snap-frame)
     (copy-file-content-to-clipboard "~/emacsshot.png")
     ))
-    #+end_src
+#+end_src
 
 ** Misc
 *** Keycast
-    In case I am sharing my screen with people and I want to show which
-    functions are called on my keystrokes since I don’t exactly use
-    standard keybindings.
+In case I am sharing my screen with people and I want to show which
+functions are called on my keystrokes since I don’t exactly use
+standard keybindings.
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package keycast
   :defer t
   :straight t
@@ -3871,9 +4054,9 @@ If prefix ARG, copy instead of move."
         (add-hook 'pre-command-hook 'keycast--update t)
       (remove-hook 'pre-command-hook 'keycast--update)))
   (add-to-list 'global-mode-string '("" mode-line-keycast " ")))
-    #+end_src
+#+end_src
 *** wakatime
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package wakatime-mode
   :straight t
   :config
@@ -3881,10 +4064,10 @@ If prefix ARG, copy instead of move."
    wakatime-python-bin "~/.pyenv/versions/emacs/bin/python"
    wakatime-cli-path "~/.pyenv/versions/emacs/bin/wakatime")
   (global-wakatime-mode))
-    #+end_src
+#+end_src
 ** Hydra
-   Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
-   #+begin_src emacs-lisp
+Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
+#+begin_src emacs-lisp
 (use-package hydra
   :straight t)
 
@@ -3908,12 +4091,12 @@ If prefix ARG, copy instead of move."
   (defun with-octicon (icon str &optional height v-adjust face)
     "Display an icon from the GitHub Octicons."
     (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
-   #+end_src
+#+end_src
 *** Hydra / Windows
 
-    Group window-related commands.
+Group window-related commands.
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (pretty-hydra-define hydra-windows
   (:hint nil :forein-keys warn :quit-key "q" :title "Windows")
   ("Window"
@@ -3930,11 +4113,11 @@ If prefix ARG, copy instead of move."
    (("-" text-scale-decrease "out")
     ("+" text-scale-increase "in")
     ("=" (text-scale-increase 0) "reset"))))
-    #+end_src
+#+end_src
 *** Hydra / Window Nav
-    From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
+From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra +hydra/window-nav (:hint nil)
   "
             Split: _v_ert  _s_:horz
@@ -3976,9 +4159,9 @@ If prefix ARG, copy instead of move."
   ("=" (text-scale-increase 0) "reset")
 
   ("q" nil))
-    #+end_src
+#+end_src
 *** Hydra / Flyspell
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra flyspell-hydra ()
   "
   Spell Commands^^           Add To Dictionary^^              Other
@@ -4002,12 +4185,12 @@ If prefix ARG, copy instead of move."
   ("S" nil)
   ("s" flyspell-correct-at-point)
   ("t" nil))
-    #+end_src
+#+end_src
 *** Hydra / ORG
 **** hydra-org-jump
-     From [[https://sriramkswamy.github.io/dotemacs/]]
+From [[https://sriramkswamy.github.io/dotemacs/]]
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun sk/before-hydra ()
   "Function to run before the Hydra gets executed."
   (focus-mode))
@@ -4056,13 +4239,13 @@ If prefix ARG, copy instead of move."
   ;; ("N" org-next-link)
   ("P" backward-paragraph)
   ("q" nil :color blue))
-     #+end_src
+#+end_src
 
-     #+results:
-     : sk/hydra-org-jump/body
+#+results:
+: sk/hydra-org-jump/body
 
 **** hydra-org-babel-transient
-     #+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
 (defhydra org-babel-transient ()
   "
   ^Navigate^                    ^Interact
@@ -4078,11 +4261,11 @@ If prefix ARG, copy instead of move."
   ("z" recenter-top-bottom)
   ("x" org-babel-execute-maybe)
   ("'" org-edit-special :exit t))
-     #+end_src
+#+end_src
 *** Hydra / merge
-    Group Merge commands.
+Group Merge commands.
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (pretty-hydra-define hydra-merge
   (:hint nil :color pink :quit-key "q" :title (with-octicon "mark-github" "Magit" 1 -0.05))
   ("Move"
@@ -4104,11 +4287,11 @@ If prefix ARG, copy instead of move."
    (("C" smerge-combine-with-next "combine")
     ("r" smerge-resolve "resolve")
     ("k" smerge-kill-current "kill current"))))
-    #+end_src
+#+end_src
 *** Hydra / smerge
-    From https://github.com/dakra/dmacs/blob/nil/init.org
+From https://github.com/dakra/dmacs/blob/nil/init.org
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package smerge-mode
   :hook (magit-diff-visit-file . (lambda ()
                                    (when smerge-mode
@@ -4143,9 +4326,9 @@ If prefix ARG, copy instead of move."
     ("r" smerge-resolve)
     ("k" smerge-kill-current)
     ("q" nil "cancel" :color blue)))
-    #+end_src
+#+end_src
 *** Hydra / modeline                                                   :todo:
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (pretty-hydra-define hydra-modeline
   (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
   ("Icon"
@@ -4293,11 +4476,11 @@ If prefix ARG, copy instead of move."
                     (symbol-value 'doom-modeline-gnus-timer)))
      "set gnus interval" :exit t))))
 
-    #+end_src
+#+end_src
 *** Hydra / unicode
-    From https://github.com/dakra/dmacs/blob/nil/init.org
-    Add here circled digits like: ②
-    #+begin_src emacs-lisp
+From https://github.com/dakra/dmacs/blob/nil/init.org
+Add here circled digits like: ②
+#+begin_src emacs-lisp
 (defun dakra/insert-unicode (unicode-name)
   "Same as C-x 8 enter UNICODE-NAME."
   (insert-char (gethash unicode-name (ucs-names))))
@@ -4324,9 +4507,9 @@ If prefix ARG, copy instead of move."
   ("p" (dakra/insert-unicode "POUND SIGN"))
   ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
   ("m" (dakra/insert-unicode "MICRO SIGN")))
-    #+end_src
+#+end_src
 *** Hydra / multiple-cursors
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra multiple-cursors-hydra (:columns 3 :idle 1.0)
   "Multiple cursors"
   ("l" mc/edit-lines "Edit lines in region" :exit t)
@@ -4348,9 +4531,9 @@ If prefix ARG, copy instead of move."
   ("P" mc/skip-to-previous-like-this "Skip to previous like this")
   ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
   ("q" nil "Quit" :exit t))
-    #+end_src
+#+end_src
 *** Hydra / lasgun
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra hydra-lasgun-marks (:color red :hint nil)
   "
                               LASGUN MARKS
@@ -4393,9 +4576,9 @@ _q_: Quit
   ("h" lasgun-mark-whitespace-end :exit nil)
   
   ("q" nil :exit t))
-    #+end_src
+#+end_src
 *** Hydra / Scratch Buffers
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Nice idea from https://github.com/dakra/dmacs/blob/nil/init.org
 (defhydra hydra-scratchpad (:hint nil)
   "
@@ -4413,39 +4596,39 @@ _q_: Quit
   ("o" (switch-to-buffer "*org*scratchpad.org"))
   ("T" (switch-to-buffer "*text*scratchpad.txt"))
   ("m" (switch-to-buffer "*markdown*scratchpad.md")))
-    #+end_src
+#+end_src
 ** explain-pause-mode
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package explain-pause-mode
   :straight (explain-pause-mode :type git :host github :repo "lastquestion/explain-pause-mode")
   :defer t)
-   #+end_src
+#+end_src
 ** exec-path-from-shell
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package exec-path-from-shell
   :straight t
   :if (memq window-system '(mac ns x))
   :config
   (exec-path-from-shell-initialize))
-   #+end_src
+#+end_src
 
 ** Custom Elisp
 *** reload config
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/reload-dotemacs ()
   (interactive)
   (load-file (concat minemacs-root-dir "init.el" )))
-    #+end_src
+#+end_src
 *** change font size
-    Change default font size
-    #+begin_src emacs-lisp
+Change default font size
+#+begin_src emacs-lisp
 (defun dorneanu/set-font-size (size)
   "Set the font size to SIZE, specified in tenths of a point."
   (interactive "nEnter the font size: ")
   (set-face-attribute 'default nil :height size))
-    #+end_src
+#+end_src
 *** reload directory variables
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/reload-dir-locals ()
   "Reload directory local variables for the current buffer."
   (interactive)
@@ -4454,16 +4637,16 @@ _q_: Quit
     (hack-local-variables)
     (message "Directory local variables reloaded for %s" 
              (buffer-name))))
-    #+end_src
+#+end_src
 * Media
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** empv
-   Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
-   position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
+Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
+position and resume whenever the same video is played again (read [[https://unix.stackexchange.com/questions/414639/is-it-possible-to-continue-movies-from-where-one-leaves-in-mpv-as-can-be-done-in][here]]).
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package empv
   :straight t
   :after (embark browse-url)
@@ -4491,10 +4674,10 @@ _q_: Quit
 ;; Handle youtube links using mpv
 (with-eval-after-load 'browse-url
   (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/play-video-with-mpv-browse)))
-   #+end_src
+#+end_src
 ** Feeds
 *** elfeed
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package elfeed
   :defer t
   :straight t
@@ -4614,12 +4797,12 @@ _q_: Quit
   (add-hook 'elfeed-search-mode-hook
             (lambda ()
               (setq-local tooltip-function #'elfeed-search-show-entry-tooltip))))
-    #+end_src
+#+end_src
 
 
 **** Custom functions
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun hp/elfeed-entry-line-draw (entry)
   "Enhanced print function for ENTRY in the elfeed-search buffer."
   (let* (;; Basic entry information
@@ -4765,11 +4948,11 @@ _q_: Quit
       (insert (propertize title 'face title-faces 'kbd-help title))))
   )
 
-     #+end_src
+#+end_src
 
-     xwidget related:
+xwidget related:
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
   "open with xwidget"
   (interactive "P")
@@ -4779,12 +4962,12 @@ _q_: Quit
   (other-window 1)
   (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
     (elfeed-search-browse-url use-generic-p)))
-     #+end_src
+#+end_src
 
 **** Filter cycling
-     Cycle through different filters:
+Cycle through different filters:
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defvar dorneanu/elfeed-custom-filters
   '("+2read"
     "+unread +golang"
@@ -4861,13 +5044,13 @@ _q_: Quit
   (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
     (elfeed-search-set-filter current-filter)
     (message "Elfeed filter set to: %s" current-filter)))
-     #+end_src
+#+end_src
 
 **** elfeed-goodies
-     Elfeed-goodies is a package which enhances the Elfeed experience.
-     Aside from running its setup command as soon as possible, I also set
-     in this code block all my keybinds for Elfeed here.
-     #+begin_src emacs-lisp
+Elfeed-goodies is a package which enhances the Elfeed experience.
+Aside from running its setup command as soon as possible, I also set
+in this code block all my keybinds for Elfeed here.
+#+begin_src emacs-lisp
 (use-package elfeed-goodies
   :defer t
   :after elfeed
@@ -4880,17 +5063,17 @@ _q_: Quit
   (elfeed-goodies/tag-column-width 28)
   :config
   (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
-     #+end_src
+#+end_src
 
 **** Youtube
-     I don’t want YouTube videos to be open with my web browser when I
-     invoke ~elfeed-show-visit~, so I’ll advise this function to make it
-     possible to modify the behaviour of said function. Oh, and I already
-     made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
-     [[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
+I don’t want YouTube videos to be open with my web browser when I
+invoke ~elfeed-show-visit~, so I’ll advise this function to make it
+possible to modify the behaviour of said function. Oh, and I already
+made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
+[[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
 
-     #+name: elfeed-open-youtube-with-mpv
-     #+begin_src emacs-lisp
+#+name: elfeed-open-youtube-with-mpv
+#+begin_src emacs-lisp
 (defun my/elfeed-filter-youtube-videos (orig-fun &rest args)
   "Open with mpv the video leading to PATH"
   (let ((link (elfeed-entry-link elfeed-show-entry)))
@@ -4903,16 +5086,16 @@ _q_: Quit
         (apply orig-fun args)))))
 
 (advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
-     #+end_src
+#+end_src
 
-     A future improvement to be made is to let the user chose the
-     resolution of the video before it is launched. I may not always have
-     the best internet connection, and viewing 4K videos on a 1080p display
-     is not something very useful.
+A future improvement to be made is to let the user chose the
+resolution of the video before it is launched. I may not always have
+the best internet connection, and viewing 4K videos on a 1080p display
+is not something very useful.
 **** elfeed-org
-     Last but not least, my Elfeed configuration is stored in an org file
-     thanks to ~elfeed-org~.
-     #+begin_src emacs-lisp
+Last but not least, my Elfeed configuration is stored in an org file
+thanks to ~elfeed-org~.
+#+begin_src emacs-lisp
 (use-package elfeed-org
   :after elfeed
   :straight t
@@ -4920,9 +5103,9 @@ _q_: Quit
   (elfeed-org)
   :config
   (setq rmh-elfeed-org-files (list (concat org-directory "elfeed.org.gpg"))))
-     #+end_src
+#+end_src
 **** elfeed-tube
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package elfeed-tube
   :straight t
   :after elfeed
@@ -4961,10 +5144,10 @@ _q_: Quit
     (when (< 0 quality-val)
       (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
     (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
-     #+end_src
+#+end_src
 
 **** functions
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
   "open with xwidget"
   (interactive "P")
@@ -4974,11 +5157,11 @@ _q_: Quit
   (other-window 1)
   (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
     (elfeed-search-browse-url use-generic-p)))
-     #+end_src
+#+end_src
 **** reddigg
-     Use reddigg to show reddit threads.
+Use reddigg to show reddit threads.
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package reddigg
   :straight t
   :after (elfeed))
@@ -4991,24 +5174,24 @@ _q_: Quit
                   (elfeed-search-selected :ignore-region)))
          (link (if link link (elfeed-entry-link entry))))
     (reddigg-view-comments link)))
-     #+end_src
+#+end_src
 
 **** hnreader
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package hnreader
   :straight t
   :after (elfeed))
-     #+end_src
+#+end_src
 
-     Open in same window
+Open in same window
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (setq hnreader-view-comments-in-same-window nil)
-     #+end_src
+#+end_src
 
-     Use hnreader to show HN threads
+Use hnreader to show HN threads
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun my/elfeed-hn-show-comments (&optional link)
   (interactive)
   (let* ((entry (if (eq major-mode 'elfeed-show-mode)
@@ -5023,19 +5206,19 @@ _q_: Quit
     (message comments-url)
     (setq-local hnreader-view-comments-in-same-window nil)
     (hnreader-promise-comment (format "%s" comments-url))))
-     #+end_src
+#+end_src
 
-     Use hnread to show HN threads for a URL at point
+Use hnread to show HN threads for a URL at point
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun my/elfeed-hn-show-comments-at-point ()
   "Kill the url at point."
   (interactive)
   (setq-local hnreader-view-comments-in-same-window t)
   (hnreader-comment (format "%s" (url-get-url-at-point))))
-     #+end_src
+#+end_src
 **** COMMENT rdrview
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://github.com/SqrtMinusOne/dotfiles
 (defun sqrtminusone/rdrview-get (url callback)
   "Get the rdrview representation of URL.
@@ -5148,15 +5331,15 @@ _q_: Quit
        (setq-local my/elfeed-show-rdrview-html content)
        (goto-char (point-min))))))
 
-     #+end_src
+#+end_src
 
 * Email
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** mu4e
 **** General config
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Make sure we find the mu4e package
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
 
@@ -5301,10 +5484,10 @@ _q_: Quit
   )
 
 ;; (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
-     #+end_src
+#+end_src
 
 **** Bookmarks
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (setq mu4e-bookmarks
       `(
         ("maildir:/Sent" "Sent messages" ?s)
@@ -5326,29 +5509,29 @@ _q_: Quit
         ;;             "OR support@xeroshoes.com"))
         ;;  "Newletter" ?n)
         ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
-     #+end_src
+#+end_src
 
 **** Fancy stuff
-     From https://github.com/Phundrak/dotfiles
+From https://github.com/Phundrak/dotfiles
 
-     #+name: mu4e-fancy-marks-tbl
-     | Mark      | Flag | Icon        |
-     |-----------+------+-------------|
-     | draft     | D    | pencil      |
-     | flagged   | F    | flag        |
-     | new       | N    | rss         |
-     | passed    | P    | check       |
-     | replied   | R    | reply       |
-     | seen      | S    | eye         |
-     | unread    | u    | eye-slash   |
-     | trashed   | T    | trash       |
-     | attach    | a    | paperclip   |
-     | encrypted | x    | lock        |
-     | signed    | s    | certificate |
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
 
-     #+name: mu4e-fancy-marks-gen
-     #+header: :tangle no :exports none :results value :cache yes
-     #+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
 (mapconcat (lambda (line)
              (let ((mark (car line))
                    (flag (cadr line))
@@ -5359,39 +5542,39 @@ _q_: Quit
                        icon)))
            table
            "\n")
-     #+end_src
+#+end_src
 
-     #+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
-     #+begin_example
-     mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
-     mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
-     mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
-     mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
-     mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
-     mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
-     mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
-     mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
-     mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
-     mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
-     mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
-     #+end_example
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
 
-     Let’s enable them and set them:
-     #+name: mu4e-fancy-marks
-     #+begin_src emacs-lisp :tangle no
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
 (setq mu4e-use-fancy-chars t
       <<mu4e-fancy-marks-gen()>>)
-     #+end_src
+#+end_src
 
 **** View mode
-     #+name: mu4e-view-mode
-     #+begin_src emacs-lisp :tangle no
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
 (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
-     #+end_src
+#+end_src
 
 **** Contexts
-     Set contexts
-     #+begin_src emacs-lisp
+Set contexts
+#+begin_src emacs-lisp
 (defun dorneanu/set-mu4e-contexts ()
   "Set mail contexts for mu4e"
   (interactive)
@@ -5454,13 +5637,13 @@ _q_: Quit
                      ))))
   )
 
-     #+end_src
+#+end_src
 
-     #+results:
-     : dorneanu/set-mu4e-contexts
+#+results:
+: dorneanu/set-mu4e-contexts
 **** Reply
-     I often want to reply without the original message:
-     #+begin_src emacs-lisp
+I often want to reply without the original message:
+#+begin_src emacs-lisp
 ;; From https://github.com/djcb/mu/issues/2345
 ;; (after! mu4e
 ;;   (defun dorneanu/mu4e-delete-citation ()
@@ -5476,14 +5659,14 @@ _q_: Quit
 ;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
 ;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
 ;;   )
-     #+end_src
+#+end_src
 * Applications
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** AI
 *** copilot
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package copilot
   :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
   :after corfu
@@ -5494,9 +5677,9 @@ _q_: Quit
                ("M-l" . copilot-accept-completion)
                ("M-1" . copilot-accept-completion-by-word)
                ("M-2" . copilot-accept-completion-by-line))))
-    #+end_src
+#+end_src
 *** gptel
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package gptel
   :straight t
   :defer t
@@ -5519,9 +5702,9 @@ _q_: Quit
                         :stream t
                         :models '("llama3"))
         gptel-model "llama3"))
-    #+end_src
+#+end_src
 * Post Initialization
-  #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (message "Loading %s...done (%.3fs)" user-init-file
          (float-time (time-subtract (current-time)
                                     before-user-init-time)))
@@ -5534,4 +5717,4 @@ _q_: Quit
             ;; Let's lower our GC thresholds back down to 256MB.
             (setq gc-cons-threshold (* 256 1024 1024)))
           t)
-  #+END_SRC
+#+END_SRC
