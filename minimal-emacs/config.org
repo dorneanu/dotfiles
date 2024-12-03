@@ -357,7 +357,7 @@ Make sure we load host specific settings
 :end:
 
 From https://github.com/dakra/dmacs/blob/nil/init.org#L700
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_src emacs-lisp
 ;; Don't quit Emacs on C-x C-c
 (when (daemonp)
   (global-set-key (kbd "C-x C-c") 'kill-buffer-and-window))
@@ -433,7 +433,7 @@ From https://github.com/dakra/dmacs/blob/nil/init.org#L700
 ;; Increase the limit to catch infinite recursions.
 ;; Large scala files need sometimes more and this value can safely be increased.
 (setq max-lisp-eval-depth 32768)
-#+END_SRC
+#+END_src
 * Emacs Built-in Packages
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -445,6 +445,8 @@ Change some default keybiding
   :straight (:type built-in)
   :bind (("C-z"   . undo-only)
          ("C-S-z" . undo-redo)
+         ;; ("C-M-k" . scroll-up)
+         ;; ("C-M-j" . scroll-down)
          ("C-x k" . kill-current-buffer))
   :hook ((mu4e-compose-mode markdown-mode rst-mode git-commit-setup) . +text-mode-autofill-setup)
   :config
@@ -867,7 +869,10 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
               ("C-{" . sp-backward-barf-sexp)
               ("C-M-<right>" . sp-backward-barf-sexp)
               ("M-S" . sp-split-sexp) ;; misc
-              ("M-j" . sp-join-sexp))
+              ;; ("M-j" . sp-join-sexp)
+              )
+  
+  ;; Old keybindings
   ;; :bind (:map smartparens-mode-map
   ;;             ;; paredit bindings
   ;;             ("C-M-f" . sp-forward-sexp)
@@ -1266,7 +1271,7 @@ Extended ~isearch~
     :dir (concat org-roam-directory "/rez/huberman-lab")
     :confirm prefix)
 
-  (setq dotemacs-directory "/cs/priv/repos/dotemacs")
+  (setq dotemacs-directory "~/repos/priv/dotemacs")
   (rg-define-search my/rg-dotemacs
     :query ask
     :format regexp
@@ -1351,6 +1356,9 @@ Need to invest more time how to use it
               browse-kill-ring-separator-face 'shadow))
 #+end_src
 * Navigation
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** avy
 #+BEGIN_SRC emacs-lisp
 (use-package avy
@@ -1472,7 +1480,6 @@ Need to invest more time how to use it
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
 ** Theme
-
 Install additional themes:
 #+begin_src emacs-lisp
 (use-package doom-themes
@@ -1674,9 +1681,10 @@ Focus and swap windows
         mouse-wheel-progressive-speed nil))
 (setq scroll-step 1
       scroll-margin 0
-      scroll-conservatively 10
+      ;; I don't like the cursor to jump 
+      scroll-conservatively 1000
       auto-window-vscroll nil
-      scroll-preserve-screen-position t)
+      scroll-preserve-screen-position nil)
 #+end_src
 ** Tabs
 *** centaur-tabs
@@ -2030,7 +2038,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
          ("/Pipfile\\'"   . conf-mode))
   :init
   (setq python-indent-guess-indent-offset-verbose nil)
-  (add-hook 'python-mode-local-vars-hook #'lsp)
+  ;; (add-hook 'python-mode-local-vars-hook #'lsp)
   :config
   (setq python-indent-guess-indent-offset-verbose nil)
   (when (and (executable-find "python3")
@@ -2074,8 +2082,6 @@ This package will bring a new major mode for editing pip requirements.
 (use-package pip-requirements
   :defer t
   :straight t)
-#+end_src
-
 #+end_src
 **** pipenv
 This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
@@ -2175,24 +2181,6 @@ Flycheck can also be enabled for Cython:
   :straight t
   :after cython-mode)
 #+end_src
-**** COMMENT pyright
-Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP backend for Python.
-#+begin_src emacs-lisp
-;; (use-package lsp-pyright
-;;   :after lsp-mode
-;;   :defer t
-;;   :straight (:buidl t))
-#+end_src
-*** Yaml
-#+begin_src emacs-lisp
-(use-package yaml-mode
-  :straight t
-  :defer t
-  :hook (kubed-display-resource-mode . yaml-mode)
-  :mode "\\.yml\\'"
-  :mode "\\.yaml\\'")
-#+end_src
-
 *** Makefiles
 #+begin_src emacs-lisp
 (defun my/local-tab-indent ()
@@ -2264,13 +2252,22 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
   :straight t
   :mode "Dockerfile[a-zA-Z.-]*\\'")
 #+end_src
-
-*** Toml
+*** Configs
+**** Toml
 #+begin_src emacs-lisp
 (use-package toml-mode
   :straight t
   :defer t
   :mode "/\\(Cargo.lock\\|\\.cargo/config\\)\\'")
+#+end_src
+**** Yaml
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :straight t
+  :defer t
+  :hook (kubed-display-resource-mode . yaml-mode)
+  :mode "\\.yml\\'"
+  :mode "\\.yaml\\'")
 #+end_src
 *** Web
 **** web-mode
@@ -2349,19 +2346,6 @@ Finally, I’m using [[https://github.com/microsoft/pyright][Pyright]] as my LSP
   :bind (:map emmet-mode-keymap
               (("M-RET" . 'emmet-expand-yas))))
 #+end_src
-*** Yaml
-#+begin_src emacs-lisp
-(use-package yaml-mode
-  :straight t
-  :defer t
-  :mode "\\.yml\\'"
-  :mode "\\.yaml\\'")
-
-;; (use-package yaml-pro
-;;   :straight t
-;;   :mode "\\.yml\\'"
-;;   :mode "\\.yaml\\'")
-#+end_src
 ** LSP
 *** eglot
 #+begin_src emacs-lisp
@@ -2402,6 +2386,8 @@ Need to add some keybindings here:
 (use-package eldoc
   :straight (:type built-in)
   :hook (prog-mode . eldoc-mode)
+  :bind (:map prog-mode-map
+              ("C-c e d" . eldoc))
   :init
   (global-eldoc-mode 1)
   :config
@@ -2410,6 +2396,8 @@ Need to add some keybindings here:
 (use-package eldoc-box
   :straight t
   :hook (eldoc-mode-hook . eldoc-box-hover-mode)
+  :bind (:map prog-mode-map
+              ("C-c e h" . eldoc-box-hover-mode))
   :init
   (setq eldoc-box-position-function #'eldoc-box--default-upper-corner-position-function
         eldoc-box-clear-with-C-g t))
@@ -2602,6 +2590,12 @@ Need to add some keybindings here:
   :hook (prog-mode . highlight-indent-guides-mode)
   :custom (highlight-indent-guides-method 'character))
 #+end_src
+*** display-line-numbers
+#+begin_src emacs-lisp
+(use-package display-line-numbers
+  :defer t
+  :hook ((prog-mode . display-line-numbers-mode)))
+#+end_src
 *** hl-line-mode
 #+begin_src emacs-lisp
 (use-package hl-line
@@ -2727,6 +2721,9 @@ Keep lisp code always indented.
   :after magit)
 #+end_src
 * DevOps
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** k8s
 *** k8s-mode
 #+begin_src emacs-lisp
@@ -2749,12 +2746,269 @@ Keep lisp code always indented.
   :bind (("C-c a k" . kubel)))
 #+END_SRC
 * Shells
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
 ** COMMENT vterm
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
   :defer t)
 #+end_src
+** Eshell
+From https://github.com/dakra/dmacs/blob/nil/init.org
+#+BEGIN_SRC emacs-lisp
+;; Always show file size in human readable format
+(setq eshell-ls-initial-args "-h")
+
+;; We're in emacs, so 'cat' is nicer there than 'less'
+(setenv "PAGER" "cat")
+
+;; Fixme eshell-mode-map maps to global keybindings? Check "C-d"
+;; Issue: https://github.com/jwiegley/use-package/issues/332
+(use-package eshell
+  :bind (("C-c a s" . eshell))
+  :config
+  ;; Config for xterm-color
+  ;; (add-to-list 'eshell-preoutput-filter-functions 'xterm-color-filter)
+  ;; (setq eshell-output-filter-functions (remove 'eshell-handle-ansi-color eshell-output-filter-functions))
+  (setenv "TERM" "xterm-256color")
+
+  ;; Synchronize eshell buffer name on directory change.
+  ;; From https://github.com/manateelazycat/aweshell
+  (defun eshell-sync-dir-buffer-name ()
+    "Change eshell buffer name by directory change."
+    (when (equal major-mode 'eshell-mode)
+      (rename-buffer (format "*eshell: %s*" (epe-fish-path default-directory)) t)))
+  (add-hook 'eshell-directory-change-hook #'eshell-sync-dir-buffer-name)
+  (add-hook 'eshell-mode-hook #'eshell-sync-dir-buffer-name)
+
+  (defun dakra-eshell-split (&optional arg)
+    "Like eshell but use pop-to-buffer to display."
+    (interactive "P")
+    (let ((cur-buf (buffer-name))
+          (eshell-buf (eshell arg)))
+      (pop-to-buffer-same-window cur-buf)
+      (pop-to-buffer eshell-buf)))
+
+  ;; Don't print the welcome banner and
+  ;; use native 'sudo', system sudo asks for password every time.
+  (require 'em-tramp)
+  (setq eshell-modules-list
+        '(eshell-alias
+          eshell-basic
+          eshell-cmpl
+          eshell-dirs
+          eshell-glob
+          eshell-hist
+          eshell-ls
+          eshell-pred
+          eshell-prompt
+          eshell-script
+          eshell-term
+          eshell-tramp
+          eshell-unix))
+
+  (require 'em-smart)
+  (setq-default eshell-where-to-jump 'begin)
+  (setq-default eshell-review-quick-commands nil)
+  (setq-default eshell-smart-space-goes-to-end t)
+
+  (require 'em-hist)
+  ;; Some ideas from https://github.com/howardabrams/dot-files/blob/master/emacs-eshell.org
+  (setq-default eshell-scroll-to-bottom-on-input 'all
+                eshell-error-if-no-glob t
+                eshell-hist-ignoredups t
+                eshell-visual-commands '("ptpython" "ipython" "pshell" "tail" "vi" "vim" "watch"
+                                         "nmtui" "dstat" "mycli" "pgcli" "vue" "ngrok"
+                                         "castnow" "mitmproxy" "rmapi"
+                                         "tmux" "screen" "top" "htop" "less" "more" "ncftp")
+                eshell-prefer-lisp-functions nil)
+
+  ;; Fix eshell overwriting history.
+  ;; From https://emacs.stackexchange.com/a/18569/15023.
+  (setq eshell-save-history-on-exit nil)
+  (defun eshell-append-history ()
+    "Call `eshell-write-history' with the `append' parameter set to `t'."
+    (when eshell-history-ring
+      (let ((newest-cmd-ring (make-ring 1)))
+        (ring-insert newest-cmd-ring (car (ring-elements eshell-history-ring)))
+        (let ((eshell-history-ring newest-cmd-ring))
+          (eshell-write-history eshell-history-file-name t)))))
+  (add-hook 'eshell-pre-command-hook #'eshell-append-history)
+
+  ;; Increase eshell history size from default of only 128
+  (setq eshell-history-size 8192)
+  (require 'em-prompt)
+
+  (defun eshell-delete-backward-char (n)
+    "Only call `(delete-backward-char N)' when not at beginning of prompt."
+    (interactive "p")
+    (if (looking-back eshell-prompt-regexp nil)
+        (message "Beginning of prompt")
+      (delete-char (- n))))
+
+  ;; Fixme eshell-mode-map maps to global keybindings? Check "C-d"
+  ;; Issue: https://github.com/jwiegley/use-package/issues/332
+  (add-hook 'eshell-mode-hook (lambda ()
+                                (local-set-key (kbd "M-P") 'eshell-previous-prompt)
+                                (local-set-key (kbd "M-N") 'eshell-next-prompt)
+                                (local-set-key (kbd "M-R") 'eshell-list-history)
+                                (local-set-key (kbd "C-r") 'consult-history)
+                                (local-set-key (kbd "DEL") 'eshell-delete-backward-char)
+                                ;; Use helm as completion menu
+                                ;;(local-set-key [remap eshell-pcomplete] 'helm-esh-pcomplete)
+                                ;; or ivy
+                                (local-set-key [remap eshell-pcomplete] 'completion-at-point)
+
+                                ;; Support imenu
+                                (setq-local imenu-generic-expression `(("Prompt" ,eshell-prompt-regexp 1)))
+                                ;; Support outline (e.g. consult-outline)
+                                (setq-local outline-regexp eshell-prompt-regexp)
+
+                                ;;(eshell-smart-initialize)
+                                
+                                ;; Disable overwriting the history on eshell exit
+                                ;; See eshell-append-history above
+                                (remove-hook 'eshell-exit-hook #'eshell-write-history t)
+
+                                (setq xterm-color-preserve-properties t)))
+  ;; Functions starting with `eshell/' can be called directly from eshell
+  ;; with only the last part. E.g. (eshell/foo) will call `$ foo'
+  (defun eshell/d (&rest args)
+    "Open dired in current directory."
+    (dired (pop args) "."))
+
+  (defun eshell/ccat (file)
+    "Like `cat' but output with Emacs syntax highlighting."
+    (with-temp-buffer
+      (insert-file-contents file)
+      (let ((buffer-file-name file))
+        (delay-mode-hooks
+          (set-auto-mode)
+          (if (fboundp 'font-lock-ensure)
+              (font-lock-ensure)
+            (with-no-warnings
+              (font-lock-fontify-buffer)))))
+      (buffer-string)))
+
+  (defun eshell/lcd (&optional directory)
+    "Like regular 'cd' but don't jump out of a tramp directory.
+When on a remote directory with tramp don't jump 'out' of the server.
+So if we're connected with sudo to 'remotehost'
+'$ lcd /etc' would go to '/sudo:remotehost:/etc' instead of just
+'/etc' on localhost."
+    (setq directory (or directory "~/"))
+    (unless (file-remote-p directory)
+      (setq directory (concat (file-remote-p default-directory) directory)))
+    (eshell/cd directory))
+
+  (defun eshell/gst (&rest args)
+    (magit-status-setup-buffer (or (pop args) default-directory))
+    (eshell/echo))   ;; The echo command suppresses output
+
+  (defun eshell/f (filename &optional dir try-count)
+    "Searches for files matching FILENAME in either DIR or the
+current directory. Just a typical wrapper around the standard
+`find' executable.
+
+Since any wildcards in FILENAME need to be escaped, this wraps the shell command.
+
+If not results were found, it calls the `find' executable up to
+two more times, wrapping the FILENAME pattern in wildcard
+matches. This seems to be more helpful to me."
+    (let* ((cmd (concat
+                 (executable-find "find")
+                 " " (or dir ".")
+                 "      -not -path '*/.git*'"
+                 " -and -not -path '*node_modules*'"
+                 " -and -not -path '*classes*'"
+                 " -and "
+                 " -type f -and "
+                 "-iname '" filename "'"))
+           (results (shell-command-to-string cmd)))
+
+      (if (not (s-blank-str? results))
+          results
+        (cond
+         ((or (null try-count) (= 0 try-count))
+          (eshell/f (concat filename "*") dir 1))
+         ((or (null try-count) (= 1 try-count))
+          (eshell/f (concat "*" filename) dir 2))
+         (t "")))))
+
+  (defun eshell/ef (filename &optional dir)
+    "Searches for the first matching filename and loads it into a
+file to edit."
+    (let* ((files (eshell/f filename dir))
+           (file (car (s-split "\n" files))))
+      (find-file file)))
+
+  (defun eshell/find (&rest args)
+    "Wrapper around the ‘find’ executable."
+    (let ((cmd (concat "find " (string-join args " "))))
+      (shell-command-to-string cmd)))
+
+  (defun execute-command-on-file-buffer (cmd)
+    "Execute command on current buffer file."
+    (interactive "sCommand to execute: ")
+    (let* ((file-name (buffer-file-name))
+           (full-cmd (concat cmd " " file-name)))
+      (shell-command full-cmd)))
+
+  (defun execute-command-on-file-directory (cmd)
+    "Execute command on current buffer directory."
+    (interactive "sCommand to execute: ")
+    (let* ((dir-name (file-name-directory (buffer-file-name)))
+           (full-cmd (concat "cd " dir-name "; " cmd)))
+      (shell-command full-cmd))))
+
+(use-package eshell-bookmark
+  :hook (eshell-mode . eshell-bookmark-setup)
+  :after eshell)
+#+END_SRC
+
+*** Prompt
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-prompt-extras
+  :straight t
+  :after esh-opt
+  :config
+  ;; (require 'virtualenvwrapper)  ; We want python venv support
+  (autoload 'epe-theme-dakrone "eshell-prompt-extras")
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-dakrone))
+#+END_SRC
+
+*** Z
+cd to frequent directory
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-z
+  :straight t
+  :after eshell)
+#+END_SRC
+*** Eshel-up
+Quickly go to a specific parent directory in eshell
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-up
+  :straight t
+  :after eshell)
+#+END_SRC
+*** COMMENT Autocomplete
+#+BEGIN_SRC emacs-lisp
+(use-package fish-completion
+  :if (executable-find "fish")
+  :after eshell
+  :config (global-fish-completion-mode))
+
+;; Autocomplete for git commands in shell and
+;; the git command from magit ('!')
+(use-package pcmpl-git
+  :after pcomplete)
+
+(use-package pcmpl-pip
+  :after pcomplete)
+#+END_SRC
 * ORG mode
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -2811,7 +3065,11 @@ Basic configuration
 
          ;; Misc
          ("C-c o a" . org-archive-subtree)
-         ("C-c o r" . org-refile)
+         ("C-c o r w" . org-refile)
+         ("C-c o r v" . +org/refile-to-visible)
+         ("C-c o r f" . +org/refile-to-current-file)
+         ("C-c o r o" . +org/refile-to-other-window)
+         ;;("C-c o r l" . +org/refile-to-last-location)
          ("C-c o l" . org-insert-link)
          ("C-c C-e" . org-edit-special)
 
@@ -3166,6 +3424,22 @@ If prefix ARG, copy instead of move."
            (lambda (_p _coll _pred _rm _ii _h default &rest _)
              default)))
       (org-refile)))
+
+  (defun +org/refile-to-other-window (arg)
+    "Refile current heading to an org buffer visible in another window.
+If prefix ARG, copy instead of move."
+    (interactive "P")
+    (let ((org-refile-keep arg)
+          org-refile-targets
+          current-prefix-arg)
+      (dolist (win (delq (selected-window) (window-list)))
+        (with-selected-window win
+          (let ((file (buffer-file-name (buffer-base-buffer))))
+            (and (eq major-mode 'org-mode)
+                 file
+                 (cl-pushnew (cons file (cons :maxlevel 10))
+                             org-refile-targets)))))
+      (call-interactively #'org-refile)))
 
   ;; Save all buffers after refilling
   (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers))))
@@ -3941,8 +4215,10 @@ Various useful utilities
 ;; From https://github.com/dakra/dmacs/blob/nil/init.org#L2056
 (use-package helpful
   :straight t 
-  :bind (("C-h f" . helpful-callable)
+  :bind (("C-h ." . helpful-at-point)
+         ("C-h f" . helpful-callable)
          ("C-h v" . helpful-variable)
+         ("C-h f" . helpful-function)
          ("C-h s" . describe-symbol)
          ("C-h k" . helpful-key)
          ;; ("C-c h f" . helpful-callable)
@@ -4477,37 +4753,6 @@ From https://github.com/dakra/dmacs/blob/nil/init.org
      "set gnus interval" :exit t))))
 
 #+end_src
-*** Hydra / unicode
-From https://github.com/dakra/dmacs/blob/nil/init.org
-Add here circled digits like: ②
-#+begin_src emacs-lisp
-(defun dakra/insert-unicode (unicode-name)
-  "Same as C-x 8 enter UNICODE-NAME."
-  (insert-char (gethash unicode-name (ucs-names))))
-
-(defhydra dakra/hydra-unicode (:color blue :hint nil)
-  "
-       Unicode  _c_ €   _a_ ä   _A_ Ä
-                _d_ °   _o_ ö   _O_ Ö
-                _e_ €   _u_ Ü   _U_ Ü
-                _p_ £   _s_ ß
-                _m_ µ
-                _r_ →
-       "
-  ("a" (dakra/insert-unicode "LATIN SMALL LETTER A WITH DIAERESIS"))
-  ("A" (dakra/insert-unicode "LATIN CAPITAL LETTER A WITH DIAERESIS"))
-  ("o" (dakra/insert-unicode "LATIN SMALL LETTER O WITH DIAERESIS")) ;;
-  ("O" (dakra/insert-unicode "LATIN CAPITAL LETTER O WITH DIAERESIS"))
-  ("u" (dakra/insert-unicode "LATIN SMALL LETTER U WITH DIAERESIS")) ;;
-  ("U" (dakra/insert-unicode "LATIN CAPITAL LETTER U WITH DIAERESIS"))
-  ("s" (dakra/insert-unicode "LATIN SMALL LETTER SHARP S"))
-  ("c" (dakra/insert-unicode "COPYRIGHT SIGN"))
-  ("d" (dakra/insert-unicode "DEGREE SIGN"))
-  ("e" (dakra/insert-unicode "EURO SIGN"))
-  ("p" (dakra/insert-unicode "POUND SIGN"))
-  ("r" (dakra/insert-unicode "RIGHTWARDS ARROW"))
-  ("m" (dakra/insert-unicode "MICRO SIGN")))
-#+end_src
 *** Hydra / multiple-cursors
 #+begin_src emacs-lisp
 (defhydra multiple-cursors-hydra (:columns 3 :idle 1.0)
@@ -4616,8 +4861,9 @@ _q_: Quit
 *** reload config
 #+begin_src emacs-lisp
 (defun dorneanu/reload-dotemacs ()
+  "Reload Emacs configuration."
   (interactive)
-  (load-file (concat minemacs-root-dir "init.el" )))
+  (load-file (expand-file-name "init.el" user-emacs-directory)))
 #+end_src
 *** change font size
 Change default font size
