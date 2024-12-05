@@ -965,7 +965,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
            '(((lambda (&rest _ignored)
                 (crux-smart-open-line-above)) "RET")))
   
-  (smartparens-global-mode))
+  (smartparens-strict-mode))
 #+end_src
 
 ** olivetti
@@ -1073,12 +1073,12 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
         ("s-<mouse-1>"   . mc/add-cursor-on-click)
         ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 #+end_src
-** electric-pair
+** COMMENT electric-pair
 #+begin_src emacs-lisp
-(use-package elec-pair
-  :ensure
-  :hook (after-init . electric-pair-mode)
-  :init (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
+;; (use-package elec-pair
+;;   :ensure
+;;   :hook (after-init . electric-pair-mode)
+;;   :init (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
 #+end_src
 ** discover-my-major
 Display a list of keybindings for the current major mode
@@ -1682,7 +1682,7 @@ Focus and swap windows
 (setq scroll-step 1
       scroll-margin 0
       ;; I don't like the cursor to jump 
-      scroll-conservatively 1000
+      scroll-conservatively 10
       auto-window-vscroll nil
       scroll-preserve-screen-position nil)
 #+end_src
@@ -1769,6 +1769,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (org-agenda-mode . centaur-tabs-local-mode)
   (prog-mode . centaur-tabs-mode)
   (eshell-mode . centaur-tabs-local-mode)
+  (gptel-mode . centaur-tabs-local-mode)
   (popper-mode . centaur-tabs-local-mode)
   ;; :bind
   ;; ("s-1" . centaur-tabs-backward)
@@ -1777,9 +1778,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
 #+end_src
-
-#+RESULTS:
-: #s(hash-table size 65 test eql rehash-size 1.5 rehash-threshold 0.8125 data (:use-package (26446 65533 683315 0) :init (26446 65533 683274 0) :init-secs (0 0 6310 0) :use-package-secs (0 0 49535 0) :config (26446 65533 683245 0) :config-secs (0 0 6273 0)))
 
 *** tabspaces
 #+begin_src emacs-lisp
@@ -1866,13 +1864,14 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; Enable `recentf-mode' to remember recent files
   (recentf-mode 1))
 #+end_src
-** COMMENT treemacs
+** treemacs
 #+begin_src emacs-lisp
 (use-package treemacs
   :straight t
+  :bind (("C-c a t" . treemacs))
   :config
   (setq treemacs-follow-after-init          t
-        treemacs-width                      35
+        treemacs-width                      45
         treemacs-indentation                2
         treemacs-git-integration            t
         treemacs-collapse-dirs              3
@@ -1883,7 +1882,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         treemacs-never-persist              nil
         treemacs-is-never-other-window      nil
         treemacs-goto-tag-strategy          'refetch-index)
-
   (treemacs-follow-mode t)
   (treemacs-filewatch-mode t))
 
@@ -1916,7 +1914,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 (use-package go-mode
   :straight t
   :mode "\\.go\\'"
-  :hook ((before-save . gofmt-before-save))
+  :hook ((go-mode go-ts-mode) . apheleia-mode)
   ;; ((go-mode . gofmt-before-save)
   ;;  (go-mode . eglot-ensure)
   :bind (:map go-mode-map
@@ -2046,7 +2044,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     (setq python-shell-interpreter "python3")))
 
 ;; Activate eglot for python-mode
-(add-hook 'python-mode-hook 'eglot-ensure)
+;; (add-hook 'python-mode-hook 'eglot-ensure)
 #+end_src
 **** pytest
 #+begin_src emacs-lisp
@@ -2229,6 +2227,12 @@ Flycheck can also be enabled for Cython:
         org-plantuml-jar-path "~/.local/bin/plantuml.jar"
         plantuml-indent-level 4))
 #+end_src
+*** nixOS
+#+begin_src emacs-lisp
+(use-package nix-mode
+  :straight t
+  :mode "\\.nix\\'")
+#+end_src
 *** docker
 #+begin_src emacs-lisp
 (use-package docker
@@ -2252,6 +2256,37 @@ Flycheck can also be enabled for Cython:
   :straight t
   :mode "Dockerfile[a-zA-Z.-]*\\'")
 #+end_src
+*** markdown
+#+begin_src emacs-lisp
+;; From https://github.com/dakra/dmacs/blob/nil/init.org
+(use-package markdown-mode
+  :mode (("/itsalltext/.*\\(gitlab\\|github\\).*\\.txt$" . gfm-mode)
+         ("\\.markdown\\'" . gfm-mode)
+         ("\\.md\\'" . gfm-mode))
+  :bind (:map markdown-mode-map
+         ("M-n" . markdown-next-visible-heading)
+         ("M-p" . markdown-previous-visible-heading)
+         ("M-N" . markdown-forward-same-level)
+         ("M-P" . markdown-backward-same-level)
+         ("M-O" . markdown-up-heading)
+         ("M-ö" . markdown-forward-paragraph)
+         ("M-ä" . markdown-backward-paragraph)
+         ("C-c =" . markdown-insert-header-dwim))
+  :hook (gfm-mode . apheleia-mode)
+  :config
+  ;; Display remote images
+  (setq markdown-display-remote-images t)
+  ;; Enable fontification for code blocks
+  (setq markdown-fontify-code-blocks-natively t)
+  ;; Add some more languages
+  (dolist (x '(("ini" . conf-mode)
+               ("clj" . clojure-mode)
+               ("cljs" . clojure-mode)
+               ("cljc" . clojure-mode)))
+    (add-to-list 'markdown-code-lang-modes x))
+  ;; use pandoc with source code syntax highlighting to preview markdown (C-c C-c p)
+  (setq markdown-command "pandoc -s --highlight-style pygments -f markdown_github -t html5"))
+#+end_src
 *** Configs
 **** Toml
 #+begin_src emacs-lisp
@@ -2266,9 +2301,11 @@ Flycheck can also be enabled for Cython:
   :straight t
   :defer t
   :hook (kubed-display-resource-mode . yaml-mode)
+  :hook (yaml-mode . apheleia-mode)
   :mode "\\.yml\\'"
   :mode "\\.yaml\\'")
 #+end_src
+
 *** Web
 **** web-mode
 #+begin_src emacs-lisp
@@ -2378,7 +2415,8 @@ Flycheck can also be enabled for Cython:
   (setq eglot-insert-completion-annotations t)
 
   ;; Enable eglot for certain modes
-  (add-hook 'go-mode-hook 'eglot-ensure))
+  ;; (add-hook 'go-mode-hook 'eglot-ensure)
+  )
 #+end_src
 *** TODO eldoc
 Need to add some keybindings here: 
@@ -2404,34 +2442,77 @@ Need to add some keybindings here:
 #+end_src
 *** lsp-mode
 #+begin_src emacs-lisp
-
 (use-package lsp-mode
-  :straight t
-  :config
-  (setq lsp-idle-delay 0.5
-        lsp-enable-symbol-highlighting t
-        lsp-enable-snippet t  ;; Not supported by company capf, which is the recommended company backend
-        ;; lsp-disabled-clients '(eslint)
-        lsp-pyls-plugins-flake8-enabled t)
-  ;; :hook (
-  ;;        ;; (go-mode . lsp-deferred)
-  ;;        ;; (typescript-mode . lsp)
-  ;;        ;; (js-mode . lsp)
-  ;;        ;; (vue-mode . lsp)
-  ;;        ;; (svelte-mode . lsp)
-  ;;        ;; (python-mode . lsp)
-  ;;        ;; (json-mode . lsp)
-  ;;        ;; (lsp-mode . lsp-headerline-breadcrumb-mode)
-  ;;        ;; (lsp-mode . lsb-enable-which-key-integration))
-  ;;        )
+  :ensure nil
+  :defer t
+  :hook ((go-ts-mode . lsp-deferred)
+         (web-mode . lsp-deferred)
+         (python-mode . lsp-deferred)
+         (python-ts-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :custom
-  (lsp-print-io nil)
-  (lsp-trace nil)
-  (lsp-print-performance nil)
-  (lsp-prefer-flymake t))
+  ;; (lsp-print-io nil)
+  ;; (lsp-trace nil)
+  ;; (lsp-print-performance nil)
+  ;; (lsp-prefer-flymake t)
+  ;; (lsp-disabled-clients (emmet-ls))
+  (lsp-use-plist t)
+  (lsp-keymap-prefix "C-c l")
+  (lsp-completion-provider :none)                    ; we use Corfu
+  (lsp-diagnostics-provider :flycheck)
+  ;; (lsp-session-file (locate-user-emacs-file ".lsp-session"))
+  (lsp-log-io nil)                                  ; IMPORTANT! Use only for debugging! Drastically affects performance
+  (lsp-keep-workspace-alive nil)                    ; Close LSP server if all project buffers are closed
+  (lsp-idle-delay 0.5)                             ; Debounce timer for `after-change-function'
+  
+  ;; core
+  (lsp-enable-xref t)                              ; Use xref to find references
+  (lsp-auto-configure t)                           ; Used to decide between current active servers
+  (lsp-eldoc-enable-hover t)                       ; Display signature information in the echo area
+  (lsp-enable-dap-auto-configure nil)              ; Debug support
+  (lsp-enable-file-watchers nil)                   ; This basically means, if you change
+                                                   ; the branch, should LSP reload
+                                                   ; instantly - it's a big performance
+                                                   ; overhead
+  (lsp-enable-folding t) 
+  (lsp-enable-imenu t)
+  (lsp-enable-indentation nil)                     ; I use prettier
+  (lsp-enable-links nil)                           ; No need since we have `browse-url'
+  (lsp-enable-on-type-formatting nil)              ; Prettier handles this
+  (lsp-enable-suggest-server-download t)           ; Useful prompt to download LSP providers
+  (lsp-enable-symbol-highlighting t)               ; Shows usages of symbol at point in the current buffer
+  (lsp-enable-text-document-color nil)             ; This is Treesitter's job
+  (lsp-ui-sideline-show-hover nil)                 ; Sideline used only for diagnostics
+  (lsp-ui-sideline-diagnostic-max-lines 20)        ; 20 lines since typescript errors can be quite big
+  
+  ;; completion
+  (lsp-completion-enable t)
+  (lsp-completion-show-detail t)
+  (lsp-completion-enable-additional-text-edit t)    ; Ex: auto-insert an import for a completion candidate
+  (lsp-enable-snippet t)                           ; Important to provide full JSX completion
+  (lsp-completion-show-kind t)                     ; Optional
+  
+  ;; headerline
+  (lsp-headerline-breadcrumb-enable nil)               ; Optional, I like the breadcrumbs
+  (lsp-headerline-breadcrumb-enable-diagnostics nil)   ; Don't make them red, too noisy
+  (lsp-headerline-breadcrumb-enable-symbol-numbers nil)
+  (lsp-headerline-breadcrumb-icons-enable nil)
+  
+  ;; modeline
+  (lsp-modeline-code-actions-enable t)             ; Modeline should be relatively clean
+  (lsp-modeline-diagnostics-enable nil)            ; Already supported through `flycheck'
+  (lsp-modeline-workspace-status-enable t)         ; Modeline displays "LSP" when lsp-mode is enabled
+  (lsp-signature-doc-lines 1)                      ; Don't raise the echo area. It's distracting
+  (lsp-ui-doc-use-childframe t)                    ; Show docs for symbol at point
+  (lsp-eldoc-render-all nil)                       ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
+  
+  ;; lens
+  (lsp-lens-enable nil)                            ; Optional, I don't need it
+  
+  ;; semantic
+  (lsp-semantic-tokens-enable nil)                 ; Related to highlighting, and we defer to treesitter
+  )
 #+end_src
-
 *** lsp-ui
 #+begin_src emacs-lisp
 (use-package lsp-ui
@@ -2503,7 +2584,48 @@ Need to add some keybindings here:
 
 #+RESULTS:
 : my-reload-eglot
+*** lsp-treemacs
+#+begin_src emacs-lisp
+(use-package lsp-treemacs
+  :straight t
+  :defer t)
+#+end_src
+*** lsp-pyright
+#+begin_src emacs-lisp
+(use-package lsp-pyright
+  :straight t
+  :custom (lsp-pyright-langserver-command "pyright") ;; or basedpyright
+  )
+#+end_src
+*** lsp-tailwindcss
+#+begin_src emacs-lisp
+(use-package lsp-tailwindcss
+  :straight (:type git :host github :repo "merrickluo/lsp-tailwindcss")
+  :init (setq lsp-tailwindcss-add-on-mode t)
+  :config
+  (setq lsp-tailwindcss-add-on-mode t)
+  ;; (setq lsp-tailwindcss-server-path "/opt/homebrew/bin/tailwindcss-language-server")
+  (dolist (tw-major-mode
+           '(web-mode
+             web-ts-mode
+             css-mode
+             css-ts-mode
+             typescript-mode
+             typescript-ts-mode
+             tsx-ts-mode
+             html-mode
+             js2-mode
+             js-ts-mode))
+    (add-to-list 'lsp-tailwindcss-major-modes tw-major-mode))
+  )
+#+end_src
 
+*** lsp-eslint
+#+begin_src emacs-lisp
+(use-package lsp-eslint
+  :straight (:type built-in)
+  :after lsp-mode)
+#+end_src
 ** Snippets
 #+begin_src emacs-lisp
 (use-package yasnippet
@@ -2573,6 +2695,18 @@ Need to add some keybindings here:
   (repeat-mode))
 #+end_src
 ** Utilities
+*** apheleia
+#+begin_src emacs-lisp
+(use-package apheleia
+  :straight t
+  :config
+  ;; For Python we want to format with isort and black
+  (setf (alist-get 'isort apheleia-formatters)
+        '("isort" "--stdout" "-"))
+  (setf (alist-get 'python-mode apheleia-mode-alist)
+        '(isort black))
+  (apheleia-global-mode))
+#+end_src
 *** flycheck
 #+begin_src emacs-lisp
 (use-package flycheck
@@ -3044,6 +3178,8 @@ Basic configuration
          ("M-N" . org-forward-heading-same-level)
          ("M-P" . org-backward-heading-same-level)
          ("M-O" . org-up-element)
+         ("M-ö" . org-forward-paragraph)
+         ("M-ä" . org-backward-paragraph)
 
          ;; Todo state
          ("C-c o t t" . org-todo)
@@ -3091,6 +3227,9 @@ Basic configuration
   :config
   (setq org-hide-leading-stars             t
         org-hide-macro-markers             t
+        org-hide-properties                t
+        org-cycle-hide-drawer-startup      t
+        org-hide-drawer-startup            t
         ;; Some characters to choose from: …, ⤵, ▼, ↴, ⬎, ⤷, and ⋱
         org-ellipsis                       "…"
         org-image-actual-width             600
@@ -3448,7 +3587,7 @@ If prefix ARG, copy instead of move."
 #+begin_src emacs-lisp
 (use-package org-modern
   :straight t
-  :hook (org-mode . org-modern-mode)
+  ;; :hook (org-mode . org-modern-mode)
   :hook (org-agenda-finalize . org-modern-agenda)
   ;; :custom-face
   ;; ;; force monospaced font for tags
@@ -3663,7 +3802,7 @@ If prefix ARG, copy instead of move."
   (setq org-src-fontify-natively t)  ; syntax highlighting for source code blocks
 
   ;; Tab should do indent in code blocks
-  (setq org-src-tab-acts-natively t)
+  (setq org-src-tab-acts-natively nil)
 
   ;; Don't remove (or add) any extra whitespace
   (setq org-src-preserve-indentation nil)
@@ -4132,7 +4271,117 @@ Various useful utilities
   :bind (("C-c l o" . link-hint-open-link)
          ("C-c l c" . link-hint-copy-link)))
 #+end_src
+** treesit
+#+begin_src emacs-lisp
+(use-package treesit
+  :straight (:type built-in)
+  :mode (("\\.tsx\\'" . tsx-ts-mode)
+         ("\\.py\\'" . python-ts-mode)
+         ("\\.cmake\\'" . cmake-ts-mode)
+         ("\\.go\\'" . go-ts-mode)
+         ("\\.js\\'" . typescript-ts-mode)
+         ("\\.mjs\\'" . typescript-ts-mode)
+         ("\\.mts\\'" . typescript-ts-mode)
+         ("\\.cjs\\'" . typescript-ts-mode)
+         ("\\.ts\\'" . typescript-ts-mode)
+         ("\\.jsx\\'" . tsx-ts-mode)
+         ("\\.json\\'" . json-ts-mode)
+         ("\\.yaml\\'" . yaml-ts-mode)
+         ("\\.css\\'" . css-ts-mode)
+         ("\\.yml\\'" . yaml-ts-mode)
+         ("\\.php\\'" . php-ts-mode)
+         ("\\.prisma\\'" . prisma-ts-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.mm\\'" . objc-mode)
+         ("\\.mdx\\'" . markdown-mode))
+  :preface
+  (defun os/setup-install-grammars ()
+    "Install Tree-sitter grammars if they are absent."
+    (interactive)
+    (dolist (grammar
+             '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
+               (bash "https://github.com/tree-sitter/tree-sitter-bash")
+               (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
+               (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
+               (kotlin "https://github.com/fwcd/tree-sitter-kotlin")
+               (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
+               (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
+               (go "https://github.com/tree-sitter/tree-sitter-go" "v0.20.0")
+               (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+               (make "https://github.com/alemuller/tree-sitter-make")
+               (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+               (cmake "https://github.com/uyha/tree-sitter-cmake")
+               (c "https://github.com/tree-sitter/tree-sitter-c")
+               (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+               (objc "https://github.com/tree-sitter-grammars/tree-sitter-objc")
+               (toml "https://github.com/tree-sitter/tree-sitter-toml")
+               (php "https://github.com/tree-sitter/tree-sitter-php" "v0.22.8" "php/src" )
+               (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
+               (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
+               (prisma "https://github.com/victorhqc/tree-sitter-prisma")))
+      (add-to-list 'treesit-language-source-alist grammar)
+      ;; Only install `grammar' if we don't already have it
+      ;; installed. However, if you want to *update* a grammar then
+      ;; this obviously prevents that from happening.
+      (unless (treesit-language-available-p (car grammar))
+        (treesit-install-language-grammar (car grammar)))))
 
+  ;; Optional, but recommended. Tree-sitter enabled major modes are
+  ;; distinct from their ordinary counterparts.
+  ;;
+  ;; You can remap major modes with `major-mode-remap-alist'. Note
+  ;; that this does *not* extend to hooks! Make sure you migrate them
+  ;; also
+  ;;(dolist (mapping
+  ;;         '((python-mode . python-ts-mode)
+  ;;           (css-mode . css-ts-mode)
+  ;;           (typescript-mode . typescript-ts-mode)
+  ;;           (js-mode . typescript-ts-mode)
+  ;;           (js2-mode . typescript-ts-mode)
+  ;;           (c-mode . c-ts-mode)
+  ;;           (c++-mode . c++-ts-mode)
+  ;;           (c-or-c++-mode . c-or-c++-ts-mode)
+  ;;           (bash-mode . bash-ts-mode)
+  ;;           (css-mode . css-ts-mode)
+  ;;           (json-mode . json-ts-mode)
+  ;;           (js-json-mode . json-ts-mode)
+  ;;           (sh-mode . bash-ts-mode)
+  ;;           (sh-base-mode . bash-ts-mode)))
+  ;;  (add-to-list 'major-mode-remap-alist mapping))
+  :config
+  (os/setup-install-grammars))
+#+end_src
+** combulate
+#+begin_src emacs-lisp
+(use-package combobulate
+  :straight t
+  :after (treesit)
+  :bind (("C-," . combobulate))
+  :preface
+  ;; You can customize Combobulate's key prefix here.
+  ;; Note that you may have to restart Emacs for this to take effect!
+  (setq combobulate-key-prefix "C-x ,")
+  :bind (:map combobulate-key-map
+              ("M-a" . nil))
+  ;;
+  ;; You can manually enable Combobulate with `M-x
+  ;; combobulate-mode'.
+  :hook
+  ((python-ts-mode . combobulate-mode)
+   (js-ts-mode . combobulate-mode)
+   (go-mode . go-ts-mode)
+   (html-ts-mode . combobulate-mode)
+   (css-ts-mode . combobulate-mode)
+   (yaml-ts-mode . combobulate-mode)
+   (typescript-ts-mode . combobulate-mode)
+   (json-ts-mode . combobulate-mode)
+   (tsx-ts-mode . combobulate-mode))
+  ;; Amend this to the directory where you keep Combobulate's source
+  ;; code.
+  ;;:load-path ("~/workspace/combobulate")
+  )
+#+end_src
 * Helpful
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -5948,6 +6197,32 @@ I often want to reply without the original message:
                         :stream t
                         :models '("llama3"))
         gptel-model "llama3"))
+#+end_src
+** Chrome
+*** atomic-chrome
+#+begin_src emacs-lisp
+(use-package atomic-chrome
+  :demand t
+  :straight (atomic-chrome
+             :repo "KarimAziev/atomic-chrome"
+             :type git
+             :host github)
+  :commands (atomic-chrome-start-server)
+  :config
+  (setq-default atomic-chrome-extension-type-list '(atomic-chrome))
+  (setq-default atomic-chrome-buffer-open-style 'split)
+  (setq-default atomic-chrome-auto-remove-file t)
+  (setq-default atomic-chrome-url-major-mode-alist
+                '(("claude.ai" . text-mode)
+                  ("github.com" . gfm-mode)
+                  ("gitlab.com" . gfm-mode)
+                  ("leetcode.com" . typescript-ts-mode)
+                  ("codi.eu-nl-1.cloud.sap" . gfm-mode)
+                  ("codesandbox.io" . js-ts-mode)
+                  ("typescriptlang.org" . typescript-ts-mode)
+                  ("jsfiddle.net" . js-ts-mode)
+                  ("w3schools.com" . js-ts-mode)))
+  (atomic-chrome-start-server))
 #+end_src
 * Post Initialization
 #+BEGIN_SRC emacs-lisp
