@@ -1693,10 +1693,12 @@ Focus and swap windows
   :straight t
   :init
   (setq centaur-tabs-enable-key-bindings t)
+  :custom
+  (centaur-tabs-set-icons t)
+  (centaur-tabs-plain-icons t)
   :config
   (setq centaur-tabs-style "bar"
         centaur-tabs-height 15
-        centaur-tabs-set-icons t
         centaur-tabs-show-new-tab-button t
         centaur-tabs-set-modified-marker t
         centaur-tabs-show-navigation-buttons t
@@ -1704,7 +1706,6 @@ Focus and swap windows
         centaur-tabs-show-count nil
         ;; centaur-tabs-label-fixed-length 15
         ;; centaur-tabs-gray-out-icons 'buffer
-        centaur-tabs-plain-icons t
         x-underline-at-descent-line t
         centaur-tabs-left-edge-margin nil)
   ;; Exclude some buffers
@@ -2626,6 +2627,15 @@ Need to add some keybindings here:
   :straight (:type built-in)
   :after lsp-mode)
 #+end_src
+*** consult-lsp
+#+begin_src emacs-lisp
+(use-package consult-lsp
+  :straight t
+  :after consult lsp-mode
+  :bind (:map lsp-mode-map
+              ([remap xref-find-apropos] . consult-lsp-symbols)))
+#+end_src
+
 ** Snippets
 #+begin_src emacs-lisp
 (use-package yasnippet
