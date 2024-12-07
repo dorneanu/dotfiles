@@ -433,6 +433,9 @@ From https://github.com/dakra/dmacs/blob/nil/init.org#L700
 ;; Increase the limit to catch infinite recursions.
 ;; Large scala files need sometimes more and this value can safely be increased.
 (setq max-lisp-eval-depth 32768)
+
+;; No debug on error
+(setq debug-on-error nil)
 #+END_src
 * Emacs Built-in Packages
 :properties:
@@ -2390,6 +2393,7 @@ Flycheck can also be enabled for Cython:
 (use-package eglot
   :ensure nil
   :bind (("C-c C-." . eglot-code-actions))
+  :disabled t
   :defer t
   :commands (eglot
              eglot-rename
@@ -3171,6 +3175,10 @@ Basic configuration
          ("C-c o i t" . org-insert-todo-heading)
          ("C-c o i c" . dorneanu/org-insert-link-from-clipboard)
 
+         ;; Structuring
+         ("M-s-n" . org-drag-element-forward)
+         ("M-s-p" . org-drag-element-backward)
+
          ;; Clocking
          ("C-c o c i" . org-clock-in)
          ("C-c o c o" . org-clock-out)
@@ -3217,7 +3225,7 @@ Basic configuration
          ("C-c o r o" . +org/refile-to-other-window)
          ;;("C-c o r l" . +org/refile-to-last-location)
          ("C-c o l" . org-insert-link)
-         ("C-c C-e" . org-edit-special)
+         ("C-c '" . org-edit-special)
 
          ([(shift return)] . crux-smart-open-line)
          ([(control shift return)] . crux-smart-open-line-above)
@@ -3729,12 +3737,19 @@ If prefix ARG, copy instead of move."
 (use-package org-roam
   :straight t
   :defer t
+  :bind (("M-g rn" . org-roam-node-find)
+         ("M-g rs" . my/rg-org-roam-directory)
+         ("M-g rc" . org-roam-capture)
+         ("M-g ri" . org-roam-node-insert)
+         ("M-g rta" . org-roam-tag-add)
+         ("M-g rtd" . org-roam-tag-remove))
+
   :commands (consult-org-roam-search consult-org-roam-find)
   :custom
   ;; (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
   (org-roam-directory (expand-file-name "repos/priv/roam/" (getenv "HOME")))
-  ;; (org-roam-completion-everywhere t)
+  (org-roam-completion-everywhere t)
   :config
   (org-roam-db-autosync-mode 1)
   (setq org-roam-capture-templates
@@ -3789,7 +3804,7 @@ If prefix ARG, copy instead of move."
 
 #+end_src
 
-*** consult-org-roam
+*** COMMENT consult-org-roam: Disabled due to performance issues
 #+begin_src emacs-lisp
 (use-package consult-org-roam
   :straight t
@@ -3804,7 +3819,6 @@ If prefix ARG, copy instead of move."
   ;; Eventually suppress previewing for certain functions
   (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
 #+end_src
-
 ** org-babel
 #+begin_src emacs-lisp
 (with-eval-after-load 'org
@@ -3839,6 +3853,13 @@ If prefix ARG, copy instead of move."
    (emacs-lisp . t)
    (mermaid . t)
    (shell . t)))
+#+end_src
+** org-sidebar                                                        :todo:
+#+begin_src emacs-lisp
+(use-package org-sidebar
+  :straight t
+  :bind ((:map org-super-agenda
+              "C-" . org-sidebar-refresh)))
 #+end_src
 ** COMMENT org-drawio
 #+begin_src emacs-lisp
