@@ -4589,7 +4589,11 @@ Various useful utilities
 ** focus-mode
 #+begin_src emacs-lisp
 (use-package focus
-  :straight t)
+  :straight t
+  :config
+  (add-to-list 'focus-mode-to-thing '(python-mode . defun))
+  (add-to-list 'focus-mode-to-thing '(org-mode . org-element))
+  (add-to-list 'focus-mode-to-thing '(yaml-mode . paragraph)))
 #+end_src
 ** COMMENT Screenshots
 *** emacsshot
