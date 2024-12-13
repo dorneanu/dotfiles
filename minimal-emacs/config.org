@@ -82,7 +82,7 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
     ;; If the matching thing has multi-lines, join them
     (string-join (string-lines thing))))
 #+end_src
-** post-init
+** post-init: start
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
@@ -309,7 +309,7 @@ I only need ~counsel-org-tag~
   :straight t
   :commands (counsel-org-tag))
 #+end_src
-** Defaults
+*** Defaults
 #+begin_src emacs-lisp
 ;; Auto-revert in Emacs is a feature that automatically updates the
 ;; contents of a buffer to reflect changes made to the underlying file
@@ -346,10 +346,29 @@ Configure GPG assistant
   :custom
   (epa-file-select-keys 'silent))
 #+end_src
-** Locals
+*** locals
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
+:end:
 Make sure we load host specific settings
 #+begin_src emacs-lisp
 (minimal-emacs-load-user-init "local.el")
+#+end_src
+** gcmh: Garbage collection
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/pre-init.el
+:end:
+#+begin_src emacs-lisp
+(use-package gcmh
+  :straight t
+  :diminish gcmh-mode
+  :demand t
+  :config
+  (setq gcmh-idle-delay 5
+        gcmh-high-cons-threshold (* 512 1024 1024)) ; 512MB
+  ;; (setq gcmh-idle-delay 5
+  ;;       gcmh-high-cons-threshold (* 16 1024 1024))  ; 16mb
+  (gcmh-mode 1))
 #+end_src
 * Emacs Defaults
 :properties:
@@ -2731,6 +2750,7 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package apheleia
   :straight t
+  :bind (("C-c f f" . apheleia-format-buffer))
   :config
   ;; For Python we want to format with isort and black
   (setf (alist-get 'isort apheleia-formatters)
@@ -3689,6 +3709,11 @@ If prefix ARG, copy instead of move."
       my/org-appointment
       :empty-lines 1)
 
+     ;; Notes
+     ("n" "Note" entry (file+headline "inbox.org" "Notes")
+         "* %^{Title} %^G \n:PROPERTIES:\n:CREATED: %U\n:END:\n\n%?"
+         :empty-lines 1)
+         
      ("m" "Meetings")
      ("mn" "Meeting" entry (file+headline "inbox.org" "Meetings"),
       my/org-meeting
@@ -6245,9 +6270,9 @@ I often want to reply without the original message:
   ;; ChatGPT
   ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
   ;; Anthropic / Claude 3
-  (gptel-make-anthropic "Claude"
-    :stream t
-    :key (password-store-get "emacs/anthropic-claude3"))
+  ;; (gptel-make-anthropic "Claude"       
+  ;;   :stream t
+  ;;   :key (password-store-get "emacs/anthropic-claude3"))
   ;; OPTIONAL configuration
   (setq gptel-backend (gptel-make-ollama "Ollama"
                         :host "localhost:11434"
@@ -6281,8 +6306,11 @@ I often want to reply without the original message:
                   ("w3schools.com" . js-ts-mode)))
   (atomic-chrome-start-server))
 #+end_src
-* Post Initialization
-#+BEGIN_SRC emacs-lisp
+* COMMENT Post Initialization
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
+:end:
+#+begin_src emacs-lisp
 (message "Loading %s...done (%.3fs)" user-init-file
          (float-time (time-subtract (current-time)
                                     before-user-init-time)))
@@ -6295,4 +6323,4 @@ I often want to reply without the original message:
             ;; Let's lower our GC thresholds back down to 256MB.
             (setq gc-cons-threshold (* 256 1024 1024)))
           t)
-#+END_SRC
+#+end_src
