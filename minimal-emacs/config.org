@@ -2773,7 +2773,7 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package highlight-indent-guides
   :straight t
-  :hook (prog-mode . highlight-indent-guides-mode)
+  :hook ((prog-mode yaml-mode yaml-pro-mode) . highlight-indent-guides-mode)
   :custom (highlight-indent-guides-method 'character))
 #+end_src
 *** display-line-numbers
@@ -2785,7 +2785,7 @@ Need to add some keybindings here:
 *** hl-line-mode
 #+begin_src emacs-lisp
 (use-package hl-line
-  :hook (prog-mode . hl-line-mode))
+  :hook ((prog-mode yaml-mode yaml-pro-mode) . hl-line-mode))
 #+end_src
 *** hl-todo
 #+begin_src emacs-lisp
