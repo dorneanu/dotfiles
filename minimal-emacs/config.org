@@ -178,7 +178,7 @@ Measure time:
          ("C-c M-x" . consult-mode-command)
          ("C-c h" . consult-history)
          ("C-c k" . consult-kmacro)
-         ("C-c m" . consult-man)
+         ;; ("C-c m" . consult-man)
          ("C-c i" . consult-info)
          ([remap Info-search] . consult-info)
          ([remap recentf-open-files] . consult-recent-file)
@@ -440,6 +440,7 @@ From https://github.com/dakra/dmacs/blob/nil/init.org#L700
 
 ;; Put authinfo.gpg first so new secrets will be stored there by default and not in plain text
 (setq auth-sources '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
+
 ;; Don't ask to store credentials in .authinfo.gpg
 (setq auth-source-save-behavior nil)
 
@@ -846,7 +847,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
    ("p" . er/mark-paragraph)
    ("P" . er/mark-text-paragraph)))
 #+end_src
-** smartparens
+** COMMENT smartparens
 #+begin_src emacs-lisp
 (use-package smartparens-config
   :straight (:type built-in)
@@ -1095,12 +1096,16 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
         ("s-<mouse-1>"   . mc/add-cursor-on-click)
         ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 #+end_src
-** COMMENT electric-pair
+** electric-pair
 #+begin_src emacs-lisp
 ;; (use-package elec-pair
 ;;   :ensure
 ;;   :hook (after-init . electric-pair-mode)
 ;;   :init (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
+
+;; Disable it
+(with-eval-after-load 'electric
+  (electric-indent-mode -1))
 #+end_src
 ** discover-my-major
 Display a list of keybindings for the current major mode
@@ -1556,6 +1561,13 @@ Set default font
   :straight t
   :demand t)
 #+end_src
+** solaire-mode
+#+begin_src emacs-lisp
+(use-package solaire-mode
+  :straight t
+  :init
+  (solaire-global-mode))
+#+end_src
 ** Modeline
 *** doom-modeline
 #+begin_src emacs-lisp
@@ -1908,11 +1920,11 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (treemacs-follow-mode t)
   (treemacs-filewatch-mode t))
 
-(use-package treemacs-projectile
-  :straight t
-  :after treemacs projectile
-  :config
-  (setq treemacs-header-function #'treemacs-projectile-create-header))
+;; (use-package treemacs-projectile
+;;   :straight t
+;;   :after treemacs projectile
+;;   :config
+;;   (setq treemacs-header-function #'treemacs-projectile-create-header))
 
 (use-package treemacs-icons-dired
   :after treemacs dired
@@ -2146,6 +2158,9 @@ Let’s also add a mode for ~pyenv~:
   :defer t
   :after python
   :straight t
+  :init
+  (add-to-list 'exec-path "~/.pyenv/shims")
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
   :if (executable-find "pyenv")
   :commands (pyenv-mode-versions))
 #+end_src
@@ -2445,6 +2460,11 @@ Flycheck can also be enabled for Cython:
 
   ;; Enable eglot for certain modes
   ;; (add-hook 'go-mode-hook 'eglot-ensure)
+  (add-to-list 'eglot-server-programs
+               `(python-mode
+                 . ,(eglot-alternatives '(("pyright-langserver" "--stdio")
+                                          "jedi-language-server"
+                                          "pylsp"))))
   )
 #+end_src
 *** TODO eldoc
@@ -2773,7 +2793,7 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package highlight-indent-guides
   :straight t
-  :hook ((prog-mode yaml-mode yaml-pro-mode) . highlight-indent-guides-mode)
+  :hook ((prog-mode yaml-ts-mode yaml-mode yaml-pro-mode) . highlight-indent-guides-mode)
   :custom (highlight-indent-guides-method 'character))
 #+end_src
 *** display-line-numbers
@@ -2785,7 +2805,7 @@ Need to add some keybindings here:
 *** hl-line-mode
 #+begin_src emacs-lisp
 (use-package hl-line
-  :hook ((prog-mode yaml-mode yaml-pro-mode) . hl-line-mode))
+  :hook ((prog-mode yaml-ts-mode yaml-mode yaml-pro-mode) . hl-line-mode))
 #+end_src
 *** hl-todo
 #+begin_src emacs-lisp
@@ -2842,6 +2862,7 @@ Keep lisp code always indented.
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
+  :bind (("C-c a v m" . magit))
   :straight t)
 #+end_src
 *** forge
@@ -2850,9 +2871,9 @@ Keep lisp code always indented.
   :straight t
   :after magit)
 
-(push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
-        "github.wdf.sap.corp" forge-github-repository)
-      forge-alist)
+;;(push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
+;;        "github.wdf.sap.corp" forge-github-repository)
+;;      forge-alist)
 #+end_src
 *** diff-hl
 #+begin_src emacs-lisp
@@ -2897,13 +2918,50 @@ Keep lisp code always indented.
   :straight t
   :bind (("C-c go" . browse-at-remote)
          ("C-c gy" . browse-at-remote-kill))
-  )
+  :config
+  (add-to-list 'browse-at-remote-remote-type-regexps
+               '(:host "github\\.wdf\\.sap\\.corp" :type "github")))
 #+end_src
 *** pr-review
 #+begin_src emacs-lisp
 (use-package pr-review
   :straight t
   :after magit)
+#+end_src
+*** COMMENT consult-gh
+#+begin_src emacs-lisp
+(use-package consult-gh
+  :straight t
+  :after embark-consult
+  :custom
+  (consult-gh-show-preview t) ;;show previews
+  (consult-gh-preview-key "C-o") ;;show previews on demand by hitting "C-o"
+  (consult-gh-repo-preview-mode nil) ;;use the default README extension in preview
+  (consult-gh-repo-action #'consult-gh--repo-browse-files-action) ;;open file tree of repo on selection
+  (consult-gh-issue-action #'consult-gh--issue-view-action) ;;open issues in an emacs buffer
+  (consult-gh-pr-action #'consult-gh--pr-view-action) ;;open pull requests in an emacs buffer
+  (consult-gh-code-action #'consult-gh--code-view-action) ;;open files that contain code snippet in an emacs buffer
+  (consult-gh-file-action #'consult-gh--files-view-action) ;;open files in an emacs buffer
+
+  (consult-gh-notifications-action #'consult-gh--notifications-action) ;;open notifications using default actions for issue/pr
+  (consult-gh-dashboard-action #'consult-gh--dashboard-action) ;;open dashbaord items using default actions for issue/pr
+  (consult-gh-default-interactive-command #'consult-gh-transient)
+  :config
+  ;; set default org list
+  (setq consult-gh-default-orgs-list (consult-gh--get-current-orgs t))
+  ;; add a hook to update default org ist after switching accounts
+  (add-hook 'consult-gh-auth-post-switch-hook (lambda (&rest args)
+                                                (setq consult-gh-default-orgs-list
+                                                      (consult-gh--get-current-orgs t))))
+  ;; (add-to-list 'savehist-additional-variables 'consult-gh--known-orgs-list) ;;keep record of searched orgs
+  ;; (add-to-list 'savehist-additional-variables 'consult-gh--known-repos-list) ;;keep record of searched repos
+  )
+
+;;; enable embark actions
+(use-package consult-gh-embark
+  :straight t
+  :config
+  (consult-gh-embark-mode +1))
 #+end_src
 * DevOps
 :properties:
@@ -4460,6 +4518,35 @@ Various useful utilities
   ;;:load-path ("~/workspace/combobulate")
   )
 #+end_src
+** gif-screencasts
+#+begin_src emacs-lisp
+(use-package gif-screencast
+  :straight t
+  :bind (("C-c a g s s" . gif-screencast)
+         :map gif-screencast-mode-map
+         ("<f11>" . gif-screencast-toggle-pause)
+         ("C-c a g s t" . gif-screencast-stop)
+         ("<escape>" . gif-screencast-stop))
+  :config (setq gif-screencast-output-directory (expand-file-name "tmp/videos/emacs/" "~")))
+
+;; Some MacOS setups
+(with-eval-after-load 'gif-screencast
+  (setq gif-screencast-args '("-x")) ;; To shut up the shutter sound of `screencapture' (see `gif-screencast-command').
+  (setq gif-screencast-cropping-program "mogrify") ;; Optional: Used to crop the capture to the Emacs frame.
+  (setq gif-screencast-capture-format "ppm") ;; Optional: Required to crop captured images.
+  )
+
+;; Some patching for HiDPI
+(advice-add
+ #'gif-screencast--cropping-region
+ :around
+ (lambda (oldfun &rest r)
+   (apply #'format "%dx%d+%d+%d"
+          (mapcar
+           (lambda (x) (* 2 (string-to-number x)))
+           (split-string (apply oldfun r) "[+x]")))))
+#+end_src
+
 * Helpful
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -6246,14 +6333,19 @@ I often want to reply without the original message:
 #+begin_src emacs-lisp
 (use-package copilot
   :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-  :after corfu
-  :hook (go-mode . copilot-mode)
   :bind ((:map prog-mode-map
                ("M-k" . copilot-complete))
          (:map copilot-completion-map
                ("M-l" . copilot-accept-completion)
                ("M-1" . copilot-accept-completion-by-word)
-               ("M-2" . copilot-accept-completion-by-line))))
+               ("M-2" . copilot-accept-completion-by-line)))
+  :config
+  (add-to-list 'copilot-indentation-alist '(prog-mode 4))
+  (setq copilot-idle-delay 0.12)
+  (setq copilot-max-char -1))
+  ;;(add-to-list 'copilot-major-mode-alist '("go-ts" . "go")))
+
+(add-hook 'prog-mode-hook 'copilot-mode)
 #+end_src
 *** gptel
 #+begin_src emacs-lisp
