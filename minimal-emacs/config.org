@@ -2343,10 +2343,10 @@ Flycheck can also be enabled for Cython:
   :mode "\\.yml\\'"
   :mode "\\.yaml\\'")
 
-(use-package yaml-pro
-  :straight t
-  :hook (yaml-mode . yaml-pro-mode)
-  :hook (yaml-ts-mode . yaml-pro-ts-mode))
+;; (use-package yaml-pro
+;;   :straight t
+;;   :hook (yaml-mode . yaml-pro-mode)
+;;   :hook (yaml-ts-mode . yaml-pro-ts-mode))
 #+end_src
 
 *** Web
