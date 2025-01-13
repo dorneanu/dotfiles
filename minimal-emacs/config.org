@@ -5355,6 +5355,7 @@ position and resume whenever the same video is played again (read [[https://unix
          
          ;; Search mode bindings
          :map elfeed-search-mode-map
+         ("TAB" . elfeed-search-show-entry)
          ("g" . elfeed-search-update--force)
          ("f j" . dorneanu/elfeed-cycle-filters-forward)
          ("f J" . dorneanu/elfeed-cycle-filters-backward)
