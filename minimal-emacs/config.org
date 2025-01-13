@@ -3517,7 +3517,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
             (tags (concat "wk" (format-time-string "%V")) ((org-agenda-overriding-header  (concat "--\nToDos Week " (format-time-string "%V")))
                                                            (org-super-agenda-groups
                                                             '((:discard (:deadline t))
-                                                              (:discard (:todo ("DONE" "CANCELED" "WAITING")))
+                                                              (:discard (:todo ("DONE" "CANCELED")))
                                                               (:discard (:not (:todo t)))))))
 
             (alltodo "" ((org-agenda-overriding-header "")
@@ -3569,7 +3569,8 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                          (org-super-agenda-groups
                           '(
                             (:log t)
-                            (:discard (:tag "inactive"))
+                            (:discard (:tag ("inactive" "meeting" "projectile")))
+                            (:discard (:todo ("PROJ")))
                             (:name "Projects"
                                    :auto-property "project"
                                    :todo t
