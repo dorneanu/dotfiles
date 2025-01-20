@@ -2805,7 +2805,7 @@ Need to add some keybindings here:
 *** hl-line-mode
 #+begin_src emacs-lisp
 (use-package hl-line
-  :hook ((prog-mode yaml-ts-mode yaml-mode yaml-pro-mode) . hl-line-mode))
+  :hook ((prog-mode markdown-mode yaml-ts-mode yaml-mode yaml-pro-mode) . hl-line-mode))
 #+end_src
 *** hl-todo
 #+begin_src emacs-lisp
@@ -3315,6 +3315,8 @@ Basic configuration
          ;; ("C-c o u" . org-underline)
          ("C-c o f f" . org-emphasize)
 
+         ;; Soting
+         ("C-c o s" . org-sort)
          ;; Export
          ("C-c o e e" . org-export-dispatch)
 
@@ -3434,7 +3436,10 @@ Basic configuration
    org-agenda-todo-list-sublevels t
 
    ;; Set column width for tags in agenda
-   org-agenda-tags-column 80
+   org-agenda-tags-column 100
+
+   ;; Set column width for tags in org mode
+   org-tags-column -100
 
 
    ;; org-agenda-todo-ignore-scheduled 'all
@@ -3472,7 +3477,11 @@ Basic configuration
    ;; Append extra files
    org-agenda-files (append org-agenda-files
                             '("~/syncthing/org/2-PARA.org"
-                              "~/syncthing/org/01-TDL.org")))
+                              "~/syncthing/org/01-TDL.org"))
+
+   ;; Append proj files
+   org-agenda-files (append org-agenda-files
+                            (directory-files org-directory t "proj_.+\\.org$")))
 
   ;; (add-hook 'org-agenda-mode-hook
   ;;           (lambda ()
@@ -6373,6 +6382,7 @@ I often want to reply without the original message:
                         :stream t
                         :models '("llama3"))
         gptel-model "llama3"))
+
 #+end_src
 ** Chrome
 *** atomic-chrome
