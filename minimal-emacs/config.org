@@ -205,6 +205,7 @@ Measure time:
          ("M-g M-g" . consult-goto-line)
          ("M-g o" . consult-outline)
          ("M-g O" . consult-org-heading)
+         ("M-g j a" . consult-org-agenda)
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
@@ -3283,6 +3284,7 @@ Basic configuration
          ;; Clocking
          ("C-c o c i" . org-clock-in)
          ("C-c o c o" . org-clock-out)
+         ("C-c o c r" . org-clock-report)
          ("C-c o c m" . dorneanu/org-clock-enter-manually)
 
          ;; Demote / Promote
