@@ -138,6 +138,49 @@ Measure time:
 ;; (add-hook 'vertico-posframe-mode-hook (set-face-background 'vertico-posframe-border (face-background 'fringe))))
 #+end_src
 
+**** COMMENT vertico-multiform
+#+begin_src emacs-lisp
+  (use-package vertico-multiform
+    :straight (:type built-in)
+    :demand t
+    :config
+    ;; (setq vertico-multiform-commands    
+    ;;       '((consult-line
+    ;;          posframe
+    ;;         (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+    ;;         (vertico-posframe-fallback-mode . vertico-buffer-mode))
+    ;;         (consult-org-heading buffer)
+    ;;         (consult-imenu buffer)
+    ;;         (consult-ripgrep buffer)
+    ;;         (consult-project-buffer buffer)
+    ;;         (consult-project-extra-find buffer)))
+    (setq vertico-multiform-commands
+          '((consult-line
+             posframe
+             (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+             (vertico-posframe-border-width . 10)
+             ;; NOTE: This is useful when emacs is used in both in X and
+             ;; terminal, for posframe do not work well in terminal, so
+             ;; vertico-buffer-mode will be used as fallback at the
+             ;; moment.
+             (vertico-posframe-fallback-mode . vertico-buffer-mode))
+            (t posframe)))
+    ;; (setq vertico-multiform-commands
+    ;;       '((consult-line
+    ;;          ;; posframe
+    ;;          ;; (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+    ;;          ;; (vertico-posframe-border-width . 10)
+    ;;          ;; NOTE: This is useful when emacs is used in both in X and
+    ;;          ;; terminal, for posframe do not work well in terminal, so
+    ;;          ;; vertico-buffer-mode will be used as fallback at the
+    ;;          ;; moment.
+    ;;          ;; (vertico-posframe-fallback-mode . vertico-buffer-mode))
+    ;;         (t posframe)))
+    ;; (add-to-list 'vertico-multiform-categories
+    ;;              '(jinx grid (vertico-grid-annotate . 35)))
+
+    (vertico-multiform-mode 1))
+#+end_src
 **** orderless
 #+begin_src emacs-lisp
 (use-package orderless
@@ -206,6 +249,10 @@ Measure time:
          ("M-g o" . consult-outline)
          ("M-g O" . consult-org-heading)
          ("M-g j a" . consult-org-agenda)
+         ;; Pulsar commands
+         ("M-g l t" . pulsar-recenter-top)
+         ("M-g l m" . pulsar-recenter-middle)
+         ("M-g l c" . pulsar-recenter-center)
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
@@ -643,6 +690,17 @@ Used for popups (eshell, scratch buffer etc.)
 ;;   (with-demoted-errors "Error: %S"
 ;;     (persistent-scratch-setup-default)))
 #+end_src
+** bufler
+A replacement for ~ibuffer~ 
+
+#+begin_src emacs-lisp
+(use-package bufler
+  :straight (bufler :build t
+                    :files (:defaults (:exclude "helm-bufler.el")))
+  :bind (("C-c b o" . bufler)
+         ("C-c b b" . bufler-switch-buffer))
+  :defer t)
+#+end_src
 * Editing
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -998,7 +1056,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   :straight t
   :commands (olivetti-mode)
   :custom
-  (olivetti-body-width 0.68))
+  (olivetti-body-width 0.80))
 #+end_src
 ** drag-stuff
 #+begin_src emacs-lisp
@@ -1409,7 +1467,7 @@ Need to invest more time how to use it
   :custom
   (aw-dispatch-always t))
 #+end_src
-** ibuffer
+** COMMENT ibuffer
 #+begin_src emacs-lisp
 (use-package ibuffer
   :defer t
@@ -1593,13 +1651,14 @@ Set default font
 #+begin_src emacs-lisp
 (use-package pulsar
   :straight t
-  :hook (after-init-hook . pulsar-global-mode)
-  :hook ((next-error xref-after-return) . pulsar-pulse-line) ; only pulse, don't recenter
+  ;; :hook (after-init-hook . pulsar-global-mode)
+  :hook ((next-error xref-after-return org-mode) . pulsar-pulse-line) ; only pulse, don't recenter
   :hook ((consult-after-jump imenu-after-jump xref-after-jump) . pulsar-recenter-center) ; pulse and recenter
   :hook ((consult-after-jump imenu-after-jump xref-after-jump xref-after-return) . pulsar-reveal-entry) ; reveal if hidden
   :custom
   (pulsar-face 'pulsar-red)
   :config
+  (pulsar-global-mode t)
   (cl-callf append pulsar-pulse-functions
     '(what-cursor-position scroll-up-command scroll-down-command kill-whole-line yank-from-kill-ring yank yank-pop)))
 #+end_src
@@ -1668,7 +1727,6 @@ Set default font
   (setq hs-set-up-overlay #'hs-display-code-line-counts))
 #+end_src
 
-#+RESULTS:
 ** Symbol-overlay
 #+BEGIN_SRC emacs-lisp
 (use-package symbol-overlay
@@ -1722,7 +1780,7 @@ Focus and swap windows
       scroll-preserve-screen-position nil)
 #+end_src
 ** Tabs
-*** centaur-tabs
+*** COMMENT centaur-tabs
 #+begin_src emacs-lisp
 (use-package centaur-tabs
   :straight t
@@ -2735,7 +2793,7 @@ Need to add some keybindings here:
 #+end_src
 
 *** yankpad
- #+begin_src emacs-lisp
+#+begin_src emacs-lisp
  (use-package yankpad
    :straight t
    :bind
@@ -2744,7 +2802,7 @@ Need to add some keybindings here:
    (setq yankpad-file (concat org-directory "/yankpad.org"))
    (setq yas-wrap-around-region t)
    (yankpad-reload))
- #+end_src
+#+end_src
  
 ** Debugging
 *** dape
@@ -2806,7 +2864,7 @@ Need to add some keybindings here:
 *** hl-line-mode
 #+begin_src emacs-lisp
 (use-package hl-line
-  :hook ((prog-mode markdown-mode yaml-ts-mode yaml-mode yaml-pro-mode) . hl-line-mode))
+  :hook ((prog-mode markdown-mode yaml-ts-mode yaml-mode yaml-pro-mode gptel-mode org-mode) . hl-line-mode))
 #+end_src
 *** hl-todo
 #+begin_src emacs-lisp
@@ -2865,6 +2923,14 @@ Keep lisp code always indented.
 (use-package magit
   :bind (("C-c a v m" . magit))
   :straight t)
+#+end_src
+*** magit-todo
+#+begin_src emacs-lisp
+(use-package magit-todos
+  :straight t
+  :after magit
+  :config
+  (magit-todos-mode))
 #+end_src
 *** forge
 #+begin_src emacs-lisp
@@ -2990,11 +3056,11 @@ Keep lisp code always indented.
   :bind (("C-c a k" . kubel)))
 #+END_SRC
 *** COMMENT kubernetes-helm
-    #+begin_src emacs-lisp
-    (use-package kubernetes-helm
-      :commands (kubernetes-helm-status)
-      :straight t)
-    #+end_src
+#+begin_src emacs-lisp
+(use-package kubernetes-helm
+  :straight t
+  :commands (kubernetes-helm-status))
+#+end_src
 * Shells
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -4242,19 +4308,21 @@ Some keybindings for MacOS
 #+end_src
 
 **** toggles
-
-#+begin_src emacs-lisp :results none
+#+begin_src emacs-lisp
 (keymap-global-set "M-g t o" #'olivetti-mode)
 (keymap-global-set "M-g t t b" #'tab-bar-mode)
 (keymap-global-set "M-g t t n" #'global-tab-line-mode)
-(keymap-global-set "M-g t F" #'focus-mode)
+(keymap-global-set "M-g t f" #'focus-mode)
 (keymap-global-set "M-g t h" #'highlight-indent-guides-mode)
 (keymap-global-set "M-g t H" #'hl-line-mode)
 (keymap-global-set "M-g t n" #'display-line-numbers-mode)
-(keymap-global-set "M-g t f" #'fringe-mode)
+(keymap-global-set "M-g t F" #'fringe-mode)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
 (keymap-global-set "M-g t w" #'hydra-windows/body)
 #+end_src
+
+#+RESULTS:
+: hydra-windows/body
 
 **** COMMENT inserts
 #+begin_src emacs-lisp
@@ -4714,11 +4782,39 @@ Various useful utilities
 #+begin_src emacs-lisp
 (use-package focus
   :straight t
+  :bind (:map focus-mode-map
+              ("M-g t ." . #'toggle-focus-transparency))
   :config
   (add-to-list 'focus-mode-to-thing '(python-mode . defun))
   (add-to-list 'focus-mode-to-thing '(org-mode . org-element))
   (add-to-list 'focus-mode-to-thing '(yaml-mode . paragraph)))
+
+;; Add some customizations regarding unfocused text
+(defvar my-focus-transparent-mode nil
+  "Track whether transparent focus mode is active.")
+
+(defun toggle-focus-transparency ()
+  "Toggle between transparent and default focus-unfocused face."
+  (interactive)
+  (if my-focus-transparent-mode
+      ;; Restore default settings (inherit from shadow)
+      (custom-set-faces
+       '(focus-unfocused ((t :inherit shadow))))
+    ;; Apply transparent settings
+    (custom-set-faces
+     '(focus-unfocused ((t (:foreground "#000000"
+                           :inherit nil  ; Remove shadow inheritance
+                           :opacity 0.1))))))
+  
+  ;; Toggle the state
+  (setq my-focus-transparent-mode (not my-focus-transparent-mode))
+  (message "Focus transparency %s" 
+           (if my-focus-transparent-mode "enabled" "disabled")))
 #+end_src
+
+#+RESULTS:
+: toggle-focus-transparency
+
 ** COMMENT Screenshots
 *** emacsshot
 From https://gitlab.com/marcowahl/emacsshot
@@ -6366,26 +6462,83 @@ I often want to reply without the original message:
   :straight t
   :defer t
   :commands (gptel gptel-send)
-  :bind (("<f7>" . #'gptel)
-         ("s-<f7>" . #'gptel-send))
+  :bind (("M-g ä" . #'gptel)
+         ("M-g ö" . #'gptel-send))
   :custom
   (gptel-default-mode 'org-mode)
-  (gptel-model "gpt-4")
+  ;; (gptel-model "gpt-4")
   :config
   ;; ChatGPT
   ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
   ;; Anthropic / Claude 3
-  ;; (gptel-make-anthropic "Claude"       
-  ;;   :stream t
-  ;;   :key (password-store-get "emacs/anthropic-claude3"))
+
+  ;; auto-scrolling
+  (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+  
+  ;; Add system messages
+  (add-to-list 'gptel-directives
+             '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
+ (add-to-list 'gptel-directives
+             '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
+  ;; ollama
+  (gptel-make-ollama "Ollama"       
+    :host "localhost:11434"
+    :stream t
+    :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
+
   ;; OPTIONAL configuration
   (setq gptel-backend (gptel-make-ollama "Ollama"
                         :host "localhost:11434"
                         :stream t
-                        :models '("llama3"))
-        gptel-model "llama3"))
-
+                        :models '("llama3" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
+        ;; gptel-model "deepseek-v3"))
 #+end_src
+
+*** ellama
+#+begin_src emacs-lisp
+(use-package ellama
+  :straight t
+  :bind ("C-c x" . ellama-transient-main-menu)
+  :init
+  ;; setup key bindings
+  ;; (setopt ellama-keymap-prefix "C-c x")
+  ;; language you want ellama to translate to
+  (setopt ellama-language "English")
+  (setopt ellama-auto-scroll t)
+  (require 'llm-ollama)
+  (setopt ellama-provider
+  	  (make-llm-ollama
+  	   ;; this model should be pulled to use it
+  	   ;; value should be the same as you print in terminal during pull
+  	   :chat-model "llama3:8b"
+  	   :embedding-model "nomic-embed-text"
+  	   :default-chat-non-standard-params '(("num_ctx" . 8192))))
+  (setopt ellama-summarization-provider
+  	  (make-llm-ollama
+  	   :chat-model "qwen2.5:3b"
+  	   :embedding-model "nomic-embed-text"
+  	   :default-chat-non-standard-params '(("num_ctx" . 32768))))
+  (setopt ellama-coding-provider
+  	  (make-llm-ollama
+  	   :chat-model "qwen2.5-coder:7b"
+  	   :embedding-model "nomic-embed-text"
+  	   :default-chat-non-standard-params '(("num_ctx" . 32768))))
+  (setopt ellama-translation-provider
+  	  (make-llm-ollama
+  	   :chat-model "qwen2.5:3b"
+  	   :embedding-model "nomic-embed-text"
+  	   :default-chat-non-standard-params
+  	   '(("num_ctx" . 32768))))
+  (setopt ellama-extraction-provider (make-llm-ollama
+  				      :chat-model "qwen2.5-coder:7b"
+  				      :embedding-model "nomic-embed-text"
+  				      :default-chat-non-standard-params
+  				      '(("num_ctx" . 32768))))
+  :config
+  ;; send last message in chat buffer with C-c C-c
+  (add-hook 'org-ctrl-c-ctrl-c-hook #'ellama-chat-send-last-message))
+#+end_src
+
 ** Chrome
 *** atomic-chrome
 #+begin_src emacs-lisp
