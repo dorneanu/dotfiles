@@ -742,8 +742,8 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
    '("j" . "H-j")
    '("k" . "H-k")
    ;; Use SPC (0-9) for digit arguments.
-   '("1" . centaur-tabs-backward)
-   '("2" . centaur-tabs-forward)
+   '("1" . awesome-tab-backward-tab)
+   '("2" . awesome-tab-forward-tab)
    '("3" . crux-switch-to-previous-buffer)
    '("4" . meow-digit-argument)
    '("5" . meow-digit-argument)
@@ -817,6 +817,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
    '("y" . meow-save)
    '("Y" . meow-sync-grab)
    '("z" . meow-pop-selection)
+   '("Z" . dorneanu/wrap-region-with-char)
    '("(" . meow-wrap-round)
    '("{" . meow-wrap-curly)
    '("[" . meow-wrap-square)
@@ -828,6 +829,18 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   :config
   (meow-setup)
   (meow-global-mode 1))
+
+;; Additional functions
+(defun dorneanu/wrap-region-with-char (char)
+  "Wrap the selected region with the specified character."
+  (interactive "cEnter character: ")
+  (when (region-active-p)
+    (let ((beg (region-beginning))
+          (end (region-end)))
+      (goto-char end)
+      (insert char)
+      (goto-char beg)
+      (insert char))))
 #+end_src
 
 *** meow for org
@@ -1401,7 +1414,7 @@ Configure custom searches
   :dir dotemacs-directory
   :confirm prefix)
 #+end_src
-*** COMMENT dogears
+*** dogears
 Need to invest more time how to use it
 #+begin_src emacs-lisp
 ;; Never lose your place in Emacs again
@@ -1878,7 +1891,74 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
 #+end_src
-
+*** awesome-tab
+#+begin_src emacs-lisp
+(use-package awesome-tab
+  :straight t
+  :init
+  ; Define a keymap for our prefix
+  (defvar awesome-tab-prefix-map (make-sparse-keymap))
+  (global-set-key (kbd "C-c t") awesome-tab-prefix-map)
+  :bind (:map awesome-tab-prefix-map
+              ;; Basic tab navigation
+              ("n" . awesome-tab-forward-tab)
+              ("p" . awesome-tab-backward-tab)
+              ("f" . awesome-tab-select-beg-tab)
+              ("l" . awesome-tab-select-end-tab)
+              ("j" . awesome-tab-ace-jump)
+              ("o" . awesome-tab-open-tab-in-current-group)
+              
+              ;; Group navigation - use another keymap for "g" prefix
+              ("g" . nil) ; This makes "g" a prefix key
+              ("g n" . awesome-tab-forward-group)
+              ("g p" . awesome-tab-backward-group)
+              ("g s" . awesome-tab-switch-group)
+              ("g i" . awesome-tab-counsel-switch-group)
+              
+              ;; Other window navigation
+              ("w" . nil) ; This makes "w" a prefix key
+              ("w n" . awesome-tab-forward-tab-other-window)
+              ("w p" . awesome-tab-backward-tab-other-window)
+              
+              ;; Tab movement
+              ("m" . nil) ; This makes "m" a prefix key
+              ("m r" . awesome-tab-move-current-tab-to-right)
+              ("m l" . awesome-tab-move-current-tab-to-left)
+              ("m f" . awesome-tab-move-current-tab-to-beg)
+              
+              ;; Buffer management
+              ("k" . nil) ; This makes "k" a prefix key
+              ("k o" . awesome-tab-kill-other-buffers-in-current-group)
+              ("k a" . awesome-tab-kill-all-buffers-in-current-group)
+              ("k m" . awesome-tab-kill-match-buffers-in-current-group)
+              ("k k" . awesome-tab-keep-match-buffers-in-current-group))
+  :config
+  (setq awesome-tab-ace-str-style 'left)  ;; Can be 'left, 'right, or 'replace-icon
+  (setq awesome-tab-ace-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))  ;; Keys used for ace jump
+  (setq awesome-tab-height 120)
+  ;; Define what to hide
+  (defun awesome-tab-hide-tab (x)
+    (let ((name (format "%s" x))
+          (buffer (get-buffer x)))
+      (or
+       ;; Original name-based conditions
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*LSP" name)
+       (string-prefix-p "*kubel" name)
+       (string-prefix-p "*dape-" name)
+       (string-prefix-p "*Org" name)
+       (string-prefix-p "*Ilist" name)
+       (string-prefix-p " *Treemacs" name)
+       (string-prefix-p "*eshell" name)
+       (string-prefix-p " *Minibuf" name)
+       (and (string-prefix-p "magit" name)
+            (not (file-name-extension name)))
+       )))
+  (awesome-tab-mode t))
+#+end_src
 *** tabspaces
 #+begin_src emacs-lisp
 (use-package tabspaces
@@ -1968,7 +2048,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 #+begin_src emacs-lisp
 (use-package treemacs
   :straight t
-  :bind (("C-c a t" . treemacs))
+  :bind (("M-g 9" . treemacs))
   :config
   (setq treemacs-follow-after-init          t
         treemacs-width                      45
@@ -2494,8 +2574,9 @@ Flycheck can also be enabled for Cython:
 #+begin_src emacs-lisp
 (use-package eglot
   :ensure nil
-  :bind (("C-c C-." . eglot-code-actions))
-  :disabled t
+  :bind (("C-c l e " . eglot)
+         ("C-c C-." . eglot-code-actions))
+  ;; :disabled t
   :defer t
   :commands (eglot
              eglot-rename
@@ -2552,16 +2633,20 @@ Need to add some keybindings here:
   (setq eldoc-box-position-function #'eldoc-box--default-upper-corner-position-function
         eldoc-box-clear-with-C-g t))
 #+end_src
-*** COMMENT lsp-mode
+*** lsp-mode
 #+begin_src emacs-lisp
 (use-package lsp-mode
   :ensure nil
   :defer t
-  :hook ((go-ts-mode . lsp-deferred)
+  :bind (("C-c l s" . lsp))
+  :hook (
+         (go-ts-mode . lsp-deferred)
+         (go-mode . lsp-deferred)
          (web-mode . lsp-deferred)
          (python-mode . lsp-deferred)
-         (lsp-mode . lsp-deferred)
-         (python-ts-mode . lsp-deferred))
+         ;; (lsp-mode . lsp-deferred)
+         ;; (python-ts-mode . lsp-deferred)
+         )
   :commands (lsp lsp-deferred)
   :custom
   ;; (lsp-print-io nil)
@@ -2641,6 +2726,11 @@ Need to add some keybindings here:
    lsp-ui-doc-header nil
    lsp-ui-doc-include-signature t
    lsp-ui-doc-use-childframe t)
+   (setq lsp-ui-peek-always-show t)
+   (setq lsp-ui-peek-list-width 40)
+   (setq lsp-ui-peek-show-directory nil)
+   ;; Expand all peek folds.
+   (setq lsp-ui-peek-expand-function (lambda (xs) (mapcar #'car xs)))
   :commands lsp-ui-mode
   :custom
   ;; lsp-ui-doc
@@ -2656,7 +2746,6 @@ Need to add some keybindings here:
   (lsp-signature-auto-activate t)
   (lsp-signature-render-documentation t)
   (lsp-eldoc-hook t)
-
   :bind
   (:map lsp-ui-mode-map
         ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
@@ -2701,7 +2790,8 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package lsp-treemacs
   :straight t
-  :defer t)
+  :defer t
+  :bind (("M-g 8" . lsp-treemacs-symbols)))
 #+end_src
 *** lsp-pyright
 #+begin_src emacs-lisp
@@ -2841,6 +2931,10 @@ Need to add some keybindings here:
         '("isort" "--stdout" "-"))
   (setf (alist-get 'python-mode apheleia-mode-alist)
         '(isort black))
+
+  ;; For golang
+  (setf (alist-get 'gofmt apheleia-formatters)
+        '("gofmt" "-s"))
   (apheleia-global-mode))
 #+end_src
 *** flycheck
@@ -3000,11 +3094,19 @@ Keep lisp code always indented.
   :straight t
   :after magit)
 #+end_src
-*** COMMENT consult-gh
+*** consult-gh
 #+begin_src emacs-lisp
 (use-package consult-gh
-  :straight t
-  :after embark-consult
+  :straight (:host github :repo "armindarvish/consult-gh" :branch "main")
+  ;; :after embark-consult
+  :bind (("M-g # r" . consult-gh-repos-list)        ; r for repositories
+         ("M-g # i" . consult-gh-search-issues)       ; i for issues
+         ("M-g # p" . consult-gh-search-prs)          ; p for pull requests
+         ("M-g # r" . consult-gh-search-repos)          ; p for pull requests
+         ("M-g # c" . consult-gh-search-code)         ; c for code search
+         ("M-g # f" . consult-gh-find-file)    ; f for find files
+         ("M-g # n" . consult-gh-notifications) ; n for notifications
+         ("M-g # d" . consult-gh-dashboard))
   :custom
   (consult-gh-show-preview t) ;;show previews
   (consult-gh-preview-key "C-o") ;;show previews on demand by hitting "C-o"
@@ -3408,6 +3510,7 @@ Basic configuration
          ;;("C-c o r l" . +org/refile-to-last-location)
          ("C-c o l" . org-insert-link)
          ("C-c '" . org-edit-special)
+         ("C-c o o p" . org-present)
 
          ([(shift return)] . crux-smart-open-line)
          ([(control shift return)] . crux-smart-open-line-above)
@@ -4195,6 +4298,14 @@ Insert images easily into ORG mode files
   :config
   (setq org-web-tools-pandoc-sleep-time 10))
 #+end_src
+** el-draw
+#+begin_src emacs-lisp
+(use-package el-easydraw
+  :straight (el-easydraw :build t
+                         :type git
+                         :host github
+                         :repo "misohena/el-easydraw"))
+#+end_src
 * Keybindings
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
@@ -4325,6 +4436,7 @@ Some keybindings for MacOS
 
 **** toggles
 #+begin_src emacs-lisp
+(keymap-global-set "M-g t a" #'awesome-tab-mode)
 (keymap-global-set "M-g t o" #'olivetti-mode)
 (keymap-global-set "M-g t t b" #'tab-bar-mode)
 (keymap-global-set "M-g t t n" #'global-tab-line-mode)
