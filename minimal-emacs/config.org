@@ -1,4 +1,3 @@
-#+title: Minimal Emacs — Config
 #+property: header-args:emacs-lisp  :mkdirp yes :lexical t :exports code
 #+property: header-args:emacs-lisp+ :mkdirp yes :noweb no-export
 #+property: header-args:emacs-lisp+ :results none
@@ -745,7 +744,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
    '("1" . awesome-tab-backward-tab)
    '("2" . awesome-tab-forward-tab)
    '("3" . crux-switch-to-previous-buffer)
-   '("4" . meow-digit-argument)
+   '("4" . awesome-tab-ace-jump)
    '("5" . meow-digit-argument)
    '("6" . meow-digit-argument)
    '("7" . meow-digit-argument)
@@ -1611,6 +1610,9 @@ Install additional themes:
 (use-package solarized-theme
   :straight t)
 
+(use-package rg-themes
+  :straight (:type git :host github :repo "raegnald/rg-themes"))
+
 (use-package lambda-themes
   :straight (:type git :host github :repo "lambda-emacs/lambda-themes")
   :custom
@@ -1951,8 +1953,11 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
        (string-prefix-p "*dape-" name)
        (string-prefix-p "*Org" name)
        (string-prefix-p "*Ilist" name)
+       (string-prefix-p "*which" name)
+       (string-prefix-p "*vterm" name)
        (string-prefix-p " *Treemacs" name)
        (string-prefix-p "*eshell" name)
+       (string-prefix-p "*eldoc" name)
        (string-prefix-p " *Minibuf" name)
        (and (string-prefix-p "magit" name)
             (not (file-name-extension name)))
@@ -2639,14 +2644,14 @@ Need to add some keybindings here:
   :ensure nil
   :defer t
   :bind (("C-c l s" . lsp))
-  :hook (
-         (go-ts-mode . lsp-deferred)
-         (go-mode . lsp-deferred)
-         (web-mode . lsp-deferred)
-         (python-mode . lsp-deferred)
-         ;; (lsp-mode . lsp-deferred)
-         ;; (python-ts-mode . lsp-deferred)
-         )
+  ;; :hook (
+  ;;        ;; (go-ts-mode . lsp-deferred)
+  ;;        ;; (go-mode . lsp-deferred)
+  ;;        ;; (web-mode . lsp-deferred)
+  ;;        ;; (python-mode . lsp-deferred)
+  ;;        ;; (lsp-mode . lsp-deferred)
+  ;;        ;; (python-ts-mode . lsp-deferred)
+  ;;        )
   :commands (lsp lsp-deferred)
   :custom
   ;; (lsp-print-io nil)
@@ -2786,7 +2791,7 @@ Need to add some keybindings here:
 
 #+RESULTS:
 : my-reload-eglot
-*** lsp-treemacs
+*** COMMENT lsp-treemacs
 #+begin_src emacs-lisp
 (use-package lsp-treemacs
   :straight t
@@ -3175,7 +3180,7 @@ Keep lisp code always indented.
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
-** COMMENT vterm
+** vterm
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
@@ -3894,6 +3899,10 @@ If prefix ARG, copy instead of move."
   ;; Save all buffers after refilling
   (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers))))
 #+end_src
+** org-archive
+#+begin_src emacs-lisp
+(setq org-archive-location (concat org-directory "/archive/%s_archive.org::* Archived"))
+#+end_src
 ** org-modern
 #+begin_src emacs-lisp
 (use-package org-modern
@@ -3968,8 +3977,9 @@ If prefix ARG, copy instead of move."
      ("mn" "Meeting" entry (file+headline "inbox.org" "Meetings"),
       my/org-meeting
       :empty-lines 1)
-     ("mm" "Minutes" entry (file+headline "inbox.org" "Minutes")
-      "* %^u: %^{Name of person/group} \n%? ")
+
+      ("mm" "Minutes" entry (file+headline "inbox.org" "Minutes")
+      "** %t-%^{Meeting} \n%?")
      
      ("ma" "Active meeting" entry (file+headline "inbox.org" "Meetings")
       "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
