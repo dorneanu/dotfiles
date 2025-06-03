@@ -86,16 +86,16 @@ Configuration based on https://github.com/jamescherti/minimal-emacs.d.
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
 
-Header: 
+Header:
 #+begin_src emacs-lisp
 ;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
 #+end_src
 
-Measure time: 
+Measure time:
 #+begin_src emacs-lisp
 (defvar before-user-init-time (current-time)
   "Value of `current-time' when Emacs begins loading `user-init-file'.")
-(message "Loading Emacs...done (%.3fs)"
+  (message "Loading Emacs...done (%.3fs)"
          (float-time (time-subtract before-user-init-time
                                     before-init-time)))
 #+end_src
@@ -143,7 +143,7 @@ Measure time:
   :straight (:type built-in)
   :demand t
   :config
-  ;; (setq vertico-multiform-commands    
+  ;; (setq vertico-multiform-commands
   ;;       '((consult-line
   ;;          posframe
   ;;         (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
@@ -183,9 +183,11 @@ Measure time:
          '((consult-line reverse buffer (:not posframe))
            (consult-project-buffer buffer (:not posframe))
            (consult-ripgrep buffer (:not posframe))
+           (xref-find-references buffer (:not posframe))
            (consult-imenu reverse buffer (:not posframe))))
   (vertico-multiform-mode 1))
 #+end_src
+
 **** orderless
 #+begin_src emacs-lisp
 (use-package orderless
@@ -524,7 +526,11 @@ Change some default keybiding
          ;; ("C-M-k" . scroll-up)
          ;; ("C-M-j" . scroll-down)
          ("C-x k" . kill-current-buffer))
-  :hook ((mu4e-compose-mode markdown-mode rst-mode git-commit-setup) . +text-mode-autofill-setup)
+  :hook ((before-save . delete-trailing-whitespace)
+         (mu4e-compose-mode . +text-mode-autofill-setup)
+         (markdown-mode . +text-mode-autofill-setup)
+         (rst-mode . +text-mode-autofill-setup)
+         (git-commit-setup . +text-mode-autofill-setup))
   :config
   ;; Hide commands in M-x which do not apply to the current mode.
   (setq read-extended-command-predicate #'command-completion-default-include-p)
@@ -696,7 +702,7 @@ Used for popups (eshell, scratch buffer etc.)
 ;;     (persistent-scratch-setup-default)))
 #+end_src
 ** bufler
-A replacement for ~ibuffer~ 
+A replacement for ~ibuffer~
 
 #+begin_src emacs-lisp
 (use-package bufler
@@ -894,7 +900,10 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   '("O" . meow-org-motion-mode))
 #+end_src
 
-** expand-region
+** #+begin_example
+
+#+end_example
+pand-region
 #+begin_src emacs-lisp
 (use-package expand-region
   :straight t
@@ -939,7 +948,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
       (newline)
       (indent-according-to-mode))
     (indent-according-to-mode))
-  
+
   (sp-pair "(" nil :post-handlers '(:add (my/smartparens-pair-newline-and-indent "RET")))
   (sp-pair "{" nil :post-handlers '(:add (my/smartparens-pair-newline-and-indent "RET")))
   (sp-pair "[" nil :post-handlers '(:add (my/smartparens-pair-newline-and-indent "RET"))))
@@ -971,7 +980,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
               ("M-S" . sp-split-sexp) ;; misc
               ;; ("M-j" . sp-join-sexp)
               )
-  
+
   ;; Old keybindings
   ;; :bind (:map smartparens-mode-map
   ;;             ;; paredit bindings
@@ -1013,13 +1022,13 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
         sp-highlight-wrap-tag-overlay nil)
   :config
   (require 'smartparens-org)
-  
+
   (setq sp-base-key-bindings 'paredit)
   (setq sp-autoskip-closing-pair 'always)
 
   ;; Always highlight matching parens
   (show-smartparens-global-mode +1)
-  (setq blink-matching-paren t) 
+  (setq blink-matching-paren t)
 
   ;; Define pairs for Org mode
   (sp-local-pair 'org-mode "*" "*")
@@ -1028,7 +1037,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   (sp-local-pair 'org-mode "=" "=")
   (sp-local-pair 'org-mode "~" "~")
   (sp-local-pair 'org-mode "+" "+")
-  
+
   ;; Create keybindings to wrap symbol/region in pairs
   (defun prelude-wrap-with (s)
     "Create a wrapper function for smartparens using S."
@@ -1049,7 +1058,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   ;;   (indent-according-to-mode)
   ;;   (forward-line -1)
   ;;   (indent-according-to-mode))
-  ;; 
+  ;;
   ;; (sp-local-pair 'prog-mode "{" nil :post-handlers '((indent-between-pair "RET")))
   ;; (sp-local-pair 'prog-mode "[" nil :post-handlers '((indent-between-pair "RET")))
   ;; (sp-local-pair 'prog-mode "(" nil :post-handlers '((indent-between-pair "RET")))
@@ -1064,17 +1073,74 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
   (sp-pair "(" nil :post-handlers
            '(((lambda (&rest _ignored)
                 (crux-smart-open-line-above)) "RET")))
-  
+
   (smartparens-strict-mode))
 #+end_src
+** COMMENT puni - Not using it for now
+Need to review this section
+#+begin_src emacs-lisp
+(use-package puni
+  :straight t
+  :hook ((prog-mode . puni-mode)
+         (go-mode . puni-mode)
+         (python-mode . puni-mode))
+  :init
+  ;; Define a prefix keymap for M-a
+  (defvar puni-prefix-map (make-sparse-keymap)
+    "Keymap for puni structural editing commands.")
+  ;; Bind M-a to the puni keymap
+  (global-set-key (kbd "M-a") puni-prefix-map)
 
+  :bind (:map puni-prefix-map
+              ;; Basic navigation - use first letters for most common operations
+              ("f" . puni-forward-sexp)
+              ("b" . puni-backward-sexp)
+              ("u" . puni-backward-up-list)
+              ("d" . puni-forward-down-list)
+
+              ;; Killing and deletion
+              ("k" . puni-kill-line)
+              ("w" . puni-kill-word)
+              ("K" . puni-delete)  ; Delete expression at point while keeping structure balanced
+
+              ;; Manipulation
+              ("s" . puni-splice-sexp)     ; Remove surrounding delimiters
+              ("r" . puni-raise-sexp)      ; Replace parent with current sexp
+              ("t" . puni-transpose)       ; Swap with next expression
+
+              ;; Selection
+              ("SPC" . puni-mark-sexp-at-point)  ; Mark expression
+              ("m" . puni-mark-list)             ; Mark containing list
+
+              ;; Wrapping
+              ("(" . puni-wrap-round)        ; () parentheses
+              ("[" . puni-wrap-square)       ; [] brackets
+              ("{" . puni-wrap-curly)        ; {} braces
+              ("<" . puni-wrap-angle)        ; <> angle brackets
+              ("\"" . puni-wrap-double-quote) ; "" double quotes
+              ("'" . puni-wrap-single-quote)  ; '' single quotes
+              ("`" . puni-wrap-back-quote)    ; `` back quotes
+
+              ;; Slurping/Barfing - use mnemonic keys
+              (">" . puni-slurp-forward)    ; Pull in next expression
+              ("<" . puni-barf-forward)     ; Push out last expression
+              ("." . puni-slurp-backward)   ; Pull in previous expression
+              ("," . puni-barf-backward)    ; Push out first expression
+
+              ;; Force commands for emergency editing
+              ("x" . puni-force-delete))    ; Force delete when you need to break structure
+
+  :config
+  (setq puni-confirm-when-delete-unbalanced-active-region nil)
+  (setq puni-blink-for-sexp-manipulating t))
+#+end_src
 ** olivetti
 #+begin_src emacs-lisp
 (use-package olivetti
   :straight t
   :commands (olivetti-mode)
   :custom
-  (olivetti-body-width 0.80))
+  (olivetti-body-width 0.95))
 #+end_src
 ** drag-stuff
 #+begin_src emacs-lisp
@@ -1100,7 +1166,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
 ;;   ;; 3 times the default values
 ;;   (undo-limit (* 3 160000))
 ;;   (undo-strong-limit (* 3 240000)))
-;; 
+;;
 ;; (use-package undo-fu-session
 ;;   :straight t
 ;;   :config
@@ -1184,7 +1250,7 @@ A collection of opinionated keyboard-driven user interfaces for various built-in
 (with-eval-after-load 'electric
   (electric-indent-mode -1))
 #+end_src
-** discover-my-major
+** COMMENT discover-my-major
 Display a list of keybindings for the current major mode
 #+BEGIN_SRC emacs-lisp
 (use-package discover-my-major
@@ -1207,9 +1273,9 @@ Different color for each parenthesis level
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
   :straight t
-  :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode cider-repl-mode sql-mode) . rainbow-delimiters-mode))
+  :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
-** TODO COMMENT Selected
+** COMMENT Selected
 One key keybindings for regions when selection active
 https://github.com/Kungsgeten/selected.el
 #+BEGIN_SRC emacs-lisp
@@ -1437,7 +1503,6 @@ Need to invest more time how to use it
 
 ;; Save clipboard contents into kill-ring before replace them
 (setq save-interprogram-paste-before-kill t)
-
 #+end_src
 *** easy-kill
 #+begin_src emacs-lisp
@@ -1485,76 +1550,46 @@ Need to invest more time how to use it
   :custom
   (aw-dispatch-always t))
 #+end_src
-** COMMENT ibuffer
+** ibuffer
 #+begin_src emacs-lisp
 (use-package ibuffer
   :defer t
   :commands (ibuffer)
   :custom
   (ibuffer-default-display-maybe-show-predicates t)
-  (ibuffer-expert t)
-  (ibuffer-formats
-   '((mark modified read-only " "
-           (name 16 -1)
-           " "
-           (size 6 -1 :right)
-           " "
-           (mode 16 16)
-           " " filename)
-     (mark " "
-           (name 16 -1)
-           " " filename)))
-  (ibuffer-maybe-show-regexps nil)
   (ibuffer-saved-filter-groups
-   '(("default"
-      ("Magit"
-       (or
-        (mode . magit-status-mode)
-        (mode . magit-log-mode)
-        (name . "\\*magit")
-        (name . "magit-")
-        (name . "git-monitor")))
-      ("Commands"
-       (or
-        (mode . shell-mode)
-        (mode . eshell-mode)
-        (mode . term-mode)
-        (mode . compilation-mode)))
-      ("Lisp"
-       (mode . emacs-lisp-mode))
-      ("Dired"
-       (mode . dired-mode))
-      ("Gnus"
-       (or
-        (mode . message-mode)
-        (mode . mail-mode)
-        (mode . gnus-group-mode)
-        (mode . gnus-summary-mode)
-        (mode . gnus-article-mode)
-        (name . "^\\.newsrc-dribble")
-        (name . "^\\*\\(sent\\|unsent\\|fetch\\)")
-        (name . "^ \\*\\(nnimap\\|nntp\\|nnmail\\|gnus\\|server\\|mm\\*\\)")
-        (name . "\\(Original Article\\|canonical address\\|extract address\\)")))
-      ("Org"
-       (or
-        (name . "^\\*Calendar\\*$")
-        (name . "^\\*Org Agenda")
-        (name . "^ \\*Agenda")
-        (name . "^diary$")
-        (mode . org-mode)))
-      ("Emacs"
-       (or
-        (name . "^\\*scratch\\*$")
-        (name . "^\\*Messages\\*$")
-        (name . "^\\*\\(Customize\\|Help\\)")
-        (name . "\\*\\(Echo\\|Minibuf\\)"))))))
-  (ibuffer-show-empty-filter-groups nil)
-  (ibuffer-shrink-to-minimum-size t t)
-  (ibuffer-use-other-window t)
+      '(("Default"
+         ("Programming" (mode . prog-mode))
+         ("Org" (mode . org-mode))
+         ("Magit" (name . "^magit"))
+         ("Dired" (mode . dired-mode))
+         ("Help" (or (name . "^\\*Help\\*")
+                     (name . "^\\*Apropos\\*")
+                     (name . "^\\*info\\*"))))))
   :init
   (add-hook 'ibuffer-mode-hook
             #'(lambda ()
                 (ibuffer-switch-to-saved-filter-groups "default"))))
+
+#+end_src
+*** ibuffer-projectile
+#+begin_src emacs-lisp
+(use-package ibuffer-projectile
+  :straight t
+  :config
+  (add-hook 'ibuffer-hook
+            (lambda ()
+              (ibuffer-projectile-set-filter-groups)
+              (unless (eq ibuffer-sorting-mode 'alphabetic)
+                (ibuffer-do-sort-by-alphabetic)))))
+#+end_src
+*** COMMENT all-the-icons-ibuffer
+#+begin_src emacs-lisp
+(use-package all-the-icons-ibuffer
+  :straight t
+  :after (ibuffer)
+  :init
+  (all-the-icons-ibuffer-mode 1))
 #+end_src
 ** imenu
 #+begin_src emacs-lisp
@@ -1652,7 +1687,7 @@ Set default font
 *** doom-modeline
 #+begin_src emacs-lisp
 (use-package doom-modeline
-  :straight (:type git :host github :repo "seagle0128/doom-modeline") 
+  :straight (:type git :host github :repo "seagle0128/doom-modeline")
   :init
   :custom
   (doom-modeline-height 15)
@@ -1795,7 +1830,7 @@ Focus and swap windows
         mouse-wheel-progressive-speed nil))
 (setq scroll-step 1
       scroll-margin 0
-      ;; I don't like the cursor to jump 
+      ;; I don't like the cursor to jump
       scroll-conservatively 10
       auto-window-vscroll nil
       scroll-preserve-screen-position nil)
@@ -1909,25 +1944,25 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
               ("l" . awesome-tab-select-end-tab)
               ("j" . awesome-tab-ace-jump)
               ("o" . awesome-tab-open-tab-in-current-group)
-              
+
               ;; Group navigation - use another keymap for "g" prefix
               ("g" . nil) ; This makes "g" a prefix key
               ("g n" . awesome-tab-forward-group)
               ("g p" . awesome-tab-backward-group)
               ("g s" . awesome-tab-switch-group)
               ("g i" . awesome-tab-counsel-switch-group)
-              
+
               ;; Other window navigation
               ("w" . nil) ; This makes "w" a prefix key
               ("w n" . awesome-tab-forward-tab-other-window)
               ("w p" . awesome-tab-backward-tab-other-window)
-              
+
               ;; Tab movement
               ("m" . nil) ; This makes "m" a prefix key
               ("m r" . awesome-tab-move-current-tab-to-right)
               ("m l" . awesome-tab-move-current-tab-to-left)
               ("m f" . awesome-tab-move-current-tab-to-beg)
-              
+
               ;; Buffer management
               ("k" . nil) ; This makes "k" a prefix key
               ("k o" . awesome-tab-kill-other-buffers-in-current-group)
@@ -1958,6 +1993,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
        (string-prefix-p " *Treemacs" name)
        (string-prefix-p "*eshell" name)
        (string-prefix-p "*eldoc" name)
+       (string-prefix-p "*elfeed" name)
        (string-prefix-p " *Minibuf" name)
        (and (string-prefix-p "magit" name)
             (not (file-name-extension name)))
@@ -1967,9 +2003,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 *** tabspaces
 #+begin_src emacs-lisp
 (use-package tabspaces
-  ;; use this next line only if you also use straight, otherwise ignore it. 
+  ;; use this next line only if you also use straight, otherwise ignore it.
   :straight (:type git :host github :repo "mclear-tools/tabspaces")
-  :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup. 
+  :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup.
   :commands (tabspaces-switch-or-create-workspace
              tabspaces-open-or-create-project-and-workspace)
   :custom
@@ -2123,7 +2159,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     (setq-local eglot-workspace-configuration
                 '(:gopls
                   ((usePlaceholders . t))))
-    
+
     ;; Start eglot
     (eglot-ensure))
 
@@ -2135,7 +2171,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
     (setq-local lsp-log-io t)
     (setq-local lsp-idle-delay 0.1)
     (setq-local lsp-enable-snippet t)
-    
+
     ;; Start LSP
     (lsp-deferred)))
 
@@ -2413,6 +2449,11 @@ Flycheck can also be enabled for Cython:
         org-plantuml-jar-path "~/.local/bin/plantuml.jar"
         plantuml-indent-level 4))
 #+end_src
+*** Mermaid
+#+begin_src emacs-lisp
+(use-package mermaid-mode
+  :straight t)
+#+end_src
 *** nixOS
 #+begin_src emacs-lisp
 (use-package nix-mode
@@ -2527,7 +2568,7 @@ Flycheck can also be enabled for Cython:
               ("M-g /" . web-mode-element-close)
               ("M-g k" . web-mode-element-kill)
               ("M-g s" . web-mode-element-select)
-              
+
               ;; Tag operations (M-g t prefix)
               ("M-g t n" . web-mode-tag-next)
               ("M-g t p" . web-mode-tag-previous)
@@ -2535,7 +2576,7 @@ Flycheck can also be enabled for Cython:
               ("M-g t s" . web-mode-tag-select)
               ("M-g t b" . web-mode-tag-beginning)
               ("M-g t e" . web-mode-tag-end)
-              
+
               ;; Element operations (M-g e prefix)
               ("M-g e n" . web-mode-element-next)
               ("M-g e p" . web-mode-element-previous)
@@ -2546,7 +2587,7 @@ Flycheck can also be enabled for Cython:
               ("M-g e s" . web-mode-element-select)
               ("M-g e c" . web-mode-element-clone)
               ("M-g e r" . web-mode-element-rename)
-              
+
               ;; Attribute operations (M-g a prefix)
               ("M-g a n" . web-mode-attribute-next)
               ("M-g a p" . web-mode-attribute-previous)
@@ -2572,7 +2613,7 @@ Flycheck can also be enabled for Cython:
          (scss-mode . emmet-mode)
          (web-mode  . emmet-mode))
   :bind (:map emmet-mode-keymap
-              (("M-RET" . 'emmet-expand-yas))))
+              ("M-RET" . 'emmet-expand-yas)))
 #+end_src
 ** LSP
 *** eglot
@@ -2617,7 +2658,7 @@ Flycheck can also be enabled for Cython:
   )
 #+end_src
 *** TODO eldoc
-Need to add some keybindings here: 
+Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package eldoc
   :straight (:type built-in)
@@ -2667,7 +2708,7 @@ Need to add some keybindings here:
   (lsp-log-io nil)                                  ; IMPORTANT! Use only for debugging! Drastically affects performance
   (lsp-keep-workspace-alive nil)                    ; Close LSP server if all project buffers are closed
   (lsp-idle-delay 0.5)                             ; Debounce timer for `after-change-function'
-  
+
   ;; core
   (lsp-enable-xref t)                              ; Use xref to find references
   (lsp-auto-configure t)                           ; Used to decide between current active servers
@@ -2677,7 +2718,7 @@ Need to add some keybindings here:
                                                    ; the branch, should LSP reload
                                                    ; instantly - it's a big performance
                                                    ; overhead
-  (lsp-enable-folding t) 
+  (lsp-enable-folding t)
   (lsp-enable-imenu t)
   (lsp-enable-indentation nil)                     ; I use prettier
   (lsp-enable-links nil)                           ; No need since we have `browse-url'
@@ -2687,20 +2728,20 @@ Need to add some keybindings here:
   (lsp-enable-text-document-color nil)             ; This is Treesitter's job
   (lsp-ui-sideline-show-hover nil)                 ; Sideline used only for diagnostics
   (lsp-ui-sideline-diagnostic-max-lines 20)        ; 20 lines since typescript errors can be quite big
-  
+
   ;; completion
   (lsp-completion-enable t)
   (lsp-completion-show-detail t)
   (lsp-completion-enable-additional-text-edit t)    ; Ex: auto-insert an import for a completion candidate
   (lsp-enable-snippet t)                           ; Important to provide full JSX completion
   (lsp-completion-show-kind t)                     ; Optional
-  
+
   ;; headerline
   (lsp-headerline-breadcrumb-enable nil)               ; Optional, I like the breadcrumbs
   (lsp-headerline-breadcrumb-enable-diagnostics nil)   ; Don't make them red, too noisy
   (lsp-headerline-breadcrumb-enable-symbol-numbers nil)
   (lsp-headerline-breadcrumb-icons-enable nil)
-  
+
   ;; modeline
   (lsp-modeline-code-actions-enable t)             ; Modeline should be relatively clean
   (lsp-modeline-diagnostics-enable nil)            ; Already supported through `flycheck'
@@ -2708,10 +2749,10 @@ Need to add some keybindings here:
   (lsp-signature-doc-lines 1)                      ; Don't raise the echo area. It's distracting
   (lsp-ui-doc-use-childframe t)                    ; Show docs for symbol at point
   (lsp-eldoc-render-all nil)                       ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
-  
+
   ;; lens
   (lsp-lens-enable nil)                            ; Optional, I don't need it
-  
+
   ;; semantic
   (lsp-semantic-tokens-enable nil)                 ; Related to highlighting, and we defer to treesitter
   )
@@ -2781,11 +2822,11 @@ Need to add some keybindings here:
 (global-set-key (kbd "C-c e r") 'my-reload-eglot)
 
 
-;; (define-key go-mode-map (kbd "C-c e d") 
-;;             (lambda () (interactive) 
+;; (define-key go-mode-map (kbd "C-c e d")
+;;             (lambda () (interactive)
 ;;               (my-test-eglot-config 'default)))
-;; (define-key go-mode-map (kbd "C-c e a") 
-;;             (lambda () (interactive) 
+;; (define-key go-mode-map (kbd "C-c e a")
+;;             (lambda () (interactive)
 ;;               (my-test-eglot-config 'go-aggressive)))
 #+end_src
 
@@ -2903,7 +2944,7 @@ Need to add some keybindings here:
    (setq yas-wrap-around-region t)
    (yankpad-reload))
 #+end_src
- 
+
 ** Debugging
 *** dape
 #+begin_src emacs-lisp
@@ -2990,18 +3031,18 @@ Need to add some keybindings here:
 An Emacs "jump to definition" package for 50+ languages
 
 #+begin_src emacs-lisp
-(use-package dumb-jump
-  :straight t
-  :bind (:map prog-mode-map
-              (("C-c C-o" . dumb-jump-go-other-window)
-               ("C-c C-j" . dumb-jump-go)
-               ("C-c C-i" . dumb-jump-go-prompt)))
-  :custom
-  (dumb-jump-selector 'completing-read)
-  ;; :init
-  ;; Use `dumb-jump' as `xref' backend
-  ;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
-  )
+  ;; (use-package dumb-jump
+  ;;   :straight t
+  ;;   :bind (:map prog-mode-map
+  ;;               (("C-c C-o" . dumb-jump-go-other-window)
+  ;;                ("C-c C-j" . dumb-jump-go)
+  ;;                ("C-c C-i" . dumb-jump-go-prompt)))
+  ;;   :custom
+  ;;   (dumb-jump-selector 'completing-read)
+  ;;   ;; :init
+  ;;   ;; Use `dumb-jump' as `xref' backend
+  ;;   ;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+  ;;   )
 #+end_src
 *** breadcrumb
 #+begin_src emacs-lisp
@@ -3043,9 +3084,10 @@ Keep lisp code always indented.
   :after magit)
 
 ;;(push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
-;;        "github.wdf.sap.corp" forge-github-repository)
-;;      forge-alist)
+;;       "github.wdf.sap.corp" forge-github-repository)
+;;
 #+end_src
+
 *** diff-hl
 #+begin_src emacs-lisp
 (use-package diff-hl
@@ -3127,11 +3169,11 @@ Keep lisp code always indented.
   (consult-gh-default-interactive-command #'consult-gh-transient)
   :config
   ;; set default org list
-  (setq consult-gh-default-orgs-list (consult-gh--get-current-orgs t))
+  ;; (setq consult-gh-default-orgs-list (consult-gh--get-current-orgs t))
   ;; add a hook to update default org ist after switching accounts
-  (add-hook 'consult-gh-auth-post-switch-hook (lambda (&rest args)
-                                                (setq consult-gh-default-orgs-list
-                                                      (consult-gh--get-current-orgs t))))
+  ;; (add-hook 'consult-gh-auth-post-switch-hook (lambda (&rest args)
+  ;;                                              (setq consult-gh-default-orgs-list
+  ;;                                                    (consult-gh--get-current-orgs t))))
   ;; (add-to-list 'savehist-additional-variables 'consult-gh--known-orgs-list) ;;keep record of searched orgs
   ;; (add-to-list 'savehist-additional-variables 'consult-gh--known-repos-list) ;;keep record of searched repos
   )
@@ -3301,7 +3343,7 @@ From https://github.com/dakra/dmacs/blob/nil/init.org
                                 (corfu-mode -1)
 
                                 ;;(eshell-smart-initialize)
-                                
+
                                 ;; Disable overwriting the history on eshell exit
                                 ;; See eshell-append-history above
                                 (remove-hook 'eshell-exit-hook #'eshell-write-history t)
@@ -3454,6 +3496,9 @@ Basic configuration
   :straight (:type built-in)
   :hook ((org-mode . toggle-truncate-lines))
   :bind (
+         ;; Global keybindings
+         ("M-g A" . org-agenda)
+
          :map org-mode-map
          ;; Basic structure
          ("C-c o i h" . org-insert-heading)
@@ -3472,8 +3517,8 @@ Basic configuration
          ("C-c o c m" . dorneanu/org-clock-enter-manually)
 
          ;; Demote / Promote
-         ("C-c o d +" . org-do-promote)
-         ("C-c o d -" . org-do-demote)
+         ("C-c o d +" . org-promote-subtree)
+         ("C-c o d -" . org-demote-subtree)
 
          ;; Navigation
          ;; ("C-c o n n" . org-next-visible-heading)
@@ -3500,6 +3545,10 @@ Basic configuration
          ;; ("C-c o i" . org-italic)
          ;; ("C-c o u" . org-underline)
          ("C-c o f f" . org-emphasize)
+
+         ;; Hide / show
+         ("C-c o f s" . org-fold-hide-sublevels)
+         ("C-c o f t" . org-fold-hide-subtree)
 
          ;; Soting
          ("C-c o s" . org-sort)
@@ -3781,7 +3830,20 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             (:discard (:not (:tag ("video" "article"))))
                             (:and (:tag))
                             (:auto-parent t)
-                            (:discard (:anything)))))))))))
+                            (:discard (:anything))))))))
+          ("p" "Projects"
+           ((alltodo "" ((org-agenda-overriding-header "Projects")
+                         (org-super-agenda-groups
+                          '(
+                            (:log t)
+                            (:discard (:tag ("inactive" "meeting" "projectile")))
+                            (:discard (:todo ("PROJ")))
+                            (:name "Projects"
+                                   :auto-property "project"
+                                   :todo t
+                                   :order 1)
+                            (:discard (:anything))))
+                         )))))))
 
 
 #+end_src
@@ -3972,7 +4034,7 @@ If prefix ARG, copy instead of move."
      ("n" "Note" entry (file+headline "inbox.org" "Notes")
          "* %^{Title} %^G \n:PROPERTIES:\n:CREATED: %U\n:END:\n\n%?"
          :empty-lines 1)
-         
+
      ("m" "Meetings")
      ("mn" "Meeting" entry (file+headline "inbox.org" "Meetings"),
       my/org-meeting
@@ -3980,7 +4042,7 @@ If prefix ARG, copy instead of move."
 
       ("mm" "Minutes" entry (file+headline "inbox.org" "Minutes")
       "** %t-%^{Meeting} \n%?")
-     
+
      ("ma" "Active meeting" entry (file+headline "inbox.org" "Meetings")
       "* MEETING with %? :meeting:\n%U" :clock-in t :clock-resume t :empty-lines 1)
 
@@ -4103,7 +4165,7 @@ If prefix ARG, copy instead of move."
   :after org
   :bind (("M-g rj" . org-roam-dailies-goto-today))
   :config
-  (setq org-roam-dailies-directory "journal/")
+  (setq org-roam-dailies-directory "org/journal")
   (setq org-roam-dailies-capture-templates
         '(("d" "default" entry
            "* %?"
@@ -4308,7 +4370,7 @@ Insert images easily into ORG mode files
   :config
   (setq org-web-tools-pandoc-sleep-time 10))
 #+end_src
-** el-draw
+** COMMENT el-draw
 #+begin_src emacs-lisp
 (use-package el-easydraw
   :straight (el-easydraw :build t
@@ -4605,7 +4667,7 @@ Various useful utilities
          ([(control shift return)] . crux-smart-open-line-above))
   :config
   ;; No need to create a new scratch buffer every time
-  ;; Just use one. 
+  ;; Just use one.
   (defun create-scratch-buffer ()
     "Create a scratch buffer."
     (interactive)
@@ -4716,8 +4778,6 @@ Various useful utilities
   ;; You can customize Combobulate's key prefix here.
   ;; Note that you may have to restart Emacs for this to take effect!
   (setq combobulate-key-prefix "C-x ,")
-  :bind (:map combobulate-key-map
-              ("M-a" . nil))
   ;;
   ;; You can manually enable Combobulate with `M-x
   ;; combobulate-mode'.
@@ -4846,7 +4906,7 @@ Various useful utilities
 #+BEGIN_SRC emacs-lisp
 ;; From https://github.com/dakra/dmacs/blob/nil/init.org#L2056
 (use-package helpful
-  :straight t 
+  :straight t
   :bind (("C-h ." . helpful-at-point)
          ("C-h f" . helpful-callable)
          ("C-h v" . helpful-variable)
@@ -4943,10 +5003,10 @@ Various useful utilities
      '(focus-unfocused ((t (:foreground "#000000"
                            :inherit nil  ; Remove shadow inheritance
                            :opacity 0.1))))))
-  
+
   ;; Toggle the state
   (setq my-focus-transparent-mode (not my-focus-transparent-mode))
-  (message "Focus transparency %s" 
+  (message "Focus transparency %s"
            (if my-focus-transparent-mode "enabled" "disabled")))
 #+end_src
 
@@ -5467,23 +5527,23 @@ _q_: Quit
   ("s" lasgun-mark-symbol-1 :exit nil)
   ("c" lasgun-mark-char-2 :exit nil)
   ("t" lasgun-mark-char-timer :exit nil)
-  
+
   ;; Above variants - using capital letters
   ("W" lasgun-mark-word-0-above :exit nil)
   ("S" lasgun-mark-symbol-1-above :exit nil)
   ("C" lasgun-mark-char-2-above :exit nil)
   ("H" lasgun-mark-whitespace-end-above :exit nil)
-  
+
   ;; Below variants - using available lowercase letters
   ("n" lasgun-mark-word-0-below :exit nil)
   ("m" lasgun-mark-symbol-1-below :exit nil)
   ("v" lasgun-mark-char-2-below :exit nil)
   ("b" lasgun-mark-whitespace-end-below :exit nil)
-  
+
   ("0" lasgun-mark-subword-0 :exit nil)
   ("1" lasgun-mark-subword-1 :exit nil)
   ("h" lasgun-mark-whitespace-end :exit nil)
-  
+
   ("q" nil :exit t))
 #+end_src
 *** Hydra / Scratch Buffers
@@ -5545,7 +5605,7 @@ Change default font size
   (let ((enable-local-variables :all))
     (hack-dir-local-variables-non-file-buffer)
     (hack-local-variables)
-    (message "Directory local variables reloaded for %s" 
+    (message "Directory local variables reloaded for %s"
              (buffer-name))))
 #+end_src
 * Media
@@ -5597,7 +5657,7 @@ position and resume whenever the same video is played again (read [[https://unix
          ("C-c a e s" . elfeed-search)
          ("C-c a e b" . elfeed-search-browse-bookmark)
          ("C-c a e l" . elfeed-search-live-filter)
-         
+
          ;; Search mode bindings
          :map elfeed-search-mode-map
          ("TAB" . elfeed-search-show-entry)
@@ -5622,12 +5682,13 @@ position and resume whenever the same video is played again (read [[https://unix
          ("o x" . dorneanu/elfeed-search-browse-url-xwidget)
          ("o b" . elfeed-search-browse-url)
          ("o r" . sqrtminusone/rdrview-elfeed-show)
-         
+
          ;; Show mode bindings
          :map elfeed-show-mode-map
          ("q" . kill-buffer-and-window)
          ("u" . elfeed-show-tag--unread)
          ("y" . elfeed-show-yank)
+         ("e" . dorneanu/elfeed-show-browse-url-eww)
          ("n" . elfeed-show-next)
          ("p" . elfeed-show-prev)
          ("+" . elfeed-show-tag)
@@ -5638,7 +5699,7 @@ position and resume whenever the same video is played again (read [[https://unix
          ("h" . elfeed-show-visit-html-file))
   :custom
   ((elfeed-search-title-min-width 70)
-   (elfeed-search-title-max-width 100)
+   (elfeed-search-title-max-width 140)
    (elfeed-search-trailing-width 30)
    (elfeed-search-date-format '("%Y-%m-%d %H:%M" 16 :left))
    ;; Cache content for offline reading
@@ -5651,22 +5712,22 @@ position and resume whenever the same video is played again (read [[https://unix
   :config
   (custom-set-faces
    ;; Title styling
-   '(elfeed-show-title-face ((t :height 1.5 
-                                :weight bold 
-                                :family "Variable Serif" 
+   '(elfeed-show-title-face ((t :height 1.5
+                                :weight bold
+                                :family "Variable Serif"
                                 :foreground "#A6E3A1")))  ; Catppuccin green
    ;; Author and feed info
-   '(elfeed-show-author-face ((t :height 1.2 
-                                 :family "Variable Sans" 
+   '(elfeed-show-author-face ((t :height 1.2
+                                 :family "Variable Sans"
                                  :foreground "#F9E2AF")))  ; Catppuccin yellow
-   '(elfeed-show-feed-face ((t :height 1.1 
-                               :family "Variable Sans" 
+   '(elfeed-show-feed-face ((t :height 1.1
+                               :family "Variable Sans"
                                :foreground "#89B4FA")))    ; Catppuccin blue
    ;; Tags and metadata
    '(elfeed-show-tag-face ((t :box (:line-width 1)       ; Boxed tags
                               :foreground "#F5C2E7")))     ; Catppuccin pink
    ;; Link styling
-   '(elfeed-show-link-face ((t :height 1.1 
+   '(elfeed-show-link-face ((t :height 1.1
                                :underline (:style line)
                                :foreground "#89DCEB"))))   ; Catppuccin sky
 
@@ -5679,21 +5740,21 @@ position and resume whenever the same video is played again (read [[https://unix
     (setq-local right-margin-width 2)        ; Add right margin
     (setq-local header-line-format nil)      ; Clean header line
     (setq-local cursor-type 'bar)            ; Thin cursor
-    
+
     ;; Enable useful minor modes
     (variable-pitch-mode t)                  ; Use variable-pitch fonts
     (visual-line-mode t)                     ; Wrap lines at window edge
     (visual-fill-column-mode t)              ; Center content
     (display-line-numbers-mode -1)           ; Disable line numbers
     (olivetti-mode t)                        ; Center content with margins
-    
+
     ;; Apply text scaling
     (text-scale-set 1)
-    
+
     ;; Set max content width
     (setq-local visual-fill-column-width 100)
     (setq-local visual-fill-column-center-text t)
-    
+
     ;; Custom font locks for better content structure
     ;; (font-lock-add-keywords             ;
     ;;  nil
@@ -5718,65 +5779,65 @@ position and resume whenever the same video is played again (read [[https://unix
   "Enhanced print function for ENTRY in the elfeed-search buffer."
   (let* (;; Basic entry information
          (date (elfeed-search-format-date (elfeed-entry-date entry)))
-         (title (or (elfeed-meta entry :title) 
-                    (elfeed-entry-title entry) 
+         (title (or (elfeed-meta entry :title)
+                    (elfeed-entry-title entry)
                     ""))
          (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
-         
+
          ;; Feed information
          (feed (elfeed-entry-feed entry))
          (feed-title (when feed
-                       (or (elfeed-meta feed :title) 
+                       (or (elfeed-meta feed :title)
                            (elfeed-feed-title feed))))
-         
+
          ;; Tags formatting
          (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
          (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
-         
+
          ;; Width calculations
-         (title-width (- (window-width) 
+         (title-width (- (window-width)
                          elfeed-goodies/feed-source-column-width
-                         elfeed-goodies/tag-column-width 
+                         elfeed-goodies/tag-column-width
                          10  ; date width
                          4)) ; spacing
-         
+
          ;; Column formatting
          (title-column (elfeed-format-column
-                        title 
+                        title
                         (elfeed-clamp elfeed-search-title-min-width
                                       title-width
                                       title-width)
                         :left))
          (tag-column (elfeed-format-column
-                      tags-str 
+                      tags-str
                       (elfeed-clamp (length tags-str)
                                     elfeed-goodies/tag-column-width
                                     elfeed-goodies/tag-column-width)
                       :left))
          (feed-column (elfeed-format-column
-                       feed-title 
+                       feed-title
                        (elfeed-clamp elfeed-goodies/feed-source-column-width
                                      elfeed-goodies/feed-source-column-width
                                      elfeed-goodies/feed-source-column-width)
                        :left))
-         
+
          ;; Reading time calculation
          (content (elfeed-deref (elfeed-entry-content entry)))
-         (word-count (when content 
+         (word-count (when content
                        (with-temp-buffer
                          (insert content)
                          (count-words (point-min) (point-max)))))
-         (reading-time (when word-count 
+         (reading-time (when word-count
                          (format "%dm" (/ word-count 200))))
-         
+
          ;; Age calculations
-         (age-in-days (/ (- (float-time) 
-                            (float-time (elfeed-entry-date entry))) 
+         (age-in-days (/ (- (float-time)
+                            (float-time (elfeed-entry-date entry)))
                          86400))
          (age-face (cond ((> age-in-days 365) 'font-lock-comment-face)
                          ((> age-in-days 30) 'font-lock-keyword-face)
                          (t 'font-lock-string-face))))
-    
+
     ;; Display logic based on window width
     (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
         ;; Wide format
@@ -5784,19 +5845,19 @@ position and resume whenever the same video is played again (read [[https://unix
           ;; Date and reading time
           (insert (propertize date 'face 'elfeed-search-date-face) " ")
           (when reading-time
-            (insert (propertize (format "[%s] " reading-time) 
+            (insert (propertize (format "[%s] " reading-time)
                                 'face 'font-lock-comment-face)))
-          
+
           ;; Feed and tags
           (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
           (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
-          
+
           ;; Title and age
           (insert (propertize title 'face title-faces 'kbd-help title))
           (when (> age-in-days 7)
-            (insert " " (propertize (format "(%d days old)" (round age-in-days)) 
+            (insert " " (propertize (format "(%d days old)" (round age-in-days))
                                     'face age-face))))
-      
+
       ;; Narrow format
       (insert (propertize title 'face title-faces 'kbd-help title)))))
 
@@ -5809,7 +5870,7 @@ position and resume whenever the same video is played again (read [[https://unix
                      (goto-char (point-min))
                      (forward-paragraph)
                      (buffer-substring (point-min) (point)))))
-      (format "Title: %s\nFeed: %s\nSummary: %s" 
+      (format "Title: %s\nFeed: %s\nSummary: %s"
               (elfeed-entry-title entry)
               (elfeed-feed-title (elfeed-entry-feed entry))
               (truncate-string-to-width summary 200)))))
@@ -6068,6 +6129,12 @@ thanks to ~elfeed-org~.
   (other-window 1)
   (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
     (elfeed-search-browse-url use-generic-p)))
+
+(defun elfeed/elfeed-show-visit-eww ()
+  "Visit the current entry in EWW."
+  (interactive)
+  (let ((browse-url-browser-function 'eww-browse-url))
+    (elfeed-show-visit)))
 #+end_src
 **** reddigg
 Use reddigg to show reddit threads.
@@ -6243,6 +6310,9 @@ Use hnread to show HN threads for a URL at point
        (goto-char (point-min))))))
 
 #+end_src
+
+#+RESULTS:
+: sqrtminusone/rdrview-elfeed-show
 
 * Email
 :properties:
@@ -6576,7 +6646,7 @@ I often want to reply without the original message:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs/post-init.el
 :end:
 ** AI
-*** copilot
+*** COMMENT copilot
 #+begin_src emacs-lisp
 (use-package copilot
   :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
@@ -6598,7 +6668,7 @@ I often want to reply without the original message:
 #+begin_src emacs-lisp
 (use-package gptel
   :straight t
-  :defer t
+  ;; :defer t
   :commands (gptel gptel-send)
   :bind (("M-g ä" . #'gptel)
          ("M-g ö" . #'gptel-send))
@@ -6610,16 +6680,47 @@ I often want to reply without the original message:
   ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
   ;; Anthropic / Claude 3
 
+  ;; Enable expert commands
+  (setq gptel-expert-commands t)
+
   ;; auto-scrolling
   (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-  
+
   ;; Add system messages
   (add-to-list 'gptel-directives
              '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
  (add-to-list 'gptel-directives
              '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
+  (add-to-list 'gptel-directives
+             '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
+
+When I provide you with the high-level topic and overall direction for a new blog post, your first step is to <STRUCTURE_PLANNING>:
+
+- Propose a logical structure for the post, including key sections and their purpose. For example: Introduction, Background, Core Argument, Counterpoints, Conclusion.
+- For each section, provide a brief description of the type of content that should be included, and the overall flow you recommend.
+- Suggest appropriate subheadings that capture the essence of each section.
+- Estimate the ideal word count range for the full post and each section.
+- Review the plan with me, gather any clarifications or adjustments, and finalize the structure.
+
+Once the structure is approved, you will then <CONTENT_GENERATION>:
+
+- For each section, provide a bulleted list of key points, facts, or ideas that should be covered.
+- Review the tone, language, and writing style used in my previous blog posts, and craft sample sentences for each bullet point that align with that established brand voice.
+- Aim to strike a balance between providing directive guidance (sample sentences) and leaving room for me to personalize the content in my own words.
+- Ensure the overall content flows logically from one section to the next, with smooth transitions.
+- Review the full draft with me, gather feedback, and refine as needed.
+
+Throughout the process, please <THINKING>:
+
+- Analyze the topic and my goals for the blog post to ensure the structure and content are well-aligned.
+- Consider potential counterarguments or alternative perspectives that should be addressed.
+- Identify opportunities to incorporate relevant data, examples, or expert insights to strengthen the post.
+- Flag any areas where additional research or fact-checking may be required.
+- Maintain a collaborative, supportive tone, and position yourself as a writing partner rather than simply a content generator.
+
+Most importantly, your outputs should reflect the same quality, tone, and brand voice as my previous successful blog posts. Your role is to elevate the post's structure and writing, not to drastically alter its character. Please let me know if you need any clarification or have additional suggestions to improve this system prompt."))
   ;; ollama
-  (gptel-make-ollama "Ollama"       
+  (gptel-make-ollama "Ollama"
     :host "localhost:11434"
     :stream t
     :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
@@ -6628,9 +6729,78 @@ I often want to reply without the original message:
   (setq gptel-backend (gptel-make-ollama "Ollama"
                         :host "localhost:11434"
                         :stream t
-                        :models '("llama3" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
+                        :models '("llama3" "huggingface.co/unsloth/Qwen3-30B-A3B-GGUF:latest" "qwen3:14b" "qwen3:8b" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
         ;; gptel-model "deepseek-v3"))
 #+end_src
+**** custom functions for gptel
+Mostly from https://github.com/gregoryg/emacs-gregoryg/blob/master/README.org
+#+begin_src emacs-lisp
+       (defun gjg/llm-explain (myphrase)
+         (gptel-request
+             myphrase
+             :system "explain this phrase, give examples of its use if appropriate, historical context if appropriate.  Reply only in the language of the phrase."
+           :callback (lambda (response info)
+             (if (stringp response)
+                 (let ((posn (marker-position (plist-get info :position)))
+                       (buf (buffer-name (plist-get info :buffer))))
+                   (message "Heya - the LLM responsded to request from %S at %d: %s"
+                            buf posn response))
+               (message "gptel-request failed with message: %s" (plist-get info :status))))
+           :buffer (get-buffer-create "*GORT*")))
+
+#+end_src
+
+***** COMMENT Search the web and read a web page
+#+begin_src emacs-lisp
+   (defcustom gjg/gptel-search-prefix
+     (if (and (boundp 'eww-search-prefix) eww-search-prefix) eww-search-prefix "'https://duckduckgo.com/html?q='")
+     "Base URL used for searching the web using gptel tools.
+   Falls back to duckduckgo if EWW is not loaded."
+     :type 'string)
+
+   (defun gjg/search-web (query)
+     "Initiate a web search using the search engine defined in `gjg/gptel-search-prefix'."
+     (condition-case err
+         (let* ((url-with-query
+                 (url-encode-url (concat gjg/gptel-search-prefix query)))
+                (content (shell-command-to-string
+                          (format "lynx -dump -list_inline %s" url-with-query))))
+           (format "Content pulled from %s\n\n%s" query content))
+       (warning (format "Error accessing %s: %s" query (error-message-string err)))))
+
+
+   (defun gjg/read-web (url)
+     "Pull in a web page with plain text and links."
+     (condition-case err
+         (let ((content (shell-command-to-string
+                          (format "lynx -dump -list_inline %s" url))))
+           (format "Content pulled from %s\n\n%s" url content))
+       (warning (format "Error accessing %s: %s" url (error-message-string err)))))
+
+
+   (gptel-make-tool
+    :name "search_web"
+    :function #'gjg/search-web
+    :description "Search the web"
+    :include t
+    :category "web"
+    :args (list `(:name "query"
+                        :type string
+                        :description ,(format "Search terms / string to search on the web using %s" gjg/gptel-search-prefix))))
+
+   (gptel-make-tool
+    :name "read_webpage"
+    :function #'gjg/read-web
+    :description "Read the content of a URL"
+    :include t
+    :category "web"
+    :args (list '(:name "url"
+                        :type string
+                        :description "URL to read")))
+#+end_src
+
+#+RESULTS:
+: #s(gptel-tool gjg/read-web "read_webpage" "Read the content of a URL" ((:name "url" :type "string" :description "URL to read")) nil "web" nil t)
 
 *** ellama
 #+begin_src emacs-lisp
@@ -6676,7 +6846,36 @@ I often want to reply without the original message:
   ;; send last message in chat buffer with C-c C-c
   (add-hook 'org-ctrl-c-ctrl-c-hook #'ellama-chat-send-last-message))
 #+end_src
+*** COMMENT mcp.el - disabled for the moment
+#+begin_src emacs-lisp
+(use-package mcp
+  :straight (mcp :type git :host github :repo "lizqwerscott/mcp.el"))
 
+(setq mcp-hub-servers
+      '(
+        ("filesystem" . (:command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "$HOME/repos/")))
+        ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
+        ))
+
+;; Custom commands for gptel
+(defun gptel-mcp-register-tool ()
+  (interactive)
+  (let ((tools (mcp-hub-get-all-tool :asyncp t :categoryp t)))
+    (mapcar #'(lambda (tool)
+                (apply #'gptel-make-tool
+                       tool))
+            tools)))
+
+(defun gptel-mcp-use-tool ()
+  (interactive)
+  (let ((tools (mcp-hub-get-all-tool :asyncp t :categoryp t)))
+    (mapcar #'(lambda (tool)
+                (let ((path (list (plist-get tool :category)
+                                  (plist-get tool :name))))
+                  (push (gptel-get-tool path)
+                        gptel-tools)))
+            tools)))
+#+end_src
 ** Chrome
 *** atomic-chrome
 #+begin_src emacs-lisp
