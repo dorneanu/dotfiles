@@ -2872,6 +2872,7 @@ position and resume whenever the same video is played again (read [[https://unix
          ("m g h" . my/elfeed-hn-show-comments)
          ("o x" . dorneanu/elfeed-search-browse-url-xwidget)
          ("o b" . elfeed-search-browse-url)
+         ("o B" . dorneanu/elfeed-search-browse-url-chrome)
          ("o r" . sqrtminusone/rdrview-elfeed-show)
 
          ;; Show mode bindings
@@ -3126,6 +3127,15 @@ xwidget related:
     (elfeed-search-browse-url use-generic-p)))
 #+end_src
 
+chrome related:
+#+begin_src emacs-lisp
+(defun dorneanu/elfeed-search-browse-url-chrome (&optional use-generic-p)
+  "Open elfeed entry with default macOS browser"
+  (interactive "P")
+  (let ((browse-url-browser-function #'browse-url-default-macosx-browser))
+    (elfeed-search-browse-url use-generic-p)))
+#+end_src
+
 *** Filter cycling
 Cycle through different filters:
 
@@ -3331,7 +3341,16 @@ Use reddigg to show reddit threads.
 (use-package reddigg
   :straight t
   :after (elfeed))
-
+  
+(defun my/elfeed-reddit-show-comments (&optional link)
+  (interactive)
+  (require 'reddigg)
+  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+                    elfeed-show-entry
+                  (elfeed-search-selected :ignore-region)))
+         (link (if link link (elfeed-entry-link entry))))
+    (reddigg-view-comments link)))
+    
 (defun my/org-buffer-to-epub ()
   "Convert current org-mode buffer to epub"
   (interactive)
@@ -4586,7 +4605,7 @@ Install additional themes:
   :straight t)
 #+end_src
 
-Load theme
+Load default theme: 
 
 #+begin_src emacs-lisp
 (load-theme 'ef-owl t)
