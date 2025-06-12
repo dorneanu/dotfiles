@@ -824,6 +824,15 @@ I only need ~counsel-org-tag~
              pytest-pdb-last-failed
              pytest-module
              pytest-pdb-module)
+  :bind (:map python-mode-map
+              ("C-c t ." . pytest-one)           ; test one (current test)
+              ("C-c t T" . pytest-pdb-one)       ; test one with pdb
+              ("C-c t a" . pytest-all)           ; test all
+              ("C-c t A" . pytest-pdb-all)       ; test all with pdb
+              ("C-c t l" . pytest-last-failed)   ; test last failed
+              ("C-c t L" . pytest-pdb-last-failed) ; test last failed with pdb
+              ("C-c t m" . pytest-module)        ; test module
+              ("C-c t M" . pytest-pdb-module))   ; test module with pdb
   :config
   (add-to-list 'pytest-project-root-files "setup.cfg"))
 #+end_src
@@ -1196,11 +1205,13 @@ Flycheck can also be enabled for Cython:
 
   ;; Enable eglot for certain modes
   ;; (add-hook 'go-mode-hook 'eglot-ensure)
+  ;; (add-to-list 'eglot-server-programs
+  ;;              `(python-mode
+  ;;                . ,(eglot-alternatives '(("pyright-langserver" "--stdio")
+  ;;                                         "jedi-language-server"
+  ;;                                         "pylsp"))))
   (add-to-list 'eglot-server-programs
-               `(python-mode
-                 . ,(eglot-alternatives '(("pyright-langserver" "--stdio")
-                                          "jedi-language-server"
-                                          "pylsp"))))
+               '(python-mode . ("ruff" "server")))
   (add-to-list 'eglot-server-programs '(markdown-mode . ("marksman"))))
 
 ;; Add config for markdown
@@ -1522,10 +1533,16 @@ Need to add some keybindings here:
   :bind (("C-c f f" . apheleia-format-buffer))
   :config
   ;; For Python we want to format with isort and black
-  (setf (alist-get 'isort apheleia-formatters)
-        '("isort" "--stdout" "-"))
+  ;; (setf (alist-get 'isort apheleia-formatters)
+  ;;       '("isort" "--stdout" "-"))
+  ;; (setf (alist-get 'python-mode apheleia-mode-alist)
+  ;;       '(isort black))
+
+  ;; Replace default (black) to use ruff for sorting import and formatting.
   (setf (alist-get 'python-mode apheleia-mode-alist)
-        '(isort black))
+        '(ruff-isort ruff))
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist)
+        '(ruff-isort ruff))
 
   ;; For golang
   (setf (alist-get 'gofmt apheleia-formatters)
