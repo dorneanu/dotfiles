@@ -246,6 +246,7 @@ Something I use a lot:
 (keymap-global-set "M-g t n" #'display-line-numbers-mode)
 (keymap-global-set "M-g t F" #'fringe-mode)
 (keymap-global-set "M-g t v" #'visual-line-fill-column-mode)
+(keymap-global-set "M-g t V" #'vertico-posframe-mode)
 (keymap-global-set "M-g t w" #'hydra-windows/body)
 #+end_src
 
@@ -270,6 +271,7 @@ Something I use a lot:
 (keymap-global-set "C-x j c" #'avy-goto-char)
 (keymap-global-set "C-x j w" #'avy-goto-word-1)
 (keymap-global-set "C-x j t" #'centaur-tabs-ace-jump)
+(keymap-global-set "C-x j j" #'consult-goto-line)
 ;; This doesn't fit here
 (keymap-global-set "M-j" #'crux-top-join-line)
 #+end_src
@@ -1954,6 +1956,7 @@ Basic configuration
         org-insert-heading-respect-content nil
         org-adapt-indentation              t
         org-log-done                       'time
+        org-log-state-notes-into-drawer    nil     ;; No state change notes
         org-log-into-drawer                nil     ;; Does this make sense?
         org-directory                      "~/repos/priv/org/"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
@@ -3844,7 +3847,7 @@ Most importantly, your outputs should reflect the same quality, tone, and brand 
          ("C-c e i" . eww-wiki)
          ("C-c e l" . eww-follow-link))
   :init
-  (setq browse-url-browser-function 'eww-browse-url)
+h (setq browse-url-browser-function 'eww-browse-url)
   (setq eww-search-prefix "http://www.google.com/search?q=")
 
   (defun eww-wiki (text)
@@ -4764,6 +4767,25 @@ Focus and swap windows
     "h" #'windmove-left
     "l" #'windmove-right)
   (keymap-global-set "C-c w" +windmove-keys))
+#+end_src
+*** winner-mode
+#+begin_src emacs-lisp
+(use-package winner
+  :straight t
+  :custom
+  (winner-boring-buffers
+   '("*Completions*"
+     "*Compile-Log*"
+     "*inferior-lisp*"
+     "*Fuzzy Completions*"
+     "*Apropos*"
+     "*Help*"
+     "*cvs*"
+     "*Buffer List*"
+     "*Ibuffer*"
+     "*esh command on file*"))
+  :config
+  (winner-mode 1))
 #+end_src
 ** Tabs
 *** tabspaces
