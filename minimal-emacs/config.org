@@ -816,8 +816,8 @@ I only need ~counsel-org-tag~
 **** pytest
 #+begin_src emacs-lisp
 (use-package pytest
-  :defer t
   :straight t
+  :after (python-mode)
   :commands (pytest-one
              pytest-pdb-one
              pytest-all
@@ -2908,14 +2908,14 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
       (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url (org-web-tools--cleanup-title title)))))
 #+end_src
 *** Focus on current heading
-#+begin_example emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/org-focus-current-subtree ()
   "Show current subtree, fold everything else"
   (interactive)
   (org-overview)  ; Fold everything
   (org-reveal)    ; Show path to current heading
   (org-show-subtree)) ; Show current subtree content
-#+end_example
+#+end_src
 * Media
 ** empv
 Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
@@ -2939,7 +2939,7 @@ position and resume whenever the same video is played again (read [[https://unix
   "Play a video URL with mpv."
   (interactive "sEnter video URL: ")
   (let ((quality-arg "")
-        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080") nil nil)))
+        (quality-val (completing-read "Max height resolution (0 for unlimited): " '("0" "480" "720" "1080" "1980") nil nil)))
     (setq quality-val (string-to-number quality-val))
     (message "Opening %s with height≤%s with mpv..." url quality-val)
     (when (< 0 quality-val)
@@ -3957,7 +3957,7 @@ Most importantly, your outputs should reflect the same quality, tone, and brand 
          ("C-c e i" . eww-wiki)
          ("C-c e l" . eww-follow-link))
   :init
-h (setq browse-url-browser-function 'eww-browse-url)
+  (setq browse-url-browser-function 'eww-browse-url)
   (setq eww-search-prefix "http://www.google.com/search?q=")
 
   (defun eww-wiki (text)
@@ -4751,7 +4751,7 @@ Set default font
 #+end_src
 ** Folding
 *** hideshow
- #+begin_src emacs-lisp
+#+begin_src emacs-lisp
  (use-package hideshow
    :straight (:type built-in)
    :defer t
@@ -4812,7 +4812,7 @@ Set default font
                       'face '(:inherit shadow :height 0.8))
                      " "))))
    (setq hs-set-up-overlay #'hs-display-code-line-counts))
- #+end_src
+#+end_src
 
 ** symbol-overlay
 #+BEGIN_SRC emacs-lisp
@@ -4917,6 +4917,98 @@ Focus and swap windows
   (tabspaces-session t)
   (tabspaces-session-auto-restore nil)
   (tab-bar-new-tab-choice "*scratch*"))
+#+end_src
+*** COMMENT centaur-tabs
+#+begin_src emacs-lisp
+(use-package centaur-tabs
+  :straight t
+  :init
+  (setq centaur-tabs-enable-key-bindings t)
+  :custom
+  (centaur-tabs-set-icons t)
+  (centaur-tabs-plain-icons t)
+  :config
+  (setq centaur-tabs-style "bar"
+        centaur-tabs-height 15
+        centaur-tabs-show-new-tab-button t
+        centaur-tabs-set-modified-marker t
+        centaur-tabs-show-navigation-buttons t
+        centaur-tabs-set-bar 'under
+        centaur-tabs-show-count nil
+        ;; centaur-tabs-label-fixed-length 15
+        ;; centaur-tabs-gray-out-icons 'buffer
+        x-underline-at-descent-line t
+        centaur-tabs-left-edge-margin nil)
+  ;; Exclude some buffers
+  (setq centaur-tabs-excluded-prefixes
+        (append centaur-tabs-excluded-prefixes
+                '("*ginko-output*"
+                  "*new-prefix2*"
+                  "*new-prefix3*")))
+  (centaur-tabs-change-fonts (face-attribute 'default :font) 110)
+  (centaur-tabs-headline-match)
+  ;; (centaur-tabs-enable-buffer-alphabetical-reordering)
+  ;; (setq centaur-tabs-adjust-buffer-order t)
+  (setq centaur-tabs-adjust-buffer-order 'left)
+  (centaur-tabs-mode t)
+  (centaur-tabs-group-by-projectile-project)
+  (setq uniquify-separator "/")
+  (setq uniquify-buffer-name-style 'forward)
+  (defun centaur-tabs-buffer-groups ()
+    "`centaur-tabs-buffer-groups' control buffers' group rules.
+
+Group centaur-tabs with mode if buffer is derived from `eshell-mode' `emacs-lisp-mode' `dired-mode' `org-mode' `magit-mode'.
+All buffer name start with * will group to \"Emacs\".
+Other buffer group by `centaur-tabs-get-group-name' with project name."
+    (list
+     (cond
+      ;; ((not (eq (file-remote-p (buffer-file-name)) nil))
+      ;; "Remote")
+      ((or (string-equal "*" (substr
+                              (memq major-mode '(magit-process-mode
+                                                 magit-status-mode
+                                                 magit-diff-mode
+                                                 magit-log-mode
+                                                 magit-file-mode
+                                                 magit-blob-mode
+                                                 magit-blame-mode
+                                                 )))
+                         "Emacs")
+           ((derived-mode-p 'prog-mode)
+            "Editing")
+           ((derived-mode-p 'dired-mode)
+            "Dired")
+           ((memq major-mode '(helpful-mode
+                               help-mode))
+            "Help")
+           ((memq major-mode '(org-mode
+                               org-agenda-clockreport-mode
+                               org-src-mode
+                               org-agenda-mode
+                               org-beamer-mode
+                               org-indent-mode
+                               org-bullets-mode
+                               org-cdlatex-mode
+                               org-agenda-log-mode
+                               diary-mode))
+            "OrgMode")
+           (t
+            (centaur-tabs-get-group-name (current-buffer))))))))
+  :hook
+  (dashboard-mode . centaur-tabs-local-mode)
+  (term-mode . centaur-tabs-local-mode)
+  (calendar-mode . centaur-tabs-local-mode)
+  (org-agenda-mode . centaur-tabs-local-mode)
+  (prog-mode . centaur-tabs-mode)
+  (eshell-mode . centaur-tabs-local-mode)
+  (gptel-mode . centaur-tabs-local-mode)
+  (popper-mode . centaur-tabs-local-mode)
+  ;; :bind
+  ;; ("s-1" . centaur-tabs-backward)
+  ;; ("s-2" . centaur-tabs-forward)
+  ;; ("s-S h" . centaur-tabs-move-current-tab-to-left)
+  ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
+  )
 #+end_src
 ** Hydra
 Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
