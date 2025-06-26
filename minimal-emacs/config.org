@@ -613,6 +613,37 @@ Something I use a lot:
                  nil
                  (window-parameters (mode-line-format . none)))))
 
+;; Using embark and ace
+(defun dorneanu/embark-ace-action (fn)
+  "Create an embark action that uses ace-window to select target window."
+  (lambda (target)
+    (with-demoted-errors "%S"
+      (let ((window (if (> (length (aw-window-list)) 1)
+                        (aw-select "Select window: ")
+                      (selected-window))))
+        (when window
+          (select-window window)
+          (funcall fn target))))))
+
+;; Define ace-window variants of common actions
+(defun dorneanu/embark-find-file-ace (file)
+  "Open file in ace-selected window."
+  (let ((window (aw-select "Select window: ")))
+    (when window
+      (select-window window)
+      (find-file file))))
+
+(defun dorneanu/embark-switch-to-buffer-ace (buffer)
+  "Switch to buffer in ace-selected window."
+  (let ((window (aw-select "Select window: ")))
+    (when window
+      (select-window window)
+      (switch-to-buffer buffer))))
+
+;; Add to embark keymaps
+(define-key embark-file-map "O" #'dorneanu/embark-find-file-ace)
+(define-key embark-buffer-map "O" #'dorneanu/embark-switch-to-buffer-ace)
+
 (use-package embark-consult
   :straight t
   :hook
