@@ -133,6 +133,10 @@ Configure GPG assistant
   :custom
   (epa-file-select-keys 'silent))
 #+end_src
+*** custom.el
+#+begin_src emacs-lisp
+(load custom-file 'noerror 'no-message)
+#+end_src
 *** locals
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs-dev/pre-init.el
@@ -614,6 +618,8 @@ Something I use a lot:
                  (window-parameters (mode-line-format . none)))))
 
 ;; Using embark and ace
+;; (require 'ace-window)
+
 (defun dorneanu/embark-ace-action (fn)
   "Create an embark action that uses ace-window to select target window."
   (lambda (target)
@@ -700,6 +706,9 @@ I only need ~counsel-org-tag~
    (mermaid . t)
    (graphql . t)
    (shell . t)))
+
+;; Automatically display inline images after babel execution
+(add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
 #+end_src
 
 #+RESULTS:
@@ -1278,14 +1287,14 @@ Need to add some keybindings here:
   :ensure nil
   :defer t
   :bind (("C-c l s" . lsp))
-  ;; :hook (
-  ;;        ;; (go-ts-mode . lsp-deferred)
-  ;;        ;; (go-mode . lsp-deferred)
-  ;;        ;; (web-mode . lsp-deferred)
-  ;;        ;; (python-mode . lsp-deferred)
-  ;;        ;; (lsp-mode . lsp-deferred)
-  ;;        ;; (python-ts-mode . lsp-deferred)
-  ;;        )
+  :hook (
+         (go-ts-mode . lsp-deferred)
+         (go-mode . lsp-deferred)
+         ;; (web-mode . lsp-deferred)
+         ;; (python-mode . lsp-deferred)
+         ;; (lsp-mode . lsp-deferred)
+         ;; (python-ts-mode . lsp-deferred)
+         )
   :commands (lsp lsp-deferred)
   :custom
   ;; (lsp-print-io nil)
@@ -1425,7 +1434,7 @@ Need to add some keybindings here:
 
 #+RESULTS:
 : my-reload-eglot
-*** COMMENT lsp-treemacs
+*** lsp-treemacs
 #+begin_src emacs-lisp
 (use-package lsp-treemacs
   :straight t
@@ -1728,8 +1737,8 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
-  :bind (("C-c vt " . vterm))
-  :hook (prog-mode . puni-mode)
+  :bind (("C-c vt " . vterm)
+         ("C-c vp" . projectile-run-vterm))
   :config
   (setq puni-confirm-when-delete-unbalanced-active-region nil)
   (setq puni-blink-for-sexp-manipulating t))
@@ -1860,7 +1869,7 @@ Keep lisp code always indented.
 *** treesit
 #+begin_src emacs-lisp
 (use-package treesit
-  :straight (:type built-in)
+  :straight t
   :mode (("\\.tsx\\'" . tsx-ts-mode)
          ("\\.py\\'" . python-ts-mode)
          ("\\.cmake\\'" . cmake-ts-mode)
@@ -2266,6 +2275,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                           '(
                             (:log t)
                             (:discard (:tag "inactive"))
+                            (:discard (:tag "no-agenda"))
                             (:discard (:tag "jira"))
                             (:name "Started"
                                    :todo ("STARTED")
@@ -2298,19 +2308,20 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             ;;  :todo ("WIP")
                             ;;  :order 40)
                             (:discard (:anything))))))
-            (alltodo "" ((org-agenda-overriding-header "")
-                         (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
-                         (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
-                         (org-super-agenda-groups
-                          '(
-                            (:log t)
-                            (:discard (:tag ("inactive" "meeting" "projectile")))
-                            (:discard (:todo ("PROJ")))
-                            (:name "Projects"
-                                   :auto-property "project"
-                                   :todo t
-                                   :order 1)
-                            (:discard (:anything))))))))
+            ;; (alltodo "" ((org-agenda-overriding-header "")
+            ;;              (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
+            ;;              (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
+            ;;              (org-super-agenda-groups
+            ;;               '(
+            ;;                 (:log t)
+            ;;                 (:discard (:tag ("no-agenda" "inactive" "meeting" "projectile")))
+            ;;                 (:discard (:todo ("PROJ")))
+            ;;                 (:name "Projects"
+            ;;                        :auto-property "project"
+            ;;                        :todo t
+            ;;                        :order 1)
+            ;;                 (:discard (:anything))))))
+                            ))
 
 
           ("r" "Resonance"
@@ -2333,8 +2344,9 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                          (org-super-agenda-groups
                           '(
                             (:log t)
-                            (:discard (:tag ("inactive" "meeting" "projectile")))
+                            (:discard (:tag ("inactive" "area" "meeting" "projectile")))
                             (:discard (:todo ("PROJ")))
+                            (:discard (:todo ("MEETING")))
                             (:name "Projects"
                                    :auto-property "project"
                                    :todo t
@@ -3571,65 +3583,6 @@ Use reddigg to show reddit threads.
       (string-trim (match-string 1 content))
     (format "Untitled-%s" (format-time-string "%H%M"))))
 
-(defun my/reddit-hierarchy-to-clear-format-spaced (content)
-  "Convert Reddit hierarchy with generous spacing for e-reader readability"
-  (let ((lines (split-string content "\n"))
-        (processed-lines '())
-        (last-level 0))
-    
-    (dolist (line lines)
-      ;; Strip text properties
-      (setq line (substring-no-properties line))
-      
-      (cond
-       ;; Original post (single *)
-       ((string-match "^\\*\\s-+\\(.+\\)$" line)
-        (when processed-lines (push "" processed-lines)) ; Space if not first
-        (push "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" processed-lines)
-        (push (format "🔷 **ORIGINAL POST**: %s" (match-string 1 line)) processed-lines)
-        (push "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" processed-lines)
-        (push "" processed-lines)
-        (push "" processed-lines)
-        (setq last-level 1))
-       
-       ;; Level 1 replies (**)
-       ((string-match "^\\*\\*\\s-+\\(.+\\)$" line)
-        (push "" processed-lines) ; Space before
-        (push "" processed-lines) ; Extra space for visual separation
-        (push (format "💬 **%s**" (match-string 1 line)) processed-lines)
-        (push "" processed-lines) ; Space after username for content
-        (setq last-level 2))
-       
-       ;; Level 2 replies (***)
-       ((string-match "^\\*\\*\\*\\s-+\\(.+\\)$" line)
-        (push "" processed-lines) ; Space before reply
-        (push (format "    ↳ *%s*" (match-string 1 line)) processed-lines)
-        (push "" processed-lines) ; Space after for content
-        (setq last-level 3))
-       
-       ;; Level 3+ replies (****+)
-       ((string-match "^\\(\\*\\*\\*\\*+\\)\\s-+\\(.+\\)$" line)
-        (let* ((asterisks (match-string 1 line))
-               (level (length asterisks))
-               (content (match-string 2 line))
-               (indent (make-string (* (- level 1) 4) ?\s)))
-          (push "" processed-lines) ; Space before
-          (push (format "%s↳ %s" indent content) processed-lines)
-          (push "" processed-lines) ; Space after for content
-          (setq last-level level)))
-       
-       ;; Skip empty heading lines
-       ((string-match "^\\*+\\s-*$" line))
-       
-       ;; Regular content - add with appropriate indentation
-       (t 
-        (let ((content-indent (cond 
-                              ((= last-level 1) "")
-                              ((= last-level 2) "    ")
-                              (t (make-string (* last-level 4) ?\s)))))
-          (push (concat content-indent line) processed-lines)))))
-    
-    (string-join (reverse processed-lines) "\n")))
 
 (defun my/reddigg-to-epub-with-threading ()
   "Convert reddigg buffer to epub preserving comment threading - fixed version"
@@ -3727,6 +3680,8 @@ Use hnread to show HN threads for a URL at point
   (setq dirvish-side-width 40)
   (setq dired-omit-files "^\\.?#\\|^\\.$\\|^\\.\\.$\\|^\\.")
   (setq dired-omit-mode t)
+  ;; (setq dired-listing-switches "-ahlv")
+  (setq dired-listing-switches "-l")
   ;; (setq dirvish-attributes '(vc-state subtree-state all-the-icons collapse git-msg file-time file-size))
   :bind (("C-c a d" . dirvish-side)
          :map
@@ -3988,7 +3943,11 @@ Most importantly, your outputs should reflect the same quality, tone, and brand 
          ("C-c e i" . eww-wiki)
          ("C-c e l" . eww-follow-link))
   :init
-  (setq browse-url-browser-function 'eww-browse-url)
+  ;; (setq browse-url-browser-function 'eww-browse-url)
+  ;; (setq browse-url-browser-function 'browse-url-chrome)
+  (setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "open"
+      browse-url-generic-args '("-a" "Google Chrome"))
   (setq eww-search-prefix "http://www.google.com/search?q=")
 
   (defun eww-wiki (text)
@@ -4154,6 +4113,13 @@ Various useful utilities
   :defer t
   :init
   :bind (("M-g .d" . dictcc)))
+#+end_src
+** password-store
+#+begin_src emacs-lisp
+(use-package password-store
+  :straight t)
+(use-package pass
+  :straight t)
 #+end_src
 ** Custom Elisp
 *** reload dotemacs config
