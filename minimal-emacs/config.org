@@ -786,11 +786,11 @@ I only need ~counsel-org-tag~
   :hook
   (go-mode . flycheck-golangci-lint-setup))
 
-(use-package go-eldoc
-  :straight t
-  :after go-mode
-  :hook
-  (go-mode . go-eldoc-setup))
+;; (use-package go-eldoc
+;;   :straight t
+;;   :after go-mode
+;;   :hook
+;;   (go-mode . go-eldoc-setup))
 
 (use-package go-tag
   :straight t
@@ -1266,20 +1266,28 @@ Need to add some keybindings here:
   :straight t
   :hook (prog-mode . eldoc-mode)
   :bind (:map prog-mode-map
-              ("C-c e d" . eldoc))
+              ("C-c e d" . eldoc)
+              ("C-c e t" . eldoc-toggle))
   :init
   (global-eldoc-mode -1)
   :config
-  (setq eldoc-documentation-default 'eldoc-documentation-compose-eagerly))
+  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly
+        eldoc-echo-area-use-multiline-p t
+        eldoc-echo-area-display-truncation-message nil
+        eldoc-idle-delay 0.1))
 
 (use-package eldoc-box
   :straight t
-  :hook (eldoc-mode-hook . eldoc-box-hover-mode)
+  :after eldoc
+  :hook (eldoc-mode . eldoc-box-hover-mode)
   :bind (:map prog-mode-map
-              ("C-c e h" . eldoc-box-hover-mode))
-  :init
+              ("C-c e h" . eldoc-box-hover-mode)
+              ("C-c e c" . eldoc-box-clear-all))
+  :config
   (setq eldoc-box-position-function #'eldoc-box--default-upper-corner-position-function
-        eldoc-box-clear-with-C-g t))
+        eldoc-box-clear-with-C-g t
+        eldoc-box-max-pixel-width 800
+        eldoc-box-max-pixel-height 600))
 #+end_src
 *** lsp-mode
 #+begin_src emacs-lisp
@@ -1314,7 +1322,7 @@ Need to add some keybindings here:
   ;; core
   (lsp-enable-xref t)                              ; Use xref to find references
   (lsp-auto-configure t)                           ; Used to decide between current active servers
-  (lsp-eldoc-enable-hover t)                       ; Display signature information in the echo area
+  ;; (lsp-eldoc-enable-hover t)                       ; Display signature information in the echo area
   (lsp-enable-dap-auto-configure nil)              ; Debug support
   (lsp-enable-file-watchers nil)                   ; This basically means, if you change
                                                    ; the branch, should LSP reload
@@ -1350,7 +1358,7 @@ Need to add some keybindings here:
   (lsp-modeline-workspace-status-enable t)         ; Modeline displays "LSP" when lsp-mode is enabled
   (lsp-signature-doc-lines 1)                      ; Don't raise the echo area. It's distracting
   (lsp-ui-doc-use-childframe t)                    ; Show docs for symbol at point
-  (lsp-eldoc-render-all nil)                       ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
+  ;; (lsp-eldoc-render-all nil)                       ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
 
   ;; lens
   (lsp-lens-enable nil)                            ; Optional, I don't need it
@@ -1393,7 +1401,7 @@ Need to add some keybindings here:
   ;; signature
   (lsp-signature-auto-activate t)
   (lsp-signature-render-documentation t)
-  (lsp-eldoc-hook t)
+  ;; (lsp-eldoc-hook t)
   :bind
   (:map lsp-ui-mode-map
         ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
@@ -1623,7 +1631,8 @@ Need to add some keybindings here:
   :config
   (add-to-list 'focus-mode-to-thing '(python-mode . defun))
   (add-to-list 'focus-mode-to-thing '(org-mode . org-element))
-  (add-to-list 'focus-mode-to-thing '(yaml-mode . paragraph)))
+  (add-to-list 'focus-mode-to-thing '(yaml-mode . paragraph))
+  (add-to-list 'focus-mode-to-thing '(elfeed-show-mode)))
 
 ;; Add some customizations regarding unfocused text
 (defvar my-focus-transparent-mode nil
@@ -1737,8 +1746,9 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
-  :bind (("C-c vt " . vterm)
-         ("C-c vp" . projectile-run-vterm))
+  :after prog-mode
+  :bind (("C-c v t " . vterm)
+         ("C-c v p" . projectile-run-vterm))
   :config
   (setq puni-confirm-when-delete-unbalanced-active-region nil)
   (setq puni-blink-for-sexp-manipulating t))
@@ -1869,7 +1879,7 @@ Keep lisp code always indented.
 *** treesit
 #+begin_src emacs-lisp
 (use-package treesit
-  :straight t
+  :straight (:type built-in)
   :mode (("\\.tsx\\'" . tsx-ts-mode)
          ("\\.py\\'" . python-ts-mode)
          ("\\.cmake\\'" . cmake-ts-mode)
@@ -1895,7 +1905,6 @@ Keep lisp code always indented.
     (interactive)
     (dolist (grammar
              '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-               (bash "https://github.com/tree-sitter/tree-sitter-bash")
                (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
                (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
                (kotlin "https://github.com/fwcd/tree-sitter-kotlin")
@@ -1906,7 +1915,7 @@ Keep lisp code always indented.
                (make "https://github.com/alemuller/tree-sitter-make")
                (elisp "https://github.com/Wilfred/tree-sitter-elisp")
                (cmake "https://github.com/uyha/tree-sitter-cmake")
-               (c "https://github.com/tree-sitter/tree-sitter-c")
+               ;; (c "https://github.com/tree-sitter/tree-sitter-c")
                (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
                (objc "https://github.com/tree-sitter-grammars/tree-sitter-objc")
                (toml "https://github.com/tree-sitter/tree-sitter-toml")
@@ -3044,7 +3053,10 @@ position and resume whenever the same video is played again (read [[https://unix
          ("s" . elfeed-show-save)
          ("b" . elfeed-show-bookmark)
          ("r" . elfeed-show-refresh)
-         ("h" . elfeed-show-visit-html-file))
+         ("h" . elfeed-show-visit-html-file)
+         ;; For navigation
+         ("C-j" . forward-paragraph)
+         ("C-k" . backward-paragraph))
   :custom
   ((elfeed-search-title-min-width 70)
    (elfeed-search-title-max-width 140)
@@ -3669,20 +3681,6 @@ Use hnread to show HN threads for a URL at point
 (use-package dirvish
   :straight t
   :after dired
-  :init
-  (dirvish-override-dired-mode)
-  :custom
-  (dirvish-attributes '(subtree-state file-size vc-state))
-  ;; (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
-  ;;  '(("r" "~/work/repos"   "Repos (work)")
-  ;;    ("b" "~/sync/blog"    "Blog")))
-  :config
-  (setq dirvish-side-width 40)
-  (setq dired-omit-files "^\\.?#\\|^\\.$\\|^\\.\\.$\\|^\\.")
-  (setq dired-omit-mode t)
-  ;; (setq dired-listing-switches "-ahlv")
-  (setq dired-listing-switches "-l")
-  ;; (setq dirvish-attributes '(vc-state subtree-state all-the-icons collapse git-msg file-time file-size))
   :bind (("C-c a d" . dirvish-side)
          :map
          dirvish-mode-map ; Dirvish inherits `dired-mode-map'
@@ -3702,7 +3700,50 @@ Use hnread to show HN threads for a URL at point
          ("M-t" . dirvish-layout-toggle)
          ("M-s" . dirvish-setup-menu)
          ("M-e" . dirvish-emerge-menu)
-         ("M-j" . dirvish-fd-jump)))
+         ("M-j" . dirvish-fd-jump))
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-attributes '(subtree-state file-size vc-state))
+  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+   '(("r" "~/work/repos"   "Repos (work)")
+     ("b" "~/sync/blog"    "Blog")
+     ("m" "/Volumes/MC-101/" "MC-101")))
+  :config
+  (setq dirvish-side-width 40)
+  (setq dired-omit-files "^\\.?#\\|^\\.$\\|^\\.\\.$\\|^\\.")
+  (setq dired-omit-mode t)
+  ;; (setq dired-listing-switches "-ahlv")
+  (setq dired-listing-switches "-l"))
+#+end_src
+*** timidity (midi)
+Play midi files from within dir buffers
+#+begin_src emacs-lisp
+(defun my/dired-play-midi ()
+  "Play MIDI file at point with timidity."
+  (interactive)
+  (let ((file (dired-get-file-for-visit)))
+    (if (string-match-p "\\.mid\\'" file)
+        (progn
+          (start-process "timidity" nil "timidity" "-Od" file)
+          (message "Playing MIDI: %s" (file-name-nondirectory file)))
+      (message "Not a MIDI file"))))
+
+(with-eval-after-load 'dired
+  (define-key dired-mode-map (kbd "C-c p") #'my/dired-play-midi))
+
+(defun my/kill-timidity ()
+  "Kill all running timidity processes."
+  (interactive)
+  (let ((killed 0))
+    (dolist (proc (process-list))
+      (when (string-match-p "timidity" (process-name proc))
+        (delete-process proc)
+        (setq killed (1+ killed))))
+    (message "Killed %d timidity process%s" killed (if (= killed 1) "" "es"))))
+    
+(with-eval-after-load 'dired
+  (define-key dired-mode-map (kbd "C-c k") #'my/kill-timidity))
 #+end_src
 ** recentf
 #+begin_src emacs-lisp
@@ -3822,12 +3863,23 @@ Use hnread to show HN threads for a URL at point
 #+end_src
 * Applications
 ** AI
+*** mcp.el
+#+begin_src emacs-lisp
+(use-package mcp
+  :straight t
+  :after gptel
+  :custom (mcp-hub-servers
+           `(("filesystem" . (:command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "~/repos/")))))
+  :config (require 'mcp-hub))
+#+end_src
 *** gptel
 #+begin_src emacs-lisp
 (use-package gptel
   :straight t
   :commands (gptel gptel-send)
-  :bind (("M-g ä" . #'gptel)
+  :bind (("M-g '" . #'gptel)
+         ("M-g :" . #'gptel-rewrite)
+         ("M-g K" . #'gptel-abort)
          ("M-g ö" . #'gptel-send))
   :custom
   (gptel-default-mode 'org-mode)
@@ -3836,7 +3888,20 @@ Use hnread to show HN threads for a URL at point
   ;; ChatGPT
   ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
   ;; Anthropic / Claude 3
+  (gptel-make-anthropic "Claude-thinking" ;Any name you want
+  :key (password-store-get "emacs/anthropic-claude3")
+  :stream t
+  :models '(claude-sonnet-4-20250514 claude-3-7-sonnet-20250219)
+  :request-params '(:thinking (:type "enabled" :budget_tokens 2048)
+                    :max_tokens 4096))
 
+  ;; Required for mcp integration
+  (require 'gptel-integrations)
+  (setq mcp-hub-servers nil)
+  (setq mcp-hub-servers '(("filesystem" :command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "/Users/I748851/repos/" "/Volumes/MC-101/ROLAND"))
+                          ("shell" :command "npx" :args ("mcp-shell"))
+                          ("sequential-thinking" :command "npx" :args ("-y" "@modelcontextprotocol/server-sequential-thinking"))))
+  
   ;; Enable expert commands
   (setq gptel-expert-commands t)
 
@@ -3845,11 +3910,11 @@ Use hnread to show HN threads for a URL at point
 
   ;; Add system messages
   (add-to-list 'gptel-directives
-             '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
- (add-to-list 'gptel-directives
+               '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
+  (add-to-list 'gptel-directives
              '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
   (add-to-list 'gptel-directives
-             '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
+               '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
 
 When I provide you with the high-level topic and overall direction for a new blog post, your first step is to <STRUCTURE_PLANNING>:
 
@@ -3882,12 +3947,33 @@ Most importantly, your outputs should reflect the same quality, tone, and brand 
     :stream t
     :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
 
+  ;; gemini
+  (gptel-make-gemini "Gemini" :key (password-store-get "emacs/gemini-api") :stream t)
+
+  ;; openweb-ui
+  (gptel-make-openai "OpenWebUI"
+    :protocol "http"
+    :host "localhost:3000"  ; Replace with your OpenWebUI host/port
+    :endpoint "/api/chat/completions"
+    :stream t
+    :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
+    :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4-sonnet")
+    :request-params '(:parallel_tool_calls t))
+  
   ;; OPTIONAL configuration
   (setq gptel-backend (gptel-make-ollama "Ollama"
                         :host "localhost:11434"
                         :stream t
                         :models '("llama3" "huggingface.co/unsloth/Qwen3-30B-A3B-GGUF:latest" "qwen3:14b" "qwen3:8b" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
-        ;; gptel-model "deepseek-v3"))
+  ;; (setq gptel-backend (gptel-make-openai "OpenWebUI"
+  ;;                       :protocol "http"
+  ;;                       :host "localhost:3000"
+  ;;                       :endpoint "/api/chat/completions"
+  ;;                       :stream t
+  ;;                       :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
+  ;;                       :models '("sap_ai_core.gemini-2.5-pro" 
+  ;;                                "sap_ai_core.anthropic--claude-4-sonnet"))))
+;; GPTEL-model "deepseek-v3"))
 #+end_src
 *** ellama
 #+begin_src emacs-lisp
@@ -3985,6 +4071,16 @@ Most importantly, your outputs should reflect the same quality, tone, and brand 
                   ("jsfiddle.net" . js-ts-mode)
                   ("w3schools.com" . js-ts-mode)))
   (atomic-chrome-start-server))
+#+end_src
+** Reading
+*** nov.el (epub)
+#+begin_src emacs-lisp
+(use-package nov
+    :straight t
+    :defer t
+    :mode ("\\.epub\\'" . nov-mode)
+    :config
+    (setq nov-text-width 95))
 #+end_src
 * Useful
 ** exec-path-from-shell
@@ -4872,7 +4968,8 @@ Focus and swap windows
     "k" #'windmove-up
     "j" #'windmove-down
     "h" #'windmove-left
-    "l" #'windmove-right)
+    "l" #'windmove-right
+    "d" #'delete-window)
   (keymap-global-set "C-c w" +windmove-keys))
 #+end_src
 *** winner-mode
@@ -5006,6 +5103,27 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ("s-S h" . centaur-tabs-move-current-tab-to-left)
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
+#+end_src
+** Mouse
+I still use the mouse for scrolling, changing frame sizes:
+
+#+begin_src emacs-lisp
+(unless (display-graphic-p)
+  (xterm-mouse-mode 1))
+
+;; Automatically focus frame
+(setq mouse-autoselect-window t)
+
+;; Some keybindings
+(global-set-key (kbd "C-S-<wheel-up>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-<wheel-up>") 'enlarge-window)
+(global-set-key (kbd "C-S-<mouse-4>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-<mouse-4>") 'enlarge-window)
+
+(global-set-key (kbd "C-S-<wheel-down>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-<wheel-down>") 'shrink-window)
+(global-set-key (kbd "C-S-<mouse-5>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-<mouse-5>") 'shrink-window)
 #+end_src
 ** Hydra
 Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
@@ -5230,7 +5348,7 @@ Group Merge commands.
     ("r" smerge-resolve "resolve")
     ("k" smerge-kill-current "kill current"))))
 #+end_src
-*** COMMENT Hydra / smerge
+*** Hydra / smerge
 From https://github.com/dakra/dmacs/blob/nil/init.org
 
 #+begin_src emacs-lisp
