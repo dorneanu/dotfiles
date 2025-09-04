@@ -17,11 +17,11 @@
    #+end_src
 
 ** pre-init
-   :properties:
-   :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs-dev/pre-init.el
-   :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs-dev/pre-init.el
+:end:
 *** straight.el
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;;; pre-init.el --- Pre Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
 ;; straight.el options
@@ -63,9 +63,14 @@
 ;; Fixes eglot problem ("Feature provided by other file: ...")
 (straight-use-package '(project :type built-in))
 (straight-use-package '(xref :type built-in))
-    #+end_src
+
+;; Force reinstall problematic packages
+(straight-use-package '(transient :type git :host github :repo "magit/transient"))
+(straight-use-package '(magit :type git :host github :repo "magit/magit")) 
+(straight-use-package '(rg :type git :host github :repo "dajva/rg.el"))
+#+end_src
 *** COMMENT gcmh: Garbage collection
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package gcmh
   :straight t
   :diminish gcmh-mode
@@ -76,7 +81,7 @@
   ;; (setq gcmh-idle-delay 5
   ;;       gcmh-high-cons-threshold (* 16 1024 1024))  ; 16mb
   (gcmh-mode 1))
-    #+end_src
+#+end_src
 
 ** post-init: start
    :properties:
@@ -714,17 +719,128 @@
    #+RESULTS:
 
 * Programming
-  :properties:
-  :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs-dev/post-init.el
-  :end:
+:properties:
+:header-args:emacs-lisp: :tangle ~/.config/minimal-emacs-dev/post-init.el
+:end:
+** Misc
+*** treesit
+#+begin_src emacs-lisp
+(use-package treesit
+  :straight (:type built-in)
+  :demand t
+  :mode (("\\.tsx\\'" . tsx-ts-mode)
+         ("\\.py\\'" . python-ts-mode)
+         ("\\.cmake\\'" . cmake-ts-mode)
+         ("\\.go\\'" . go-ts-mode)
+         ("\\.js\\'" . typescript-ts-mode)
+         ("\\.mjs\\'" . typescript-ts-mode)
+         ("\\.mts\\'" . typescript-ts-mode)
+         ("\\.cjs\\'" . typescript-ts-mode)
+         ("\\.ts\\'" . typescript-ts-mode)
+         ("\\.jsx\\'" . tsx-ts-mode)
+         ("\\.json\\'" . json-ts-mode)
+         ("\\.yaml\\'" . yaml-ts-mode)
+         ("\\.css\\'" . css-ts-mode)
+         ("\\.yml\\'" . yaml-ts-mode)
+         ("\\.php\\'" . php-ts-mode)
+         ("\\.prisma\\'" . prisma-ts-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.mm\\'" . objc-mode)
+         ("\\.mdx\\'" . markdown-mode))
+  :preface
+  (defun os/setup-install-grammars ()
+    "Install Tree-sitter grammars if they are absent."
+    (interactive)
+    (dolist (grammar
+             '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
+               (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
+               (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
+               (kotlin "https://github.com/fwcd/tree-sitter-kotlin")
+               (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
+               (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
+               (go "https://github.com/tree-sitter/tree-sitter-go" "v0.20.0")
+               (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+               (make "https://github.com/alemuller/tree-sitter-make")
+               (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+               (cmake "https://github.com/uyha/tree-sitter-cmake")
+               ;; (c "https://github.com/tree-sitter/tree-sitter-c")
+               (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+               (objc "https://github.com/tree-sitter-grammars/tree-sitter-objc")
+               (toml "https://github.com/tree-sitter/tree-sitter-toml")
+               (php "https://github.com/tree-sitter/tree-sitter-php" "v0.22.8" "php/src" )
+               (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
+               (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
+               (prisma "https://github.com/victorhqc/tree-sitter-prisma")))
+      (add-to-list 'treesit-language-source-alist grammar)
+      ;; Only install `grammar' if we don't already have it
+      ;; installed. However, if you want to *update* a grammar then
+      ;; this obviously prevents that from happening.
+      (unless (treesit-language-available-p (car grammar))
+        (treesit-install-language-grammar (car grammar)))))
+
+  ;; Optional, but recommended. Tree-sitter enabled major modes are
+  ;; distinct from their ordinary counterparts.
+  ;;
+  ;; You can remap major modes with `major-mode-remap-alist'. Note
+  ;; that this does *not* extend to hooks! Make sure you migrate them
+  ;; also
+  ;;(dolist (mapping
+  ;;         '((python-mode . python-ts-mode)
+  ;;           (css-mode . css-ts-mode)
+  ;;           (typescript-mode . typescript-ts-mode)
+  ;;           (js-mode . typescript-ts-mode)
+  ;;           (js2-mode . typescript-ts-mode)
+  ;;           (c-mode . c-ts-mode)
+  ;;           (c++-mode . c++-ts-mode)
+  ;;           (c-or-c++-mode . c-or-c++-ts-mode)
+  ;;           (bash-mode . bash-ts-mode)
+  ;;           (css-mode . css-ts-mode)
+  ;;           (json-mode . json-ts-mode)
+  ;;           (js-json-mode . json-ts-mode)
+  ;;           (sh-mode . bash-ts-mode)
+  ;;           (sh-base-mode . bash-ts-mode)))
+  ;;  (add-to-list 'major-mode-remap-alist mapping))
+  :config
+  (os/setup-install-grammars))
+#+end_src
+*** combulate
+#+begin_src emacs-lisp
+(use-package combobulate
+  :straight t
+  :after (treesit)
+  :bind (("C-," . combobulate))
+  :preface
+  ;; You can customize Combobulate's key prefix here.
+  ;; Note that you may have to restart Emacs for this to take effect!
+  (setq combobulate-key-prefix "C-x ,")
+  ;;
+  ;; You can manually enable Combobulate with `M-x
+  ;; combobulate-mode'.
+  :hook
+  ((python-ts-mode . combobulate-mode)
+   (js-ts-mode . combobulate-mode)
+   (go-mode . go-ts-mode)
+   (html-ts-mode . combobulate-mode)
+   (css-ts-mode . combobulate-mode)
+   (yaml-ts-mode . combobulate-mode)
+   (typescript-ts-mode . combobulate-mode)
+   (json-ts-mode . combobulate-mode)
+   (tsx-ts-mode . combobulate-mode))
+  ;; Amend this to the directory where you keep Combobulate's source
+  ;; code.
+  ;;:load-path ("~/workspace/combobulate")
+  )
+#+end_src
 ** Languages
 *** golang
-#+begin_src emas-lcisp
-(use-package go-mode
-  :straight t
+#+begin_src emacs-lisp
+;;; Clean Go-ts-mode only configuration
+(use-package go-ts-mode
+  :straight (:type built-in)
   :mode "\\.go\\'"
-  :hook ((go-mode go-ts-mode) . apheleia-mode)
-  :bind (:map go-mode-map
+  :hook (go-ts-mode . apheleia-mode)
+  :bind (:map go-ts-mode-map
               ("C-c g e h" . eldoc-box-hover-mode)
               ("C-c g l e" . my-switch-to-eglot)
               ("C-c g l l" . my-switch-to-lsp)
@@ -733,7 +849,6 @@
               ("M-_" . xref-find-references)
   
               ;; TESTING
-              ;; Core testing
               ("C-c t t" . go-test-current-test)
               ("C-c t f" . go-test-current-file)
               ("C-c t p" . go-test-current-project)
@@ -761,8 +876,8 @@
               ("C-c t n" . go-test-next-error)
               ("C-c t N" . go-test-previous-error)
               
-              ;; IMPORTS (using C-c g i prefix - no conflicts!)
-              ("C-c g i a" . go-import-add)           ; Most important!
+              ;; IMPORTS
+              ("C-c g i a" . go-import-add)
               ("C-c g i r" . go-remove-unused-imports)
               ("C-c g i g" . go-goto-imports)
               ("C-c g i o" . go-organize-imports)
@@ -772,9 +887,9 @@
               ("C-c g i l" . eglot-code-action-organize-imports)
               ("C-c g i s" . lsp-organize-imports)
               
-              ;; Quick access for go-import-add (use frequently)
-              ("C-c a" . go-import-add)             ; Quick access
-              ("s-i" . go-import-add))              ; Super quick!
+              ;; Quick access
+              ("C-c a" . go-import-add)
+              ("s-i" . go-import-add))
   :custom
   (gofmt-command "goimports")
   :config
@@ -782,85 +897,56 @@
   (defun my-switch-to-eglot ()
     "Switch to eglot for the current Go buffer."
     (interactive)
-    ;; Configure and start eglot
     (add-to-list 'completion-styles 'flex)
     (setq-local eglot-debug-server-messages t)
     (setq-local eglot-events-buffer-size 0)
     (setq-local eglot-workspace-configuration
-                '(:gopls
-                  ((usePlaceholders . t))))
-
-    ;; Start eglot
+                '(:gopls ((usePlaceholders . t))))
     (eglot-ensure))
 
   (defun my-switch-to-lsp ()
     "Switch to lsp-mode for the current Go buffer."
     (interactive)
-    ;; Configure and start lsp-mode
     (add-to-list 'completion-styles 'flex)
     (setq-local lsp-log-io t)
     (setq-local lsp-idle-delay 0.1)
     (setq-local lsp-enable-snippet t)
-
-    ;; Start LSP
     (lsp-deferred)))
 
+;; Go testing
 (use-package gotest
   :straight t
-  :after go-mode
+  :after go-ts-mode
   :config
-  ;; Configure go-test behavior
-  (setq go-test-verbose t)          ; Show verbose output by default
-  (setq go-test-args "-v -race"))   ; Default test arguments
+  (setq go-test-verbose t)          
+  (setq go-test-args "-v -race"))
+
+;; Go additional packages
 (use-package go-guru
   :straight t
-  :after go-mode
-  :hook
-  (go-mode . go-guru-hl-identifier-mode))
+  :after go-ts-mode
+  :hook (go-ts-mode . go-guru-hl-identifier-mode))
 
 (use-package flycheck-golangci-lint
   :straight t
-  :after go-mode
-  :hook
-  (go-mode . flycheck-golangci-lint-setup))
-
-;; (use-package go-eldoc
-;;   :straight t
-;;   :after go-mode
-;;   :hook
-;;   (go-mode . go-eldoc-setup))
+  :after go-ts-mode
+  :hook (go-ts-mode . flycheck-golangci-lint-setup))
 
 (use-package go-tag
   :straight t
-  :after go-mode
-  :bind (:map go-mode-map
+  :after go-ts-mode
+  :bind (:map go-ts-mode-map
               ("C-c t a" . go-tag-add)
               ("C-c t r" . go-tag-remove))
   :init (setq go-tag-args (list "-transform" "camelcase")))
 
-;; Not needed anymore: Use eglot-clode-actions > Fill <struct>
-;; (use-package go-fill-struct
-;;   :straight t
-;;   :defer t
-;;   ;; :bind (:map go-mode-map
-;;   ;;             ("C-c f" . go-fill-struct))
-;;   )
-
-;; (use-package go-imenu
-;;   :straight t
-;;   :config
-;;   (add-hook 'go-mode-hook 'go-imenu-setup))
-
 (use-package go-impl
   :straight t
-  :after go-mode)
+  :after go-ts-mode)
 
 (use-package go-playground
   :straight t
-  :after go-mode
-  ;; :bind (:map go-mode-map
-  ;;             ("C-c p" . go-playground))
-  )
+  :after go-ts-mode)
 #+end_src
 
 **** Ginkgo
@@ -870,7 +956,7 @@
   :defer t)
 #+end_src
 *** python
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package python
   :defer t
   :straight t
@@ -890,9 +976,9 @@
 
 ;; Activate eglot for python-mode
 ;; (add-hook 'python-mode-hook 'eglot-ensure)
-    #+end_src
+#+end_src
 **** pytest
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package pytest
   :straight t
   :after (python-mode)
@@ -915,9 +1001,9 @@
               ("C-c t M" . pytest-pdb-module))   ; test module with pdb
   :config
   (add-to-list 'pytest-project-root-files "setup.cfg"))
-     #+end_src
+#+end_src
 **** poetry
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package poetry
   :defer t
   :straight t
@@ -926,18 +1012,18 @@
   :config
   (setq poetry-tracking-strategy 'switch-buffer)
   (add-hook 'python-mode-hook #'poetry-tracking-mode))
-     #+end_src
+#+end_src
 
 **** pip-requirements
-     This package will bring a new major mode for editing pip requirements.
-     #+begin_src emacs-lisp
+This package will bring a new major mode for editing pip requirements.
+#+begin_src emacs-lisp
 (use-package pip-requirements
   :defer t
   :straight t)
-     #+end_src
+#+end_src
 **** pipenv
-     This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
-     #+begin_src emacs-lisp
+This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
+#+begin_src emacs-lisp
 (use-package pipenv
   :defer t
   :straight t
@@ -949,10 +1035,10 @@
              pipenv-uninstall)
   :hook (python-mode . pipenv-mode)
   :init (setq pipenv-with-projectile nil))
-     #+end_src
+#+end_src
 **** pyenv
-     This integrates ~pyenv~ into ~python-mode~.
-     #+begin_src emacs-lisp
+This integrates ~pyenv~ into ~python-mode~.
+#+begin_src emacs-lisp
 (use-package pyenv
   :defer t
   :straight t
@@ -961,18 +1047,18 @@
   (add-to-list 'global-mode-string
                '(pyenv-virtual-env-name (" venv:" pyenv-virtual-env-name " "))
                'append))
-     #+end_src
+#+end_src
 **** Pippel
-     List, install, upgrade packages with pip
-     #+BEGIN_SRC emacs-lisp
+List, install, upgrade packages with pip
+#+BEGIN_SRC emacs-lisp
 ;; package-list-packages like interface for python packages
 (use-package pippel
   :straight t
   :defer t)
-     #+END_SRC
+#+END_SRC
 **** pyenv-mode
-     Let’s also add a mode for ~pyenv~:
-     #+begin_src emacs-lisp
+Let’s also add a mode for ~pyenv~:
+#+begin_src emacs-lisp
 (use-package pyenv-mode
   :defer t
   :after python
@@ -982,68 +1068,68 @@
   (setenv "WORKON_HOME" "~/.pyenv/versions/")
   :if (executable-find "pyenv")
   :commands (pyenv-mode-versions))
-     #+end_src
+#+end_src
 **** pyimport
-     This package automatically imports packages we forgot to import.
-     #+begin_src emacs-lisp
+This package automatically imports packages we forgot to import.
+#+begin_src emacs-lisp
 (use-package pyimport
   :defer t
   :straight t)
-     #+end_src
+#+end_src
 **** py-isort
-     On the other hand, this one sorts our imports to make them more readable.
-     #+begin_src emacs-lisp
+On the other hand, this one sorts our imports to make them more readable.
+#+begin_src emacs-lisp
 (use-package py-isort
   :defer t
   :straight t)
-     #+end_src
+#+end_src
 **** blacken
-     Blacken uses the ~black~ formatter backend to format Python buffers.
-     #+begin_src emacs-lisp
+Blacken uses the ~black~ formatter backend to format Python buffers.
+#+begin_src emacs-lisp
 (use-package blacken
   :defer t
   :straight t
   :init
   (add-hook 'python-mode-hook #'blacken-mode))
-     #+end_src
+#+end_src
 **** COMMENT sphinx-doc
-     This generates Python documentation that is meant to be compatible
-     with Sphinx, a documentation generation for Python.
-     #+begin_src emacs-lisp
+This generates Python documentation that is meant to be compatible
+with Sphinx, a documentation generation for Python.
+#+begin_src emacs-lisp
 (use-package sphinx-doc
   :defer t
   :straight t
   :init
   (add-hook 'python-mode-hook #'sphinx-doc-mode))
-     #+end_src
+#+end_src
 **** COMMENT cython-mode
-     Cython is a Python to C compiler. It also introduces the extended
-     Cython programming language which makes writing C for Python easier.
-     This package is a major mode for the Cython programming language.
-     #+begin_src emacs-lisp
+Cython is a Python to C compiler. It also introduces the extended
+Cython programming language which makes writing C for Python easier.
+This package is a major mode for the Cython programming language.
+#+begin_src emacs-lisp
 (use-package cython-mode
   :defer t
   :straight t
   :mode "\\.p\\(yx\\|x[di]\\)\\'"
   :config
   (setq cython-default-compile-format "cython -a %s"))
-     #+end_src
+#+end_src
 **** COMMENT flycheck-cython
-     Flycheck can also be enabled for Cython:
-     #+begin_src emacs-lisp
+Flycheck can also be enabled for Cython:
+#+begin_src emacs-lisp
 (use-package flycheck-cython
   :defer t
   :straight t
   :after cython-mode)
-     #+end_src
+#+end_src
 *** Makefiles
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun my/local-tab-indent ()
   (setq-local indent-tabs-mode 1))
 (add-hook 'makefile-mode-hook #'my/local-tab-indent)
-    #+end_src
+#+end_src
 *** Elisp
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package elisp-mode
   :straight (:type built-in)
   :bind (:map emacs-lisp-mode-map
@@ -1068,9 +1154,9 @@
         (save-match-data
           (re-search-forward "[[:space:]\n]*" nil t)
           (insert eval-print-as-comment-prefix))))))
-    #+end_src
+#+end_src
 *** PlantUML
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package plantuml-mode
   :straight t
   :defer t
@@ -1083,43 +1169,43 @@
         plantuml-jar-path "~/.local/bin/plantuml.jar"
         org-plantuml-jar-path "~/.local/bin/plantuml.jar"
         plantuml-indent-level 4))
-    #+end_src
+#+end_src
 *** Mermaid
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package mermaid-mode
   :straight t)
-    #+end_src
+#+end_src
 *** nixOS
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package nix-mode
   :straight t
   :mode "\\.nix\\'")
-    #+end_src
+#+end_src
 *** docker
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package docker
   :straight t
   :diminish
   :bind (("C-x C-." . docker)))
-    #+end_src
+#+end_src
 
 **** docker-compose-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package docker-compose-mode
   :straight t
   :bind (:map docker-compose-mode-map
               ("C-c d" . docker-compose))
   :mode "docker-compose.*\.yml\\'")
-     #+end_src
+#+end_src
 
 **** dockerfile-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package dockerfile-mode
   :straight t
   :mode "Dockerfile[a-zA-Z.-]*\\'")
-     #+end_src
+#+end_src
 *** markdown
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://github.com/dakra/dmacs/blob/nil/init.org
 (use-package markdown-mode
   :mode (("/itsalltext/.*\\(gitlab\\|github\\).*\\.txt$" . gfm-mode)
@@ -1148,17 +1234,17 @@
     (add-to-list 'markdown-code-lang-modes x))
   ;; use pandoc with source code syntax highlighting to preview markdown (C-c C-c p)
   (setq markdown-command "pandoc -s --highlight-style pygments -f markdown_github -t html5"))
-    #+end_src
+#+end_src
 *** Configs
 **** Toml
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package toml-mode
   :straight t
   :defer t
   :mode "/\\(Cargo.lock\\|\\.cargo/config\\)\\'")
-     #+end_src
+#+end_src
 **** Yaml
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package yaml-mode
   :straight t
   :defer t
@@ -1171,11 +1257,11 @@
 ;;   :straight t
 ;;   :hook (yaml-mode . yaml-pro-mode)
 ;;   :hook (yaml-ts-mode . yaml-pro-ts-mode))
-     #+end_src
+#+end_src
 
 *** Web
 **** web-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package web-mode
   :straight t
   :defer t
@@ -1235,9 +1321,9 @@
         web-mode-css-indent-offset 2
         web-mode-enable-auto-pairing t
         web-mode-enable-css-colorization t))
-     #+end_src
+#+end_src
 **** emmet-mode
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package emmet-mode
   :straight t
   :defer t
@@ -1249,10 +1335,10 @@
          (web-mode  . emmet-mode))
   :bind (:map emmet-mode-keymap
               ("M-RET" . 'emmet-expand-yas)))
-     #+end_src
+#+end_src
 ** LSP
 *** eglot
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package eglot
   :ensure nil
   :bind (("C-c l e " . eglot)
@@ -1296,10 +1382,10 @@
 
 ;; Add config for markdown
 (add-hook 'markdown-mode-hook #'eglot-ensure)
-    #+end_src
+#+end_src
 *** eldoc
-    Need to add some keybindings here:
-    #+begin_src emacs-lisp
+Need to add some keybindings here:
+#+begin_src emacs-lisp
 (use-package eldoc
   :straight t
   :hook (prog-mode . eldoc-mode)
@@ -1326,9 +1412,9 @@
         eldoc-box-clear-with-C-g t
         eldoc-box-max-pixel-width 800
         eldoc-box-max-pixel-height 600))
-    #+end_src
+#+end_src
 *** lsp-mode
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lsp-mode
   :ensure nil
   :defer t
@@ -1404,7 +1490,7 @@
   ;; semantic
   (lsp-semantic-tokens-enable nil)                 ; Related to highlighting, and we defer to treesitter
   )
-    #+end_src
+#+end_src
 *** lsp-ui
 #+begin_src emacs-lisp
 (use-package lsp-ui
@@ -1481,21 +1567,21 @@
 #+RESULTS:
 : my-reload-eglot
 *** lsp-treemacs
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lsp-treemacs
   :straight t
   :defer t
   :bind (("M-g 8" . lsp-treemacs-symbols)))
-    #+end_src
+#+end_src
 *** lsp-pyright
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lsp-pyright
   :straight t
   :custom (lsp-pyright-langserver-command "pyright") ;; or basedpyright
   )
-    #+end_src
+#+end_src
 *** lsp-tailwindcss
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lsp-tailwindcss
   :straight (:type git :host github :repo "merrickluo/lsp-tailwindcss")
   :init (setq lsp-tailwindcss-add-on-mode t)
@@ -1515,26 +1601,26 @@
              js-ts-mode))
     (add-to-list 'lsp-tailwindcss-major-modes tw-major-mode))
   )
-    #+end_src
+#+end_src
 
 *** lsp-eslint
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package lsp-eslint
   :straight (:type built-in)
   :after lsp-mode)
-    #+end_src
+#+end_src
 *** consult-lsp
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package consult-lsp
   :straight t
   :after consult lsp-mode
   :bind (:map lsp-mode-map
               ([remap xref-find-apropos] . consult-lsp-symbols)))
-    #+end_src
+#+end_src
 
 ** Snippets
 *** yasnippet
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package yasnippet
   :straight t
   :demand t
@@ -1579,10 +1665,10 @@
   (defun +cape-yasnippet--setup-h ()
     (when (bound-and-true-p yas-minor-mode)
       (add-to-list 'completion-at-point-functions #'yasnippet-capf))))
-    #+end_src
+#+end_src
 
 *** yankpad
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
  (use-package yankpad
    :straight t
    :bind
@@ -1591,7 +1677,7 @@
    (setq yankpad-file (concat org-directory "/yankpad.org"))
    (setq yas-wrap-around-region t)
    (yankpad-reload))
-    #+end_src
+#+end_src
 
 ** Debugging
 *** dape
@@ -1646,7 +1732,7 @@
 #+end_src
 ** Utilities
 *** apheleia
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package apheleia
   :straight t
   :bind (("C-c f f" . apheleia-format-buffer))
@@ -1667,9 +1753,9 @@
   (setf (alist-get 'gofmt apheleia-formatters)
         '("gofmt" "-s"))
   (apheleia-global-mode))
-    #+end_src
+#+end_src
 *** flycheck
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package flycheck
   :straight t
   :hook (prog-mode . flycheck-mode))
@@ -1677,22 +1763,22 @@
 (use-package consult-flycheck
   :straight t
   :bind (("M-g f" . consult-flycheck)))
-    #+end_src
+#+end_src
 *** highlight-indent-guides
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package highlight-indent-guides
   :straight t
   :hook ((prog-mode yaml-ts-mode yaml-mode yaml-pro-mode) . highlight-indent-guides-mode)
   :custom (highlight-indent-guides-method 'character))
-    #+end_src
+#+end_src
 *** display-line-numbers
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package display-line-numbers
   :defer t
   :hook ((prog-mode . display-line-numbers-mode)))
-    #+end_src
+#+end_src
 *** focus-mode
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package focus
   :straight t
   :bind (:map focus-mode-map
@@ -1724,14 +1810,14 @@
   (setq my-focus-transparent-mode (not my-focus-transparent-mode))
   (message "Focus transparency %s"
            (if my-focus-transparent-mode "enabled" "disabled")))
-    #+end_src
+#+end_src
 *** hl-line-mode
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package hl-line
   :hook ((prog-mode markdown-mode yaml-ts-mode yaml-mode yaml-pro-mode gptel-mode org-mode) . hl-line-mode))
-    #+end_src
+#+end_src
 *** hl-todo
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Highlight TODO keywords
 (use-package hl-todo
   :straight (:host github :repo "tarsius/hl-todo")
@@ -1745,16 +1831,16 @@
       ("INFO"  . "#0e9030")
       ("TWEAK" . "#fe9030")
       ("PERF"  . "#e09030"))))
-    #+end_src
+#+end_src
 *** breadcrumb
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package breadcrumb
   :straight t
   :hook ((go-mode org-mode c-mode c++-mode c-ts-mode c++-ts-mode python-mode python-ts-mode rust-mode rust-ts-mode sh-mode bash-ts-mode) . breadcrumb-local-mode))
-    #+end_src
+#+end_src
 *** aggressive-indent
-    Keep lisp code always indented.
-    #+begin_src emacs-lisp
+Keep lisp code always indented.
+#+begin_src emacs-lisp
 (use-package aggressive-indent
   :straight t
   :commands (aggressive-indent-mode aggressive-indent-global-mode)
@@ -1763,9 +1849,9 @@
   ;; (clojurescript-mode . aggressive-indent-mode)
   ;; (emacs-lisp-mode . aggressive-indent-mode)
   (lisp-mode . aggressive-indent-mode))
-    #+end_src
+#+end_src
 *** wakatime
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package wakatime-mode
   :straight t
   :config
@@ -1773,9 +1859,9 @@
    wakatime-python-bin "~/.pyenv/versions/emacs/bin/python"
    wakatime-cli-path "~/.pyenv/versions/emacs/bin/wakatime")
   (global-wakatime-mode))
-    #+end_src
+#+end_src
 *** treemacs
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package treemacs
   :straight t
   :bind (("M-g 9" . treemacs))
@@ -1809,10 +1895,10 @@
 (use-package treemacs-magit
   :after treemacs magit
   :straight t)
-    #+end_src
+#+end_src
 ** Shells
 *** vterm
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package vterm
   :straight t
   :after prog-mode
@@ -1821,24 +1907,24 @@
   :config
   (setq puni-confirm-when-delete-unbalanced-active-region nil)
   (setq puni-blink-for-sexp-manipulating t))
-    #+end_src
+#+end_src
 ** VC
 *** magit
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package magit
   :bind (("C-c a v m" . magit))
   :straight t)
-    #+end_src
+#+end_src
 *** COMMENT magit-todos
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package magit-todos
   :straight t
   :after magit
   :config
   (magit-todos-mode))
-    #+end_src
+#+end_src
 *** forge
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package forge
   :straight t
   :after magit)
@@ -1846,10 +1932,10 @@
 ;;(push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
 ;;       "github.wdf.sap.corp" forge-github-repository)
 ;;
-    #+end_src
+#+end_src
 
 *** diff-hl
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package diff-hl
   :straight t
   :hook (prog-mode . diff-hl-mode)
@@ -1867,9 +1953,9 @@
   :hook
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh))
-    #+end_src
+#+end_src
 *** ediff
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package ediff
   :straight (:type built-in)
   :defer t
@@ -1884,9 +1970,9 @@
    ;; Split ediff windows horizontally by default
    ediff-split-window-function 'split-window-horizontally
    ediff-merge-split-window-function 'split-window-horizontally))
-    #+end_src
+#+end_src
 *** browse-at-remote
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package browse-at-remote
   :straight t
   :bind (("C-c go" . browse-at-remote)
@@ -1894,15 +1980,15 @@
   :config
   (add-to-list 'browse-at-remote-remote-type-regexps
                '(:host "github\\.wdf\\.sap\\.corp" :type "github")))
-    #+end_src
+#+end_src
 *** pr-review
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package pr-review
   :straight t
   :after magit)
-    #+end_src
+#+end_src
 *** consult-gh
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package consult-gh
   :straight (:host github :repo "armindarvish/consult-gh" :branch "main")
   ;; :after embark-consult
@@ -1943,116 +2029,7 @@
   :straight t
   :config
   (consult-gh-embark-mode +1))
-    #+end_src
-** Misc
-*** treesit
-    #+begin_src emacs-lisp
-(use-package treesit
-  :straight (:type built-in)
-  :mode (("\\.tsx\\'" . tsx-ts-mode)
-         ("\\.py\\'" . python-ts-mode)
-         ("\\.cmake\\'" . cmake-ts-mode)
-         ("\\.go\\'" . go-ts-mode)
-         ("\\.js\\'" . typescript-ts-mode)
-         ("\\.mjs\\'" . typescript-ts-mode)
-         ("\\.mts\\'" . typescript-ts-mode)
-         ("\\.cjs\\'" . typescript-ts-mode)
-         ("\\.ts\\'" . typescript-ts-mode)
-         ("\\.jsx\\'" . tsx-ts-mode)
-         ("\\.json\\'" . json-ts-mode)
-         ("\\.yaml\\'" . yaml-ts-mode)
-         ("\\.css\\'" . css-ts-mode)
-         ("\\.yml\\'" . yaml-ts-mode)
-         ("\\.php\\'" . php-ts-mode)
-         ("\\.prisma\\'" . prisma-ts-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.mm\\'" . objc-mode)
-         ("\\.mdx\\'" . markdown-mode))
-  :preface
-  (defun os/setup-install-grammars ()
-    "Install Tree-sitter grammars if they are absent."
-    (interactive)
-    (dolist (grammar
-             '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-               (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
-               (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
-               (kotlin "https://github.com/fwcd/tree-sitter-kotlin")
-               (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
-               (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
-               (go "https://github.com/tree-sitter/tree-sitter-go" "v0.20.0")
-               (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-               (make "https://github.com/alemuller/tree-sitter-make")
-               (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-               (cmake "https://github.com/uyha/tree-sitter-cmake")
-               ;; (c "https://github.com/tree-sitter/tree-sitter-c")
-               (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-               (objc "https://github.com/tree-sitter-grammars/tree-sitter-objc")
-               (toml "https://github.com/tree-sitter/tree-sitter-toml")
-               (php "https://github.com/tree-sitter/tree-sitter-php" "v0.22.8" "php/src" )
-               (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
-               (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
-               (prisma "https://github.com/victorhqc/tree-sitter-prisma")))
-      (add-to-list 'treesit-language-source-alist grammar)
-      ;; Only install `grammar' if we don't already have it
-      ;; installed. However, if you want to *update* a grammar then
-      ;; this obviously prevents that from happening.
-      (unless (treesit-language-available-p (car grammar))
-        (treesit-install-language-grammar (car grammar)))))
-
-  ;; Optional, but recommended. Tree-sitter enabled major modes are
-  ;; distinct from their ordinary counterparts.
-  ;;
-  ;; You can remap major modes with `major-mode-remap-alist'. Note
-  ;; that this does *not* extend to hooks! Make sure you migrate them
-  ;; also
-  ;;(dolist (mapping
-  ;;         '((python-mode . python-ts-mode)
-  ;;           (css-mode . css-ts-mode)
-  ;;           (typescript-mode . typescript-ts-mode)
-  ;;           (js-mode . typescript-ts-mode)
-  ;;           (js2-mode . typescript-ts-mode)
-  ;;           (c-mode . c-ts-mode)
-  ;;           (c++-mode . c++-ts-mode)
-  ;;           (c-or-c++-mode . c-or-c++-ts-mode)
-  ;;           (bash-mode . bash-ts-mode)
-  ;;           (css-mode . css-ts-mode)
-  ;;           (json-mode . json-ts-mode)
-  ;;           (js-json-mode . json-ts-mode)
-  ;;           (sh-mode . bash-ts-mode)
-  ;;           (sh-base-mode . bash-ts-mode)))
-  ;;  (add-to-list 'major-mode-remap-alist mapping))
-  :config
-  (os/setup-install-grammars))
-    #+end_src
-*** combulate
-    #+begin_src emacs-lisp
-(use-package combobulate
-  :straight t
-  :after (treesit)
-  :bind (("C-," . combobulate))
-  :preface
-  ;; You can customize Combobulate's key prefix here.
-  ;; Note that you may have to restart Emacs for this to take effect!
-  (setq combobulate-key-prefix "C-x ,")
-  ;;
-  ;; You can manually enable Combobulate with `M-x
-  ;; combobulate-mode'.
-  :hook
-  ((python-ts-mode . combobulate-mode)
-   (js-ts-mode . combobulate-mode)
-   (go-mode . go-ts-mode)
-   (html-ts-mode . combobulate-mode)
-   (css-ts-mode . combobulate-mode)
-   (yaml-ts-mode . combobulate-mode)
-   (typescript-ts-mode . combobulate-mode)
-   (json-ts-mode . combobulate-mode)
-   (tsx-ts-mode . combobulate-mode))
-  ;; Amend this to the directory where you keep Combobulate's source
-  ;; code.
-  ;;:load-path ("~/workspace/combobulate")
-  )
-    #+end_src
+#+end_src
 * DevOps
 ** Kubel (Kubernetes interface)
    #+BEGIN_SRC emacs-lisp
@@ -3943,117 +3920,117 @@ If prefix ARG, copy instead of move."
 * Applications
 ** AI
 *** mcp.el
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package mcp
   :straight t
   :after gptel
   :custom (mcp-hub-servers
            `(("filesystem" . (:command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "~/repos/")))))
   :config (require 'mcp-hub))
-    #+end_src
+#+end_src
 *** gptel
-    #+begin_src emacs-lisp
-(use-package gptel
-  :straight t
-  :commands (gptel gptel-send)
-  :bind (("M-g '" . #'gptel)
-         ("M-g :" . #'gptel-rewrite)
-         ("M-g K" . #'gptel-abort)
-         ("M-g ö" . #'gptel-send))
-  :custom
-  (gptel-default-mode 'org-mode)
-  ;; (gptel-model "gpt-4")
-  :config
-  ;; ChatGPT
-  ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
-  ;; Anthropic / Claude 3
-  (gptel-make-anthropic "Claude-thinking" ;Any name you want
-  :key (password-store-get "emacs/anthropic-claude3")
-  :stream t
-  :models '(claude-sonnet-4-20250514 claude-3-7-sonnet-20250219)
-  :request-params '(:thinking (:type "enabled" :budget_tokens 2048)
-                    :max_tokens 4096))
+#+begin_src emacs-lisp
+    (use-package gptel
+      :straight t
+      :commands (gptel gptel-send)
+      :bind (("M-g '" . #'gptel)
+             ("M-g C-;" . #'gptel-rewrite)
+             ("M-g ;" . #'gptel-send)
+             ("M-g K" . #'gptel-abort))
+      :custom
+      (gptel-default-mode 'org-mode)
+      ;; (gptel-model "gpt-4")
+      :config
+      ;; ChatGPT
+      ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
+      ;; Anthropic / Claude 3
+      (gptel-make-anthropic "Claude-thinking" ;Any name you want
+      :key (password-store-get "emacs/anthropic-claude3")
+      :stream t
+      :models '(claude-sonnet-4-20250514 claude-3-7-sonnet-20250219)
+      :request-params '(:thinking (:type "enabled" :budget_tokens 2048)
+                        :max_tokens 4096))
 
-  ;; Required for mcp integration
-  (require 'gptel-integrations)
-  (setq mcp-hub-servers nil)
-  (setq mcp-hub-servers '(("filesystem" :command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "/Users/I748851/repos/" "/Volumes/MC-101/ROLAND"))
-                          ("shell" :command "npx" :args ("mcp-shell"))
-                          ("sequential-thinking" :command "npx" :args ("-y" "@modelcontextprotocol/server-sequential-thinking"))))
+      ;; Required for mcp integration
+      (require 'gptel-integrations)
+      (setq mcp-hub-servers nil)
+      (setq mcp-hub-servers '(("filesystem" :command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "/Users/I748851/repos/"))
+                              ("shell" :command "npx" :args ("mcp-shell"))
+                              ("sequential-thinking" :command "npx" :args ("-y" "@modelcontextprotocol/server-sequential-thinking"))))
   
-  ;; Enable expert commands
-  (setq gptel-expert-commands t)
+      ;; Enable expert commands
+      (setq gptel-expert-commands t)
 
-  ;; auto-scrolling
-  (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+      ;; auto-scrolling
+      (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
 
-  ;; Add system messages
-  (add-to-list 'gptel-directives
-               '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
-  (add-to-list 'gptel-directives
-             '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
-  (add-to-list 'gptel-directives
-               '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
+      ;; Add system messages
+      (add-to-list 'gptel-directives
+                   '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
+      (add-to-list 'gptel-directives
+                 '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
+      (add-to-list 'gptel-directives
+                   '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
 
-When I provide you with the high-level topic and overall direction for a new blog post, your first step is to <STRUCTURE_PLANNING>:
+    When I provide you with the high-level topic and overall direction for a new blog post, your first step is to <STRUCTURE_PLANNING>:
 
-- Propose a logical structure for the post, including key sections and their purpose. For example: Introduction, Background, Core Argument, Counterpoints, Conclusion.
-- For each section, provide a brief description of the type of content that should be included, and the overall flow you recommend.
-- Suggest appropriate subheadings that capture the essence of each section.
-- Estimate the ideal word count range for the full post and each section.
-- Review the plan with me, gather any clarifications or adjustments, and finalize the structure.
+    - Propose a logical structure for the post, including key sections and their purpose. For example: Introduction, Background, Core Argument, Counterpoints, Conclusion.
+    - For each section, provide a brief description of the type of content that should be included, and the overall flow you recommend.
+    - Suggest appropriate subheadings that capture the essence of each section.
+    - Estimate the ideal word count range for the full post and each section.
+    - Review the plan with me, gather any clarifications or adjustments, and finalize the structure.
 
-Once the structure is approved, you will then <CONTENT_GENERATION>:
+    Once the structure is approved, you will then <CONTENT_GENERATION>:
 
-- For each section, provide a bulleted list of key points, facts, or ideas that should be covered.
-- Review the tone, language, and writing style used in my previous blog posts, and craft sample sentences for each bullet point that align with that established brand voice.
-- Aim to strike a balance between providing directive guidance (sample sentences) and leaving room for me to personalize the content in my own words.
-- Ensure the overall content flows logically from one section to the next, with smooth transitions.
-- Review the full draft with me, gather feedback, and refine as needed.
+    - For each section, provide a bulleted list of key points, facts, or ideas that should be covered.
+    - Review the tone, language, and writing style used in my previous blog posts, and craft sample sentences for each bullet point that align with that established brand voice.
+    - Aim to strike a balance between providing directive guidance (sample sentences) and leaving room for me to personalize the content in my own words.
+    - Ensure the overall content flows logically from one section to the next, with smooth transitions.
+    - Review the full draft with me, gather feedback, and refine as needed.
 
-Throughout the process, please <THINKING>:
+    Throughout the process, please <THINKING>:
 
-- Analyze the topic and my goals for the blog post to ensure the structure and content are well-aligned.
-- Consider potential counterarguments or alternative perspectives that should be addressed.
-- Identify opportunities to incorporate relevant data, examples, or expert insights to strengthen the post.
-- Flag any areas where additional research or fact-checking may be required.
-- Maintain a collaborative, supportive tone, and position yourself as a writing partner rather than simply a content generator.
+    - Analyze the topic and my goals for the blog post to ensure the structure and content are well-aligned.
+    - Consider potential counterarguments or alternative perspectives that should be addressed.
+    - Identify opportunities to incorporate relevant data, examples, or expert insights to strengthen the post.
+    - Flag any areas where additional research or fact-checking may be required.
+    - Maintain a collaborative, supportive tone, and position yourself as a writing partner rather than simply a content generator.
 
-Most importantly, your outputs should reflect the same quality, tone, and brand voice as my previous successful blog posts. Your role is to elevate the post's structure and writing, not to drastically alter its character. Please let me know if you need any clarification or have additional suggestions to improve this system prompt."))
-  ;; ollama
-  (gptel-make-ollama "Ollama"
-    :host "localhost:11434"
-    :stream t
-    :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
+    Most importantly, your outputs should reflect the same quality, tone, and brand voice as my previous successful blog posts. Your role is to elevate the post's structure and writing, not to drastically alter its character. Please let me know if you need any clarification or have additional suggestions to improve this system prompt."))
+      ;; ollama
+      (gptel-make-ollama "Ollama"
+        :host "localhost:11434"
+        :stream t
+        :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
 
-  ;; gemini
-  (gptel-make-gemini "Gemini" :key (password-store-get "emacs/gemini-api") :stream t)
+      ;; gemini
+      (gptel-make-gemini "Gemini" :key (password-store-get "emacs/gemini-api") :stream t)
 
-  ;; openweb-ui
-  (gptel-make-openai "OpenWebUI"
-    :protocol "http"
-    :host "localhost:3000"  ; Replace with your OpenWebUI host/port
-    :endpoint "/api/chat/completions"
-    :stream t
-    :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
-    :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4-sonnet")
-    :request-params '(:parallel_tool_calls t))
+      ;; openweb-ui
+      (gptel-make-openai "OpenWebUI"
+        :protocol "http"
+        :host "localhost:3000"  ; Replace with your OpenWebUI host/port
+        :endpoint "/api/chat/completions"
+        :stream t
+        :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
+        :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4-sonnet")
+        :request-params '(:parallel_tool_calls t))
   
-  ;; OPTIONAL configuration
-  (setq gptel-backend (gptel-make-ollama "Ollama"
-                        :host "localhost:11434"
-                        :stream t
-                        :models '("gemma3" "qwen3-coder" "llama3" "huggingface.co/unsloth/Qwen3-30B-A3B-GGUF:latest" "qwen3:14b" "qwen3:8b" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
-  ;; (setq gptel-backend (gptel-make-openai "OpenWebUI"
-  ;;                       :protocol "http"
-  ;;                       :host "localhost:3000"
-  ;;                       :endpoint "/api/chat/completions"
-  ;;                       :stream t
-  ;;                       :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
-  ;;                       :models '("sap_ai_core.gemini-2.5-pro" 
-  ;;                                "sap_ai_core.anthropic--claude-4-sonnet"))))
-;; GPTEL-model "deepseek-v3"))
-    #+end_src
+      ;; OPTIONAL configuration
+      (setq gptel-backend (gptel-make-ollama "Ollama"
+                            :host "localhost:11434"
+                            :stream t
+                            :models '("gemma3" "qwen3-coder" "llama3" "huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF" "huggingface.co/unsloth/Qwen3-30B-A3B-GGUF:latest" "qwen3:14b" "qwen3:8b" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
+      ;; (setq gptel-backend (gptel-make-openai "OpenWebUI"
+      ;;                       :protocol "http"
+      ;;                       :host "localhost:3000"
+      ;;                       :endpoint "/api/chat/completions"
+      ;;                       :stream t
+      ;;                       :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
+      ;;                       :models '("sap_ai_core.gemini-2.5-pro" 
+      ;;                                "sap_ai_core.anthropic--claude-4-sonnet"))))
+    ;; GPTEL-model "deepseek-v3"))
+#+end_src
 *** ellama
     #+begin_src emacs-lisp
 (use-package ellama
@@ -4124,6 +4101,330 @@ Most importantly, your outputs should reflect the same quality, tone, and brand 
   :config
   (add-hook 'eww-mode 'ace-link-mode))
     #+end_src
+** Email
+*** mu4e
+**** General config
+#+begin_src emacs-lisp
+;; Make sure we find the mu4e package
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+(use-package mu4e
+  :straight (:type built-in)
+  :defer t
+  :commands (mu4e)
+  :bind (("C-c a m" . mu4e)
+         :map mu4e-main-mode-map
+         ("U" . mu4e-update-mail-and-index-background)
+         :map mu4e-headers-mode-map
+         ("TAB" . mu4e-headers-next-unread)
+         ("j" . mu4e-view-headers-next)
+         ("k" . mu4e-view-headers-prev)
+         ("J" . mu4e-search-maildir)
+         ;; ("j" . mu4e-move-to-junk)
+         ;; ("M" . mu4e-headers-mark-all-unread-read) ; Mark all as read
+         :map mu4e-view-mode-map
+         ("A" . mu4e-view-attachment-action)
+         ("M-o" . ace-link-mu4e)
+         ("o" . ace-link-mu4e)
+         ("n" . mu4e-scroll-up)
+         ("p" . mu4e-scroll-down)
+         ("J" . mu4e-view-headers-next)
+         ("K" . mu4e-view-headers-prev)
+         ;; ("j" . mu4e-move-to-junk)
+         )
+  :init
+  ;; From https://github.com/Phundrak/dotfiles/blob/master/org/config/emacs.org
+  ;; (defun mu4e--main-action-str (name func)
+  ;;   "This seems to be needed until evil-collection supports the latest version of mu4e."
+  ;;   "mu4e-main-action")
+  ;; (remove-hook 'mu4e-main-mode-hook 'evil-collection-mu4e-update-main-view)
+
+  ;; Prefer text over html/ritchtext
+  (setq mm-discouraged-alternatives '("text/html" "text/richtext"))
+
+  ;; Use completing-read (which is ivy) instead of ido
+  (setq mu4e-completing-read-function 'completing-read)
+
+  ;; set mu4e as default mail client
+  (setq mail-user-agent 'mu4e-user-agent)
+
+  ;; SMTP related
+  (setq message-send-mail-function        'smtpmail-send-it
+        smtpmail-stream-type              'tls)
+
+  :config
+  ;; Set mu binary
+  (setq mu4e-mu-binary "/usr/bin/mu")
+
+  ;; Use passwords from password-store
+  (setq auth-sources '(password-store))
+  (setq auth-source-debug t)
+
+  ;; Choose which fields to show
+  (setq mu4e-headers-fields
+        '(
+          (:maildir    . 13)
+          (:human-date . 12)
+          (:flags      . 6)
+          (:from       . 22)
+          (:subject    . nil)))
+
+  ;; Refresh mail using isync every 10 minutes
+  (setq mu4e-update-interval (* 10 60))
+
+  ;; Command used to retrieve new mails
+  (setq mu4e-get-mail-command "mbsync -a")
+
+  ;; Defaults
+  (setq mu4e-maildir (getenv "MU4E_MAILDIR"))
+  (setq-default mu4e-drafts-folder "/private/Drafts")
+  (setq-default mu4e-sent-folder   "/private/Sent")
+  (setq-default mu4e-trash-folder  "/private/Trash")
+
+  ;; Set citation settings
+  (setq message-citation-line-format "\nOn %a, %b %d, %Y at %r %z, %N wrote:\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+
+  ;; Fancy stuff
+  (setq mu4e-use-fancy-chars t)
+  ;; <<mu4e-fancy-marks>>
+
+  ;; And change default threading characters to some "nicer" looking chars
+  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
+
+  ;; Also change to some nicer characters for marks
+  ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
+  (setq mu4e-headers-passed-mark  '("P" . "›"))
+  (setq mu4e-headers-replied-mark '("R" . "‹"))
+  (setq mu4e-headers-seen-mark   '("S" . ""))
+  ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
+  (setq mu4e-headers-personal-mark '("p" . ""))
+  ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
+
+  ;; Set date format (header view)
+  (setq mu4e-headers-date-format "%F")
+
+  ;; How should html context be converted
+  ;; (setq mu4e-html2text-command "/usr/bin/w3m -T text/html")
+  (setq mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain")
+
+  ;; Improve rendering of rich-text messages (html)
+  (setq shr-color-visible-luminance-min 80)
+
+  ;; Show email address as well and not only the name
+  (setq-default mu4e-view-show-addresses t)
+
+  ;; Don't reply to self
+  (setq mu4e-compose-dont-reply-to-self t)
+
+  ;; Setup some handy shortcuts
+  ;; you can quickly switch to your Inbox -- press ``ji''
+  ;; then, when you want archive some messages, move them to
+  ;; the 'All Mail' folder by pressing ``ma''.
+
+  ;; View mail in browser with "a V"
+  (add-to-list 'mu4e-view-actions
+               '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+  (add-to-list 'mu4e-view-actions
+               '("fViewInChrome" . mu4e-action-view-in-chrome) t)
+  (add-to-list 'mu4e-view-actions
+               '("xViewXWidget" . mu4e-action-view-with-xwidget) t)
+
+  (setq mu4e-maildir-shortcuts
+        '(
+          ("/variomedia/inbox"   . ?v)
+          ("/gmail/inbox"    . ?g)
+          ("/cashlink/inbox"   . ?c)
+          ("/private/Trash"   . ?t)
+          ("/private/Drafts"  . ?d)
+          ("/private/Junk"    . ?j)
+          ("/private/Archive" . ?a)))
+
+  ;; Set contexts
+  (dorneanu/set-mu4e-contexts)
+  )
+
+;; (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
+**** Bookmarks
+#+begin_src emacs-lisp
+(setq mu4e-bookmarks
+      `(
+        ("maildir:/Sent" "Sent messages" ?s)
+        ("flag:unread AND NOT flag:trashed" "Unread messages" ?U)
+        ("date:today..now AND NOT flag:trashed" "Today's messages" ?t)
+        ("date:7d..now AND NOT flag:trashed" "Last 7 days" ?w)
+        ("date:1m..now AND NOT flag:trashed" "Last month" ?m)
+        ("date:1y..now AND NOT flag:trashed" "Last year" ?y)
+        ("flag:trashed AND NOT flag:trashed" "Trash" ?T)
+        ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
+        ("from:jira@*" "Jira" ?j)
+        ("from:notifications@github.com" "Github" ?g)
+        ;; (,(s-join " "
+        ;;           '("OR noreply@tagesspiegel.de"
+        ;;             "OR support@lagedernation.org"
+        ;;             "OR hello@blinkist.com"
+        ;;             "OR info@smarticular.net"
+        ;;             "OR newsletter@*"
+        ;;             "OR support@xeroshoes.com"))
+        ;;  "Newletter" ?n)
+        ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
+#+end_src
+
+**** Fancy stuff
+From https://github.com/Phundrak/dotfiles
+
+#+name: mu4e-fancy-marks-tbl
+| Mark      | Flag | Icon        |
+|-----------+------+-------------|
+| draft     | D    | pencil      |
+| flagged   | F    | flag        |
+| new       | N    | rss         |
+| passed    | P    | check       |
+| replied   | R    | reply       |
+| seen      | S    | eye         |
+| unread    | u    | eye-slash   |
+| trashed   | T    | trash       |
+| attach    | a    | paperclip   |
+| encrypted | x    | lock        |
+| signed    | s    | certificate |
+
+#+name: mu4e-fancy-marks-gen
+#+header: :tangle no :exports none :results value :cache yes
+#+begin_src emacs-lisp :var table=mu4e-fancy-marks-tbl
+(mapconcat (lambda (line)
+             (let ((mark (car line))
+                   (flag (cadr line))
+                   (icon (caddr line)))
+               (format "mu4e-headers-%s-mark `(\"%s\" . ,(all-the-icons-faicon \"%s\" :height 0.8))"
+                       mark
+                       flag
+                       icon)))
+           table
+           "\n")
+#+end_src
+
+#+RESULTS[c6ed5d4bec4c10339a7de52a70822af74d782e62]: mu4e-fancy-marks-gen
+#+begin_example
+mu4e-headers-draft-mark `("D" . ,(all-the-icons-faicon "pencil" :height 0.8))
+mu4e-headers-flagged-mark `("F" . ,(all-the-icons-faicon "flag" :height 0.8))
+mu4e-headers-new-mark `("N" . ,(all-the-icons-faicon "rss" :height 0.8))
+mu4e-headers-passed-mark `("P" . ,(all-the-icons-faicon "check" :height 0.8))
+mu4e-headers-replied-mark `("R" . ,(all-the-icons-faicon "reply" :height 0.8))
+mu4e-headers-seen-mark `("S" . ,(all-the-icons-faicon "eye" :height 0.8))
+mu4e-headers-unread-mark `("u" . ,(all-the-icons-faicon "eye-slash" :height 0.8))
+mu4e-headers-trashed-mark `("T" . ,(all-the-icons-faicon "trash" :height 0.8))
+mu4e-headers-attach-mark `("a" . ,(all-the-icons-faicon "paperclip" :height 0.8))
+mu4e-headers-encrypted-mark `("x" . ,(all-the-icons-faicon "lock" :height 0.8))
+mu4e-headers-signed-mark `("s" . ,(all-the-icons-faicon "certificate" :height 0.8))
+#+end_example
+
+Let’s enable them and set them:
+#+name: mu4e-fancy-marks
+#+begin_src emacs-lisp :tangle no
+(setq mu4e-use-fancy-chars t
+      <<mu4e-fancy-marks-gen()>>)
+#+end_src
+
+**** View mode
+#+name: mu4e-view-mode
+#+begin_src emacs-lisp :tangle no
+(add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
+#+end_src
+
+**** Contexts
+Set contexts
+#+begin_src emacs-lisp
+(defun dorneanu/set-mu4e-contexts ()
+  "Set mail contexts for mu4e"
+  (interactive)
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "gmail"
+             :enter-func (lambda () (mu4e-message "Entering gmail context"))
+             :leave-func (lambda () (mu4e-message "Leaving gmail context"))
+             ;; we match based on the contact-fields of the message
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/personal/username"))
+                     (user-full-name    . "Cyneox")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/personal/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-default-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Cyneox via Gmail")
+                     (mu4e-drafts-folder  . "/[Gmail]/drafts")
+                     (mu4e-sent-folder  . "/[Gmail]/sent")
+                     (mu4e-refile-folder  . "/[Gmail]/All Mail")
+                     (mu4e-trash-folder  . "/[Gmail]/bin")))
+           ,(make-mu4e-context
+             :name "variomedia"
+             :enter-func (lambda () (mu4e-message "Switch to the variomedia context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/variomedia" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/personal/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/personal/username")) (smtpmail-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-default-smtp-server  . "smtp.variomedia.de")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-compose-signature . "Victor via Emacs")
+                     (mu4e-drafts-folder  . "/variomedia/drafts")
+                     (mu4e-sent-folder  . "/variomedia/sent")
+                     (mu4e-trash-folder  . "/variomedia/bin")))
+           ,(make-mu4e-context
+             :name "cashlink"
+             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
+             :match-func
+             (lambda (msg)
+               (when msg
+                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
+             :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
+                     (user-full-name    . "Victor Dorneanu")
+                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
+                     (smtpmail-smtp-server  . "smtp.gmail.com")
+                     (smtpmail-smtp-service . 465)
+                     (smtpmail-stream-type  . ssl)
+                     (mu4e-drafts-folder  . "/cashlink/drafts")
+                     (mu4e-sent-folder  . "/cashlink/sent")
+                     (mu4e-trash-folder  . "/cashlink/bin")
+                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
+                     ))))
+  )
+
+#+end_src
+
+#+results:
+: dorneanu/set-mu4e-contexts
+**** Reply
+I often want to reply without the original message:
+#+begin_src emacs-lisp
+;; From https://github.com/djcb/mu/issues/2345
+;; (after! mu4e
+;;   (defun dorneanu/mu4e-delete-citation ()
+;;     (delete-region (point) (point-max)))
+
+;;   (defun dorneanu/mu4e-reply (prefix)
+;;     (interactive "P")
+;;     (setq mu4e-compose-cite-function (if prefix
+;;                                          #'dorneanu/mu4e-delete-citation
+;;                                        #'message-cite-original-without-signature))
+;;     (mu4e-compose-reply))
+
+;;   (define-key mu4e-view-mode-map "R" #'dorneanu/mu4e-reply)
+;;   (define-key mu4e-headers-mode-map "R" #'dorneanu/mu4e-reply)
+;;   )
+#+end_src
 ** Browser
 *** atomic-chrome
     #+begin_src emacs-lisp
@@ -4698,76 +4999,67 @@ Used for popups (eshell, scratch buffer etc.)
 (use-package visual-regexp-steroids
   :after visual-regexp)
     #+END_SRC
-*** rg.el
-    #+begin_src emacs-lisp
+*** COMMENT rg.el
+#+begin_src emacs-lisp
+; Load transient first
+(use-package transient
+  :straight (:type git :host github :repo "magit/transient" :branch "main")
+  :demand t)
+;; (use-package transient
+;;   :straight t
+;;   :demand t
+;;   :config
+;;   ;; Make sure transient is completely initialized
+;;   (require 'transient))
+
+;; Minimal rg configuration that avoids the problematic macros
 (use-package rg
   :straight t
-  :defer t
+  :commands (rg rg-project rg-dwim)
+  ;; :bind (("C-s r" . rg))
   :config
-  (rg-enable-default-bindings)
-  ;; Not sure if I really need this
-  (rg-define-toggle "--multiline --multiline-dotall" "u")
-  (rg-define-toggle "--word-regexp" "w")
-  (rg-define-toggle "--files-with-matches" "L")
-
-  ;; Highlight longer
+  ;; Only enable the basic bindings - this should work
+  ;; (rg-enable-default-bindings)
+  
+  ;; Basic settings that don't use macros
   (setq next-error-highlight-no-select t)
+  
+  ;; We'll add the custom searches and toggles later after ensuring everything works
+  )
 
-  ;; Custom searches
-  ;; search in org roam folder
-  (rg-define-search my/rg-org-roam-directory
-    :query ask
-    :format regexp
-    :files "everything"
-    :dir org-roam-directory
-    :confirm prefix)
+;; Alternative: If you really need the custom searches, define them as regular functions
+;; instead of using the rg-define-search macro
 
-  ;; search in org roam folder where I have transcripts from the Huberman Lab
-  (rg-define-search my/rg-org-roam-directory-huberman
-    :query ask
-    :format regexp
-    :files "everything"
-    :dir (concat org-roam-directory "/rez/huberman-lab")
-    :confirm prefix)
+(defun my/rg-org-roam-directory (query)
+  "Search for QUERY in org-roam directory."
+  (interactive "sSearch for: ")
+  (when (boundp 'org-roam-directory)
+    (rg query "everything" org-roam-directory)))
 
-  (setq dotemacs-directory "~/repos/priv/dotemacs")
-  (rg-define-search my/rg-dotemacs
-    :query ask
-    :format regexp
-    :files "everything"
-    :dir dotemacs-directory
-    :confirm prefix)
+(defun my/rg-org-roam-directory-huberman (query)
+  "Search for QUERY in Huberman Lab directory."
+  (interactive "sSearch for: ")
+  (when (boundp 'org-roam-directory)
+    (let ((huberman-dir (concat org-roam-directory "/rez/huberman-lab")))
+      (if (file-directory-p huberman-dir)
+          (rg query "everything" huberman-dir)
+        (message "Huberman directory not found: %s" huberman-dir)))))
 
-  (add-hook 'next-error-hook #'recenter)
-  (add-hook 'next-error-hook #'focus-mode))
-    #+end_src
+(defun my/rg-dotemacs (query)
+  "Search for QUERY in dotemacs directory."
+  (interactive "sSearch for: ")
+  (let ((dotemacs-directory "~/repos/priv/dotemacs"))
+    (if (file-directory-p dotemacs-directory)
+        (rg query "everything" dotemacs-directory)
+      (message "Dotemacs directory not found: %s" dotemacs-directory))))
 
-    Configure custom searches
-    #+begin_src emacs-lisp
-;; search in org roam folder
-(rg-define-search my/rg-org-roam-directory
-  :query ask
-  :format regexp
-  :files "everything"
-  :dir org-roam-directory
-  :confirm prefix)
+;; Bind these functions to keys if you want quick access
+;; (global-set-key (kbd "C-c s r") #'my/rg-org-roam-directory)
+;; (global-set-key (kbd "C-c s h") #'my/rg-org-roam-directory-huberman)
+;; (global-set-key (kbd "C-c s d") #'my/rg-dotemacs)
+#+end_src
 
-;; search in org roam folder where I have transcripts from the Huberman Lab
-(rg-define-search my/rg-org-roam-directory-huberman
-  :query ask
-  :format regexp
-  :files "everything"
-  :dir (concat org-roam-directory "/rez/huberman-lab")
-  :confirm prefix)
 
-(setq dotemacs-directory "~/repos/priv/dotemacs")
-(rg-define-search my/rg-dotemacs
-  :query ask
-  :format regexp
-  :files "everything"
-  :dir dotemacs-directory
-  :confirm prefix)
-    #+end_src
 ** Undo/Redo
 *** vundo
     #+begin_src emacs-lisp
@@ -4985,7 +5277,7 @@ Used for popups (eshell, scratch buffer etc.)
                      " "))))
    (setq hs-set-up-overlay #'hs-display-code-line-counts))
 #+end_src
-** emojify
+** TODO COMMENT emojify
 Generated via LLM:
 #+begin_src emacs-lisp
 (use-package emojify
@@ -5157,9 +5449,9 @@ Generated via LLM:
   (add-hook 'org-mode-hook #'my/org-emoji-todo-keywords)
   
   ;; Special binding for git commit mode
-  (add-hook 'git-commit-mode-hook 
-            (lambda () 
-              (local-set-key (kbd "C-x 8 e") #'my/git-commit-emoji)))
+  ;; (add-hook 'git-commit-mode-hook 
+  ;;           (lambda () 
+  ;;             (local-set-key (kbd "C-x 8 e") #'my/git-commit-emoji)))
 
   ;; Enable global mode
   (global-emojify-mode 1))
@@ -5199,18 +5491,18 @@ Generated via LLM:
    #+end_src
 ** pulsar
    #+begin_src emacs-lisp
-(use-package pulsar
-  :straight t
-  ;; :hook (after-init-hook . pulsar-global-mode)
-  :hook ((next-error xref-after-return org-mode) . pulsar-pulse-line) ; only pulse, don't recenter
-  :hook ((consult-after-jump imenu-after-jump xref-after-jump) . pulsar-recenter-center) ; pulse and recenter
-  :hook ((consult-after-jump imenu-after-jump xref-after-jump xref-after-return) . pulsar-reveal-entry) ; reveal if hidden
-  :custom
-  (pulsar-face 'pulsar-red)
-  :config
-  (pulsar-global-mode t)
-  (cl-callf append pulsar-pulse-functions
-    '(what-cursor-position scroll-up-command scroll-down-command kill-whole-line yank-from-kill-ring yank yank-pop)))
+   (use-package pulsar
+     :straight t
+     ;; :hook (after-init-hook . pulsar-global-mode)
+     :hook ((next-error xref-after-return org-mode) . pulsar-pulse-line) ; only pulse, don't recenter
+     :hook ((consult-after-jump imenu-after-jump xref-after-jump) . pulsar-recenter-center) ; pulse and recenter
+     :hook ((consult-after-jump imenu-after-jump xref-after-jump xref-after-return) . pulsar-reveal-entry) ; reveal if hidden
+     :custom
+     (pulsar-face 'pulsar-red)
+     :config
+     (pulsar-global-mode t)
+     (cl-callf append pulsar-pulse-functions
+       '(what-cursor-position scroll-up-command scroll-down-command kill-whole-line yank-from-kill-ring yank yank-pop treesit-beginning-of-defun)))
    #+end_src
 ** Windows
 *** windmove
@@ -5383,8 +5675,8 @@ I still use the mouse for scrolling, changing frame sizes:
 (global-set-key (kbd "S-<mouse-5>") 'shrink-window)
 #+end_src
 ** Hydra
-   Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
-   #+begin_src emacs-lisp
+Some inspirations from https://github.com/rememberYou/.emacs.d/blob/master/config.org
+#+begin_src emacs-lisp
 (use-package hydra
   :straight t)
 
@@ -5408,12 +5700,12 @@ I still use the mouse for scrolling, changing frame sizes:
   (defun with-octicon (icon str &optional height v-adjust face)
     "Display an icon from the GitHub Octicons."
     (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
-   #+end_src
+#+end_src
 *** Hydra / Windows
 
-    Group window-related commands.
+Group window-related commands.
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (pretty-hydra-define hydra-windows
   (:hint nil :forein-keys warn :quit-key "q" :title "Windows")
   ("Window"
@@ -5430,11 +5722,11 @@ I still use the mouse for scrolling, changing frame sizes:
    (("-" text-scale-decrease "out")
     ("+" text-scale-increase "in")
     ("=" (text-scale-increase 0) "reset"))))
-    #+end_src
+#+end_src
 *** COMMENT Hydra / Window Nav
-    From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
+From https://github.com/doomemacs/doomemacs/blob/master/modules/ui/hydra/autoload/windows.el
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra +hydra/window-nav (:hint nil)
   "
             Split: _v_ert  _s_:horz
@@ -5476,9 +5768,9 @@ I still use the mouse for scrolling, changing frame sizes:
   ("=" (text-scale-increase 0) "reset")
 
   ("q" nil))
-    #+end_src
+#+end_src
 *** COMMENT Hydra / Flyspell
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra flyspell-hydra ()
   "
   Spell Commands^^           Add To Dictionary^^              Other
@@ -5502,12 +5794,12 @@ I still use the mouse for scrolling, changing frame sizes:
   ("S" nil)
   ("s" flyspell-correct-at-point)
   ("t" nil))
-    #+end_src
+#+end_src
 *** Hydra / ORG
 **** COMMENT hydra-org-jump
-     From [[https://sriramkswamy.github.io/dotemacs/]]
+From [[https://sriramkswamy.github.io/dotemacs/]]
 
-     #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun sk/before-hydra ()
   "Function to run before the Hydra gets executed."
   (focus-mode))
@@ -5556,13 +5848,13 @@ I still use the mouse for scrolling, changing frame sizes:
   ;; ("N" org-next-link)
   ("P" backward-paragraph)
   ("q" nil :color blue))
-     #+end_src
+#+end_src
 
-     #+results:
-     : sk/hydra-org-jump/body
+#+results:
+: sk/hydra-org-jump/body
 
 **** COMMENT hydra-org-babel-transient
-     #+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
 (defhydra org-babel-transient ()
   "
   ^Navigate^                    ^Interact
@@ -5578,11 +5870,11 @@ I still use the mouse for scrolling, changing frame sizes:
   ("z" recenter-top-bottom)
   ("x" org-babel-execute-maybe)
   ("'" org-edit-special :exit t))
-     #+end_src
+#+end_src
 *** COMMENT Hydra / merge
-    Group Merge commands.
+Group Merge commands.
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (pretty-hydra-define hydra-merge
   (:hint nil :color pink :quit-key "q" :title (with-octicon "mark-github" "Magit" 1 -0.05))
   ("Move"
@@ -5604,11 +5896,11 @@ I still use the mouse for scrolling, changing frame sizes:
    (("C" smerge-combine-with-next "combine")
     ("r" smerge-resolve "resolve")
     ("k" smerge-kill-current "kill current"))))
-    #+end_src
+#+end_src
 *** Hydra / smerge
-    From https://github.com/dakra/dmacs/blob/nil/init.org
+From https://github.com/dakra/dmacs/blob/nil/init.org
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package smerge-mode
   :hook (magit-diff-visit-file . (lambda ()
                                    (when smerge-mode
@@ -5643,9 +5935,9 @@ I still use the mouse for scrolling, changing frame sizes:
     ("r" smerge-resolve)
     ("k" smerge-kill-current)
     ("q" nil "cancel" :color blue)))
-    #+end_src
+#+end_src
 *** COMMENT Hydra / modeline                                                                       :todo:
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (pretty-hydra-define hydra-modeline
   (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
   ("Icon"
@@ -5793,9 +6085,9 @@ I still use the mouse for scrolling, changing frame sizes:
                     (symbol-value 'doom-modeline-gnus-timer)))
      "set gnus interval" :exit t))))
 
-    #+end_src
+#+end_src
 *** Hydra / multiple-cursors
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra multiple-cursors-hydra (:columns 3 :idle 1.0)
   "Multiple cursors"
   ("l" mc/edit-lines "Edit lines in region" :exit t)
@@ -5817,9 +6109,9 @@ I still use the mouse for scrolling, changing frame sizes:
   ("P" mc/skip-to-previous-like-this "Skip to previous like this")
   ("M-p" mc/unmark-previous-like-this "Unmark previous like this")
   ("q" nil "Quit" :exit t))
-    #+end_src
+#+end_src
 *** Hydra / lasgun
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defhydra hydra-lasgun-marks (:color red :hint nil)
   "
                               LASGUN MARKS
@@ -5862,24 +6154,25 @@ _q_: Quit
   ("h" lasgun-mark-whitespace-end :exit nil)
 
   ("q" nil :exit t))
-    #+end_src
+#+end_src
 *** COMMENT Hydra / Scratch Buffers
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; Nice idea from https://github.com/dakra/dmacs/blob/nil/init.org
 (defhydra hydra-scratchpad (:hint nil)
-  "
-     _p_ython    _e_lisp        _s_ql
-     _g_o        _j_avascript   _t_ypescript
-     _r_ust      _R_est-client  _h_tml
-     _o_rg-mode  _T_ext         _m_arkdown
-     "
-  ("p" (switch-to-buffer "*python*scratchpad.py"))
-  ("e" (switch-to-buffer "*elisp*scratchpad.el"))
-  ("s" (switch-to-buffer "*sql*scratchpad.sql"))
-  ("g" (switch-to-buffer "*go*scratchpad.go"))
-  ("j" (switch-to-buffer "*js*scratchpad.js"))
-  ("h" (switch-to-buffer "*html*scratchpad.html"))
-  ("o" (switch-to-buffer "*org*scratchpad.org"))
-  ("T" (switch-to-buffer "*text*scratchpad.txt"))
-  ("m" (switch-to-buffer "*markdown*scratchpad.md")))
-    #+end_src
+"
+_p_ython    _e_lisp        _s_ql
+_g_o        _j_avascript   _t_ypescript
+_r_ust      _R_est-client  _h_tml
+_o_rg-mode  _T_ext         _m_arkdown
+"
+("p" (switch-to-buffer "*python*scratchpad.py"))
+("e" (switch-to-buffer "*elisp*scratchpad.el"))
+("s" (switch-to-buffer "*sql*scratchpad.sql"))
+("g" (switch-to-buffer "*go*scratchpad.go"))
+("j" (switch-to-buffer "*js*scratchpad.js"))
+("h" (switch-to-buffer "*html*scratchpad.html"))
+("o" (switch-to-buffer "*org*scratchpad.org"))
+("T" (switch-to-buffer "*text*scratchpad.txt"))
+("m" (switch-to-buffer "*markdown*scratchpad.md")))
+#+end_sr
+c
