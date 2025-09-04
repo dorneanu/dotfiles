@@ -4186,24 +4186,21 @@ If prefix ARG, copy instead of move."
   (setq message-citation-line-function 'message-insert-formatted-citation-line)
 
   ;; Fancy stuff
-  (setq mu4e-use-fancy-chars t)
+  ;; (setq mu4e-use-fancy-chars t)
   ;; <<mu4e-fancy-marks>>
 
   ;; And change default threading characters to some "nicer" looking chars
-  (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
-  (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
-  (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
-  (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
-  (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ "))
-
-  ;; Also change to some nicer characters for marks
-  ;; (setq mu4e-headers-new-mark    '("N" . "📨"))
-  (setq mu4e-headers-passed-mark  '("P" . "›"))
-  (setq mu4e-headers-replied-mark '("R" . "‹"))
-  (setq mu4e-headers-seen-mark   '("S" . ""))
-  ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
-  (setq mu4e-headers-personal-mark '("p" . ""))
-  ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
+  ;; (setq mu4e-headers-thread-child-prefix '("├>" . "├→ "))
+  ;; (setq mu4e-headers-thread-last-child-prefix '("└>" . "└→ "))
+  ;; (setq mu4e-headers-thread-connection-prefix '("│" . "│ "))
+  ;; (setq mu4e-headers-thread-orphan-prefix '("┬>" . "┬→ "))
+  ;; (setq mu4e-headers-thread-single-orphan-prefix '("─>" . "─→ ")) "📨"))
+  ;; (setq mu4e-headers-passed-mark  '("P" . "›"))
+  ;; (setq mu4e-headers-replied-mark '("R" . "‹"))
+  ;; (setq mu4e-headers-seen-mark   '("S" . ""))
+  ;; ;; (setq mu4e-headers-attach-mark '("a" . "📎"))
+  ;; (setq mu4e-headers-personal-mark '("p" . ""))
+  ;; ;; (setq mu4e-headers-unread-mark '("u" . "📫"))
 
   ;; Set date format (header view)
   (setq mu4e-headers-date-format "%F")
@@ -4245,8 +4242,7 @@ If prefix ARG, copy instead of move."
           ("/private/Archive" . ?a)))
 
   ;; Set contexts
-  (dorneanu/set-mu4e-contexts)
-  )
+  (dorneanu/set-mu4e-contexts))
 
 ;; (add-hook 'mu4e-view-mode-hook (lambda () (visual-fill-column-mode)))
 #+end_src
@@ -4276,7 +4272,7 @@ If prefix ARG, copy instead of move."
         ("mime:image/* AND NOT flag:trashed" "Messages with images" ?p)))
 #+end_src
 
-**** Fancy stuff
+**** COMMENT Fancy stuff
 From https://github.com/Phundrak/dotfiles
 
 #+name: mu4e-fancy-marks-tbl
