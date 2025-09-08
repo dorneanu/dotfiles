@@ -66,7 +66,7 @@
 
 ;; Force reinstall problematic packages
 (straight-use-package '(transient :type git :host github :repo "magit/transient"))
-(straight-use-package '(magit :type git :host github :repo "magit/magit")) 
+(straight-use-package '(magit :type git :host github :repo "magit/magit"))
 (straight-use-package '(rg :type git :host github :repo "dajva/rg.el"))
 #+end_src
 *** COMMENT gcmh: Garbage collection
@@ -847,46 +847,46 @@
               ("M-?" . godoc-at-point)
               ("M-." . xref-find-definitions)
               ("M-_" . xref-find-references)
-  
+
               ;; TESTING
               ("C-c t t" . go-test-current-test)
               ("C-c t f" . go-test-current-file)
               ("C-c t p" . go-test-current-project)
               ("C-c t s" . go-test-current-suite)
-              
+
               ;; Enhanced workflow
               ("C-c t r" . go-test-repeat)
               ("C-c t l" . go-test-last-test)
               ("C-c t d" . go-test-current-test-debug)
               ("C-c t v" . go-test-current-file-verbose)
-              
+
               ;; Coverage
               ("C-c t c" . go-test-current-coverage)
               ("C-c t C" . go-test-current-project-coverage)
-              
+
               ;; Benchmarks
               ("C-c t b" . go-test-current-benchmark)
               ("C-c t B" . go-test-current-file-benchmarks)
-              
+
               ;; Control
               ("C-c t x" . go-run)
               ("C-c t k" . go-test-kill-compilation)
-              
+
               ;; Navigation
               ("C-c t n" . go-test-next-error)
               ("C-c t N" . go-test-previous-error)
-              
+
               ;; IMPORTS
               ("C-c g i a" . go-import-add)
               ("C-c g i r" . go-remove-unused-imports)
               ("C-c g i g" . go-goto-imports)
               ("C-c g i o" . go-organize-imports)
               ("C-c g i c" . go-import-add-current-buffer)
-              
+
               ;; LSP import alternatives
               ("C-c g i l" . eglot-code-action-organize-imports)
               ("C-c g i s" . lsp-organize-imports)
-              
+
               ;; Quick access
               ("C-c a" . go-import-add)
               ("s-i" . go-import-add))
@@ -918,7 +918,7 @@
   :straight t
   :after go-ts-mode
   :config
-  (setq go-test-verbose t)          
+  (setq go-test-verbose t)
   (setq go-test-args "-v -race"))
 
 ;; Go additional packages
@@ -953,8 +953,30 @@
 #+begin_src emacs-lisp
 (use-package ginkgo-mode
   :straight (:type git :host github :repo "garslo/ginkgo-mode")
-  :defer t)
+  :after go-ts-mode
+  :bind (:map go-ts-mode-map
+              ;; Ginkgo testing commands (using "C-c g" prefix)
+              ;; Core ginkgo testing - mapped to actual functions
+              ("C-c g t" . ginkgo-run-this-container)     ; run current Describe/Context/It
+              ("C-c g a" . ginkgo-run-all)                ; run all tests
+              ("C-c g r" . ginkgo-run-last)               ; repeat last ginkgo test
+
+              ;; Setup and configuration
+              ("C-c g b" . ginkgo-bootstrap)              ; bootstrap ginkgo in current project
+              ("C-c g d" . ginkgo-set-test-dir)           ; set test directory
+              ("C-c g w" . ginkgo-toggle-pwd-as-test-dir) ; toggle current dir as test dir
+
+              ;; Quick access patterns (following your go-test style)
+              ("C-c g g" . ginkgo-run-this-container)     ; quick access to run current
+              ("C-c g l" . ginkgo-run-last)               ; quick access to repeat
+
+              ;; Mode toggle
+              ("C-c g m" . ginkgo-mode))                  ; toggle ginkgo-mode
+  :config
+  ;; Configure ginkgo behavior
+  (setq ginkgo-use-pwd-as-test-dir t))
 #+end_src
+
 *** python
 #+begin_src emacs-lisp
 (use-package python
@@ -1992,7 +2014,8 @@ Keep lisp code always indented.
 (use-package consult-gh
   :straight (:host github :repo "armindarvish/consult-gh" :branch "main")
   ;; :after embark-consult
-  :bind (("M-g # r" . consult-gh-repos-list)        ; r for repositories
+  :bind (("M-g # a" . consult-gh-auth-switch)
+         ("M-g # r" . consult-gh-repos-list)        ; r for repositories
          ("M-g # i" . consult-gh-search-issues)       ; i for issues
          ("M-g # p" . consult-gh-search-prs)          ; p for pull requests
          ("M-g # r" . consult-gh-search-repos)          ; p for pull requests
@@ -2834,20 +2857,20 @@ If prefix ARG, copy instead of move."
 (defun my/sanitize-filename (title)
   "Convert title to safe filename"
   (let* (;; Remove problematic characters
-         (safe-title (replace-regexp-in-string 
+         (safe-title (replace-regexp-in-string
                       "[^a-zA-Z0-9 ._-]" "" title))
          ;; Replace spaces with underscores or hyphens
-         (hyphenated (replace-regexp-in-string 
+         (hyphenated (replace-regexp-in-string
                       "\\s-+" "-" safe-title))
          ;; Remove multiple consecutive hyphens
-         (cleaned (replace-regexp-in-string 
+         (cleaned (replace-regexp-in-string
                    "-+" "-" hyphenated))
          ;; Trim and limit length
          (trimmed (string-trim cleaned "-"))
          (limited (if (> (length trimmed) 50)
                       (concat (substring trimmed 0 47) "...")
                     trimmed)))
-    
+
     ;; Ensure we don't end with dots or hyphens
     (replace-regexp-in-string "[-_.]+$" "" limited)))
 
@@ -2871,29 +2894,29 @@ If prefix ARG, copy instead of move."
   (let* ((webpage-title (my/get-webpage-title url))
          (org-content (org-web-tools--url-as-readable-org url))
          (temp-org (make-temp-file "web-article" nil ".org"))
-         (final-title (or webpage-title 
+         (final-title (or webpage-title
                          (my/extract-title-robust org-content url)))
          (clean-filename (my/sanitize-filename final-title))
          ;; Add date prefix for chronological organization
-         (dated-filename (format "%s_%s" 
-                                (format-time-string "%Y-%m-%d") 
+         (dated-filename (format "%s_%s"
+                                (format-time-string "%Y-%m-%d")
                                 clean-filename))
-         (epub-file (expand-file-name 
+         (epub-file (expand-file-name
                     (concat dated-filename ".epub")
                     "~/Dropbox/Ebooks/")))
-    
+
     (message "Using title: '%s'" final-title)
     (message "Final filename: %s.epub" dated-filename)
-    
+
     (with-temp-file temp-org
       (insert org-content))
-    
+
     (make-directory (file-name-directory epub-file) t)
-    
-    (shell-command 
+
+    (shell-command
      (format "pandoc -f org -t epub3 --metadata title='%s' -o '%s' '%s'"
              final-title epub-file temp-org))
-    
+
     (delete-file temp-org)
     (message "Created epub: %s" (file-name-nondirectory epub-file))))
    #+end_src
@@ -3442,7 +3465,7 @@ If prefix ARG, copy instead of move."
 (use-package elfeed-goodies
   :after elfeed
   :commands elfeed-goodies/setup
-  :straight 
+  :straight
   :init
   (elfeed-goodies/setup)
   :custom
@@ -3557,7 +3580,7 @@ If prefix ARG, copy instead of move."
 (use-package reddigg
   :straight t
   :after (elfeed))
-  
+
 (defun my/elfeed-reddit-show-comments (&optional link)
   (interactive)
   (require 'reddigg)
@@ -3566,41 +3589,41 @@ If prefix ARG, copy instead of move."
                   (elfeed-search-selected :ignore-region)))
          (link (if link link (elfeed-entry-link entry))))
     (reddigg-view-comments link)))
-    
+
 (defun my/org-buffer-to-epub ()
   "Convert current org-mode buffer to epub"
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Current buffer is not in org-mode"))
-  
+
   (let* ((buffer-content (buffer-string))
          (title (my/extract-org-title buffer-content))
          (clean-filename (my/sanitize-filename title))
-         (dated-filename (format "%s_%s" 
-                                 (format-time-string "%Y-%m-%d") 
+         (dated-filename (format "%s_%s"
+                                 (format-time-string "%Y-%m-%d")
                                  clean-filename))
          (temp-org (make-temp-file "org-export" nil ".org"))
-         (epub-file (expand-file-name 
+         (epub-file (expand-file-name
                      (concat dated-filename ".epub")  ; Make sure .epub is only added once
                      "~/Dropbox/Ebooks/")))
-    
+
     (message "Title: '%s'" title)
     (message "Creating: %s" epub-file)  ; Show full path for debugging
-    
+
     (with-temp-file temp-org
       (insert buffer-content))
-    
+
     (make-directory (file-name-directory epub-file) t)
-    
+
     ;; Properly escape the title and file paths
     (let ((escaped-title (shell-quote-argument title))
           (escaped-epub-file (shell-quote-argument epub-file))
           (escaped-temp-org (shell-quote-argument temp-org)))
-      
-      (shell-command 
+
+      (shell-command
        (format "pandoc -f org -t epub3 --metadata title=%s -o %s %s"
                escaped-title escaped-epub-file escaped-temp-org)))
-    
+
     (delete-file temp-org)
     (message "Created epub: %s" (file-name-nondirectory epub-file))))
 
@@ -3610,30 +3633,30 @@ If prefix ARG, copy instead of move."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Current buffer is not in org-mode"))
-  
+
   (let* ((buffer-content (buffer-string))
          (title (my/extract-org-title buffer-content))
          (clean-filename (my/sanitize-filename title))
-         (dated-filename (format "%s_%s" 
-                                 (format-time-string "%Y-%m-%d") 
+         (dated-filename (format "%s_%s"
+                                 (format-time-string "%Y-%m-%d")
                                  clean-filename))
          (temp-org (make-temp-file "org-export" nil ".org"))
-         (epub-file (expand-file-name 
+         (epub-file (expand-file-name
                      (concat dated-filename ".epub")
                      "~/Dropbox/Ebooks/")))
-    
+
     (message "Title: '%s'" title)
     (message "Creating: %s.epub" epub-file)
-    
+
     (with-temp-file temp-org
       (insert buffer-content))
-    
+
     (make-directory (file-name-directory epub-file) t)
-    
-    (shell-command 
+
+    (shell-command
      (format "pandoc -f org -t epub3 --metadata title='%s' -o '%s' '%s'"
              title epub-file temp-org))
-    
+
     (delete-file temp-org)
     (message "Created epub: %s" (file-name-nondirectory epub-file))))
 
@@ -3649,35 +3672,35 @@ If prefix ARG, copy instead of move."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Current buffer is not in org-mode"))
-  
+
   (let* ((buffer-content (buffer-substring-no-properties (point-min) (point-max))) ; Strip properties
          (processed-content (my/reddit-hierarchy-to-clear-format-spaced buffer-content))
          (title (my/extract-org-title buffer-content))
          (clean-filename (my/sanitize-filename title))
-         (dated-filename (format "%s_%s" 
-                                (format-time-string "%Y-%m-%d") 
+         (dated-filename (format "%s_%s"
+                                (format-time-string "%Y-%m-%d")
                                 clean-filename))
          (temp-org (make-temp-file "reddit-thread" nil ".org"))
-         (epub-file (expand-file-name 
+         (epub-file (expand-file-name
                     (concat dated-filename ".epub")
                     "~/Dropbox/Ebooks/")))
-    
+
     (message "Processing Reddit thread...")
     (message "Title: '%s'" title)
-    
+
     (with-temp-file temp-org
       (insert processed-content))
-    
+
     (make-directory (file-name-directory epub-file) t)
-    
+
     (let ((escaped-title (shell-quote-argument title))
           (escaped-epub-file (shell-quote-argument epub-file))
           (escaped-temp-org (shell-quote-argument temp-org)))
-      
-      (shell-command 
+
+      (shell-command
        (format "pandoc -f org -t epub3 --metadata title=%s -o %s %s"
                escaped-title escaped-epub-file escaped-temp-org)))
-    
+
     (delete-file temp-org)
     (message "Created epub: %s" (file-name-nondirectory epub-file))))
    #+end_src
@@ -3789,7 +3812,7 @@ If prefix ARG, copy instead of move."
         (delete-process proc)
         (setq killed (1+ killed))))
     (message "Killed %d timidity process%s" killed (if (= killed 1) "" "es"))))
-    
+
 (with-eval-after-load 'dired
   (define-key dired-mode-map (kbd "C-c k") #'my/kill-timidity))
     #+end_src
@@ -3957,7 +3980,7 @@ If prefix ARG, copy instead of move."
       (setq mcp-hub-servers '(("filesystem" :command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "/Users/I748851/repos/"))
                               ("shell" :command "npx" :args ("mcp-shell"))
                               ("sequential-thinking" :command "npx" :args ("-y" "@modelcontextprotocol/server-sequential-thinking"))))
-  
+
       ;; Enable expert commands
       (setq gptel-expert-commands t)
 
@@ -4015,7 +4038,7 @@ If prefix ARG, copy instead of move."
         :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
         :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4-sonnet")
         :request-params '(:parallel_tool_calls t))
-  
+
       ;; OPTIONAL configuration
       (setq gptel-backend (gptel-make-ollama "Ollama"
                             :host "localhost:11434"
@@ -4027,7 +4050,7 @@ If prefix ARG, copy instead of move."
       ;;                       :endpoint "/api/chat/completions"
       ;;                       :stream t
       ;;                       :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
-      ;;                       :models '("sap_ai_core.gemini-2.5-pro" 
+      ;;                       :models '("sap_ai_core.gemini-2.5-pro"
       ;;                                "sap_ai_core.anthropic--claude-4-sonnet"))))
     ;; GPTEL-model "deepseek-v3"))
 #+end_src
@@ -4235,7 +4258,6 @@ If prefix ARG, copy instead of move."
         '(
           ("/variomedia/inbox"   . ?v)
           ("/gmail/inbox"    . ?g)
-          ("/cashlink/inbox"   . ?c)
           ("/private/Trash"   . ?t)
           ("/private/Drafts"  . ?d)
           ("/private/Junk"    . ?j)
@@ -4377,25 +4399,7 @@ Set contexts
                      (mu4e-compose-signature . "Victor via Emacs")
                      (mu4e-drafts-folder  . "/variomedia/drafts")
                      (mu4e-sent-folder  . "/variomedia/sent")
-                     (mu4e-trash-folder  . "/variomedia/bin")))
-           ,(make-mu4e-context
-             :name "cashlink"
-             :enter-func (lambda () (mu4e-message "Switch to the cashlink context"))
-             :match-func
-             (lambda (msg)
-               (when msg
-                 (string-prefix-p "/cashlink" (mu4e-message-field msg :maildir))))
-             :vars `((user-mail-address . ,(password-store-get "mail/gmail/work/username"))
-                     (user-full-name    . "Victor Dorneanu")
-                     (smtpmail-smtp-user . ,(password-store-get "mail/gmail/work/username"))
-                     (smtpmail-smtp-server  . "smtp.gmail.com")
-                     (smtpmail-smtp-service . 465)
-                     (smtpmail-stream-type  . ssl)
-                     (mu4e-drafts-folder  . "/cashlink/drafts")
-                     (mu4e-sent-folder  . "/cashlink/sent")
-                     (mu4e-trash-folder  . "/cashlink/bin")
-                     (mu4e-compose-signature . ,(concat "Victor Dorneanu\n" "Security Architect @ Cashlink\n"))
-                     ))))
+                     (mu4e-trash-folder  . "/variomedia/bin")))))
   )
 
 #+end_src
@@ -4697,7 +4701,7 @@ I often want to reply without the original message:
   (set-default 'imenu-auto-rescan t))
 
 (use-package imenu-anywhere
-  :straight 
+  :straight
   :bind (("M-I" . ivy-imenu-anywhere)
          ("C-c i" . ivy-imenu-anywhere)))
 #+end_src
@@ -5016,10 +5020,10 @@ Used for popups (eshell, scratch buffer etc.)
   :config
   ;; Only enable the basic bindings - this should work
   ;; (rg-enable-default-bindings)
-  
+
   ;; Basic settings that don't use macros
   (setq next-error-highlight-no-select t)
-  
+
   ;; We'll add the custom searches and toggles later after ensuring everything works
   )
 
@@ -5178,7 +5182,7 @@ Used for popups (eshell, scratch buffer etc.)
   :straight t)
    #+end_src
 
-   Load default theme: 
+   Load default theme:
 
    #+begin_src emacs-lisp
 (load-theme 'ef-owl t)
@@ -5288,11 +5292,11 @@ Generated via LLM:
          ("C-x 8 e p" . my/popular-emojis)               ; show popular emojis
          ("C-x 8 e d" . emojify-describe-emoji-at-point) ; describe emoji at point
          ("C-x 8 e l" . emojify-list-emojis)             ; list all emojis
-         
+
          ;; Additional useful bindings
          ("C-x 8 e a" . emojify-apropos-emoji)           ; search emojis by regex
          ("C-x 8 e ?" . emojify-describe-emoji))         ; describe any emoji
-  
+
   :custom
   (emojify-display-style 'image)
   (emojify-emoji-styles '(ascii github unicode))
@@ -5303,13 +5307,13 @@ Generated via LLM:
   (emojify-point-entered-behaviour 'echo)
   (emojify-composed-text-p t)
   (emojify-company-tooltips-p t)
-  
+
   :config
   ;; Disable problematic transients (keep from Solution 2)
-  (dolist (cmd '(emoji-search emoji-insert emoji--command-Emoji 
+  (dolist (cmd '(emoji-search emoji-insert emoji--command-Emoji
                 emoji--choose-emoji emoji--command-Choose\ Emoji))
     (when (fboundp cmd)
-      (fset cmd (lambda () (interactive) 
+      (fset cmd (lambda () (interactive)
                   (message "Emoji transient disabled - use emojify-insert-emoji instead")
                   (call-interactively 'emojify-insert-emoji)))))
 
@@ -5319,7 +5323,7 @@ Generated via LLM:
     (interactive)
     (let* ((context (cond
                     ((derived-mode-p 'org-mode) 'org)
-                    ((derived-mode-p 'markdown-mode) 'markdown) 
+                    ((derived-mode-p 'markdown-mode) 'markdown)
                     ((derived-mode-p 'prog-mode) 'code)
                     ((derived-mode-p 'text-mode) 'text)
                     (t 'general)))
@@ -5327,7 +5331,7 @@ Generated via LLM:
                         ('org '(("todo" . "📝") ("done" . "✅") ("meeting" . "👥")
                                ("idea" . "💡") ("note" . "📋") ("deadline" . "⏰")
                                ("project" . "📂") ("archive" . "📦") ("calendar" . "📅")))
-                        ('code '(("bug" . "🐛") ("fix" . "🔧") ("feature" . "✨") 
+                        ('code '(("bug" . "🐛") ("fix" . "🔧") ("feature" . "✨")
                                 ("test" . "🧪") ("refactor" . "♻️") ("deploy" . "🚀")
                                 ("docs" . "📚") ("performance" . "⚡") ("security" . "🔒")))
                         ('markdown '(("important" . "❗") ("tip" . "💡") ("warning" . "⚠️")
@@ -5338,7 +5342,7 @@ Generated via LLM:
                             ("star" . "⭐") ("lightning" . "⚡") ("gem" . "💎")))))
            (choice (completing-read (format "Emoji (%s context): " context) emoji-sets nil t))
            (emoji (cdr (assoc choice emoji-sets))))
-      (when emoji 
+      (when emoji
         (insert emoji)
         (my/track-emoji-usage emoji))))
 
@@ -5346,7 +5350,7 @@ Generated via LLM:
   (defun my/emoji-react-to-line ()
     "Add emoji reaction to current line (useful for code reviews)"
     (interactive)
-    (let* ((reactions '(("approve" . "✅") ("concern" . "❓") ("issue" . "🐛") 
+    (let* ((reactions '(("approve" . "✅") ("concern" . "❓") ("issue" . "🐛")
                        ("suggestion" . "💡") ("praise" . "🎉") ("question" . "❔")
                        ("thinking" . "🤔") ("love" . "❤️") ("laugh" . "😂")))
            (choice (completing-read "Reaction: " reactions nil t))
@@ -5381,7 +5385,7 @@ Generated via LLM:
                    ("relaxed" . "😌") ("energetic" . "⚡") ("productive" . "🚀")))
            (choice (completing-read "Current mood: " moods nil t))
            (emoji (cdr (assoc choice moods))))
-      (when emoji 
+      (when emoji
         (insert emoji)
         (my/track-emoji-usage emoji))))
 
@@ -5389,11 +5393,11 @@ Generated via LLM:
   (defun my/quick-emoji-shortcuts ()
     "Set up quick emoji insertion shortcuts under C-x 8 e prefix"
     (interactive)
-    (let ((shortcuts '(("s" . "😀") ("h" . "❤️") ("t" . "👍") ("f" . "🔥") 
+    (let ((shortcuts '(("s" . "😀") ("h" . "❤️") ("t" . "👍") ("f" . "🔥")
                       ("r" . "🚀") ("c" . "✅") ("x" . "❌") ("w" . "⚠️"))))
       (dolist (shortcut shortcuts)
         (global-set-key (kbd (format "C-x 8 e %s" (car shortcut)))
-                       `(lambda () (interactive) 
+                       `(lambda () (interactive)
                           (insert ,(cdr shortcut))
                           (my/track-emoji-usage ,(cdr shortcut))))))
     (message "Quick emoji shortcuts enabled! Use C-x 8 e + [s/h/t/f/r/c/x/w]"))
@@ -5413,9 +5417,9 @@ Generated via LLM:
     (let* ((sorted-emojis (sort (hash-table-alist my/emoji-usage-count)
                                (lambda (a b) (> (cdr a) (cdr b)))))
            (top-emojis (seq-take sorted-emojis 10))
-           (choices (mapcar (lambda (x) 
-                             (cons (format "%s (used %d times)" (car x) (cdr x)) 
-                                   (car x))) 
+           (choices (mapcar (lambda (x)
+                             (cons (format "%s (used %d times)" (car x) (cdr x))
+                                   (car x)))
                            top-emojis)))
       (if choices
           (let* ((choice (completing-read "Your popular emojis: " choices nil t))
@@ -5443,10 +5447,10 @@ Generated via LLM:
 
   ;; Hooks for context-specific setups
   (add-hook 'org-mode-hook #'my/org-emoji-todo-keywords)
-  
+
   ;; Special binding for git commit mode
-  ;; (add-hook 'git-commit-mode-hook 
-  ;;           (lambda () 
+  ;; (add-hook 'git-commit-mode-hook
+  ;;           (lambda ()
   ;;             (local-set-key (kbd "C-x 8 e") #'my/git-commit-emoji)))
 
   ;; Enable global mode
