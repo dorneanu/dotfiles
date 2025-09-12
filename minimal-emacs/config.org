@@ -1493,7 +1493,7 @@ Need to add some keybindings here:
   (lsp-completion-show-kind t)                     ; Optional
 
   ;; headerline
-  (lsp-headerline-breadcrumb-enable nil)               ; Optional, I like the breadcrumbs
+  (lsp-headerline-breadcrumb-enable t)               ; Optional, I like the breadcrumbs
   (lsp-headerline-breadcrumb-enable-diagnostics nil)   ; Don't make them red, too noisy
   (lsp-headerline-breadcrumb-enable-symbol-numbers nil)
   (lsp-headerline-breadcrumb-icons-enable nil)
@@ -1951,9 +1951,13 @@ Keep lisp code always indented.
   :straight t
   :after magit)
 
-;;(push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
-;;       "github.wdf.sap.corp" forge-github-repository)
-;;
+;; (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
+;;       "github.wdf.sap.corp" forge-github-repository))
+
+(with-eval-after-load 'forge
+  (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
+          "github.wdf.sap.corp" forge-github-repository)
+        forge-alist))
 #+end_src
 
 *** diff-hl
@@ -2009,6 +2013,7 @@ Keep lisp code always indented.
   :straight t
   :after magit)
 #+end_src
+
 *** consult-gh
 #+begin_src emacs-lisp
 (use-package consult-gh
@@ -2065,8 +2070,8 @@ Keep lisp code always indented.
    #+END_SRC
 * ORG mode
 ** org
-   Basic configuration
-   #+begin_src emacs-lisp
+Basic configuration
+#+begin_src emacs-lisp
 (use-package org
   :straight (:type built-in)
   :hook ((org-mode . toggle-truncate-lines))
@@ -2216,7 +2221,7 @@ Keep lisp code always indented.
   (setq org-blank-before-new-entry
         '((heading . nil)
           (plain-list-item . nil))))
-   #+end_src
+#+end_src
 
 ** org-agenda
    #+begin_src emacs-lisp
@@ -3842,17 +3847,17 @@ If prefix ARG, copy instead of move."
 * Autocompletion
 ** cape
    #+begin_src emacs-lisp
-(use-package cape
-  :straight t
-  :defer t
-  :commands (cape-dabbrev cape-file cape-elisp-block)
-  :bind ("C-c p" . cape-prefix-map)
-  :init
-  ;; Add to the global default value of `completion-at-point-functions' which is
-  ;; used by `completion-at-point'.
-  ;; (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  (add-hook 'completion-at-point-functions #'cape-file)
-  (add-hook 'completion-at-point-functions #'cape-elisp-block))
+   (use-package cape
+     :straight t
+     :defer t
+     :commands (cape-dabbrev cape-file cape-elisp-block)
+     :bind ("C-c p" . cape-prefix-map)
+     :init
+     ;; Add to the global default value of `completion-at-point-functions' which is
+     ;; used by `completion-at-point'.
+     (add-hook 'completion-at-point-functions #'cape-dabbrev)
+     (add-hook 'completion-at-point-functions #'cape-file)
+     (add-hook 'completion-at-point-functions #'cape-elisp-block))
    #+end_src
 ** corfu
    #+begin_src emacs-lisp
