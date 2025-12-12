@@ -202,7 +202,7 @@
    #+end_src
 
 *** Change from horizotanl split to vertical split
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; https://stackoverflow.com/questions/14881020/emacs-shortcut-to-switch-from-a-horizontal-split-to-a-vertical-split-in-one-move
 (defun toggle-window-split ()
   (interactive)
@@ -230,7 +230,7 @@
           (if this-win-2nd (other-window 1))))))
 
 (global-set-key (kbd "C-x |") 'toggle-window-split)
-    #+end_src
+#+end_src
 
 *** MacOS
     #+begin_src emacs-lisp
@@ -1923,7 +1923,6 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
-  :after prog-mode
   :bind (("C-c v t " . vterm)
          ("C-c v p" . projectile-run-vterm))
   :config
@@ -2694,11 +2693,11 @@ If prefix ARG, copy instead of move."
   :defer t)
     #+end_src
 ** org-roam
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (require 'ox-hugo)
 (use-package org-roam
   :straight t
-  :defer t
+  ;; :defer t
   :bind (("M-g rn" . org-roam-node-find)
          ("M-g rs" . my/rg-org-roam-directory)
          ("M-g rc" . org-roam-capture)
@@ -2749,9 +2748,9 @@ If prefix ARG, copy instead of move."
            :unnarrowed t)
           ))
   )
-   #+end_src
+#+end_src
 *** org-roam-dailies
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package org-roam-dailies
   :straight (:type built-in)
   :after org
@@ -2764,10 +2763,10 @@ If prefix ARG, copy instead of move."
            :if-new (file+head "%<%Y-%m-%d>.org"
                               "#+TITLE: %<%Y-%m-%d>\n#+DATE: %<%Y-%m-%d>\n#+FILETAGS: journal")))))
 
-    #+end_src
+#+end_src
 
 *** COMMENT consult-org-roam: Disabled due to performance issues
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package consult-org-roam
   :straight t
   :bind (("M-g rn" . consult-org-roam-file-find)
@@ -2780,7 +2779,7 @@ If prefix ARG, copy instead of move."
   (consult-org-roam-mode 1)
   ;; Eventually suppress previewing for certain functions
   (consult-customize consult-org-roam-forward-links :preview-key (kbd "M-.")))
-    #+end_src
+#+end_src
 ** org-babel
    #+begin_src emacs-lisp
 (with-eval-after-load 'org
@@ -3079,7 +3078,7 @@ If prefix ARG, copy instead of move."
   (add-to-list 'browse-url-handlers (cons "^https://\\(www.\\)?youtube.com\\|https://youtu.be" #'dorneanu/play-video-with-mpv-browse)))
    #+end_src
 ** elfeed
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package elfeed
   :defer t
   :straight t
@@ -3121,7 +3120,7 @@ If prefix ARG, copy instead of move."
          ("q" . kill-buffer-and-window)
          ("u" . elfeed-show-tag--unread)
          ("y" . elfeed-show-yank)
-         ("e" . dorneanu/elfeed-show-browse-url-eww)
+         ("e" . elfeed/elfeed-show-visit-eww)
          ("n" . elfeed-show-next)
          ("p" . elfeed-show-prev)
          ("+" . elfeed-show-tag)
@@ -3205,11 +3204,11 @@ If prefix ARG, copy instead of move."
   (add-hook 'elfeed-search-mode-hook
             (lambda ()
               (setq-local tooltip-function #'elfeed-search-show-entry-tooltip))))
-   #+end_src
+#+end_src
 
 *** Custom functions
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun hp/elfeed-entry-line-draw (entry)
   "Enhanced print function for ENTRY in the elfeed-search buffer."
   (let* (;; Basic entry information
@@ -3355,11 +3354,11 @@ If prefix ARG, copy instead of move."
       (insert (propertize title 'face title-faces 'kbd-help title))))
   )
 
-    #+end_src
+#+end_src
 
-    xwidget related:
+xwidget related:
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
   "open with xwidget"
   (interactive "P")
@@ -3369,21 +3368,21 @@ If prefix ARG, copy instead of move."
   (other-window 1)
   (let ((browse-url-browser-function #'xwidget-webkit-browse-url))
     (elfeed-search-browse-url use-generic-p)))
-    #+end_src
+#+end_src
 
-    chrome related:
-    #+begin_src emacs-lisp
+chrome related:
+#+begin_src emacs-lisp
 (defun dorneanu/elfeed-search-browse-url-chrome (&optional use-generic-p)
   "Open elfeed entry with default macOS browser"
   (interactive "P")
   (let ((browse-url-browser-function #'browse-url-default-macosx-browser))
     (elfeed-search-browse-url use-generic-p)))
-    #+end_src
+#+end_src
 
 *** Filter cycling
-    Cycle through different filters:
+Cycle through different filters:
 
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defvar dorneanu/elfeed-custom-filters
   '("+2read"
     "+unread +golang"
@@ -3460,13 +3459,13 @@ If prefix ARG, copy instead of move."
   (let ((current-filter (nth dorneanu/elfeed-current-filter-index dorneanu/elfeed-custom-filters)))
     (elfeed-search-set-filter current-filter)
     (message "Elfeed filter set to: %s" current-filter)))
-    #+end_src
+#+end_src
 
 *** elfeed-goodies
-    Elfeed-goodies is a package which enhances the Elfeed experience.
-    Aside from running its setup command as soon as possible, I also set
-    in this code block all my keybinds for Elfeed here.
-    #+begin_src emacs-lisp
+Elfeed-goodies is a package which enhances the Elfeed experience.
+Aside from running its setup command as soon as possible, I also set
+in this code block all my keybinds for Elfeed here.
+#+begin_src emacs-lisp
 (use-package elfeed-goodies
   :after elfeed
   :commands elfeed-goodies/setup
@@ -3478,16 +3477,16 @@ If prefix ARG, copy instead of move."
   (elfeed-goodies/tag-column-width 28)
   :config
   (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
-    #+end_src
+#+end_src
 *** Youtube
-    I don’t want YouTube videos to be open with my web browser when I
-    invoke ~elfeed-show-visit~, so I’ll advise this function to make it
-    possible to modify the behaviour of said function. Oh, and I already
-    made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
-    [[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
+I don’t want YouTube videos to be open with my web browser when I
+invoke ~elfeed-show-visit~, so I’ll advise this function to make it
+possible to modify the behaviour of said function. Oh, and I already
+made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos and friends through
+[[https://ytdl-org.github.io/youtube-dl/][youtube-dl]] or its superior fork [[https://github.com/yt-dlp/yt-dlp][yt-dlp]] in mpv.
 
-    #+name: elfeed-open-youtube-with-mpv
-    #+begin_src emacs-lisp
+#+name: elfeed-open-youtube-with-mpv
+#+begin_src emacs-lisp
 (defun my/elfeed-filter-youtube-videos (orig-fun &rest args)
   "Open with mpv the video leading to PATH"
   (let ((link (elfeed-entry-link elfeed-show-entry)))
@@ -3500,16 +3499,16 @@ If prefix ARG, copy instead of move."
         (apply orig-fun args)))))
 
 (advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
-    #+end_src
+#+end_src
 
-    A future improvement to be made is to let the user chose the
-    resolution of the video before it is launched. I may not always have
-    the best internet connection, and viewing 4K videos on a 1080p display
-    is not something very useful.
+A future improvement to be made is to let the user chose the
+resolution of the video before it is launched. I may not always have
+the best internet connection, and viewing 4K videos on a 1080p display
+is not something very useful.
 *** elfeed-org
-    Last but not least, my Elfeed configuration is stored in an org file
-    thanks to ~elfeed-org~.
-    #+begin_src emacs-lisp
+Last but not least, my Elfeed configuration is stored in an org file
+thanks to ~elfeed-org~.
+#+begin_src emacs-lisp
 (use-package elfeed-org
   :after elfeed
   :straight t
@@ -3517,9 +3516,9 @@ If prefix ARG, copy instead of move."
   (elfeed-org)
   :config
   (setq rmh-elfeed-org-files (list (concat org-directory "elfeed.org.gpg"))))
-    #+end_src
+#+end_src
 *** elfeed-tube
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package elfeed-tube
   :straight t
   :after elfeed
@@ -3558,10 +3557,10 @@ If prefix ARG, copy instead of move."
     (when (< 0 quality-val)
       (setq quality-arg (format "--ytdl-format=[height<=?%s]" quality-val)))
     (start-process "elfeed-mpv" nil "mpv" quality-arg url)))
-    #+end_src
+#+end_src
 
 *** functions
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun dorneanu/elfeed-search-browse-url-xwidget (&optional use-generic-p)
   "open with xwidget"
   (interactive "P")
@@ -3577,9 +3576,9 @@ If prefix ARG, copy instead of move."
   (interactive)
   (let ((browse-url-browser-function 'eww-browse-url))
     (elfeed-show-visit)))
-    #+end_src
+#+end_src
 ** reddigg
-   Use reddigg to show reddit threads.
+ Use reddigg to show reddit threads.
 
    #+begin_src emacs-lisp
 (use-package reddigg
@@ -3711,21 +3710,24 @@ If prefix ARG, copy instead of move."
    #+end_src
 
 ** hnreader
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package hnreader
   :straight t
   :after (elfeed))
-   #+end_src
+  
+;; activate org-modern-mode
+(add-hook 'hnreader-mode-hook #'org-modern-mode)
+#+end_src
 
-   Open in same window
+Open in same window
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (setq hnreader-view-comments-in-same-window nil)
-   #+end_src
+#+end_src
 
-   Use hnreader to show HN threads
+Use hnreader to show HN threads
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun my/elfeed-hn-show-comments (&optional link)
   (interactive)
   (let* ((entry (if (eq major-mode 'elfeed-show-mode)
@@ -3739,18 +3741,23 @@ If prefix ARG, copy instead of move."
                             (match-string 1 content))))
     (message comments-url)
     (setq-local hnreader-view-comments-in-same-window nil)
-    (hnreader-promise-comment (format "%s" comments-url))))
-   #+end_src
+    (hnreader-promise-comment (format "%s" comments-url))
+    (run-with-timer 0.5 nil
+                    (lambda ()
+                      (when (string-match "\\*HNComments\\*" (buffer-name))
+                        (org-modern-mode 1))))
+    ))
+#+end_src
 
-   Use hnread to show HN threads for a URL at point
+Use hnread to show HN threads for a URL at point
 
-   #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (defun my/elfeed-hn-show-comments-at-point ()
   "Kill the url at point."
   (interactive)
   (setq-local hnreader-view-comments-in-same-window t)
   (hnreader-comment (format "%s" (url-get-url-at-point))))
-   #+end_src
+#+end_src
 * Files
 ** dirvish
    #+begin_src emacs-lisp
@@ -4037,11 +4044,11 @@ If prefix ARG, copy instead of move."
       ;; openweb-ui
       (gptel-make-openai "OpenWebUI"
         :protocol "http"
-        :host "localhost:3000"  ; Replace with your OpenWebUI host/port
+        :host "localhost:3000"  ; 3000 with your OpenWebUI host/port
         :endpoint "/api/chat/completions"
         :stream t
         :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
-        :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4-sonnet")
+        :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4.5-sonnet" "sap_ai_core.anthropic--claude-4-sonnet")
         :request-params '(:parallel_tool_calls t))
 
       ;; OPTIONAL configuration
@@ -4103,6 +4110,41 @@ If prefix ARG, copy instead of move."
   ;; send last message in chat buffer with C-c C-c
   (add-hook 'org-ctrl-c-ctrl-c-hook #'ellama-chat-send-last-message))
     #+end_src
+*** COMMENT claude-code
+#+begin_src emacs-lisp
+;; Install required inheritenv dependency:
+(use-package inheritenv
+  :straight (:type git :host github :repo "purcell/inheritenv"))
+
+;; for eat terminal backend:
+(use-package eat
+  :straight (:type git
+                   :host codeberg
+                   :repo "akib/emacs-eat"
+                   :files ("*.el" ("term" "term/*.el") "*.texi"
+                           "*.ti" ("terminfo/e" "terminfo/e/*")
+                           ("terminfo/65" "terminfo/65/*")
+                           ("integration" "integration/*")
+                           (:exclude ".dir-locals.el" "*-tests.el"))))
+
+;; install claude-code.el, using :depth 1 to reduce download size:
+(use-package claude-code
+  :straight (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main" :depth 1
+                   :files ("*.el" (:exclude "images/*")))
+  :bind-keymap
+  ("C-x c" . claude-code-command-map) ;; or your preferred key
+  ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
+  :bind
+  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
+  :config
+  (setq claude-code-ide-terminal-backend 'vterm)
+  (setq claude-code-ide-vterm-anti-flicker t))
+  ;; optional IDE integration with Monet
+  ;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
+  ;; (monet-mode 1)
+  ;; (claude-code-mode)
+  
+#+end_src
 ** Web
 *** eww
     #+begin_src emacs-lisp
@@ -4266,7 +4308,8 @@ If prefix ARG, copy instead of move."
           ("/private/Trash"   . ?t)
           ("/private/Drafts"  . ?d)
           ("/private/Junk"    . ?j)
-          ("/private/Archive" . ?a)))
+          ("/private/Archive" . ?a)
+          ("/variomedia/local-archive" . ?L)))
 
   ;; Set contexts
   (dorneanu/set-mu4e-contexts))
@@ -4629,6 +4672,28 @@ I often want to reply without the original message:
     (message "Directory local variables reloaded for %s"
              (buffer-name))))
     #+end_src
+** COMMENT emacsshot
+From https://gitlab.com/marcowahl/emacsshot
+#+begin_src emacs-lisp
+(use-package emacsshot
+  :straight t
+  :bind(("C-x a s f" . my/emacsshot-snap-frame)
+        ("C-x a s w" . my/emacsshot-snap-window))
+  :config
+  (defun copy-file-content-to-clipboard (file-path)
+    (shell-command (format "xclip -selection clipboard -t image/png -i %s" file-path)))
+  (defun my/emacsshot-snap-window ()
+    (interactive)
+    (emacsshot-snap-window)
+    (copy-file-content-to-clipboard "~/emacsshot.png")
+    )
+  (defun my/emacsshot-snap-frame ()
+    (interactive)
+    (emacsshot-snap-frame)
+    (copy-file-content-to-clipboard "~/emacsshot.png")
+    ))
+#+end_src
+
 * Navigation
 ** avy
 #+BEGIN_SRC emacs-lisp
@@ -4672,8 +4737,8 @@ I often want to reply without the original message:
   (add-hook 'ibuffer-mode-hook
             #'(lambda ()
                 (ibuffer-switch-to-saved-filter-groups "default"))))
-
 #+end_src
+
 *** ibuffer-projectile
 #+begin_src emacs-lisp
 (use-package ibuffer-projectile
@@ -4853,7 +4918,7 @@ Used for popups (eshell, scratch buffer etc.)
     #+end_src
 
 *** meow for org
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 ;; From https://aatmunbaxi.netlify.app/comp/meow_state_org_speed/
 (setq meow-org-motion-keymap (make-keymap))
 (meow-define-state org-motion
@@ -4867,11 +4932,11 @@ Used for popups (eshell, scratch buffer etc.)
   '("g" . meow-normal-mode)
   '("u" .  meow-undo)
   ;; Moving between headlines
-  '("k" .  (lambda () (interactive) (org-previous-visible-heading 1) (pulsar-recenter-center)))
-  '("j" .  (lambda () (interactive) (org-next-visible-heading 1) (pulsar-recenter-center)))
+  '("k" .  (lambda () (interactive) (org-previous-visible-heading 1) (pulsar-recenter-top)))
+  '("j" .  (lambda () (interactive) (org-next-visible-heading 1) (pulsar-recenter-top)))
   ;; Moving between headings at the same level
-  '("p" .  (lambda () (interactive) (org-backward-heading-same-level 1) (pulsar-recenter-center)))
-  '("n" .  (lambda () (interactive) (org-forward-heading-same-level 1) (pulsar-recenter-center)))
+  '("p" .  (lambda () (interactive) (org-backward-heading-same-level 1) (pulsar-recenter-top)))
+  '("n" .  (lambda () (interactive) (org-forward-heading-same-level 1) (pulsar-recenter-top)))
   ;; Moving subtrees themselves
   '("K" .  org-move-subtree-up)
   '("J" .  org-move-subtree-down)
@@ -4902,7 +4967,7 @@ Used for popups (eshell, scratch buffer etc.)
 
 (meow-define-keys 'normal
   '("O" . meow-org-motion-mode))
-    #+end_src
+#+end_src
 
 ** olivetti
    #+begin_src emacs-lisp
@@ -5024,7 +5089,7 @@ Used for popups (eshell, scratch buffer etc.)
   ;; :bind (("C-s r" . rg))
   :config
   ;; Only enable the basic bindings - this should work
-  ;; (rg-enable-default-bindings)
+  (rg-enable-default-bindings)
 
   ;; Basic settings that don't use macros
   (setq next-error-highlight-no-select t)
@@ -5547,7 +5612,7 @@ Generated via LLM:
     #+end_src
 ** Tabs
 *** tabspaces
-    #+begin_src emacs-lisp
+#+begin_src emacs-lisp
 (use-package tabspaces
   ;; use this next line only if you also use straight, otherwise ignore it.
   :straight (:type git :host github :repo "mclear-tools/tabspaces")
@@ -5565,7 +5630,7 @@ Generated via LLM:
   (tabspaces-session t)
   (tabspaces-session-auto-restore nil)
   (tab-bar-new-tab-choice "*scratch*"))
-    #+end_src
+#+end_src
 *** COMMENT centaur-tabs
     #+begin_src emacs-lisp
 (use-package centaur-tabs
@@ -5658,6 +5723,14 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   ;; ("s-S l" . centaur-tabs-move-current-tab-to-right)
   )
     #+end_src
+*** COMMENT vim-tab-bar
+#+begin_src emacs-lisp
+(use-package vim-tab-bar
+  :straight t
+  :commands vim-tab-bar-mode
+  :hook
+  (after-init . vim-tab-bar-mode))
+#+end_src
 ** Mouse
 I still use the mouse for scrolling, changing frame sizes:
 
