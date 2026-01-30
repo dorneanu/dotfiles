@@ -3019,6 +3019,47 @@ Insert images easily into ORG mode files
 ;; Drag-and-drop to `dired`
 (add-hook 'dired-mode-hook 'org-download-enable)
 #+end_src
+** org-contacts
+Contact management for mu4e and other mail clients
+#+begin_src emacs-lisp
+(use-package org-contacts
+  :straight t
+  :after org
+  :custom
+  ;; Set the contacts file(s)
+  (org-contacts-files (list (expand-file-name "contacts.org.gpg" org-directory)))
+
+  ;; Property names for contact information
+  (org-contacts-email-property "EMAIL")
+  (org-contacts-tel-property "PHONE")
+  (org-contacts-address-property "ADDRESS")
+  (org-contacts-birthday-property "BIRTHDAY")
+
+  ;; Birthday format in agenda
+  (org-contacts-birthday-format "Birthday: %l (%Y)")
+
+  :config
+  ;; Enable completion in message mode (mu4e compose)
+  (add-hook 'message-mode-hook
+            (lambda ()
+              (add-to-list 'completion-at-point-functions
+                           'org-contacts-completion-at-point)))
+
+  ;; Enable completion in mu4e compose mode specifically
+  (with-eval-after-load 'mu4e
+    (add-hook 'mu4e-compose-mode-hook
+              (lambda ()
+                (add-to-list 'completion-at-point-functions
+                             'org-contacts-completion-at-point))))
+
+  ;; Ensure corfu is enabled in mu4e compose mode
+  (with-eval-after-load 'corfu
+    (add-hook 'mu4e-compose-mode-hook 'corfu-mode)))
+
+;; Mail aliases from org-contacts
+(setq mail-aliases t)
+(add-hook 'mu4e-compose-pre-hook 'org-contacts-gnus-store-last-mail)
+#+end_src
 ** presentations
 *** org-re-reveal
 Use [[https://oer.gitlab.io/org-re-reveal/][org-re-reveal]] for creating presentations using [[https://revealjs.com/][revealjs]].
