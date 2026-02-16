@@ -2280,6 +2280,17 @@ Basic configuration
          ([(shift return)] . crux-smart-open-line)
          ([(control shift return)] . crux-smart-open-line-above)
 
+         ;; Minibuffer calendar navigation (macOS-friendly)
+         :map org-read-date-minibuffer-local-map
+         ("M-<left>"    . (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-day 1))))
+         ("M-<right>"   . (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-day 1))))
+         ("M-<up>"      . (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-week 1))))
+         ("M-<down>"    . (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-week 1))))
+         ("M-S-<left>"  . (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-month 1))))
+         ("M-S-<right>" . (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-month 1))))
+         ("M-S-<up>"    . (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-year 1))))
+         ("M-S-<down>"  . (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-year 1))))
+
          :map org-src-mode-map
          ("C-x n" . org-edit-src-exit))
   :custom
