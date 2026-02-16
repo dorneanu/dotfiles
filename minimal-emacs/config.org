@@ -967,11 +967,12 @@ I only need ~counsel-org-tag~
   :hook (go-ts-mode . apheleia-mode)
   :bind (:map go-ts-mode-map
               ("C-c g e h" . eldoc-box-hover-mode)
-              ("C-c g l e" . my-switch-to-eglot)
-              ("C-c g l l" . my-switch-to-lsp)
+              ("C-c g e e" . my-switch-to-eglot)
+              ("C-c g e l" . my-switch-to-lsp)
               ("M-?" . godoc-at-point)
               ("M-." . xref-find-definitions)
               ("M-_" . xref-find-references)
+              ("M-o" . xref-find-definitions-other-window)
 
               ;; TESTING
               ("C-c t t" . go-test-current-test)
@@ -2334,6 +2335,7 @@ Basic configuration
         org-log-into-drawer                nil     ;; Does this make sense?
         org-directory                      "~/repos/priv/org/"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
+
 
   ;; Set TODO keywords
   (setq org-todo-keywords
@@ -4807,7 +4809,7 @@ Various useful utilities
          ("C-c f r" . crux-rename-buffer-and-file)
          ("C-c f d" . crux-delete-file-and-buffer)
          ("C-x C-b" . create-scratch-buffer)
-         ("s-k"   . crux-kill-whole-line)
+         ;; ("s-k"   . crux-kill-whole-line)
          ;;("s-o"   . crux-smart-open-line-above)
          ("C-a"   . crux-move-beginning-of-line)
          ("C-k"   . crux-kill-whole-line)
