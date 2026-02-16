@@ -4395,7 +4395,32 @@ Play midi files from within dir buffers
   ;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
   ;; (monet-mode 1)
   ;; (claude-code-mode)
-  
+
+;; Claude Code endpoint switching functions
+(defun claude-code-toggle-endpoint ()
+  "Toggle between work proxy and official Anthropic API."
+  (interactive)
+  (if (string= (getenv "ANTHROPIC_BASE_URL") "http://localhost:3030")
+      (progn
+        (setenv "ANTHROPIC_BASE_URL" nil) ; Use official Anthropic API
+        (message "Claude Code: Using official Anthropic API"))
+    (progn
+      (setenv "ANTHROPIC_BASE_URL" "http://localhost:3030")
+      (message "Claude Code: Using work proxy (localhost:3030)"))))
+
+(defun claude-code-use-work-proxy ()
+  "Set Claude Code to use work proxy."
+  (interactive)
+  (setenv "ANTHROPIC_BASE_URL" "http://localhost:3030")
+  (setenv "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS" "1")
+  (message "Claude Code: Using work proxy"))
+
+(defun claude-code-use-official-api ()
+  "Set Claude Code to use official Anthropic API."
+  (interactive)
+  (setenv "ANTHROPIC_BASE_URL" nil)
+  (message "Claude Code: Using official Anthropic API"))
+
 #+end_src
 ** Web
 *** eww
