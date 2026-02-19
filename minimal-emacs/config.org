@@ -2301,7 +2301,7 @@ Basic configuration
          ("C-x n" . org-edit-src-exit))
   :custom
   (org-auto-align-tags t)
-  (org-edit-src-content-indentation t)     ; indent the content of src blocks
+  (org-edit-src-content-indentation 2)     ; indent the content of src blocks by 2 spaces
   (org-edit-src-turn-on-auto-save t)       ; auto-save org-edit-src
   (org-fontify-quote-and-verse-blocks t)
   (org-pretty-entities t)
@@ -2938,7 +2938,7 @@ If prefix ARG, copy instead of move."
 
   ;; Don't remove (or add) any extra whitespace
   (setq org-src-preserve-indentation nil)
-  (setq org-edit-src-content-indentation 0))
+  (setq org-edit-src-content-indentation 2))
 
 ;; Install ob-go
 (use-package ob-go
@@ -3303,7 +3303,7 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
   (org-show-subtree)) ; Show current subtree content
 #+end_src
 *** Dynamic Tag Width Functions
- #+begin_src emacs-lisp
+#+begin_src emacs-lisp
  ;; Functions to dynamically calculate tag column positions based on window width
  (defun my/org-tags-column-width ()
    "Calculate dynamic tag column width for org-mode.
