@@ -439,7 +439,9 @@ Something I use a lot:
   ;; Misc
   (define-key org-mode-map (dorneanu/my-org-key "a") #'org-archive-subtree)
   (define-key org-mode-map (dorneanu/my-org-key "r") #'org-refile)
-  (define-key org-mode-map (dorneanu/my-org-key "l") #'org-insert-link))
+  (define-key org-mode-map (dorneanu/my-org-key "k") #'org-store-link)
+  (define-key org-mode-map (dorneanu/my-org-key "l") #'org-insert-link)
+  (define-key org-mode-map (dorneanu/my-org-key "e m") #'my/toggle-org-emphasis-markers))
 #+end_src
 * Completion
 ** vertico
@@ -2274,7 +2276,9 @@ Basic configuration
          ("C-c o r f" . +org/refile-to-current-file)
          ("C-c o r o" . +org/refile-to-other-window)
          ;;("C-c o r l" . +org/refile-to-last-location)
+         ("C-c o k" . org-store-link)
          ("C-c o l" . org-insert-link)
+         ("C-c o e m" . my/toggle-org-emphasis-markers)
          ("C-c '" . org-edit-special)
          ("C-c o o p" . org-present)
 
@@ -2396,11 +2400,9 @@ Basic configuration
    org-agenda-include-deadlines t
    org-agenda-todo-list-sublevels t
 
-   ;; Set column width for tags in agenda
-   org-agenda-tags-column 100
-
-   ;; Set column width for tags in org mode
-   org-tags-column -100
+   ;; Dynamic tag column width functions
+   org-agenda-tags-column nil  ; Will be set dynamically
+   org-tags-column nil         ; Will be set dynamically
 
 
    ;; org-agenda-todo-ignore-scheduled 'all
@@ -2462,7 +2464,7 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
 #+begin_src emacs-lisp
 (use-package org-super-agenda
   :straight t
-  :after (org-agend))
+  :after (org-agenda))
 
 (with-eval-after-load 'org-agenda
   ;; Enable it
@@ -2534,20 +2536,22 @@ Inspired by https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-a
                             ;;  :todo ("WIP")
                             ;;  :order 40)
                             (:discard (:anything))))))
-            ;; (alltodo "" ((org-agenda-overriding-header "")
-            ;;              (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
-            ;;              (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
-            ;;              (org-super-agenda-groups
-            ;;               '(
-            ;;                 (:log t)
-            ;;                 (:discard (:tag ("no-agenda" "inactive" "meeting" "projectile")))
-            ;;                 (:discard (:todo ("PROJ")))
-            ;;                 (:name "Projects"
-            ;;                        :auto-property "project"
-            ;;                        :todo t
-            ;;                        :order 1)
-            ;;                 (:discard (:anything))))))
+                            
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-agenda-hide-tags-regexp "project\\|ticket\\|active")
+                         (org-agenda-prefix-format '((todo . " %-8c [%-4e] %?-12t %s")))
+                         (org-super-agenda-groups
+                          '(
+                            (:log t)
+                            (:discard (:tag ("no-agenda" "inactive" "meeting" "projectile")))
+                            (:discard (:todo ("PROJ")))
+                            (:name "Projects"
+                                   :auto-property "project"
+                                   :todo t
+                                   :order 1)
+                            (:discard (:anything))))))
                             ))
+                            
 
 
           ("r" "Resonance"
@@ -3297,6 +3301,60 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
   (org-reveal)    ; Show path to current heading
   (org-show-subtree)) ; Show current subtree content
 #+end_src
+*** Dynamic Tag Width Functions
+ #+begin_src emacs-lisp
+ ;; Functions to dynamically calculate tag column positions based on window width
+ (defun my/org-tags-column-width ()
+   "Calculate dynamic tag column width for org-mode.
+   Uses 80% of window width, with minimum of 60 and maximum of 120."
+   (let* ((win-width (window-width))
+          (tag-col (floor (* win-width 0.8))))
+     (max 60 (min 120 tag-col))))
+
+ (defun my/org-agenda-tags-column-width ()
+   "Calculate dynamic tag column width for org-agenda.
+   Uses 75% of window width, with minimum of 50 and maximum of 100."
+   (let* ((win-width (window-width))
+          (tag-col (floor (* win-width 0.75))))
+     (max 50 (min 100 tag-col))))
+
+ (defun my/update-org-tag-columns ()
+   "Update org tag columns based on current window width."
+   (setq org-tags-column (- (my/org-tags-column-width)))
+   (setq org-agenda-tags-column (my/org-agenda-tags-column-width)))
+
+ ;; Update tag columns when window configuration changes
+ (add-hook 'window-configuration-change-hook #'my/update-org-tag-columns)
+ (add-hook 'window-size-change-functions (lambda (&rest _) (my/update-org-tag-columns)))
+
+ ;; Set initial values
+ (my/update-org-tag-columns)
+ #+end_src
+
+*** Enhanced Org Emphasis Styling
+ #+begin_src emacs-lisp
+ ;; Enhanced emphasis styling - make bold/italic more visible
+ (custom-set-faces
+  ;; Bold text - using the correct 'bold' face (not 'org-bold')
+  '(bold ((t (:weight ultra-bold :foreground "#e74c3c" :height 1.05))))
+  ;; Italic text - using the correct 'italic' face
+  '(italic ((t (:slant italic :foreground "#3498db" :weight normal))))
+  ;; Underline text - using the correct 'underline' face
+  '(underline ((t (:underline t :foreground "#9b59b6"))))
+  ;; Code/verbatim text - these might be org-specific
+  '(org-verbatim ((t (:background "#2c3e50" :foreground "#ecf0f1" :family "monospace"))))
+  '(org-code ((t (:background "#34495e" :foreground "#f1c40f" :family "monospace")))))
+
+ ;; Function to toggle emphasis markers visibility
+ (defun my/toggle-org-emphasis-markers ()
+   "Toggle visibility of org emphasis markers (*bold*, /italic/, etc.)."
+   (interactive)
+   (setq org-hide-emphasis-markers (not org-hide-emphasis-markers))
+   (font-lock-flush)
+   (message "Org emphasis markers %s"
+            (if org-hide-emphasis-markers "hidden" "visible")))
+ #+end_src
+
 * Media
 ** empv
 Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
@@ -5217,11 +5275,11 @@ Used for popups (eshell, scratch buffer etc.)
   '("g" . meow-normal-mode)
   '("u" .  meow-undo)
   ;; Moving between headlines
-  '("k" .  (lambda () (interactive) (org-previous-visible-heading 1) (pulsar-recenter-top)))
-  '("j" .  (lambda () (interactive) (org-next-visible-heading 1) (pulsar-recenter-top)))
+  '("k" .  (lambda () (interactive) (org-previous-visible-heading 1) (pulsar-recenter-center)))
+  '("j" .  (lambda () (interactive) (org-next-visible-heading 1) (pulsar-recenter-center)))
   ;; Moving between headings at the same level
-  '("p" .  (lambda () (interactive) (org-backward-heading-same-level 1) (pulsar-recenter-top)))
-  '("n" .  (lambda () (interactive) (org-forward-heading-same-level 1) (pulsar-recenter-top)))
+  '("p" .  (lambda () (interactive) (org-backward-heading-same-level 1) (pulsar-recenter-center)))
+  '("n" .  (lambda () (interactive) (org-forward-heading-same-level 1) (pulsar-recenter-center)))
   ;; Moving subtrees themselves
   '("K" .  org-move-subtree-up)
   '("J" .  org-move-subtree-down)
