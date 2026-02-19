@@ -671,45 +671,45 @@ Something I use a lot:
 #+end_src
 ** embrace
 #+begin_src emacs-lisp
-(use-package embrace
-  :straight t
-  :demand t
-  :bind (("M-s w" . embrace-commander)  ; wrap/surround
-         ("M-s a" . embrace-add)        ; add surrounding
-         ("M-s x" . embrace-delete))    ; extract/remove surrounding
-  :config
-  ;; Add custom pairs for programming
-  (embrace-add-pair ?` "`" "`")     ; backticks
-  (embrace-add-pair ?~ "~" "~")     ; tildes
-  (embrace-add-pair ?= "=" "=")     ; equals
-  (embrace-add-pair ?/ "/" "/")     ; slashes
-  (embrace-add-pair ?_ "_" "_")     ; underscores
-  (embrace-add-pair ?* "*" "*")     ; asterisks
+  (use-package embrace
+    :straight t
+    :demand t
+    :bind (("M-s w" . embrace-commander)  ; wrap/surround
+           ("M-s a" . embrace-add)        ; add surrounding
+           ("M-s x" . embrace-delete))    ; extract/remove surrounding
+    :config
+    ;; Add custom pairs for programming
+    ;; (embrace-add-pair ?` "`" "`")     ; backticks
+    ;; (embrace-add-pair ?~ "~" "~")     ; tildes
+    ;; (embrace-add-pair ?= "=" "=")     ; equals
+    ;; (embrace-add-pair ?/ "/" "/")     ; slashes
+    ;; (embrace-add-pair ?_ "_" "_")     ; underscores
+    ;; (embrace-add-pair ?* "*" "*")     ; asterisks
 
-  ;; HTML/XML tags
-  (embrace-add-pair ?< "<" ">")
+    ;; HTML/XML tags
+    ;; (embrace-add-pair ?< "<" ">")
 
-  ;; Mode-specific pairs using hooks
-  (add-hook 'org-mode-hook
-            (lambda ()
-              (embrace-add-pair-local ?b "*" "*")   ; bold
-              (embrace-add-pair-local ?i "/" "/")   ; italic
-              (embrace-add-pair-local ?c "~" "~")   ; code
-              (embrace-add-pair-local ?v "=" "=")   ; verbatim
-              (embrace-add-pair-local ?u "_" "_")   ; underline
-              (embrace-add-pair-local ?s "+" "+"))) ; strikethrough
-
-  (add-hook 'markdown-mode-hook
-            (lambda ()
-              (embrace-add-pair-local ?c "`" "`")))
-
-  (add-hook 'gfm-mode-hook
-            (lambda ()
-              (embrace-add-pair-local ?c "`" "`")))
-
-  (add-hook 'emacs-lisp-mode-hook
-            (lambda ()
-              (embrace-add-pair-local ?q "`" "'")))))
+    ;; Mode-specific pairs using hooks
+    (add-hook 'org-mode-hook
+              (lambda ()
+                (embrace-add-pair ?b "*" "*")   ; bold
+                (embrace-add-pair ?i "/" "/")   ; italic
+                (embrace-add-pair ?c "~" "~")   ; code
+                (embrace-add-pair ?v "=" "=")   ; verbatim
+                (embrace-add-pair ?u "_" "_")   ; underline
+                (embrace-add-pair ?s "+" "+")))) ; strikethrough
+    ;; 
+    ;; (add-hook 'markdown-mode-hook
+    ;;           (lambda ()
+    ;;             (embrace-add-pair ?c "`" "`")))
+    ;; 
+    ;; (add-hook 'gfm-mode-hook
+    ;;           (lambda ()
+    ;;             (embrace-add-pair ?c "`" "`")))
+    ;; 
+    ;; (add-hook 'emacs-lisp-mode-hook
+    ;;           (lambda ()
+    ;;             (embrace-add-pair ?q "`" "'"))))
 #+end_src
 
  0asbl
