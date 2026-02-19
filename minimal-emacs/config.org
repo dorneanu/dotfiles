@@ -441,7 +441,8 @@ Something I use a lot:
   (define-key org-mode-map (dorneanu/my-org-key "r") #'org-refile)
   (define-key org-mode-map (dorneanu/my-org-key "k") #'org-store-link)
   (define-key org-mode-map (dorneanu/my-org-key "l") #'org-insert-link)
-  (define-key org-mode-map (dorneanu/my-org-key "e m") #'my/toggle-org-emphasis-markers))
+  (define-key org-mode-map (dorneanu/my-org-key "e m") #'my/toggle-org-emphasis-markers)
+  (define-key org-mode-map (dorneanu/my-org-key "e r") #'my/refresh-org-emphasis))
 #+end_src
 * Completion
 ** vertico
@@ -714,7 +715,6 @@ Something I use a lot:
     ;;             (embrace-add-pair ?q "`" "'"))))
 #+end_src
 
- 0asbl
 ** embark
 #+begin_src emacs-lisp
 ;; Some usefull functions
@@ -810,7 +810,7 @@ I only need ~counsel-org-tag~
 
   ;; Don't remove (or add) any extra whitespace
   (setq org-src-preserve-indentation nil)
-  (setq org-edit-src-content-indentation 0))
+  (setq org-edit-src-content-indentation 2))
 
 ;; Install ob-go
 (use-package ob-go
@@ -2279,6 +2279,7 @@ Basic configuration
          ("C-c o k" . org-store-link)
          ("C-c o l" . org-insert-link)
          ("C-c o e m" . my/toggle-org-emphasis-markers)
+         ("C-c o e r" . my/refresh-org-emphasis)
          ("C-c '" . org-edit-special)
          ("C-c o o p" . org-present)
 
@@ -3329,21 +3330,42 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
 
  ;; Set initial values
  (my/update-org-tag-columns)
- #+end_src
+#+end_src
 
 *** Enhanced Org Emphasis Styling
- #+begin_src emacs-lisp
- ;; Enhanced emphasis styling - make bold/italic more visible
+#+begin_src emacs-lisp
+ ;; Create custom org-only emphasis faces
+ (defface my-org-bold-face
+   '((t (:inherit bold :weight ultra-bold :foreground "#e74c3c" :height 1.05)))
+   "Custom bold face for org-mode only")
+
+ (defface my-org-italic-face
+   '((t (:inherit italic :slant italic :foreground "#3498db" :weight normal)))
+   "Custom italic face for org-mode only")
+
+ (defface my-org-underline-face
+   '((t (:inherit underline :underline t :foreground "#9b59b6")))
+   "Custom underline face for org-mode only")
+
+ ;; Customize org-specific faces only
  (custom-set-faces
-  ;; Bold text - using the correct 'bold' face (not 'org-bold')
-  '(bold ((t (:weight ultra-bold :foreground "#e74c3c" :height 1.05))))
-  ;; Italic text - using the correct 'italic' face
-  '(italic ((t (:slant italic :foreground "#3498db" :weight normal))))
-  ;; Underline text - using the correct 'underline' face
-  '(underline ((t (:underline t :foreground "#9b59b6"))))
-  ;; Code/verbatim text - these might be org-specific
   '(org-verbatim ((t (:background "#2c3e50" :foreground "#ecf0f1" :family "monospace"))))
   '(org-code ((t (:background "#34495e" :foreground "#f1c40f" :family "monospace")))))
+
+ ;; Override org-emphasis-alist to use our custom faces (org-mode only)
+ (with-eval-after-load 'org
+   (setq org-emphasis-alist
+         '(("*" my-org-bold-face)
+           ("/" my-org-italic-face)
+           ("_" my-org-underline-face)
+           ("=" org-verbatim verbatim)
+           ("~" org-code verbatim)
+           ("+" (:strike-through t))))
+   ;; Force refresh of already open org buffers
+   (dolist (buffer (buffer-list))
+     (with-current-buffer buffer
+       (when (derived-mode-p 'org-mode)
+         (org-restart-font-lock)))))
 
  ;; Function to toggle emphasis markers visibility
  (defun my/toggle-org-emphasis-markers ()
@@ -3353,7 +3375,15 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
    (font-lock-flush)
    (message "Org emphasis markers %s"
             (if org-hide-emphasis-markers "hidden" "visible")))
- #+end_src
+
+ ;; Helper function to refresh org emphasis styling
+ (defun my/refresh-org-emphasis ()
+   "Refresh org emphasis styling in current buffer."
+   (interactive)
+   (when (derived-mode-p 'org-mode)
+     (org-restart-font-lock)
+     (message "Org emphasis styling refreshed")))
+#+end_src
 
 * Media
 ** empv
