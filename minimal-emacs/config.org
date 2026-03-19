@@ -4923,6 +4923,9 @@ Play midi files from within dir buffers
         ("from:yo@dev.to AND NOT flag:trashed" "dev.to" ?d)
         ("from:jira@*" "Jira" ?j)
         ("from:notifications@github.com" "Github" ?g)
+        ("from:hello@readwise.io AND NOT flag:trashed" "Readwise" ?r)
+        ("from:peter@golangweekly.com AND NOT flag:trashed" "Golang Weekly" ?G)
+        ("from:stareanatiei@substack.com AND NOT flag:trashed" "Starea Nației" ?S)
         ;; (,(s-join " "
         ;;           '("OR noreply@tagesspiegel.de"
         ;;             "OR support@lagedernation.org"
