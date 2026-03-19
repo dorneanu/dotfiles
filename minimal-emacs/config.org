@@ -1001,12 +1001,25 @@ I only need ~counsel-org-tag~
 ** Languages
 *** golang
 #+begin_src emacs-lisp
+(defun my/de-indent ()
+  "De-indent current line or region by one tab stop."
+  (interactive)
+  (if (use-region-p)
+      (indent-rigidly (region-beginning) (region-end) (- tab-width))
+    (indent-rigidly (line-beginning-position) (line-end-position) (- tab-width))))
+
 ;;; Clean Go-ts-mode only configuration
 (use-package go-ts-mode
   :straight (:type built-in)
   :mode "\\.go\\'"
-  :hook (go-ts-mode . apheleia-mode)
+  :hook ((go-ts-mode . apheleia-mode)
+         (go-ts-mode . electric-pair-local-mode)
+         (go-ts-mode . (lambda ()
+                         (setq-local indent-tabs-mode t)
+                         (setq-local tab-width 4)
+                         (setq-local go-ts-mode-indent-offset 4))))
   :bind (:map go-ts-mode-map
+              ("<backtab>" . my/de-indent)
               ("C-c g e h" . eldoc-box-hover-mode)
               ("C-c g e e" . my-switch-to-eglot)
               ("C-c g e l" . my-switch-to-lsp)
