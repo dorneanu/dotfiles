@@ -2390,6 +2390,47 @@ Basic configuration
   ;; "STOP(c)"
   ;; "EVENT(m)"
 
+  ;; Set colors for TODO keywords
+  (setq org-todo-keyword-faces
+        '(("TODO" . (:foreground "#ff6b6b" :weight bold))
+          ("STARTED" . (:foreground "#ff9500" :weight bold))
+          ("NEXT" . (:foreground "#007acc" :weight bold))
+          ("WIP" . (:foreground "#4ecdc4" :weight bold))
+          ("WAITING" . (:foreground "#ffe66d" :weight bold))
+          ("DONE" . (:foreground "#51cf66" :weight bold))
+          ("CANCELED" . (:foreground "#6c757d" :weight bold :strike-through t))
+          ("PROJ" . (:foreground "#9c27b0" :weight bold))
+          ("MEETING" . (:foreground "#e91e63" :weight bold))
+          ("REVIEW" . (:foreground "#ff5722" :weight bold))
+          ("IDEA" . (:foreground "#ffc107" :weight bold))))
+
+  ;; Clock configuration for mode-line display
+  (setq org-clock-clocked-in-display 'mode-line)  ; Show in mode-line
+
+  ;; Custom function to get enhanced clock string
+  (defun my/org-clock-get-clock-string ()
+    "Get clock string showing session:total/effort format."
+    (when (org-clock-is-active)
+      (let* ((session-minutes (floor (/ (float-time (time-subtract (current-time) org-clock-start-time)) 60)))
+             (session-time (org-duration-from-minutes session-minutes))
+             (total-time (save-excursion
+                          (with-current-buffer (marker-buffer org-clock-marker)
+                            (goto-char org-clock-marker)
+                            (org-duration-from-minutes (org-clock-sum-current-item)))))
+             (effort (save-excursion
+                      (with-current-buffer (marker-buffer org-clock-marker)
+                        (goto-char org-clock-marker)
+                        (org-entry-get (point) "Effort")))))
+        (concat "[" session-time "/" total-time
+                (when effort (concat "/" effort)) "]"))))
+
+  ;; Advice to override the default clock string function
+  (defun my/advice-org-clock-get-clock-string (orig-fun)
+    "Advice to enhance org-clock-get-clock-string with session:total format."
+    (or (my/org-clock-get-clock-string)
+        (funcall orig-fun)))
+
+  (advice-add 'org-clock-get-clock-string :around #'my/advice-org-clock-get-clock-string)
 
   ;; No blank lines before new entries
   (setq org-blank-before-new-entry
@@ -2747,16 +2788,22 @@ If prefix ARG, copy instead of move."
   (org-modern-list '((?+ . "➤") (?- . "–") (?* . "•")))
   (org-modern-block-fringe nil)
   (org-modern-checkbox nil) ;; not that interesting! maybe it depends on the used font
+  (org-modern-todo t)
+  (org-modern-keyword nil) ;; reduce keyword padding
+  (org-modern-priority nil) ;; disable priority styling to reduce conflicts
   (org-modern-todo-faces
    ;; tweak colors, and force it to be monospaced, useful when using `mixed-pitch-mode'.
-   '(("idea" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "goldenrod"))
-     ("next" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "indianred1"))
-     ("strt" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "orangered"))
-     ("wait" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "coral"))
-     ("kill" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "darkgreen"))
-     ("proj" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "limegreen"))
-     ("hold" . (:inherit org-verbatim :weight semi-bold :foreground "white" :background "orange"))
-     ("done" . (:inherit org-verbatim :weight semi-bold :foreground "black" :background "lightgray")))))
+   '(("TODO" . (:weight normal :foreground "white" :background "#ff6b6b"))
+     ("STARTED" . (:weight normal :foreground "white" :background "#ff9500"))
+     ("NEXT" . (:weight normal :foreground "white" :background "#007acc"))
+     ("WIP" . (:weight normal :foreground "white" :background "#4ecdc4"))
+     ("WAITING" . (:weight normal :foreground "black" :background "#ffe66d"))
+     ("DONE" . (:weight normal :foreground "white" :background "#51cf66"))
+     ("CANCELED" . (:weight normal :foreground "white" :background "#6c757d" :strike-through t))
+     ("PROJ" . (:weight normal :foreground "white" :background "#9c27b0"))
+     ("MEETING" . (:weight normal :foreground "white" :background "#e91e63"))
+     ("REVIEW" . (:weight normal :foreground "white" :background "#ff5722"))
+     ("IDEA" . (:weight normal :foreground "black" :background "#ffc107")))))
 #+end_src
 
 ** org-capture
@@ -3380,20 +3427,55 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
   '(org-verbatim ((t (:background "#2c3e50" :foreground "#ecf0f1" :family "monospace"))))
   '(org-code ((t (:background "#34495e" :foreground "#f1c40f" :family "monospace")))))
 
- ;; Override org-emphasis-alist to use our custom faces (org-mode only)
- (with-eval-after-load 'org
-   (setq org-emphasis-alist
-         '(("*" my-org-bold-face)
-           ("/" my-org-italic-face)
-           ("_" my-org-underline-face)
-           ("=" org-verbatim verbatim)
-           ("~" org-code verbatim)
-           ("+" (:strike-through t))))
-   ;; Force refresh of already open org buffers
+ ;; Variable to track current emphasis state
+ (defvar my/org-emphasis-custom-active nil
+   "Whether custom org emphasis faces are currently active.")
+
+ ;; Function to toggle between custom and default emphasis
+ (defun my/toggle-org-emphasis ()
+   "Toggle between custom and default org emphasis faces."
+   (interactive)
+   (if my/org-emphasis-custom-active
+       ;; Switch to default emphasis
+       (progn
+         (setq org-emphasis-alist
+               '(("*" bold)
+                 ("/" italic)
+                 ("_" underline)
+                 ("=" org-verbatim verbatim)
+                 ("~" org-code verbatim)
+                 ("+" (:strike-through t))))
+         (setq my/org-emphasis-custom-active nil)
+         (message "Org emphasis: DEFAULT (standard faces)"))
+     ;; Switch to custom emphasis
+     (progn
+       (setq org-emphasis-alist
+             '(("*" my-org-bold-face)
+               ("/" my-org-italic-face)
+               ("_" my-org-underline-face)
+               ("=" org-verbatim verbatim)
+               ("~" org-code verbatim)
+               ("+" (:strike-through t))))
+       (setq my/org-emphasis-custom-active t)
+       (message "Org emphasis: CUSTOM (colored faces)")))
+   ;; Refresh all org buffers
    (dolist (buffer (buffer-list))
      (with-current-buffer buffer
        (when (derived-mode-p 'org-mode)
          (org-restart-font-lock)))))
+
+ ;; Start with default emphasis (no custom faces applied by default)
+ (with-eval-after-load 'org
+   (setq my/org-emphasis-custom-active nil)
+   (setq org-emphasis-alist
+         '(("*" bold)
+           ("/" italic)
+           ("_" underline)
+           ("=" org-verbatim verbatim)
+           ("~" org-code verbatim)
+           ("+" (:strike-through t))))
+   ;; Keybinding for toggle function
+   (define-key org-mode-map (kbd "C-c o e t") 'my/toggle-org-emphasis))
 
  ;; Function to toggle emphasis markers visibility
  (defun my/toggle-org-emphasis-markers ()
