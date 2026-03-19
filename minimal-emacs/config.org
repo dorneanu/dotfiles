@@ -723,7 +723,7 @@ Disabled - prefer regular vertico
 
     ;; HTML/XML tags
     ;; (embrace-add-pair ?< "<" ">")
-
+   
     ;; Mode-specific pairs using hooks
     (add-hook 'org-mode-hook
               (lambda ()
@@ -733,7 +733,14 @@ Disabled - prefer regular vertico
                 (embrace-add-pair ?v "=" "=")   ; verbatim
                 (embrace-add-pair ?u "_" "_")   ; underline
                 (embrace-add-pair ?s "+" "+")))) ; strikethrough
-    ;; 
+
+    ;; Enhanced completion for org-mode
+    (add-hook 'org-mode-hook
+              (lambda ()
+                ;; Add useful completion functions for org-mode
+                (add-hook 'completion-at-point-functions #'cape-dabbrev nil t)
+                (add-hook 'completion-at-point-functions #'cape-file nil t)))
+    ;;
     ;; (add-hook 'markdown-mode-hook
     ;;           (lambda ()
     ;;             (embrace-add-pair ?c "`" "`")))
@@ -1081,11 +1088,7 @@ I only need ~counsel-org-tag~
   (setq go-test-verbose t)
   (setq go-test-args "-v -race"))
 
-;; Go additional packages
-(use-package go-guru
-  :straight t
-  :after go-ts-mode
-  :hook (go-ts-mode . go-guru-hl-identifier-mode))
+;; go-guru removed — lsp-enable-symbol-highlighting covers identifier highlighting
 
 (use-package flycheck-golangci-lint
   :straight t
@@ -3637,7 +3640,8 @@ position and resume whenever the same video is played again (read [[https://unix
          ("h" . elfeed-show-visit-html-file)
          ;; For navigation
          ("C-j" . forward-paragraph)
-         ("C-k" . backward-paragraph))
+         ("C-k" . backward-paragraph)
+         ("M-v" . scroll-down-command))
   :custom
   ((elfeed-search-title-min-width 70)
    (elfeed-search-title-max-width 140)
