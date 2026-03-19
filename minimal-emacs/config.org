@@ -255,6 +255,9 @@ Enhanced keybindings for Super key - organized by function:
 ;; === DEVELOPMENT ===
 (global-set-key (kbd "s-`") #'shell)                   ; quick shell
 (global-set-key (kbd "s-~") #'eshell)                  ; quick eshell
+(global-set-key (kbd "C-c v t") #'vterm)               ; vterm
+(global-set-key (kbd "C-c v p") #'projectile-run-vterm) ; projectile vterm
+(global-set-key (kbd "C-c v o") #'projectile-run-vterm-other-window) ; projectile vterm other window
 (global-set-key (kbd "s-C") #'compile)                 ; compile project
 (global-set-key (kbd "s-E") #'eval-buffer)             ; evaluate buffer
 
@@ -5707,43 +5710,43 @@ Extended ~isearch~
 ** Themes
 Install additional themes:
 #+begin_src emacs-lisp
-(use-package doom-themes
-  :straight (:build t)
-  :defer t
-  ;; :init (load-theme 'doom-nord-aurora t)
-  )
+  (use-package doom-themes
+    :straight (:build t)
+    :defer t
+    ;; :init (load-theme 'doom-nord-aurora t)
+    )
 
-;; Install kaolin themes
-(use-package kaolin-themes
-  :straight t
-  :defer t)
+  ;; Install kaolin themes
+  (use-package kaolin-themes
+    :straight t
+    :defer t)
 
-;; Install moe-theme
-(use-package moe-theme
-  :straight t)
+  ;; Install moe-theme
+  ;; (use-package moe-theme
+  ;;   :straight t)
 
-(use-package ef-themes
-  :straight t)
+  (use-package ef-themes
+    :straight t)
 
-(use-package modus-themes
-  :straight t)
+  (use-package modus-themes
+    :straight t)
 
-(use-package solarized-theme
-  :straight t)
+  (use-package solarized-theme
+    :straight t)
 
-(use-package rg-themes
-  :straight (:type git :host github :repo "raegnald/rg-themes"))
+  (use-package rg-themes
+    :straight (:type git :host github :repo "raegnald/rg-themes"))
 
-(use-package lambda-themes
-  :straight (:type git :host github :repo "lambda-emacs/lambda-themes")
-  :custom
-  (lambda-themes-set-italic-comments t)
-  (lambda-themes-set-italic-keywords t)
-  (lambda-themes-set-variable-pitch t))
+  (use-package lambda-themes
+    :straight (:type git :host github :repo "lambda-emacs/lambda-themes")
+    :custom
+    (lambda-themes-set-italic-comments t)
+    (lambda-themes-set-italic-keywords t)
+    (lambda-themes-set-variable-pitch t))
 
-;; Install sanityinc tomorrow
-(use-package color-theme-sanityinc-tomorrow
-  :straight t)
+  ;; Install sanityinc tomorrow
+  (use-package color-theme-sanityinc-tomorrow
+    :straight t)
 #+end_src
 
 Load default theme:
@@ -5757,6 +5760,61 @@ Set default font
 #+begin_src emacs-lisp
 (set-face-attribute 'default nil :family "JetBrains Mono")
 #+end_src
+
+** UI Polish
+Subtle visual improvements for better aesthetics and readability.
+
+*** Visual indicators
+#+begin_src emacs-lisp
+;; Highlight current line subtly
+(global-hl-line-mode 1)
+
+;; Better paren matching
+(setq show-paren-delay 0.1
+      show-paren-style 'mixed) ; highlight paren and expression when offscreen
+
+;; Subtle window dividers
+(setq window-divider-default-right-width 1
+      window-divider-default-bottom-width 1
+      window-divider-default-places t)
+(window-divider-mode 1)
+#+end_src
+
+*** Smooth scrolling
+#+begin_src emacs-lisp
+;; Smoother scrolling experience
+(setq scroll-conservatively 101
+      scroll-preserve-screen-position t
+      auto-window-vscroll nil)
+
+;; Smooth pixel scrolling (Emacs 29+)
+(when (fboundp 'pixel-scroll-precision-mode)
+  (pixel-scroll-precision-mode 1))
+#+end_src
+
+*** COMMENT Ligatures
+Disabled due to org-mode tangling issues with << and >> characters.
+#+begin_src emacs-lisp
+;; Enable programming ligatures for better visual flow
+(use-package ligature
+  :straight t
+  :config
+  (ligature-set-ligatures
+   'prog-mode
+   '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/=" "<=" ">=" "&&" "&&&"
+     "&=" "++" "+++" "***" ";;" "!!" "??" "???" "?:" "?." "?=" "<:" ":<" ":>"
+     ">:" "<:<" "<>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "||="
+     "##" "###" "####" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
+     "^=" "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</" "</>" "/>"
+     "<!--" "<#--" "-->" "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
+     "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" "-<" "-<<" ">->" "<-<"
+     "<-|" "<=|" "|=>" "|->" "<->" "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~"
+     "~@" "[||]" "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||" "|||>"
+     "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?" "::" ":::" ":=" "::=" ":?"
+     ":?>" "//" "///" "/*" "*/" "/=" "//=" "/==" "@_" "__"))
+  (global-ligature-mode t))
+#+end_src
+
 ** Modeline
 *** doom-modeline
 #+begin_src emacs-lisp
@@ -6000,17 +6058,7 @@ Generated via LLM:
           (":productivity:" . (("name" . "Productivity") ("unicode" . "📈")))))
 
   ;; 🎯 COOL CUSTOMIZATION 8: Org-mode integration
-  (defun my/org-emoji-todo-keywords ()
-    "Set up emoji-enhanced TODO keywords for org-mode"
-    (when (derived-mode-p 'org-mode)
-      (setq-local org-todo-keyword-faces
-                  '(("TODO" . (:foreground "#ff6b6b" :weight bold))
-                    ("WIP" . (:foreground "#4ecdc4" :weight bold))
-                    ("WAITING" . (:foreground "#ffe66d" :weight bold))
-                    ("DONE" . (:foreground "#51cf66" :weight bold))))))
-
-  ;; Hooks for context-specific setups
-  (add-hook 'org-mode-hook #'my/org-emoji-todo-keywords)
+  ;; TODO keyword colors moved to org-mode section
 
   ;; Special binding for git commit mode
   ;; (add-hook 'git-commit-mode-hook
