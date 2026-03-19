@@ -20,10 +20,21 @@
 :properties:
 :header-args:emacs-lisp: :tangle ~/.config/minimal-emacs-dev/pre-init.el
 :end:
-*** straight.el
+*** Native compilation warnings
 #+begin_src emacs-lisp
 ;;; pre-init.el --- Pre Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
+;; Suppress native compilation warnings
+(setq native-comp-async-report-warnings-errors nil
+      native-comp-warning-on-missing-source nil)
+
+;; Suppress specific warning types
+(setq warning-suppress-types '((comp) (files)))
+
+#+end_src
+
+*** straight.el
+#+begin_src emacs-lisp
 ;; straight.el options
 (setq straight-repository-branch "develop"        ; Use develop branch of straight.el
       straight-use-package-by-default t          ; Make `straight-use-package' the default
@@ -91,6 +102,23 @@
 Header:
 #+begin_src emacs-lisp
 ;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
+#+end_src
+
+Disable gnus (not used, causes theme inheritance cycles):
+#+begin_src emacs-lisp
+;; Prevent gnus from loading - not used and causes face inheritance issues with themes
+;; Provide all gnus modules and stub out required functions
+(setq gnus-home-directory nil)
+
+;; Stub out gnus functions that might be called
+(defun gnus-image-type-available-p (type) nil)
+(defun gnus-continuum-version (&optional version) "0.0.0")
+
+;; Provide all gnus-related features to prevent loading
+(dolist (feature '(gnus gnus-group gnus-sum gnus-spec gnus-util gnus-range
+                   gnus-int gnus-undo gnus-art nnheader nnselect nnir
+                   ol-gnus gnus-msg gnus-cite gnus-async))
+  (provide feature))
 #+end_src
 
 Measure time:
