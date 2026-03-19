@@ -492,7 +492,8 @@ Something I use a lot:
   (vertico-resize nil)
   (vertico-count 12))
 #+end_src
-** vertico-posframe
+** COMMENT vertico-posframe
+Disabled - prefer regular vertico
 #+begin_src emacs-lisp
 (use-package vertico-posframe
   :straight t
@@ -1837,12 +1838,11 @@ Need to add some keybindings here:
 
 (use-package yasnippet-capf
   :straight t
-  :after cape
+  :after (cape yasnippet)
   :hook ((prog-mode text-mode conf-mode) . +cape-yasnippet--setup-h)
   :config
   (defun +cape-yasnippet--setup-h ()
-    (when (bound-and-true-p yas-minor-mode)
-      (add-to-list 'completion-at-point-functions #'yasnippet-capf))))
+    (add-to-list 'completion-at-point-functions #'yasnippet-capf)))
 #+end_src
 
 *** yankpad
@@ -1862,7 +1862,8 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package dape
   :straight t
-  :after (prog-mode)
+  :defer t
+  :commands (dape)
   :config
   ;; Pulse source line (performance hit)
   (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
@@ -2210,6 +2211,8 @@ Keep lisp code always indented.
 ;;; enable embark actions
 (use-package consult-gh-embark
   :straight t
+  :defer t
+  :after (consult-gh embark)
   :config
   (consult-gh-embark-mode +1))
 #+end_src
@@ -2905,6 +2908,7 @@ If prefix ARG, copy instead of move."
 *** hugo
 #+begin_src emacs-lisp
 (use-package ox-hugo
+  :defer t
   :after org
   :straight t)
 #+end_src
@@ -2915,11 +2919,12 @@ If prefix ARG, copy instead of move."
   :defer t)
 #+end_src
 ** org-roam
+
 #+begin_src emacs-lisp
 (require 'ox-hugo)
 (use-package org-roam
   :straight t
-  ;; :defer t
+  :defer t
   :bind (("M-g rn" . org-roam-node-find)
          ("M-g rs" . my/rg-org-roam-directory)
          ("M-g rc" . org-roam-capture)
@@ -2932,7 +2937,7 @@ If prefix ARG, copy instead of move."
   (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
   (org-roam-directory (expand-file-name "repos/priv/roam/" (getenv "HOME")))
-  (org-roam-completion-everywhere t)
+  ;; (org-roam-completion-everywhere t)  ; DISABLED - causes org-completion-at-point errors
   :config
   (org-roam-db-autosync-mode 1)
   (setq org-roam-capture-templates
@@ -3919,9 +3924,9 @@ Aside from running its setup command as soon as possible, I also set
 in this code block all my keybinds for Elfeed here.
 #+begin_src emacs-lisp
 (use-package elfeed-goodies
+  :straight t
   :after elfeed
   :commands elfeed-goodies/setup
-  :straight
   :init
   (elfeed-goodies/setup)
   :custom
@@ -4212,6 +4217,7 @@ Use hnread to show HN threads for a URL at point
 #+end_src
 * Files
 ** dirvish
+
 #+begin_src emacs-lisp
 (use-package dirvish
   :straight t
@@ -4299,8 +4305,10 @@ Play midi files from within dir buffers
 #+begin_src emacs-lisp
 (use-package pdf-tools
   :straight t
+  :defer t
+  :mode ("\\.pdf\\'" . pdf-view-mode)
   :config
-  (pdf-tools-install)
+  (pdf-tools-install :no-query)
   (setq-default pdf-view-display-size 'fit-width))
 #+end_src
 * Autocompletion
@@ -4522,6 +4530,8 @@ Play midi files from within dir buffers
 #+begin_src emacs-lisp
 (use-package ellama
   :straight t
+  :defer t
+  :commands (ellama-transient-main-menu ellama-chat ellama-ask-about ellama-complete)
   :bind ("C-c x" . ellama-transient-main-menu)
   :init
   ;; setup key bindings
@@ -4529,6 +4539,7 @@ Play midi files from within dir buffers
   ;; language you want ellama to translate to
   (setopt ellama-language "English")
   (setopt ellama-auto-scroll t)
+  :config
   (require 'llm-ollama)
   (setopt ellama-provider
   	  (make-llm-ollama
