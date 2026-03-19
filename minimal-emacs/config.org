@@ -552,11 +552,11 @@ Disabled - prefer regular vertico
   ;;              '(jinx grid (vertico-grid-annotate . 35)))
 
    (setq vertico-multiform-commands
-         '((consult-line reverse buffer (:not posframe))
-           (consult-project-buffer buffer (:not posframe))
-           (consult-ripgrep buffer (:not posframe))
-           (xref-find-references buffer (:not posframe))
-           (consult-imenu reverse buffer (:not posframe))))
+         '((consult-line reverse buffer)
+           (consult-project-buffer buffer)
+           (consult-ripgrep buffer)
+           (xref-find-references buffer)
+           (consult-imenu reverse buffer)))
   (vertico-multiform-mode 1))
 #+end_src
 
