@@ -1630,10 +1630,9 @@ Need to add some keybindings here:
   (lsp-auto-configure t)                           ; Used to decide between current active servers
   ;; (lsp-eldoc-enable-hover t)                       ; Display signature information in the echo area
   (lsp-enable-dap-auto-configure nil)              ; Debug support
-  (lsp-enable-file-watchers nil)                   ; This basically means, if you change
-                                                   ; the branch, should LSP reload
-                                                   ; instantly - it's a big performance
-                                                   ; overhead
+  (lsp-enable-file-watchers t)
+  (lsp-file-watch-threshold 2000)
+  (lsp-file-watch-ignored-directories '("[/\\\\]\\.git$" "[/\\\\]vendor$" "[/\\\\]node_modules$" "[/\\\\]\\.cache$"))
   (lsp-enable-folding t)
   (lsp-enable-imenu t)
   (lsp-enable-indentation nil)                     ; I use prettier
@@ -1650,7 +1649,8 @@ Need to add some keybindings here:
   (lsp-completion-show-detail t)
   (lsp-completion-enable-additional-text-edit t)    ; Ex: auto-insert an import for a completion candidate
   (lsp-enable-snippet t)                           ; Important to provide full JSX completion
-  (lsp-completion-show-kind t)                     ; Optional
+  (lsp-completion-show-kind t)
+  (lsp-completion-show-label-description t)        ; Show extra detail like package path
 
   ;; headerline
   (lsp-headerline-breadcrumb-enable t)               ; Optional, I like the breadcrumbs
@@ -1660,8 +1660,10 @@ Need to add some keybindings here:
 
   ;; modeline
   (lsp-modeline-code-actions-enable t)             ; Modeline should be relatively clean
-  (lsp-modeline-diagnostics-enable nil)            ; Already supported through `flycheck'
+  (lsp-modeline-diagnostics-enable t)              ; Quick error count in modeline
   (lsp-modeline-workspace-status-enable t)         ; Modeline displays "LSP" when lsp-mode is enabled
+  (lsp-signature-auto-activate '(:on-trigger-char :on-server-request))
+  (lsp-signature-render-documentation t)
   (lsp-signature-doc-lines 1)                      ; Don't raise the echo area. It's distracting
   (lsp-ui-doc-use-childframe t)                    ; Show docs for symbol at point
   ;; (lsp-eldoc-render-all nil)                       ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
@@ -1671,53 +1673,66 @@ Need to add some keybindings here:
 
   ;; semantic
   (lsp-semantic-tokens-enable nil)                 ; Related to highlighting, and we defer to treesitter
+
+  ;; inlay hints
+  (lsp-inlay-hint-enable t)                        ; Show parameter names and type hints inline
+
+  :config
+  ;; Merge LSP completions with yasnippet so snippets appear alongside LSP candidates
+  (defun my/lsp-capf-with-snippets ()
+    "Replace lsp-completion-at-point with a super-capf that includes yasnippet."
+    (setq-local completion-at-point-functions
+                (cl-substitute-if
+                 (cape-capf-super #'lsp-completion-at-point #'yasnippet-capf)
+                 (lambda (fn) (eq fn #'lsp-completion-at-point))
+                 completion-at-point-functions)))
+  (add-hook 'lsp-completion-mode-hook #'my/lsp-capf-with-snippets)
   )
+#+end_src
+#+begin_src emacs-lisp
+;; Workaround for lsp-ts-query bug: `#'nil' used as predicate crashes on load
+(with-eval-after-load 'lsp-ts-query
+  (setq lsp-ts-query-parser-install-directories
+        (vector (expand-file-name (locate-user-emacs-file "tree-sitter")))))
 #+end_src
 *** lsp-ui
 #+begin_src emacs-lisp
 (use-package lsp-ui
   :straight t
-  :config
-  (setq
-   lsp-ui-sideline-show-hover nil
-   ;; lsp-ui-sideline-delay 0.5
-   ;; lsp-ui-sideline-ignore-duplicates t
-   lsp-ui-doc-delay 0.5
-   lsp-ui-doc-position 'bottom
-   lsp-ui-doc-alignment 'frame
-   lsp-ui-doc-header nil
-   lsp-ui-doc-include-signature t
-   lsp-ui-doc-use-childframe t)
-   (setq lsp-ui-peek-always-show t)
-   (setq lsp-ui-peek-list-width 40)
-   (setq lsp-ui-peek-show-directory nil)
-   ;; Expand all peek folds.
-   (setq lsp-ui-peek-expand-function (lambda (xs) (mapcar #'car xs)))
   :commands lsp-ui-mode
   :custom
-  ;; lsp-ui-doc
+  ;; sideline
+  (lsp-ui-sideline-show-hover nil)
+
+  ;; doc
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-header t)
   (lsp-ui-doc-include-signature t)
-  (lsp-ui-doc-position 'top) ;; top, bottom, or at-point
+  (lsp-ui-doc-position 'top)
   (lsp-ui-doc-max-width 120)
   (lsp-ui-doc-max-height 30)
+  (lsp-ui-doc-delay 0.5)
   (lsp-ui-doc-use-childframe t)
-  (lsp-ui-doc-use-webkit t)
-  ;; signature
-  (lsp-signature-auto-activate t)
-  (lsp-signature-render-documentation t)
-  ;; (lsp-eldoc-hook t)
+
+  ;; peek
+  (lsp-ui-peek-always-show t)
+  (lsp-ui-peek-list-width 60)
+  (lsp-ui-peek-peek-height 20)
+  (lsp-ui-peek-show-directory t)
+  (lsp-ui-peek-fontify 'always)
+
+  :config
+  (setq lsp-ui-peek-expand-function (lambda (xs) (mapcar #'car xs)))
+
   :bind
   (:map lsp-ui-mode-map
-        ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-        ;; ([remap xref-find-references] . lsp-ui-peek-find-references)
         ("C-c C-r" . lsp-ui-peek-find-references)
         ("C-c C-j" . lsp-ui-peek-find-definitions)
         ("C-c i"   . lsp-ui-peek-find-implementation)
         ("C-c u" . lsp-ui-imenu)
         ("C-c d" . lsp-ui-doc-glance)
         ("C-c e" . lsp-treemacs-errors-list)
+        ("C-c C-h" . lsp-treemacs-call-hierarchy)
         ("C-c D" . lsp-ui-doc-show)
         ("C-c o" . lsp-describe-thing-at-point)
         ("C-c s"   . lsp-ui-sideline-mode)))
@@ -1827,7 +1842,7 @@ Need to add some keybindings here:
   (yas-triggers-in-field t)
   (yas-wrap-around-region t)
   :custom-face
-  (yas-field-highlight-face ((t (:background "#e4edfc")))))
+  (yas-field-highlight-face ((t (:background "#2a2a3a")))))
 
 (use-package yasnippet-snippets
   :straight t
@@ -1933,7 +1948,7 @@ Need to add some keybindings here:
 
   ;; For golang
   (setf (alist-get 'gofmt apheleia-formatters)
-        '("gofmt" "-s"))
+        '("goimports"))
   (apheleia-global-mode))
 #+end_src
 *** flycheck
@@ -2018,7 +2033,7 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package breadcrumb
   :straight t
-  :hook ((go-mode org-mode c-mode c++-mode c-ts-mode c++-ts-mode python-mode python-ts-mode rust-mode rust-ts-mode sh-mode bash-ts-mode) . breadcrumb-local-mode))
+  :hook ((go-mode go-ts-mode org-mode c-mode c++-mode c-ts-mode c++-ts-mode python-mode python-ts-mode rust-mode rust-ts-mode sh-mode bash-ts-mode) . breadcrumb-local-mode))
 #+end_src
 *** aggressive-indent
 Keep lisp code always indented.
