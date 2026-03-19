@@ -2083,18 +2083,49 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
-  :bind (("C-c v t " . vterm)
-         ("C-c v p" . projectile-run-vterm))
   :config
   (setq puni-confirm-when-delete-unbalanced-active-region nil)
   (setq puni-blink-for-sexp-manipulating t))
 #+end_src
+#+end_src
 ** VC
 *** magit
 #+begin_src emacs-lisp
+(use-package transient
+  :straight t)
+
 (use-package magit
   :bind (("C-c a v m" . magit))
   :straight t)
+
+(defun claude-code-commit-message ()
+  "Generate a commit message from staged diff using claude and copy to clipboard."
+  (interactive)
+  (let ((diff (shell-command-to-string "git diff --cached")))
+    (if (string-empty-p (string-trim diff))
+        (message "No staged changes")
+      (message "Generating commit message...")
+      (let* ((prompt (format "Write ONLY a concise commit message for this diff. No explanation, no markdown fences, just the message. Follow conventional commits style.\n\n```diff\n%s\n```" diff))
+             (temp-file (make-temp-file "claude-prompt-" nil ".txt" prompt))
+             (buf (generate-new-buffer "*claude-commit-msg*"))
+             (process-connection-type nil))
+        (set-process-sentinel
+         (start-process-shell-command
+          "claude-commit-msg" buf
+          (format "cat %s | claude -p" (shell-quote-argument temp-file)))
+         (lambda (proc _event)
+           (when (eq (process-status proc) 'exit)
+             (let* ((raw (with-current-buffer (process-buffer proc)
+                           (buffer-string)))
+                    (msg (string-trim raw)))
+               (kill-new msg)
+               (delete-file temp-file)
+               (kill-buffer (process-buffer proc))
+               (message "Commit message copied: %s" msg)))))))))
+
+(with-eval-after-load 'magit
+  (define-key magit-diff-mode-map (kbd "C-c A c") #'claude-code-commit-message)
+  (define-key magit-status-mode-map (kbd "C-c A c") #'claude-code-commit-message))
 #+end_src
 *** COMMENT magit-todos
 #+begin_src emacs-lisp
@@ -4578,62 +4609,100 @@ Play midi files from within dir buffers
 #+end_src
 *** claude-code
 #+begin_src emacs-lisp
-;; Install required inheritenv dependency:
-(use-package inheritenv
-  :straight (:type git :host github :repo "purcell/inheritenv"))
+  ;; Install required inheritenv dependency:
+  (use-package inheritenv
+    :straight (:type git :host github :repo "purcell/inheritenv"))
 
-;; for eat terminal backend:
-(use-package eat
-  :straight (:type git
-                   :host codeberg
-                   :repo "akib/emacs-eat"
-                   :files ("*.el" ("term" "term/*.el") "*.texi"
-                           "*.ti" ("terminfo/e" "terminfo/e/*")
-                           ("terminfo/65" "terminfo/65/*")
-                           ("integration" "integration/*")
-                           (:exclude ".dir-locals.el" "*-tests.el"))))
+  ;; for eat terminal backend:
+  (use-package eat
+    :defer t
+    :commands (eat eat-project eat-other-window)
+    :straight (:type git
+                     :host codeberg
+                     :repo "akib/emacs-eat"
+                     :files ("*.el" ("term" "term/*.el") "*.texi"
+                             "*.ti" ("terminfo/e" "terminfo/e/*")
+                             ("terminfo/65" "terminfo/65/*")
+                             ("integration" "integration/*")
+                             (:exclude ".dir-locals.el" "*-tests.el"))))
 
-;; install claude-code.el, using :depth 1 to reduce download size:
-(use-package claude-code
-  :straight (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main" :depth 1
-                   :files ("*.el" (:exclude "images/*")))
-  :bind-keymap
-  ("C-x c" . claude-code-command-map) ;; or your preferred key
-  ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
-  :bind
-  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
-  :config
-  (setq claude-code-ide-terminal-backend 'vterm)
-  (setq claude-code-ide-vterm-anti-flicker t))
-  ;; optional IDE integration with Monet
-  ;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
-  ;; (monet-mode 1)
-  ;; (claude-code-mode)
+  ;; install claude-code.el, using :depth 1 to reduce download size:
+  (use-package claude-code
+    :straight (:type git :host github :repo "manzaltu/claude-code.el" :branch "main" :depth 1
+                     :files ("*.el" (:exclude "images/*")))
+    :bind-keymap
+    ("C-x c" . claude-code-command-map) ;; or your preferred key
+    ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
+    :bind
+    (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
+    :config
+    (setq claude-code-terminal-backend 'eat)
+    (define-key claude-code-command-map (kbd "p") #'claude-code-send-command))
+    ;; optional IDE integration with Monet
+    ;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
+    ;; (monet-mode 1)
+    ;; (claude-code-mode)
 
-;; Claude Code endpoint switching functions
-(defun claude-code-toggle-endpoint ()
-  "Toggle between work proxy and official Anthropic API."
-  (interactive)
-  (if (string= (getenv "ANTHROPIC_BASE_URL") "http://localhost:3030")
+  ;; (use-package claude-code-ide
+  ;;   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el" :branch "main" :depth 1)
+  ;;   :bind ("C-c C-'" . claude-code-ide-menu)
+  ;;   :config
+  ;;   (claude-code-ide-emacs-tools-setup))
+
+  ;; Claude Code endpoint and account switching functions
+  (defvar claude-code-current-profile "personal"
+    "Current Claude Code profile (personal or work).")
+
+  ;; By default, use personal account (settings.json)
+  ;; Switch to work account when needed (settings.work.json)
+
+  (defun claude-code-use-work-account ()
+    "Switch Claude Code to use work account settings."
+    (interactive)
+    (setq claude-code-program-switches (list "--settings" (expand-file-name "~/.claude/settings.work.json")))
+    (setq claude-code-current-profile "work")
+    (message "Claude Code: Switched to work account. Start a new Claude session."))
+
+  (defun claude-code-use-personal-account ()
+    "Switch Claude Code to use personal account settings (default)."
+    (interactive)
+    (setq claude-code-program-switches nil)  ; Use default settings.json
+    (setq claude-code-current-profile "personal")
+    (message "Claude Code: Switched to personal account (default). Start a new Claude session."))
+
+  (defun claude-code-toggle-account ()
+    "Toggle between personal and work Claude Code accounts."
+    (interactive)
+    (if (string= claude-code-current-profile "personal")
+        (claude-code-use-work-account)
+      (claude-code-use-personal-account)))
+
+  (defun claude-code-restart-with-account (account)
+    "Restart Claude Code with the specified ACCOUNT (personal or work)."
+    (interactive
+     (list (completing-read "Select account: " '("personal" "work") nil t)))
+    ;; Set the account
+    (if (string= account "work")
+        (progn
+          (setq claude-code-program-switches (list "--settings" (expand-file-name "~/.claude/settings.work.json")))
+          (setq claude-code-current-profile "work")
+          (message "Claude Code: Switching to work account..."))
       (progn
-        (setenv "ANTHROPIC_BASE_URL" nil) ; Use official Anthropic API
-        (message "Claude Code: Using official Anthropic API"))
-    (progn
-      (setenv "ANTHROPIC_BASE_URL" "http://localhost:3030")
-      (message "Claude Code: Using work proxy (localhost:3030)"))))
+        (setq claude-code-program-switches nil)
+        (setq claude-code-current-profile "personal")
+        (message "Claude Code: Switching to personal account...")))
+    ;; Start new Claude session
+    (when (fboundp 'claude-code)
+      (claude-code)))
 
-(defun claude-code-use-work-proxy ()
-  "Set Claude Code to use work proxy."
-  (interactive)
-  (setenv "ANTHROPIC_BASE_URL" "http://localhost:3030")
-  (setenv "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS" "1")
-  (message "Claude Code: Using work proxy"))
-
-(defun claude-code-use-official-api ()
-  "Set Claude Code to use official Anthropic API."
-  (interactive)
-  (setenv "ANTHROPIC_BASE_URL" nil)
-  (message "Claude Code: Using official Anthropic API"))
+  (defun claude-code-show-current-profile ()
+    "Display the current Claude Code profile."
+    (interactive)
+    (let ((account claude-code-current-profile)
+          (switches (if claude-code-program-switches
+                     (format "Settings: %s" claude-code-program-switches)
+                   "Default settings (personal)")))
+      (message "Claude Code Profile: %s | %s" account switches)))
 
 #+end_src
 ** Web
