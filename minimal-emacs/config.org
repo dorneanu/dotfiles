@@ -106,18 +106,12 @@ Header:
 
 Disable gnus (not used, causes theme inheritance cycles):
 #+begin_src emacs-lisp
-;; Prevent gnus from loading - not used and causes face inheritance issues with themes
-;; Provide all gnus modules and stub out required functions
-(setq gnus-home-directory nil)
+;; Prevent standalone gnus from launching, but allow gnus sub-modules
+;; to load normally (mu4e depends on gnus-art, gnus-cite, etc.)
+(setq gnus-home-directory "~/")
 
-;; Stub out gnus functions that might be called
-(defun gnus-image-type-available-p (type) nil)
-(defun gnus-continuum-version (&optional version) "0.0.0")
-
-;; Provide all gnus-related features to prevent loading
-(dolist (feature '(gnus gnus-group gnus-sum gnus-spec gnus-util gnus-range
-                   gnus-int gnus-undo gnus-art nnheader nnselect nnir
-                   ol-gnus gnus-msg gnus-cite gnus-async))
+;; Only stub the top-level entry points that would launch gnus itself
+(dolist (feature '(ol-gnus nnselect nnir))
   (provide feature))
 #+end_src
 
@@ -708,7 +702,6 @@ Disabled - prefer regular vertico
 #+begin_src emacs-lisp
   (use-package embrace
     :straight t
-    :demand t
     :bind (("M-s w" . embrace-commander)  ; wrap/surround
            ("M-s a" . embrace-add)        ; add surrounding
            ("M-s x" . embrace-delete))    ; extract/remove surrounding
@@ -769,7 +762,6 @@ Disabled - prefer regular vertico
 
 (use-package embark
   :straight t
-  :demand t
   :after (vertico)
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
@@ -818,8 +810,9 @@ Disabled - prefer regular vertico
       (switch-to-buffer buffer))))
 
 ;; Add to embark keymaps
-(define-key embark-file-map "O" #'dorneanu/embark-find-file-ace)
-(define-key embark-buffer-map "O" #'dorneanu/embark-switch-to-buffer-ace)
+(with-eval-after-load 'embark
+  (define-key embark-file-map "O" #'dorneanu/embark-find-file-ace)
+  (define-key embark-buffer-map "O" #'dorneanu/embark-switch-to-buffer-ace))
 
 (use-package embark-consult
   :straight t
@@ -893,7 +886,6 @@ I only need ~counsel-org-tag~
 #+begin_src emacs-lisp
 (use-package treesit
   :straight (:type built-in)
-  :demand t
   :mode (("\\.tsx\\'" . tsx-ts-mode)
          ("\\.py\\'" . python-ts-mode)
          ("\\.cmake\\'" . cmake-ts-mode)
@@ -1790,13 +1782,17 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package lsp-pyright
   :straight t
+  :defer t
   :custom (lsp-pyright-langserver-command "pyright") ;; or basedpyright
-  )
+  :init
+  (add-hook 'python-ts-mode-hook
+            (lambda () (require 'lsp-pyright) (lsp-deferred))))
 #+end_src
 *** lsp-tailwindcss
 #+begin_src emacs-lisp
 (use-package lsp-tailwindcss
   :straight (:type git :host github :repo "merrickluo/lsp-tailwindcss")
+  :defer t
   :init (setq lsp-tailwindcss-add-on-mode t)
   :config
   (setq lsp-tailwindcss-add-on-mode t)
@@ -2114,6 +2110,7 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package vterm
   :straight t
+  :commands (vterm vterm-other-window)
   :config
   (setq puni-confirm-when-delete-unbalanced-active-region nil)
   (setq puni-blink-for-sexp-manipulating t))
@@ -3147,6 +3144,7 @@ Use counsel-org-tag (I couldn't find any alternative for consult):
 #+begin_src emacs-lisp
 (use-package org-web-tools
   :straight t
+  :commands (org-web-tools-insert-link-for-url org-web-tools-read-url-as-org)
   :config
   (setq org-web-tools-pandoc-sleep-time 10))
 
@@ -5236,9 +5234,11 @@ Various useful utilities
 ** password-store
 #+begin_src emacs-lisp
 (use-package password-store
-  :straight t)
+  :straight t
+  :commands (password-store-copy password-store-get password-store-insert))
 (use-package pass
-  :straight t)
+  :straight t
+  :commands (pass))
 #+end_src
 ** Custom Elisp
 *** reload dotemacs config
@@ -5344,12 +5344,10 @@ From https://gitlab.com/marcowahl/emacsshot
 #+begin_src emacs-lisp
 (use-package ibuffer-projectile
   :straight t
-  :config
-  (add-hook 'ibuffer-hook
-            (lambda ()
-              (ibuffer-projectile-set-filter-groups)
-              (unless (eq ibuffer-sorting-mode 'alphabetic)
-                (ibuffer-do-sort-by-alphabetic)))))
+  :hook (ibuffer . (lambda ()
+                     (ibuffer-projectile-set-filter-groups)
+                     (unless (eq ibuffer-sorting-mode 'alphabetic)
+                       (ibuffer-do-sort-by-alphabetic)))))
 #+end_src
 *** COMMENT all-the-icons-ibuffer
 #+begin_src emacs-lisp
@@ -5870,18 +5868,18 @@ Subtle visual improvements for better aesthetics and readability.
 
 *** Visual indicators
 #+begin_src emacs-lisp
-;; Highlight current line subtly
-(global-hl-line-mode 1)
+  ;; Highlight current line subtly
+  ;; (global-hl-line-mode nil)
 
-;; Better paren matching
-(setq show-paren-delay 0.1
-      show-paren-style 'mixed) ; highlight paren and expression when offscreen
+  ;; Better paren matching
+  (setq show-paren-delay 0.1
+        show-paren-style 'mixed) ; highlight paren and expression when offscreen
 
-;; Subtle window dividers
-(setq window-divider-default-right-width 1
-      window-divider-default-bottom-width 1
-      window-divider-default-places t)
-(window-divider-mode 1)
+  ;; Subtle window dividers
+  (setq window-divider-default-right-width 1
+        window-divider-default-bottom-width 1
+        window-divider-default-places t)
+  (window-divider-mode 1)
 #+end_src
 
 *** Smooth scrolling
