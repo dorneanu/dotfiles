@@ -2234,6 +2234,17 @@ Keep lisp code always indented.
   :bind (("C-c go" . browse-at-remote)
          ("C-c gy" . browse-at-remote-kill))
   :config
+  ;; Fix for wrong-type-argument stringp t error
+  (defun browse-at-remote--vc-git-call-fix (orig-fun &rest args)
+    "Fix vc-git--call being passed t instead of nil as INFILE."
+    (let ((infile (car args))
+          (rest-args (cdr args)))
+      (when (eq infile t)
+        (setq infile nil))
+      (apply orig-fun infile rest-args)))
+
+  (advice-add 'vc-git--call :around #'browse-at-remote--vc-git-call-fix)
+
   (add-to-list 'browse-at-remote-remote-type-regexps
                '(:host "github\\.wdf\\.sap\\.corp" :type "github")))
 #+end_src
@@ -2241,7 +2252,29 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package pr-review
   :straight t
-  :after magit)
+  :after magit
+  :config
+  ;; Configure for enterprise GitHub
+  (setq pr-review-github-host "github.wdf.sap.corp")
+
+  ;; Add enterprise GitHub to ghub hosts
+  (with-eval-after-load 'ghub
+    (add-to-list 'ghub-github-token-scopes '(repo user))
+
+    ;; Ensure ghub uses the right API host for enterprise GitHub
+    (defun my/pr-review-ghub-host-fix (orig-fun &rest args)
+      "Fix ghub to use enterprise GitHub API host."
+      (let ((url (car args)))
+        (when (and url (stringp url)
+                   (string-match-p "github\\.wdf\\.sap\\.corp" url))
+          ;; Replace api.github.com with enterprise API endpoint
+          (setcar args (replace-regexp-in-string
+                       "api\\.github\\.com"
+                       "github.wdf.sap.corp/api/v3"
+                       url)))
+        (apply orig-fun args)))
+
+    (advice-add 'ghub-request :around #'my/pr-review-ghub-host-fix)))
 #+end_src
 
 *** consult-gh
