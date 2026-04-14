@@ -1892,7 +1892,7 @@ Need to add some keybindings here:
 #+begin_src emacs-lisp
 (use-package dape
   :straight t
-  :defer t
+  :after (prog-mode)
   :commands (dape)
   :config
   ;; Pulse source line (performance hit)
@@ -3672,6 +3672,10 @@ position and resume whenever the same video is played again (read [[https://unix
          ("t t" . elfeed-search-toggle-all)
          ("v" . elfeed-search-view-animation)
          ("C-c C-e" . elfeed-search-export-entries)
+         ("m e" . my/elfeed-export-entries)
+         ("m E" . my/elfeed-export-clear)
+         ("m s" . my/elfeed-export-summarize)
+         ("m d" . my/elfeed-export-dired)
          ("f d" . elfeed-search-tag-all-default)
          ("m g r" . my/elfeed-reddit-show-comments)
          ("m g h" . my/elfeed-hn-show-comments)
@@ -3764,6 +3768,22 @@ position and resume whenever the same video is played again (read [[https://unix
     ;;    ("`\\(.*?\\)`" . '(:family "Monospace"))      ; Inline code
     ;;    ("^> .*$" . '(:slant italic :foreground "#C6A0F6"))))
     )  ; Blockquotes
+
+  ;; Show which feed is being fetched during elfeed-update
+  (defvar my/elfeed-update-count 0)
+  (defvar my/elfeed-update-total 0)
+
+  (defun my/elfeed-update-start (&rest _)
+    (setq my/elfeed-update-count 0
+          my/elfeed-update-total (length elfeed-feeds))
+    (message "elfeed: updating %d feeds..." my/elfeed-update-total))
+
+  (defun my/elfeed-update-feed-notify (url)
+    (cl-incf my/elfeed-update-count)
+    (message "elfeed [%d/%d]: %s" my/elfeed-update-count my/elfeed-update-total url))
+
+  (advice-add 'elfeed-update :before #'my/elfeed-update-start)
+  (advice-add 'elfeed-update-feed :before #'my/elfeed-update-feed-notify)
 
   ;; Hooks
   (add-hook 'elfeed-show-mode-hook #'my/elfeed-show-buffer-setup)
@@ -4273,6 +4293,235 @@ Use reddigg to show reddit threads.
 
     (delete-file temp-org)
     (message "Created epub: %s" (file-name-nondirectory epub-file))))
+#+end_src
+
+** elfeed export for LLM analysis
+Export elfeed entries as org files for offline LLM analysis.
+For Reddit threads, uses =reddigg= to render post + comments into org.
+For HN threads, uses =hnreader= to render post + comments into org.
+For other URLs, uses =org-web-tools= for readable content.
+
+#+begin_src emacs-lisp
+(defvar my/elfeed-export-dir "~/tmp/elfeed-export/"
+  "Directory where exported elfeed entries are saved.")
+
+(defun my/elfeed-export-clear ()
+  "Delete all exported files in `my/elfeed-export-dir'."
+  (interactive)
+  (let ((dir (expand-file-name my/elfeed-export-dir)))
+    (if (and (file-directory-p dir)
+             (yes-or-no-p (format "Delete everything in %s? " dir)))
+        (progn
+          (delete-directory dir t)
+          (make-directory dir t)
+          (message "Cleared %s" dir))
+      (message "Aborted."))))
+
+(defun my/elfeed-export-summarize ()
+  "Send exported elfeed org files to claude-code for summarization."
+  (interactive)
+  (require 'claude-code)
+  (let* ((dir (expand-file-name my/elfeed-export-dir))
+         (files (directory-files-recursively dir "\\.org$"))
+         (prompt (if files
+                     (format "Read all the org files in %s and give me a summary of the key topics, discussions, and takeaways across all articles. Group related topics together." dir)
+                   nil)))
+    (if prompt
+        (progn
+          (claude-code--do-send-command prompt)
+          (message "Sent %d files to claude-code for summarization" (length files)))
+      (user-error "No org files found in %s" dir))))
+
+(defun my/elfeed-export-dired ()
+  "Open the elfeed export directory in dired."
+  (interactive)
+  (let ((dir (expand-file-name my/elfeed-export-dir)))
+    (if (file-directory-p dir)
+        (dired dir)
+      (user-error "Export directory %s does not exist" dir))))
+
+(defun my/elfeed-export--reddit-p (url)
+  "Return non-nil if URL is a Reddit URL."
+  (string-match-p "reddit\\.com" url))
+
+(defun my/elfeed-export--hn-p (entry)
+  "Return non-nil if ENTRY is from Hacker News."
+  (let ((tags (elfeed-entry-tags entry))
+        (url (elfeed-entry-link entry)))
+    (or (memq 'hn tags)
+        (string-match-p "news\\.ycombinator\\.com" url)
+        (string-match-p "hacker-news" (or (elfeed-feed-title (elfeed-entry-feed entry)) "")))))
+
+(defun my/elfeed-export--hn-comments-url (entry)
+  "Extract HN comments URL from ENTRY content."
+  (let ((content (elfeed-deref (elfeed-entry-content entry))))
+    (when (and content
+               (string-match "Comments URL: <a href=\"\\(https://news.ycombinator.com/item\\?id=[0-9]+\\)\">" content))
+      (match-string 1 content))))
+
+(defun my/elfeed-export--sanitize-filename (name)
+  "Sanitize NAME for use as a filename."
+  (let ((clean (replace-regexp-in-string "[^a-zA-Z0-9_-]" "-" name)))
+    (replace-regexp-in-string "-+" "-"
+      (replace-regexp-in-string "^-\\|-$" "" clean))))
+
+(defun my/elfeed-export--reddit-to-file (url title filename callback)
+  "Fetch Reddit thread at URL via reddigg, save org content to FILENAME.
+Calls CALLBACK with FILENAME when done (async)."
+  (require 'reddigg)
+  (let ((cmt-path (if (string-prefix-p "https" url)
+                      (substring url (length "https://old.reddit.com/"))
+                    url)))
+    ;; Remove trailing slashes and query params for clean path
+    (when (string-prefix-p "https://www.reddit.com/" url)
+      (setq cmt-path (substring url (length "https://www.reddit.com/"))))
+    (promise-chain (reddigg--promise-comments cmt-path)
+      (then (lambda (data)
+              ;; Render into a temp buffer (same as reddigg--print-comments but we capture it)
+              (let ((buf (generate-new-buffer " *elfeed-export-reddit*")))
+                (with-current-buffer buf
+                  (insert "#+startup: overview indent\n")
+                  (insert (format "#+title: %s\n" title))
+                  (insert (format "#+date: %s\n" (format-time-string "%Y-%m-%d %H:%M")))
+                  (insert (format "#+property: URL %s\n\n" url))
+                  ;; Print post content
+                  (let ((cmt (ht-get* (aref (ht-get* (aref data 0) "data" "children") 0) "data"))
+                        (op-url (ht-get (ht-get* (aref (ht-get* (aref data 0) "data" "children") 0) "data") "url"))
+                        begin end)
+                    ;; Add OP link if it's a link post (not self post)
+                    (when (and op-url (not (string-prefix-p "https://www.reddit.com/r/" op-url)))
+                      (insert (format "#+property: OP_LINK %s\n\n" op-url)))
+                    (insert "* Post\n")
+                    (insert "author: " (ht-get cmt "author") "\n")
+                    (setq begin (point))
+                    (insert (gethash "selftext" cmt) "\n")
+                    (setq end (point))
+                    (reddigg--sanitize-range begin end))
+                  ;; Print comments
+                  (insert "\n* Comments\n")
+                  (reddigg--print-comment-list
+                   (ht-get* (aref data 1) "data" "children") "*")
+                  ;; Save to file
+                  (write-region (point-min) (point-max) filename)
+                  (kill-buffer buf))
+                (message "Exported Reddit: %s → %s" title (file-name-nondirectory filename))
+                (when callback (funcall callback filename)))))
+      (promise-catch (lambda (err)
+                       (message "Failed to export Reddit '%s': %s" title err)
+                       (when callback (funcall callback nil)))))))
+
+(defun my/elfeed-export--hn-to-file (comments-url title filename callback)
+  "Fetch HN thread at COMMENTS-URL via hnreader, save org content to FILENAME.
+Calls CALLBACK with FILENAME when done (async)."
+  (require 'hnreader)
+  (promise-chain (hnreader--promise-dom comments-url)
+    (then (lambda (dom)
+            (let ((buf (generate-new-buffer " *elfeed-export-hn*"))
+                  (comments (dom-by-class dom "^athing comtr$"))
+                  (hn-title (hnreader--get-title dom))
+                  (info (hnreader--get-post-info dom)))
+              (with-current-buffer buf
+                (insert "#+startup: overview indent\n")
+                (insert (format "#+title: %s\n" title))
+                (insert (format "#+date: %s\n" (format-time-string "%Y-%m-%d %H:%M")))
+                (insert (format "#+property: URL %s\n" comments-url))
+                ;; OP's article link from the HN post
+                (when (cdr hn-title)
+                  (insert (format "#+property: OP_LINK %s\n" (cdr hn-title))))
+                (insert "\n")
+                ;; Post info
+                (insert (car info))
+                (when (cdr info)
+                  (insert "\n")
+                  (hnreader--print-node (cdr info)))
+                ;; Comments
+                (dolist (comment comments)
+                  (insert (format "%s %s\n"
+                                  (hnreader--get-indent
+                                   (hnreader--get-img-tag-width comment))
+                                  (hnreader--get-comment-owner comment)))
+                  (hnreader--print-node
+                   (dom-append-child (hnreader--get-comment comment) '(p))))
+                ;; Save to file
+                (write-region (point-min) (point-max) filename)
+                (kill-buffer buf))
+              (message "Exported HN: %s → %s" title (file-name-nondirectory filename))
+              (when callback (funcall callback filename)))))
+    (promise-catch (lambda (err)
+                     (message "Failed to export HN '%s': %s" title err)
+                     (when callback (funcall callback nil))))))
+
+(defun my/elfeed-export--article-to-file (url title filename)
+  "Fetch article at URL using org-web-tools, save to FILENAME (sync)."
+  (require 'org-web-tools)
+  (let ((org-content (org-web-tools--url-as-readable-org url)))
+    (with-temp-file filename
+      (insert (format "#+title: %s\n" title))
+      (insert (format "#+date: %s\n" (format-time-string "%Y-%m-%d %H:%M")))
+      (insert (format "#+property: URL %s\n\n" url))
+      (if org-content
+          (insert org-content)
+        (insert "Failed to fetch content.")))
+    (message "Exported: %s → %s" title (file-name-nondirectory filename))))
+
+(defun my/elfeed-export-entries ()
+  "Export marked (or current) elfeed-search entries as org files.
+For Reddit URLs, uses reddigg to fetch post + comments (async).
+For HN entries, uses hnreader to fetch post + comments (async).
+For other URLs, uses org-web-tools for readable content (sync).
+Saves to `my/elfeed-export-dir'."
+  (interactive)
+  (let* ((entries (elfeed-search-selected))
+         (date-dir (format-time-string "%Y-%m-%d"))
+         (export-dir (expand-file-name date-dir my/elfeed-export-dir))
+         (total (length entries))
+         (sync-exported 0)
+         (async-pending 0))
+    (unless entries
+      (user-error "No entries selected"))
+    (make-directory export-dir t)
+    (dolist (entry entries)
+      (let* ((title (elfeed-entry-title entry))
+             (url (elfeed-entry-link entry))
+             (slug (my/elfeed-export--sanitize-filename
+                    (truncate-string-to-width (or title "untitled") 80)))
+             (filename (expand-file-name (concat slug ".org") export-dir)))
+        (message "Exporting [%d/%d]: %s" (1+ (- total (length entries))) total title)
+        (cond
+         ;; Reddit entries
+         ((my/elfeed-export--reddit-p url)
+          (cl-incf async-pending)
+          (my/elfeed-export--reddit-to-file url title filename
+            (lambda (_) (cl-decf async-pending)
+              (when (zerop async-pending)
+                (message "All async exports done. Files in: %s" export-dir)))))
+         ;; HN entries
+         ((my/elfeed-export--hn-p entry)
+          (let ((comments-url (my/elfeed-export--hn-comments-url entry)))
+            (if comments-url
+                (progn
+                  (cl-incf async-pending)
+                  (my/elfeed-export--hn-to-file comments-url title filename
+                    (lambda (_) (cl-decf async-pending)
+                      (when (zerop async-pending)
+                        (message "All async exports done. Files in: %s" export-dir)))))
+              (message "No HN comments URL found for '%s', exporting as article" title)
+              (condition-case err
+                  (progn
+                    (my/elfeed-export--article-to-file url title filename)
+                    (cl-incf sync-exported))
+                (error (message "Failed to export '%s': %s" title (error-message-string err)))))))
+         ;; Regular articles
+         (t
+          (condition-case err
+              (progn
+                (my/elfeed-export--article-to-file url title filename)
+                (cl-incf sync-exported))
+            (error (message "Failed to export '%s': %s" title (error-message-string err))))))))
+    (elfeed-search-untag-all-unread)
+    (message "Exported %d sync entries. %d async (Reddit/HN) pending. Dir: %s"
+             sync-exported async-pending export-dir)
+    (dired export-dir)))
 #+end_src
 
 ** hnreader
