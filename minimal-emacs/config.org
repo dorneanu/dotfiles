@@ -2167,15 +2167,27 @@ Keep lisp code always indented.
 #+begin_src emacs-lisp
 (use-package forge
   :straight t
-  :after magit)
-
-;; (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
-;;       "github.wdf.sap.corp" forge-github-repository))
-
-(with-eval-after-load 'forge
+  :after magit
+  :custom
+  ;; Set required scopes for OAuth
+  (forge-github-token-scopes '(repo user))
+  :config
+  ;; Add company GitHub Enterprise instance
   (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
           "github.wdf.sap.corp" forge-github-repository)
-        forge-alist))
+        forge-alist)
+
+  ;; Use gh CLI token for company GitHub
+  (defun my/ghub-token-from-gh-cli (host username package &optional nocreate forge)
+    "Get token from gh CLI for HOST."
+    (when (and host (string-match-p "github\\.wdf\\.sap\\.corp" (format "%s" host)))
+      (let ((token (string-trim (shell-command-to-string
+                                 "gh auth token --hostname github.wdf.sap.corp"))))
+        (message "Using gh CLI token for %s" host)
+        token)))
+
+  ;; Add advice to ghub to use gh CLI token
+  (advice-add 'ghub--token :before-until #'my/ghub-token-from-gh-cli))
 #+end_src
 
 *** diff-hl
