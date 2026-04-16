@@ -3608,6 +3608,19 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
      (message "Org emphasis styling refreshed")))
 #+end_src
 
+*** Jump to current week heading
+#+begin_src emacs-lisp
+(defun my/org-jump-to-week ()
+  "Jump to current ISO week heading using consult-outline with week pre-filled."
+  (interactive)
+  (let ((week (format-time-string "%V")))
+    (minibuffer-with-setup-hook
+        (lambda () (insert (format "wk%s" week)))
+      (consult-outline))))
+
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-c g w") #'my/org-jump-to-week))
+#+end_src
 * Media
 ** empv
 Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
