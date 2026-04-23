@@ -368,15 +368,6 @@ Something I use a lot:
 #+RESULTS:
 : hydra-windows/body
 
-*** COMMENT inserts
-#+begin_src emacs-lisp
-(+map!
- ;; ====== Inserts ======
- "ii"     #'org-download-clipboard
- "ioc"    #'dorneanu/org-insert-link-from-clipboard
- "iot"    #'counsel-org-tag)
-#+end_src
-
 *** hydras
 #+begin_src emacs-lisp
 (keymap-global-set "M-g t . w" #'+window-adjust-size-transient)
@@ -433,6 +424,7 @@ Something I use a lot:
   (define-key org-mode-map (dorneanu/my-org-key "i s") #'org-insert-subheading)
   (define-key org-mode-map (dorneanu/my-org-key "i t") #'org-insert-todo-heading)
   (define-key org-mode-map (dorneanu/my-org-key "i c") #'dorneanu/org-insert-link-from-clipboard)
+  (define-key org-mode-map (dorneanu/my-org-key "i i") #'org-download-clipboard)
 
   ;; Clocking
   (define-key org-mode-map (dorneanu/my-org-key "c i") #'org-clock-in)
@@ -463,7 +455,7 @@ Something I use a lot:
 
   ;; Misc
   (define-key org-mode-map (dorneanu/my-org-key "a") #'org-archive-subtree)
-  (define-key org-mode-map (dorneanu/my-org-key "r") #'org-refile)
+  ;; Note: "r" prefix is used for multiple refile commands, so don't bind it directly
   (define-key org-mode-map (dorneanu/my-org-key "k") #'org-store-link)
   (define-key org-mode-map (dorneanu/my-org-key "l") #'org-insert-link)
   (define-key org-mode-map (dorneanu/my-org-key "e m") #'my/toggle-org-emphasis-markers)
@@ -481,6 +473,8 @@ Something I use a lot:
   :hook (minibuffer-setup . vertico-repeat-save)
   :bind (("M-R" . vertico-repeat)
          :map vertico-map
+         ("C-g" . abort-minibuffers)
+         ("<escape>" . abort-minibuffers)
          ("RET" . vertico-directory-enter)
          ("DEL" . vertico-directory-delete-char)
          ("M-DEL" . vertico-directory-delete-word))
@@ -818,6 +812,20 @@ Disabled - prefer regular vertico
   :straight t
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
+
+** wgrep
+#+begin_src emacs-lisp
+(use-package wgrep
+  :straight t
+  :after embark-consult
+  :demand t
+  :bind (:map grep-mode-map
+         ("e" . wgrep-change-to-wgrep-mode)
+         ("C-x C-q" . wgrep-change-to-wgrep-mode))
+  :custom
+  (wgrep-auto-save-buffer t)
+  (wgrep-change-readonly-file t))
 #+end_src
 
 ** counsel
@@ -2165,29 +2173,48 @@ Keep lisp code always indented.
 #+end_src
 *** forge
 #+begin_src emacs-lisp
+;; Use latest ghub (has ghub-graphql removed, but we'll patch pr-review)
+(use-package ghub
+  :straight t
+  :config
+  (add-to-list 'ghub-github-token-scopes '(repo user)))
+
 (use-package forge
   :straight t
   :after magit
   :custom
   ;; Set required scopes for OAuth
   (forge-github-token-scopes '(repo user))
+  :bind (:map forge-pullreq-mode-map
+              ("C-c r" . forge-browse-pullreq))
   :config
   ;; Add company GitHub Enterprise instance
   (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
           "github.wdf.sap.corp" forge-github-repository)
         forge-alist)
 
-  ;; Use gh CLI token for company GitHub
-  (defun my/ghub-token-from-gh-cli (host username package &optional nocreate forge)
-    "Get token from gh CLI for HOST."
-    (when (and host (string-match-p "github\\.wdf\\.sap\\.corp" (format "%s" host)))
-      (let ((token (string-trim (shell-command-to-string
-                                 "gh auth token --hostname github.wdf.sap.corp"))))
-        (message "Using gh CLI token for %s" host)
-        token)))
+  ;; Register a custom auth-source backend that delegates to the gh CLI.
+  ;; This is cleaner than advising ghub--token directly: any package using
+  ;; auth-source (not just ghub/forge) will pick up the token automatically.
+  (defun auth-source-backend-gh-parse (entry)
+    (when (string= "gh" entry)
+      (auth-source-backend
+       :source "."
+       :type 'gh
+       :search-function #'auth-source-gh-search)))
+  (add-hook 'auth-source-backend-parser-functions #'auth-source-backend-gh-parse)
 
-  ;; Add advice to ghub to use gh CLI token
-  (advice-add 'ghub--token :before-until #'my/ghub-token-from-gh-cli))
+  (cl-defun auth-source-gh-search (&rest spec &allow-other-keys)
+    (when-let* ((host (plist-get spec :host))
+                ((string-match-p "github\\.wdf\\.sap\\.corp" (format "%s" host))))
+      (let* ((token (string-trim (shell-command-to-string
+                                  "gh auth token --hostname github.wdf.sap.corp")))
+             (user (or (plist-get spec :user) "I748851")))
+        (message "Using gh CLI token for %s" host)
+        (list (list :host host :user user :secret token)))))
+
+  (add-to-list 'auth-sources "gh")
+  (auth-source-forget-all-cached))
 #+end_src
 
 *** diff-hl
@@ -2250,31 +2277,30 @@ Keep lisp code always indented.
 #+end_src
 *** pr-review
 #+begin_src emacs-lisp
+;; Use latest pr-review - it has fixes for ghub-graphql deprecation (issue #22)
 (use-package pr-review
   :straight t
-  :after magit
-  :config
+  :after (magit ghub)
+  :custom
   ;; Configure for enterprise GitHub
-  (setq pr-review-github-host "github.wdf.sap.corp")
-
-  ;; Add enterprise GitHub to ghub hosts
-  (with-eval-after-load 'ghub
-    (add-to-list 'ghub-github-token-scopes '(repo user))
-
-    ;; Ensure ghub uses the right API host for enterprise GitHub
-    (defun my/pr-review-ghub-host-fix (orig-fun &rest args)
-      "Fix ghub to use enterprise GitHub API host."
-      (let ((url (car args)))
-        (when (and url (stringp url)
-                   (string-match-p "github\\.wdf\\.sap\\.corp" url))
-          ;; Replace api.github.com with enterprise API endpoint
-          (setcar args (replace-regexp-in-string
-                       "api\\.github\\.com"
-                       "github.wdf.sap.corp/api/v3"
-                       url)))
-        (apply orig-fun args)))
-
-    (advice-add 'ghub-request :around #'my/pr-review-ghub-host-fix)))
+  (pr-review-ghub-host "github.wdf.sap.corp/api/v3")
+  :bind (:map forge-pullreq-mode-map
+              ("C-c r" . my/pr-review-current-forge-pr))
+  :config
+  ;; Helper function to review current forge PR
+  (defun my/pr-review-current-forge-pr ()
+    "Start pr-review for the current forge PR buffer."
+    (interactive)
+    (if-let* ((topic forge-buffer-topic)
+              (repo (forge-get-repository topic))
+              (owner (oref repo owner))
+              (name (oref repo name))
+              (number (oref topic number))
+              (host (oref repo githost))
+              (url (format "https://%s/%s/%s/pull/%s"
+                          host owner name number)))
+        (pr-review url)
+      (user-error "Not in a forge PR buffer or PR info not available"))))
 #+end_src
 
 *** consult-gh
@@ -2409,11 +2435,7 @@ Basic configuration
 
          ;; Misc
          ("C-c o a" . org-archive-subtree)
-         ("C-c o r w" . org-refile)
-         ("C-c o r v" . +org/refile-to-visible)
-         ("C-c o r f" . +org/refile-to-current-file)
-         ("C-c o r o" . +org/refile-to-other-window)
-         ;;("C-c o r l" . +org/refile-to-last-location)
+         ;; Note: refile bindings (C-c o r *) are set up in with-eval-after-load below
          ("C-c o k" . org-store-link)
          ("C-c o l" . org-insert-link)
          ("C-c o e m" . my/toggle-org-emphasis-markers)
@@ -2800,10 +2822,11 @@ Now settings for ~org-refile~:
   (setq org-refile-use-outline-path 'file)       ; Show filename for refiling
   (setq org-outline-path-complete-in-steps nil)  ; Refile in a single go
 
-  ;; Exclude DONE state tasks from refile targets
+  ;; Exclude DONE state tasks and archived headings from refile targets
   (defun dorneanu/verify-refile-target ()
-    "Exclude todo keywords with a done state from refile targets."
-    (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+    "Exclude todo keywords with a done state and archived headings from refile targets."
+    (and (not (member (nth 2 (org-heading-components)) org-done-keywords))
+         (not (member org-archive-tag (org-get-tags)))))
   (setq org-refile-target-verify-function 'dorneanu/verify-refile-target)
 
   ;; Some custom elisp functions
@@ -2874,6 +2897,12 @@ If prefix ARG, copy instead of move."
                  (cl-pushnew (cons file (cons :maxlevel 10))
                              org-refile-targets)))))
       (call-interactively #'org-refile)))
+
+  ;; Set up refile keybindings now that functions are defined
+  (define-key org-mode-map (kbd "C-c o r w") #'org-refile)
+  (define-key org-mode-map (kbd "C-c o r v") #'+org/refile-to-visible)
+  (define-key org-mode-map (kbd "C-c o r f") #'+org/refile-to-current-file)
+  (define-key org-mode-map (kbd "C-c o r o") #'+org/refile-to-other-window)
 
   ;; Save all buffers after refilling
   (advice-add 'org-refile :after (lambda (&rest _) (org-save-all-org-buffers))))
@@ -2986,7 +3015,7 @@ If prefix ARG, copy instead of move."
 #+results:
 : org-capture
 
-** org-timeblock                                                                             :todo:
+** org-timeblock                                                                                                 :todo:
 #+begin_src emacs-lisp
 (use-package org-timeblock
   :straight t
@@ -3154,7 +3183,7 @@ If prefix ARG, copy instead of move."
    (graphql . t)
    (shell . t)))
 #+end_src
-** COMMENT org-sidebar                                                                       :todo:
+** COMMENT org-sidebar                                                                                           :todo:
 #+begin_src emacs-lisp
 (use-package org-sidebar
   :straight t
@@ -4946,101 +4975,158 @@ Play midi files from within dir buffers
 #+end_src
 *** claude-code
 #+begin_src emacs-lisp
-  ;; Install required inheritenv dependency:
-  (use-package inheritenv
-    :straight (:type git :host github :repo "purcell/inheritenv"))
+;; Install required inheritenv dependency:
+(use-package inheritenv
+  :straight (:type git :host github :repo "purcell/inheritenv"))
 
-  ;; for eat terminal backend:
-  (use-package eat
-    :defer t
-    :commands (eat eat-project eat-other-window)
-    :straight (:type git
-                     :host codeberg
-                     :repo "akib/emacs-eat"
-                     :files ("*.el" ("term" "term/*.el") "*.texi"
-                             "*.ti" ("terminfo/e" "terminfo/e/*")
-                             ("terminfo/65" "terminfo/65/*")
-                             ("integration" "integration/*")
-                             (:exclude ".dir-locals.el" "*-tests.el"))))
+;; for eat terminal backend:
+(use-package eat
+  :defer t
+  :commands (eat eat-project eat-other-window)
+  :straight (:type git
+                   :host codeberg
+                   :repo "akib/emacs-eat"
+                   :files ("*.el" ("term" "term/*.el") "*.texi"
+                           "*.ti" ("terminfo/e" "terminfo/e/*")
+                           ("terminfo/65" "terminfo/65/*")
+                           ("integration" "integration/*")
+                           (:exclude ".dir-locals.el" "*-tests.el"))))
 
-  ;; install claude-code.el, using :depth 1 to reduce download size:
-  (use-package claude-code
-    :straight (:type git :host github :repo "manzaltu/claude-code.el" :branch "main" :depth 1
-                     :files ("*.el" (:exclude "images/*")))
-    :bind-keymap
-    ("C-x c" . claude-code-command-map) ;; or your preferred key
-    ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
-    :bind
-    (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
-    :config
-    (setq claude-code-terminal-backend 'eat)
-    (define-key claude-code-command-map (kbd "p") #'claude-code-send-command))
-    ;; optional IDE integration with Monet
-    ;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
-    ;; (monet-mode 1)
-    ;; (claude-code-mode)
+;; install claude-code.el, using :depth 1 to reduce download size:
+(use-package claude-code
+  :straight (:type git :host github :repo "manzaltu/claude-code.el" :branch "main" :depth 1
+                   :files ("*.el" (:exclude "images/*")))
+  :bind-keymap
+  ("C-x c" . claude-code-command-map) ;; or your preferred key
+  ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
+  :bind
+  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
+  :config
+  (setq claude-code-terminal-backend 'eat)
+  (define-key claude-code-command-map (kbd "p") #'claude-code-send-command)
+  (define-key claude-code-command-map (kbd "r") #'my/claude-code-send-region)
+  (define-key claude-code-command-map (kbd "R") #'my/claude-code-send-region-with-prompt)
+  (define-key claude-code-command-map (kbd "I") #'my/claude-code-send-region-select-instance)
+  (define-key claude-code-command-map (kbd "X") #'my/claude-code-send-command-with-context-select-instance))
+;; optional IDE integration with Monet
+;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
+;; (monet-mode 1)
+;; (claude-code-mode)
 
-  ;; (use-package claude-code-ide
-  ;;   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el" :branch "main" :depth 1)
-  ;;   :bind ("C-c C-'" . claude-code-ide-menu)
-  ;;   :config
-  ;;   (claude-code-ide-emacs-tools-setup))
+;; (use-package claude-code-ide
+;;   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el" :branch "main" :depth 1)
+;;   :bind ("C-c C-'" . claude-code-ide-menu)
+;;   :config
+;;   (claude-code-ide-emacs-tools-setup))
 
-  ;; Claude Code endpoint and account switching functions
-  (defvar claude-code-current-profile "personal"
-    "Current Claude Code profile (personal or work).")
+(defun my/claude-code--build-region-cmd (beg end)
+  "Build the command string for sending region BEG to END with a prompt."
+  (let* ((region-text (buffer-substring-no-properties beg end))
+         (prompt (read-string "Prompt for Claude: " nil 'claude-code-command-history)))
+    (format "```\n%s\n```\n\n%s"
+            region-text
+            prompt)))
 
-  ;; By default, use personal account (settings.json)
-  ;; Switch to work account when needed (settings.work.json)
+(defun my/claude-code-send-region (beg end)
+  "Send region to Claude without a prompt."
+  (interactive "r")
+  (unless (use-region-p)
+    (user-error "No region selected"))
+  (let ((region-text (buffer-substring-no-properties beg end)))
+    (claude-code--do-send-command (format "```\n%s\n```" region-text))))
 
-  (defun claude-code-use-work-account ()
-    "Switch Claude Code to use work account settings."
-    (interactive)
-    (setq claude-code-program-switches (list "--settings" (expand-file-name "~/.claude/settings.work.json")))
-    (setq claude-code-current-profile "work")
-    (message "Claude Code: Switched to work account. Start a new Claude session."))
+(defun my/claude-code-send-region-with-prompt (beg end)
+  "Send region to Claude wrapped in delimiters, then ask for a prompt."
+  (interactive "r")
+  (unless (use-region-p)
+    (user-error "No region selected"))
+  (claude-code--do-send-command (my/claude-code--build-region-cmd beg end)))
 
-  (defun claude-code-use-personal-account ()
-    "Switch Claude Code to use personal account settings (default)."
-    (interactive)
-    (setq claude-code-program-switches nil)  ; Use default settings.json
-    (setq claude-code-current-profile "personal")
-    (message "Claude Code: Switched to personal account (default). Start a new Claude session."))
+(defun my/claude-code-send-region-select-instance (beg end)
+  "Like `my/claude-code-send-region-with-prompt' but prompt for Claude instance."
+  (interactive "r")
+  (unless (use-region-p)
+    (user-error "No region selected"))
+  (my/claude-code--send-to-instance (my/claude-code--build-region-cmd beg end)))
 
-  (defun claude-code-toggle-account ()
-    "Toggle between personal and work Claude Code accounts."
-    (interactive)
-    (if (string= claude-code-current-profile "personal")
-        (claude-code-use-work-account)
-      (claude-code-use-personal-account)))
+(defun my/claude-code--send-to-instance (cmd)
+  "Prompt for a Claude instance and send CMD to it."
+  (let* ((all-buffers (claude-code--find-all-claude-buffers))
+         (target (claude-code--select-buffer-from-choices
+                  "Send to Claude instance: " all-buffers)))
+    (if target
+        (with-current-buffer target
+          (claude-code--term-send-string claude-code-terminal-backend cmd)
+          (sit-for 0.1)
+          (claude-code--term-send-string claude-code-terminal-backend (kbd "RET"))
+          (display-buffer target))
+      (user-error "No Claude instance selected"))))
 
-  (defun claude-code-restart-with-account (account)
-    "Restart Claude Code with the specified ACCOUNT (personal or work)."
-    (interactive
-     (list (completing-read "Select account: " '("personal" "work") nil t)))
-    ;; Set the account
-    (if (string= account "work")
-        (progn
-          (setq claude-code-program-switches (list "--settings" (expand-file-name "~/.claude/settings.work.json")))
-          (setq claude-code-current-profile "work")
-          (message "Claude Code: Switching to work account..."))
+(defun my/claude-code-send-command-with-context-select-instance ()
+  "Like `claude-code-send-command-with-context' but prompt for Claude instance."
+  (interactive)
+  (let* ((cmd (read-string "Claude command: " nil 'claude-code-command-history))
+         (file-ref (if (use-region-p)
+                       (claude-code--format-file-reference
+                        nil
+                        (line-number-at-pos (region-beginning) t)
+                        (line-number-at-pos (region-end) t))
+                     (claude-code--format-file-reference)))
+         (cmd-with-context (if file-ref (format "%s\n%s" cmd file-ref) cmd)))
+    (my/claude-code--send-to-instance cmd-with-context)))
+
+;; Claude Code endpoint and account switching functions
+(defvar claude-code-current-profile "personal"
+  "Current Claude Code profile (personal or work).")
+
+;; By default, use personal account (settings.json)
+;; Switch to work account when needed (settings.work.json)
+
+(defun claude-code-use-work-account ()
+  "Switch Claude Code to use work account settings."
+  (interactive)
+  (setq claude-code-program-switches (list "--settings" (expand-file-name "~/.claude/settings.work.json")))
+  (setq claude-code-current-profile "work")
+  (message "Claude Code: Switched to work account. Start a new Claude session."))
+
+(defun claude-code-use-personal-account ()
+  "Switch Claude Code to use personal account settings (default)."
+  (interactive)
+  (setq claude-code-program-switches nil)  ; Use default settings.json
+  (setq claude-code-current-profile "personal")
+  (message "Claude Code: Switched to personal account (default). Start a new Claude session."))
+
+(defun claude-code-toggle-account ()
+  "Toggle between personal and work Claude Code accounts."
+  (interactive)
+  (if (string= claude-code-current-profile "personal")
+      (claude-code-use-work-account)
+    (claude-code-use-personal-account)))
+
+(defun claude-code-restart-with-account (account)
+  "Restart Claude Code with the specified ACCOUNT (personal or work)."
+  (interactive
+   (list (completing-read "Select account: " '("personal" "work") nil t)))
+  (if (string= account "work")
       (progn
-        (setq claude-code-program-switches nil)
-        (setq claude-code-current-profile "personal")
-        (message "Claude Code: Switching to personal account...")))
-    ;; Start new Claude session
-    (when (fboundp 'claude-code)
-      (claude-code)))
+        (setq claude-code-program-switches (list "--settings" (expand-file-name "~/.claude/settings.work.json")))
+        (setq claude-code-current-profile "work")
+        (message "Claude Code: Switching to work account..."))
+    (progn
+      (setq claude-code-program-switches nil)
+      (setq claude-code-current-profile "personal")
+      (message "Claude Code: Switching to personal account...")))
+  (when (fboundp 'claude-code)
+    (claude-code)))
 
-  (defun claude-code-show-current-profile ()
-    "Display the current Claude Code profile."
-    (interactive)
-    (let ((account claude-code-current-profile)
-          (switches (if claude-code-program-switches
-                     (format "Settings: %s" claude-code-program-switches)
-                   "Default settings (personal)")))
-      (message "Claude Code Profile: %s | %s" account switches)))
-
+(defun claude-code-show-current-profile ()
+  "Display the current Claude Code profile."
+  (interactive)
+  (let ((account claude-code-current-profile)
+        (switches (if claude-code-program-switches
+                      (format "Settings: %s" claude-code-program-switches)
+                    "Default settings (personal)")))
+    (message "Claude Code Profile: %s | %s" account switches)))
 #+end_src
 ** Web
 *** eww
