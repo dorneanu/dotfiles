@@ -3636,20 +3636,64 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
      (org-restart-font-lock)
      (message "Org emphasis styling refreshed")))
 #+end_src
+*** Week headings 
+**** Jump to current week heading
+ #+begin_src emacs-lisp
+ (defun my/org-jump-to-week ()
+   "Jump to current ISO week heading using consult-outline with week pre-filled."
+   (interactive)
+   (let ((week (format-time-string "%V")))
+     (minibuffer-with-setup-hook
+         (lambda () (insert (format "wk%s" week)))
+       (consult-outline))))
 
-*** Jump to current week heading
-#+begin_src emacs-lisp
-(defun my/org-jump-to-week ()
-  "Jump to current ISO week heading using consult-outline with week pre-filled."
-  (interactive)
-  (let ((week (format-time-string "%V")))
-    (minibuffer-with-setup-hook
-        (lambda () (insert (format "wk%s" week)))
-      (consult-outline))))
+ (with-eval-after-load 'org
+   (define-key org-mode-map (kbd "C-c g w") #'my/org-jump-to-week))
+ #+end_src
+**** Create week headings
+ #+begin_src emacs-lisp
+ (defun my/org-create-week-heading-work ()
+   "Create or jump to current ISO week heading in work org file."
+   (interactive)
+   (let* ((week (format-time-string "%V"))
+          (year (format-time-string "%Y"))
+          (week-heading (format "* wk%s - %s" week year))
+          (work-file (expand-file-name "work.org" org-directory)))
+     (find-file work-file)
+     (goto-char (point-min))
+     (if (search-forward week-heading nil t)
+         (progn
+           (org-show-subtree)
+           (message "Jumped to existing week heading: wk%s" week))
+       (goto-char (point-max))
+       (unless (bolp) (insert "\n"))
+       (insert week-heading "\n")
+       (org-show-subtree)
+       (message "Created new week heading: wk%s" week))))
 
-(with-eval-after-load 'org
-  (define-key org-mode-map (kbd "C-c g w") #'my/org-jump-to-week))
-#+end_src
+ (defun my/org-create-week-heading-private ()
+   "Create or jump to current ISO week heading in private org file."
+   (interactive)
+   (let* ((week (format-time-string "%V"))
+          (year (format-time-string "%Y"))
+          (week-heading (format "* wk%s - %s" week year))
+          (private-file (expand-file-name "private.org" org-directory)))
+     (find-file private-file)
+     (goto-char (point-min))
+     (if (search-forward week-heading nil t)
+         (progn
+           (org-show-subtree)
+           (message "Jumped to existing week heading: wk%s" week))
+       (goto-char (point-max))
+       (unless (bolp) (insert "\n"))
+       (insert week-heading "\n")
+       (org-show-subtree)
+       (message "Created new week heading: wk%s" week))))
+
+ (with-eval-after-load 'org
+   (define-key org-mode-map (kbd "C-c g W") #'my/org-create-week-heading-work)
+   (define-key org-mode-map (kbd "C-c g P") #'my/org-create-week-heading-private))
+ #+end_src
 * Media
 ** empv
 Watch YouTube videos from Emacs using ~mpv~. I also learned you can save the
