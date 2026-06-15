@@ -374,8 +374,8 @@ Something I use a lot:
 #+end_src
 *** jumps
 #+begin_src emacs-lisp
-(keymap-global-set "C-x j c" #'avy-goto-char)
-(keymap-global-set "C-x j w" #'avy-goto-word-1)
+(keymap-global-set "C-c a c" #'avy-goto-char)
+(keymap-global-set "C-c a w" #'avy-goto-word-1)
 (keymap-global-set "C-x j t" #'centaur-tabs-ace-jump)
 (keymap-global-set "C-x j j" #'consult-goto-line)
 ;; This doesn't fit here
@@ -1579,7 +1579,7 @@ Flycheck can also be enabled for Cython:
   (add-to-list 'eglot-server-programs '(markdown-mode . ("marksman"))))
 
 ;; Add config for markdown
-(add-hook 'markdown-mode-hook #'eglot-ensure)
+;; (add-hook 'markdown-mode-hook #'eglot-ensure)
 #+end_src
 *** eldoc
 Need to add some keybindings here:
@@ -1914,7 +1914,10 @@ Need to add some keybindings here:
 (use-package repeat
   :straight t
   :config
-  (repeat-mode))
+  (repeat-mode)
+
+  ;; Allow C-SPC to continue popping mark ring after initial C-u C-SPC
+  (setq set-mark-command-repeat-pop t))
 #+end_src
 *** dap
 #+begin_src emacs-lisp
@@ -2119,6 +2122,10 @@ Keep lisp code always indented.
 (use-package vterm
   :straight t
   :commands (vterm vterm-other-window)
+  :bind ((:map vterm-mode-map
+          ("C-c y" . vterm-copy-mode))
+         (:map vterm-copy-mode-map
+          ("C-c y" . vterm-copy-mode)))
   :config
   (setq puni-confirm-when-delete-unbalanced-active-region nil)
   (setq puni-blink-for-sexp-manipulating t))
@@ -2131,38 +2138,71 @@ Keep lisp code always indented.
   :straight t)
 
 (use-package magit
-  :bind (("C-c a v m" . magit))
-  :straight t)
+  :straight t
+  :init
+  (defun claude-code-commit-message ()
+    "Generate a commit message from staged diff using claude and copy to clipboard."
+    (interactive)
+    (let ((diff (shell-command-to-string "git diff --cached")))
+      (if (string-empty-p (string-trim diff))
+          (message "No staged changes")
+        (message "Generating commit message...")
+        (let* ((prompt (format "Write ONLY a concise commit message for this diff. No explanation, no markdown fences, just the message. Follow conventional commits style.\n\n```diff\n%s\n```" diff))
+               (temp-file (make-temp-file "claude-prompt-" nil ".txt" prompt))
+               (buf (generate-new-buffer "*claude-commit-msg*"))
+               (process-connection-type nil))
+          (set-process-sentinel
+           (start-process-shell-command
+            "claude-commit-msg" buf
+            (format "cat %s | claude -p" (shell-quote-argument temp-file)))
+           (lambda (proc _event)
+             (when (eq (process-status proc) 'exit)
+               (let* ((raw (with-current-buffer (process-buffer proc)
+                             (buffer-string)))
+                      (msg (string-trim raw)))
+                 (kill-new msg)
+                 (delete-file temp-file)
+                 (kill-buffer (process-buffer proc))
+                 (message "Commit message copied: %s" msg)))))))))
 
-(defun claude-code-commit-message ()
-  "Generate a commit message from staged diff using claude and copy to clipboard."
-  (interactive)
-  (let ((diff (shell-command-to-string "git diff --cached")))
-    (if (string-empty-p (string-trim diff))
-        (message "No staged changes")
-      (message "Generating commit message...")
-      (let* ((prompt (format "Write ONLY a concise commit message for this diff. No explanation, no markdown fences, just the message. Follow conventional commits style.\n\n```diff\n%s\n```" diff))
-             (temp-file (make-temp-file "claude-prompt-" nil ".txt" prompt))
-             (buf (generate-new-buffer "*claude-commit-msg*"))
-             (process-connection-type nil))
-        (set-process-sentinel
-         (start-process-shell-command
-          "claude-commit-msg" buf
-          (format "cat %s | claude -p" (shell-quote-argument temp-file)))
-         (lambda (proc _event)
-           (when (eq (process-status proc) 'exit)
-             (let* ((raw (with-current-buffer (process-buffer proc)
-                           (buffer-string)))
-                    (msg (string-trim raw)))
-               (kill-new msg)
-               (delete-file temp-file)
-               (kill-buffer (process-buffer proc))
-               (message "Commit message copied: %s" msg)))))))))
+  (defun my/magit-side-by-side (repo-1 repo-2)
+    "Open magit for REPO-1 and REPO-2 side by side."
+    (interactive "DFirst repo: \nDSecond repo: ")
+    (delete-other-windows)
+    (let ((magit-display-buffer-function
+           (lambda (buffer) (display-buffer-same-window buffer nil))))
+      (magit-status repo-1)
+      (split-window-right)
+      (other-window 1)
+      (magit-status repo-2)
+      (other-window -1)))
 
-(with-eval-after-load 'magit
-  (define-key magit-diff-mode-map (kbd "C-c A c") #'claude-code-commit-message)
-  (define-key magit-status-mode-map (kbd "C-c A c") #'claude-code-commit-message))
+  :bind (("C-c m m" . magit-status)
+         ("C-c m b" . magit-blame-addition)
+         ("C-c m B" . magit-branch)
+         ("C-c m c" . magit-commit)
+         ("C-c m d" . magit-diff-buffer-file)
+         ("C-c m D" . magit-diff)
+         ("C-c m f" . magit-find-file)
+         ("C-c m F" . magit-fetch)
+         ("C-c m l" . magit-log-buffer-file)
+         ("C-c m L" . magit-log)
+         ("C-c m p" . magit-push)
+         ("C-c m P" . magit-pull)
+         ("C-c m r" . magit-rebase)
+         ("C-c m S" . magit-file-stage)
+         ("C-c m M" . my/magit-side-by-side)
+         ("C-c m z" . magit-stash)
+         :map magit-diff-mode-map
+         ("C-c A c" . claude-code-commit-message)
+         :map magit-status-mode-map
+         ("C-c A c" . claude-code-commit-message)))
 #+end_src
+
+#+RESULTS:
+: #s(hash-table data (:use-package (27169 29424 784279 0) :init (27169 29424 783230 0) :init-secs (0 0 147 0) :use-package-secs (0 0 8088 0) :config (27169 29424 783219 0) :config-secs (0 0 2 0)))
+
+
 *** COMMENT magit-todos
 #+begin_src emacs-lisp
 (use-package magit-todos
@@ -2186,7 +2226,9 @@ Keep lisp code always indented.
   ;; Set required scopes for OAuth
   (forge-github-token-scopes '(repo user))
   :bind (:map forge-pullreq-mode-map
-              ("C-c r" . forge-browse-pullreq))
+              ("C-c r" . forge-browse-pullreq)
+         :map magit-mode-map
+              ("C-c f p" . forge-pull))
   :config
   ;; Add company GitHub Enterprise instance
   (push '("github.wdf.sap.corp" "github.wdf.sap.corp/api/v3"
@@ -2216,6 +2258,7 @@ Keep lisp code always indented.
   (add-to-list 'auth-sources "gh")
   (auth-source-forget-all-cached))
 #+end_src
+
 
 *** diff-hl
 #+begin_src emacs-lisp
@@ -2281,12 +2324,9 @@ Keep lisp code always indented.
 (use-package pr-review
   :straight t
   :after (magit ghub)
-  :custom
-  ;; Configure for enterprise GitHub
-  (pr-review-ghub-host "github.wdf.sap.corp/api/v3")
-  :bind (:map forge-pullreq-mode-map
-              ("C-c r" . my/pr-review-current-forge-pr))
   :config
+  (with-eval-after-load 'forge
+    (define-key forge-pullreq-mode-map (kbd "C-c r") #'my/pr-review-current-forge-pr))
   ;; Helper function to review current forge PR
   (defun my/pr-review-current-forge-pr ()
     "Start pr-review for the current forge PR buffer."
@@ -2296,10 +2336,13 @@ Keep lisp code always indented.
               (owner (oref repo owner))
               (name (oref repo name))
               (number (oref topic number))
-              (host (oref repo githost))
-              (url (format "https://%s/%s/%s/pull/%s"
-                          host owner name number)))
-        (pr-review url)
+              (host (oref repo githost)))
+        ;; Set ghub host dynamically: enterprise needs /api/v3 suffix, github.com does not
+        (let ((pr-review-ghub-host (if (string= host "github.com")
+                                       "api.github.com"
+                                     (concat host "/api/v3")))
+              (url (format "https://%s/%s/%s/pull/%s" host owner name number)))
+          (pr-review url))
       (user-error "Not in a forge PR buffer or PR info not available"))))
 #+end_src
 
@@ -2646,7 +2689,10 @@ Basic configuration
 
    ;; Append proj files
    org-agenda-files (append org-agenda-files
-                            (directory-files org-directory t "proj_.+\\.org$")))
+                            (directory-files org-directory t "proj_.+\\.org$"))
+
+   ;; Remove any nil entries that sneak in (e.g. from missing files/dirs)
+   org-agenda-files (delq nil org-agenda-files))
 
   ;; (add-hook 'org-agenda-mode-hook
   ;;           (lambda ()
@@ -3070,9 +3116,7 @@ If prefix ARG, copy instead of move."
 
   :commands (consult-org-roam-search consult-org-roam-find)
   :custom
-  (org-roam-directory (getenv "ORG_ROAM_DIRECTORY"))
   (org-roam-node-display-template (concat "${title:*} " (propertize "${tags:20}" 'face 'org-tag)))
-  (org-roam-directory (expand-file-name "repos/priv/roam/" (getenv "HOME")))
   ;; (org-roam-completion-everywhere t)  ; DISABLED - causes org-completion-at-point errors
   :config
   (org-roam-db-autosync-mode 1)
@@ -3801,6 +3845,10 @@ position and resume whenever the same video is played again (read [[https://unix
    (elfeed-goodies/wide-threshold 0.2)
    (elfeed-set-timeout 36000))
   :config
+  ;; Enable images in elfeed entries
+  (setq shr-inhibit-images nil)
+  (setq shr-max-image-proportion 0.6)
+
   (custom-set-faces
    ;; Title styling
    '(elfeed-show-title-face ((t :height 1.5
@@ -3881,92 +3929,6 @@ position and resume whenever the same video is played again (read [[https://unix
 *** Custom functions
 
 #+begin_src emacs-lisp
-(defun hp/elfeed-entry-line-draw (entry)
-  "Enhanced print function for ENTRY in the elfeed-search buffer."
-  (let* (;; Basic entry information
-         (date (elfeed-search-format-date (elfeed-entry-date entry)))
-         (title (or (elfeed-meta entry :title)
-                    (elfeed-entry-title entry)
-                    ""))
-         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
-
-         ;; Feed information
-         (feed (elfeed-entry-feed entry))
-         (feed-title (when feed
-                       (or (elfeed-meta feed :title)
-                           (elfeed-feed-title feed))))
-
-         ;; Tags formatting
-         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
-         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
-
-         ;; Width calculations
-         (title-width (- (window-width)
-                         elfeed-goodies/feed-source-column-width
-                         elfeed-goodies/tag-column-width
-                         10  ; date width
-                         4)) ; spacing
-
-         ;; Column formatting
-         (title-column (elfeed-format-column
-                        title
-                        (elfeed-clamp elfeed-search-title-min-width
-                                      title-width
-                                      title-width)
-                        :left))
-         (tag-column (elfeed-format-column
-                      tags-str
-                      (elfeed-clamp (length tags-str)
-                                    elfeed-goodies/tag-column-width
-                                    elfeed-goodies/tag-column-width)
-                      :left))
-         (feed-column (elfeed-format-column
-                       feed-title
-                       (elfeed-clamp elfeed-goodies/feed-source-column-width
-                                     elfeed-goodies/feed-source-column-width
-                                     elfeed-goodies/feed-source-column-width)
-                       :left))
-
-         ;; Reading time calculation
-         (content (elfeed-deref (elfeed-entry-content entry)))
-         (word-count (when content
-                       (with-temp-buffer
-                         (insert content)
-                         (count-words (point-min) (point-max)))))
-         (reading-time (when word-count
-                         (format "%dm" (/ word-count 200))))
-
-         ;; Age calculations
-         (age-in-days (/ (- (float-time)
-                            (float-time (elfeed-entry-date entry)))
-                         86400))
-         (age-face (cond ((> age-in-days 365) 'font-lock-comment-face)
-                         ((> age-in-days 30) 'font-lock-keyword-face)
-                         (t 'font-lock-string-face))))
-
-    ;; Display logic based on window width
-    (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
-        ;; Wide format
-        (progn
-          ;; Date and reading time
-          (insert (propertize date 'face 'elfeed-search-date-face) " ")
-          (when reading-time
-            (insert (propertize (format "[%s] " reading-time)
-                                'face 'font-lock-comment-face)))
-
-          ;; Feed and tags
-          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
-          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
-
-          ;; Title and age
-          (insert (propertize title 'face title-faces 'kbd-help title))
-          (when (> age-in-days 7)
-            (insert " " (propertize (format "(%d days old)" (round age-in-days))
-                                    'face age-face))))
-
-      ;; Narrow format
-      (insert (propertize title 'face title-faces 'kbd-help title)))))
-
 ;; Add mouseover tooltips
 (defun elfeed-search-show-entry-tooltip ()
   (when-let* ((entry (elfeed-search-selected :single))
@@ -3980,52 +3942,132 @@ position and resume whenever the same video is played again (read [[https://unix
               (elfeed-entry-title entry)
               (elfeed-feed-title (elfeed-entry-feed entry))
               (truncate-string-to-width summary 200)))))
-(defun hp/elfeed-entry-line-draw (entry)
-  "Print ENTRY to the buffer."
-  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+
+;; ── Feed-grouped sort ──────────────────────────────────────────────────────
+;; Sort entries by feed title (alphabetically), then by date descending within
+;; each feed group.  This replaces the default date-only sort.
+(defun dorneanu/elfeed-sort-by-feed-then-date (a b)
+  "Sort elfeed entries: group by feed title (A-Z), then newest-first within group."
+  (let* ((feed-a (elfeed-entry-feed a))
+         (feed-b (elfeed-entry-feed b))
+         (title-a (or (and feed-a (or (elfeed-meta feed-a :title)
+                                      (elfeed-feed-title feed-a)))
+                      ""))
+         (title-b (or (and feed-b (or (elfeed-meta feed-b :title)
+                                      (elfeed-feed-title feed-b)))
+                      "")))
+    (if (string= title-a title-b)
+        ;; Same feed → sort newest-first by date
+        (> (elfeed-entry-date a) (elfeed-entry-date b))
+      ;; Different feeds → sort A-Z by feed title
+      (string< title-a title-b))))
+
+;; ── Grouped entry rendering ───────────────────────────────────────────────
+;; elfeed maps entries to lines as (offset + index) — any extra inserted line
+;; breaks that and corrupts single-line redraws.  So we never insert extra lines.
+;; Instead, we show the feed name on EVERY line but dim it for all entries after
+;; the first in a group, so it reads as a visual group without extra rows.
+;;
+;; We still need to know "is this the first entry in its feed group?" so we
+;; track the previous entry's feed via the elfeed-search-entries list.
+
+(defun dorneanu/elfeed--prev-feed-title (entry)
+  "Return the feed title of the entry immediately before ENTRY in the search list, or nil."
+  (let* ((entries elfeed-search-entries)
+         (idx (cl-position entry entries :test #'eq)))
+    (when (and idx (> idx 0))
+      (let* ((prev (nth (1- idx) entries))
+             (prev-feed (elfeed-entry-feed prev)))
+        (when prev-feed
+          (or (elfeed-meta prev-feed :title)
+              (elfeed-feed-title prev-feed)))))))
+
+(defun dorneanu/elfeed--next-feed-title (entry)
+  "Return the feed title of the entry immediately after ENTRY in the search list, or nil."
+  (let* ((entries elfeed-search-entries)
+         (idx (cl-position entry entries :test #'eq)))
+    (when (and idx (< (1+ idx) (length entries)))
+      (let* ((next (nth (1+ idx) entries))
+             (next-feed (elfeed-entry-feed next)))
+        (when next-feed
+          (or (elfeed-meta next-feed :title)
+              (elfeed-feed-title next-feed)))))))
+
+(defun dorneanu/elfeed-entry-line-draw-grouped (entry)
+  "Draw ENTRY with feed shown prominently for group-first entries, dimmed otherwise."
+  (let* ((feed (elfeed-entry-feed entry))
+         (feed-title (or (and feed (or (elfeed-meta feed :title)
+                                       (elfeed-feed-title feed)))
+                         ""))
+         (prev-feed-title (dorneanu/elfeed--prev-feed-title entry))
+         (next-feed-title (dorneanu/elfeed--next-feed-title entry))
+         (is-first-in-group (not (equal feed-title prev-feed-title)))
+         (is-last-in-group  (not (equal feed-title next-feed-title)))
+
+         ;; Tags
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (concat "[" (mapconcat #'identity tags ",") "]"))
+
+         ;; Title
          (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
          (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
-         (feed (elfeed-entry-feed entry))
-         (feed-title
-          (when feed
-            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
-         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
-         (tags-str (concat "[" (mapconcat 'identity tags ",") "]"))
-         (title-width (- (window-width) elfeed-goodies/feed-source-column-width
-                         elfeed-goodies/tag-column-width 4))
-         (title-column (elfeed-format-column
-                        title (elfeed-clamp
-                               elfeed-search-title-min-width
-                               title-width
-                               title-width)
-                        :left))
-         (tag-column (elfeed-format-column
-                      tags-str (elfeed-clamp (length tags-str)
-                                             elfeed-goodies/tag-column-width
-                                             elfeed-goodies/tag-column-width)
-                      :left))
-         (feed-column (elfeed-format-column
-                       feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
-                                                elfeed-goodies/feed-source-column-width
-                                                elfeed-goodies/feed-source-column-width)
-                       :left))
-         ;; (entry-score (elfeed-format-column (number-to-string (elfeed-score-scoring-get-score-from-entry entry)) 6 :left))
-         ;; (entry-authors (concatenate-authors
-         ;;                 (elfeed-meta entry :authors)))
-         ;; (authors-column (elfeed-format-column entry-authors elfeed-goodies/tag-column-width :left))
-         )
+
+         ;; Date
+         (date (elfeed-search-format-date (elfeed-entry-date entry)))
+
+         ;; Age
+         (age-in-days (/ (- (float-time) (float-time (elfeed-entry-date entry))) 86400))
+         (age-face (cond ((> age-in-days 365) 'font-lock-comment-face)
+                         ((> age-in-days 30)  'font-lock-keyword-face)
+                         (t                   'font-lock-string-face)))
+
+         ;; Fixed column widths — independent of elfeed-goodies settings
+         ;; date(16) + sp(1) + feed(22) + sp(1) + tags(22) + sp(1) = 63 overhead
+         (feed-col-width 22)
+         (tag-col-width  22)
+         (title-width    (max 20 (- (window-width) feed-col-width tag-col-width 19)))
+
+         ;; Formatted columns — all truncated to their fixed width
+         (feed-column (elfeed-format-column feed-title feed-col-width :left))
+         (tag-column  (elfeed-format-column tags-str   tag-col-width  :left))
+
+         ;; Feed face: bold+bright for first entry in group, dimmed for rest
+         (feed-face (if is-first-in-group
+                        '(:inherit elfeed-search-feed-face :weight bold)
+                      'font-lock-comment-face)))
+
     (if (>= (window-width) (* (frame-width) elfeed-goodies/wide-threshold))
         (progn
-          ;; (insert (propertize entry-score 'face 'elfeed-search-feed-face) " ")
-          (insert (propertize date 'face 'elfeed-search-date-face) " ")
-          (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
-          (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
-          ;; (insert (propertize authors-column 'face 'elfeed-search-tag-face) " ")
-          (insert (propertize title 'face title-faces 'kbd-help title))
-          )
-      (insert (propertize title 'face title-faces 'kbd-help title))))
-  )
+          (insert (propertize date        'face 'elfeed-search-date-face) " ")
+          (insert (propertize feed-column 'face feed-face) " ")
+          (insert (propertize tag-column  'face 'elfeed-search-tag-face) " ")
+          (insert (propertize title       'face title-faces 'kbd-help title))
+          (when (> age-in-days 7)
+            (insert " " (propertize (format "(%d days old)" (round age-in-days))
+                                    'face age-face))))
+      (insert (propertize title 'face title-faces 'kbd-help title)))))
 
+(defun dorneanu/elfeed-apply-group-spacing (&rest _)
+  "After a full redraw, add line-spacing to the newline at each group boundary."
+  (when (buffer-live-p (elfeed-search-buffer))
+    (with-current-buffer (elfeed-search-buffer)
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (cl-loop for i from 0 below (1- (length elfeed-search-entries))
+                   do (let* ((entry (nth i elfeed-search-entries))
+                             (next  (nth (1+ i) elfeed-search-entries))
+                             (feed  (elfeed-entry-feed entry))
+                             (nfeed (elfeed-entry-feed next))
+                             (ft    (when feed  (or (elfeed-meta feed  :title) (elfeed-feed-title feed)  "")))
+                             (nft   (when nfeed (or (elfeed-meta nfeed :title) (elfeed-feed-title nfeed) ""))))
+                        (when (and ft nft (not (equal ft nft)))
+                          ;; Go to line i+offset, find its trailing newline, set line-spacing
+                          (elfeed-goto-line (+ elfeed-search--offset i))
+                          (end-of-line)
+                          (when (eq (char-after) ?\n)
+                            (put-text-property (point) (1+ (point)) 'line-spacing 0.8))))))))))
+
+(advice-add 'elfeed-search-update :after #'dorneanu/elfeed-apply-group-spacing)
 #+end_src
 
 xwidget related:
@@ -4148,7 +4190,9 @@ in this code block all my keybinds for Elfeed here.
   (elfeed-goodies/feed-source-column-width 28)
   (elfeed-goodies/tag-column-width 28)
   :config
-  (setq elfeed-search-print-entry-function 'hp/elfeed-entry-line-draw))
+  ;; Use grouped draw: feed-group headers + newest-first within each group
+  (setq elfeed-search-print-entry-function #'dorneanu/elfeed-entry-line-draw-grouped)
+  (setq elfeed-search-sort-function #'dorneanu/elfeed-sort-by-feed-then-date))
 #+end_src
 *** Youtube
 I don’t want YouTube videos to be open with my web browser when I
@@ -4173,13 +4217,7 @@ made [[file:../../scripts.md#ytplay][a neat package]] for playing YouTube videos
 (advice-add 'elfeed-show-visit :around #'my/elfeed-filter-youtube-videos)
 #+end_src
 
-A future improvement to be made is to let the user chose the
-resolution of the video before it is launched. I may not always have
-the best internet connection, and viewing 4K videos on a 1080p display
-is not something very useful.
 *** elfeed-org
-Last but not least, my Elfeed configuration is stored in an org file
-thanks to ~elfeed-org~.
 #+begin_src emacs-lisp
 (use-package elfeed-org
   :after elfeed
@@ -4335,6 +4373,46 @@ Use reddigg to show reddit threads.
 
     (delete-file temp-org)
     (message "Created epub: %s" (file-name-nondirectory epub-file))))
+
+(defun my/eww-to-epub ()
+  "Convert current eww buffer to epub.
+Uses the raw HTML source already fetched by eww (:source), falling
+back to curl if :source is nil. No org-web-tools/plz involved."
+  (interactive)
+  (unless (derived-mode-p 'eww-mode)
+    (user-error "Current buffer is not an eww buffer"))
+  (let* ((url (eww-current-url))
+         (title (or (plist-get eww-data :title) url "Untitled"))
+         (source (plist-get eww-data :source))
+         (clean-filename (my/sanitize-filename title))
+         (dated-filename (format "%s_%s"
+                                 (format-time-string "%Y-%m-%d")
+                                 clean-filename))
+         (temp-html (make-temp-file "eww-export" nil ".html"))
+         (epub-file (expand-file-name
+                     (concat dated-filename ".epub")
+                     "~/Dropbox/Ebooks/")))
+    (if source
+        (progn
+          (message "Exporting '%s' from eww source..." title)
+          (let ((coding-system-for-write 'utf-8))
+            (with-temp-file temp-html (insert source))))
+      (message "No cached source, fetching '%s' via curl..." url)
+      (call-process "curl" nil nil nil
+                    "-sL" "--max-time" "30" "--user-agent" "Mozilla/5.0"
+                    url "-o" temp-html))
+    (make-directory (file-name-directory epub-file) t)
+    (call-process "pandoc" nil nil nil
+                  "-f" "html" "-t" "epub3"
+                  "--metadata" (format "title=%s" title)
+                  "-o" epub-file temp-html)
+    (delete-file temp-html)
+    (let ((dropbox-dest (format "db:Apps/Dropbox Pocketbook/articles/%s"
+                                (format-time-string "%Y"))))
+      (message "Created epub: %s — uploading to Dropbox..." (expand-file-name epub-file))
+      (start-process "rclone-upload" nil "rclone" "copy"
+                     epub-file dropbox-dest)
+      (message "Created epub: %s — uploaded to %s" (expand-file-name epub-file) dropbox-dest))))
 
 (defun my/extract-org-title (content)
   "Extract title from #+title: property in org content"
@@ -4608,6 +4686,54 @@ Saves to `my/elfeed-export-dir'."
     (message "Exported %d sync entries. %d async (Reddit/HN) pending. Dir: %s"
              sync-exported async-pending export-dir)
     (dired export-dir)))
+
+(defun my/reddit-urls-from-region-or-buffer ()
+  "Return list of Reddit URLs from the active region, or the whole buffer."
+  (let ((text (if (use-region-p)
+                  (buffer-substring-no-properties (region-beginning) (region-end))
+                (buffer-substring-no-properties (point-min) (point-max)))))
+    (let (urls)
+      (with-temp-buffer
+        (insert text)
+        (goto-char (point-min))
+        (while (re-search-forward
+                "https?://\\(?:www\\|old\\)\\.reddit\\.com/r/[^\s\n\r\"'<>]+" nil t)
+          (push (match-string 0) urls)))
+      (nreverse urls))))
+
+(defun my/export-reddit-urls-to-org ()
+  "Export Reddit URLs from the active region (or whole buffer) to org files.
+Each URL is fetched via reddigg and saved to `my/elfeed-export-dir'.
+Works from any buffer (e.g. *scratch*, notes)."
+  (interactive)
+  (let* ((urls (my/reddit-urls-from-region-or-buffer))
+         (date-dir (format-time-string "%Y-%m-%d"))
+         (export-dir (expand-file-name date-dir my/elfeed-export-dir))
+         (total (length urls))
+         (pending total))
+    (unless urls
+      (user-error "No Reddit URLs found in %s"
+                  (if (use-region-p) "region" "buffer")))
+    (make-directory export-dir t)
+    (dolist (url urls)
+      (let* ((slug (if (string-match "/comments/[^/]+/\\([^/?]+\\)" url)
+                       (match-string 1 url)
+                     url))
+             (slug (my/elfeed-export--sanitize-filename
+                    (truncate-string-to-width slug 80)))
+             (filename (expand-file-name (concat slug ".org") export-dir)))
+        (message "Fetching [%d]: %s" total url)
+        (my/elfeed-export--reddit-to-file
+         url slug filename
+         (lambda (result)
+           (cl-decf pending)
+           (if result
+               (message "Saved: %s" (file-name-nondirectory filename))
+             (message "Failed: %s" url))
+           (when (zerop pending)
+             (message "Done. %d Reddit threads exported to: %s" total export-dir)
+             (dired export-dir))))))
+    (message "Fetching %d Reddit thread(s) (async)..." total)))
 #+end_src
 
 ** hnreader
@@ -4729,6 +4855,30 @@ Play midi files from within dir buffers
 
 (with-eval-after-load 'dired
   (define-key dired-mode-map (kbd "C-c k") #'my/kill-timidity))
+
+(defun my/dired-play-wav ()
+  "Play WAV file at point with afplay (macOS)."
+  (interactive)
+  (let ((file (dired-get-file-for-visit)))
+    (if (string-match-p "\\.wav\\'" file)
+        (progn
+          (start-process "afplay" nil "afplay" file)
+          (message "Playing WAV: %s" (file-name-nondirectory file)))
+      (message "Not a WAV file"))))
+
+(defun my/kill-afplay ()
+  "Kill all running afplay processes."
+  (interactive)
+  (let ((killed 0))
+    (dolist (proc (process-list))
+      (when (string-match-p "afplay" (process-name proc))
+        (delete-process proc)
+        (setq killed (1+ killed))))
+    (message "Killed %d afplay process%s" killed (if (= killed 1) "" "es"))))
+
+(with-eval-after-load 'dired
+  (define-key dired-mode-map (kbd "C-c w") #'my/dired-play-wav)
+  (define-key dired-mode-map (kbd "C-c K") #'my/kill-afplay))
 #+end_src
 ** recentf
 #+begin_src emacs-lisp
@@ -4869,108 +5019,119 @@ Play midi files from within dir buffers
 #+end_src
 *** gptel
 #+begin_src emacs-lisp
-    (use-package gptel
-      :straight t
-      :commands (gptel gptel-send)
-      :bind (("M-g '" . #'gptel)
-             ("M-g C-;" . #'gptel-rewrite)
-             ("M-g ;" . #'gptel-send)
-             ("M-g K" . #'gptel-abort))
-      :custom
-      (gptel-default-mode 'org-mode)
-      ;; (gptel-model "gpt-4")
-      :config
-      ;; ChatGPT
-      ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
-      ;; Anthropic / Claude 3
-      (gptel-make-anthropic "Claude-thinking" ;Any name you want
-      :key (password-store-get "emacs/anthropic-claude3")
+  (use-package gptel
+    :straight t
+    :commands (gptel gptel-send)
+    :bind (("M-g '" . #'gptel)
+           ("M-g C-;" . #'gptel-rewrite)
+           ("M-g ;" . #'gptel-send)
+           ("M-g K" . #'gptel-abort))
+    :custom
+    (gptel-default-mode 'org-mode)
+    ;; (gptel-model "gpt-4")
+    :config
+    ;; ChatGPT
+    ;;(setq gptel-api-key (password-store-get "emacs/chatgpt"))
+    ;; Anthropic / Claude 3
+    (gptel-make-anthropic "Claude-thinking" ;Any name you want
+    :key (password-store-get "emacs/anthropic-claude3")
+    :stream t
+    :models '(claude-sonnet-4-20250514 claude-3-7-sonnet-20250219)
+    :request-params '(:thinking (:type "enabled" :budget_tokens 2048)
+                      :max_tokens 4096))
+
+    ;; Required for mcp integration
+    (require 'gptel-integrations)
+    (setq mcp-hub-servers nil)
+    (setq mcp-hub-servers '(("filesystem" :command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "/Users/I748851/repos/"))
+                            ("shell" :command "npx" :args ("mcp-shell"))
+                            ("sequential-thinking" :command "npx" :args ("-y" "@modelcontextprotocol/server-sequential-thinking"))))
+
+    ;; Enable expert commands
+    (setq gptel-expert-commands t)
+
+    ;; auto-scrolling
+    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+
+    ;; Add system messages
+    (add-to-list 'gptel-directives
+                 '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
+    (add-to-list 'gptel-directives
+               '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
+    (add-to-list 'gptel-directives
+                 '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
+
+  When I provide you with the high-level topic and overall direction for a new blog post, your first step is to <STRUCTURE_PLANNING>:
+
+  - Propose a logical structure for the post, including key sections and their purpose. For example: Introduction, Background, Core Argument, Counterpoints, Conclusion.
+  - For each section, provide a brief description of the type of content that should be included, and the overall flow you recommend.
+  - Suggest appropriate subheadings that capture the essence of each section.
+  - Estimate the ideal word count range for the full post and each section.
+  - Review the plan with me, gather any clarifications or adjustments, and finalize the structure.
+
+  Once the structure is approved, you will then <CONTENT_GENERATION>:
+
+  - For each section, provide a bulleted list of key points, facts, or ideas that should be covered.
+  - Review the tone, language, and writing style used in my previous blog posts, and craft sample sentences for each bullet point that align with that established brand voice.
+  - Aim to strike a balance between providing directive guidance (sample sentences) and leaving room for me to personalize the content in my own words.
+  - Ensure the overall content flows logically from one section to the next, with smooth transitions.
+  - Review the full draft with me, gather feedback, and refine as needed.
+
+  Throughout the process, please <THINKING>:
+
+  - Analyze the topic and my goals for the blog post to ensure the structure and content are well-aligned.
+  - Consider potential counterarguments or alternative perspectives that should be addressed.
+  - Identify opportunities to incorporate relevant data, examples, or expert insights to strengthen the post.
+  - Flag any areas where additional research or fact-checking may be required.
+  - Maintain a collaborative, supportive tone, and position yourself as a writing partner rather than simply a content generator.
+
+  Most importantly, your outputs should reflect the same quality, tone, and brand voice as my previous successful blog posts. Your role is to elevate the post's structure and writing, not to drastically alter its character. Please let me know if you need any clarification or have additional suggestions to improve this system prompt."))
+    ;; ollama
+    (gptel-make-ollama "Ollama"
+      :host "localhost:11434"
       :stream t
-      :models '(claude-sonnet-4-20250514 claude-3-7-sonnet-20250219)
-      :request-params '(:thinking (:type "enabled" :budget_tokens 2048)
-                        :max_tokens 4096))
+      :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
 
-      ;; Required for mcp integration
-      (require 'gptel-integrations)
-      (setq mcp-hub-servers nil)
-      (setq mcp-hub-servers '(("filesystem" :command "npx" :args ("-y" "@modelcontextprotocol/server-filesystem" "/Users/I748851/repos/"))
-                              ("shell" :command "npx" :args ("mcp-shell"))
-                              ("sequential-thinking" :command "npx" :args ("-y" "@modelcontextprotocol/server-sequential-thinking"))))
+    ;; gemini
+    (gptel-make-gemini "Gemini" :key (password-store-get "emacs/gemini-api") :stream t)
 
-      ;; Enable expert commands
-      (setq gptel-expert-commands t)
+    ;; openweb-ui
+    (gptel-make-openai "OpenWebUI"
+      :protocol "http"
+      :host "localhost:3000"  ; 3000 with your OpenWebUI host/port
+      :endpoint "/api/chat/completions"
+      :stream t
+      :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
+      :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4.5-sonnet" "sap_ai_core.anthropic--claude-4-sonnet")
+      :request-params '(:parallel_tool_calls t))
 
-      ;; auto-scrolling
-      (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+    ;; OpenRouter (OpenAI-compatible, supports many models including Nvidia Nemotron)
+    (gptel-make-openai "OpenRouter"
+      :host "openrouter.ai"
+      :endpoint "/api/v1/chat/completions"
+      :key (password-store-get "emacs/openrouter")
+      :stream t
+      :models '(nvidia/nemotron-3-super-120b-a12b:free
+                nvidia/llama-3.3-nemotron-super-49b-v1
+                nvidia/nemotron-4-340b-instruct))
 
-      ;; Add system messages
-      (add-to-list 'gptel-directives
-                   '(gopher . "You are an AI Golang programming consultant, with deep expertise in the language's syntax, standard library, best practices, and ecosystem. Your role is to provide comprehensive guidance and support to users who are learning, developing, or optimizing their Golang projects. When interacting with the user, demonstrate an encyclopedic knowledge of the Go programming language. Be prepared to explain core language features, such as its type system, concurrency primitives, and dependency management, in clear, easy-to-understand terms. Suggest idiomatic solutions to common Golang programming challenges, drawing upon your familiarity with design patterns, performance optimization techniques, and the latest language developments. In addition to explaining language fundamentals, offer advice on setting up a productive Golang development environment, integrating with popular third-party libraries and frameworks, and implementing effective testing and deployment strategies. Anticipate the user's needs and proactively suggest ways they can write more robust, scalable, and maintainable Go code. Maintain a patient, consultative tone throughout your interactions. Your goal is to empower the user to become self-sufficient in writing high-quality Go software, while also being available to provide expert-level troubleshooting and code review support when needed. Engage the user in a collaborative, educational manner, encouraging them to think critically about their design decisions and explore alternative approaches. Above all, demonstrate a genuine passion for the Go programming language and its vibrant, growing ecosystem. Inspire the user to share your enthusiasm for Golang's unique features and the powerful applications they can build with it"))
-      (add-to-list 'gptel-directives
-                 '(emacs . "You are an AI Emacs productivity guru, with extensive knowledge of the editor's myriad features, customization capabilities, and powerful ecosystem of packages and plugins. Your role is to serve as a trusted guide, helping the user unlock the full potential of Emacs and become a true power user. When interacting with the user, demonstrate your mastery of Emacs by providing detailed explanations of core concepts, advanced workflows, and cutting-edge customization techniques. Tailor your guidance to the user's current skill level, whether they are a newcomer looking to get started or a seasoned Emacs veteran seeking to optimize their setup. Anticipate the user's needs and proactively suggest ways they can leverage Emacs to boost their productivity, automate repetitive tasks, and streamline their development/writing/research processes. When the user presents a challenge or goal, leverage your deep understanding of Emacs to propose elegant, customized solutions. Maintain an enthusiastic, knowledgeable, and patient tone throughout your interactions. Your goal is to empower the user to become self-sufficient in navigating and customizing Emacs, while also being available to provide expert-level advice and troubleshooting support when needed.. Please use chain of thought."))
-      (add-to-list 'gptel-directives
-                   '(writing . "You are an AI writing assistant tasked with helping me structure and compose blog posts on topics I already have in mind. You are familiar with the tone, style, and voice I have established in my previous blog posts, and your goal is to seamlessly continue that consistent brand voice.
-
-    When I provide you with the high-level topic and overall direction for a new blog post, your first step is to <STRUCTURE_PLANNING>:
-
-    - Propose a logical structure for the post, including key sections and their purpose. For example: Introduction, Background, Core Argument, Counterpoints, Conclusion.
-    - For each section, provide a brief description of the type of content that should be included, and the overall flow you recommend.
-    - Suggest appropriate subheadings that capture the essence of each section.
-    - Estimate the ideal word count range for the full post and each section.
-    - Review the plan with me, gather any clarifications or adjustments, and finalize the structure.
-
-    Once the structure is approved, you will then <CONTENT_GENERATION>:
-
-    - For each section, provide a bulleted list of key points, facts, or ideas that should be covered.
-    - Review the tone, language, and writing style used in my previous blog posts, and craft sample sentences for each bullet point that align with that established brand voice.
-    - Aim to strike a balance between providing directive guidance (sample sentences) and leaving room for me to personalize the content in my own words.
-    - Ensure the overall content flows logically from one section to the next, with smooth transitions.
-    - Review the full draft with me, gather feedback, and refine as needed.
-
-    Throughout the process, please <THINKING>:
-
-    - Analyze the topic and my goals for the blog post to ensure the structure and content are well-aligned.
-    - Consider potential counterarguments or alternative perspectives that should be addressed.
-    - Identify opportunities to incorporate relevant data, examples, or expert insights to strengthen the post.
-    - Flag any areas where additional research or fact-checking may be required.
-    - Maintain a collaborative, supportive tone, and position yourself as a writing partner rather than simply a content generator.
-
-    Most importantly, your outputs should reflect the same quality, tone, and brand voice as my previous successful blog posts. Your role is to elevate the post's structure and writing, not to drastically alter its character. Please let me know if you need any clarification or have additional suggestions to improve this system prompt."))
-      ;; ollama
-      (gptel-make-ollama "Ollama"
-        :host "localhost:11434"
-        :stream t
-        :models '("llama3" "deepseek-r1" "deepseek-coder-v2"))
-
-      ;; gemini
-      (gptel-make-gemini "Gemini" :key (password-store-get "emacs/gemini-api") :stream t)
-
-      ;; openweb-ui
-      (gptel-make-openai "OpenWebUI"
-        :protocol "http"
-        :host "localhost:3000"  ; 3000 with your OpenWebUI host/port
-        :endpoint "/api/chat/completions"
-        :stream t
-        :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
-        :models '("sap_ai_core.gemini-2.5-pro" "sap_ai_core.anthropic--claude-4.5-sonnet" "sap_ai_core.anthropic--claude-4-sonnet")
-        :request-params '(:parallel_tool_calls t))
-
-      ;; OPTIONAL configuration
-      (setq gptel-backend (gptel-make-ollama "Ollama"
-                            :host "localhost:11434"
-                            :stream t
-                            :models '("gemma3" "qwen3-coder" "llama3" "huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF" "huggingface.co/unsloth/Qwen3-30B-A3B-GGUF:latest" "qwen3:14b" "qwen3:8b" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
-      ;; (setq gptel-backend (gptel-make-openai "OpenWebUI"
-      ;;                       :protocol "http"
-      ;;                       :host "localhost:3000"
-      ;;                       :endpoint "/api/chat/completions"
-      ;;                       :stream t
-      ;;                       :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
-      ;;                       :models '("sap_ai_core.gemini-2.5-pro"
-      ;;                                "sap_ai_core.anthropic--claude-4-sonnet"))))
-    ;; GPTEL-model "deepseek-v3"))
+    ;; OPTIONAL configuration
+    (setq gptel-backend (gptel-make-ollama "Ollama"
+                          :host "localhost:11434"
+                          :stream t
+                          :models '("gemma3" "qwen3-coder" "llama3" "huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF" "huggingface.co/unsloth/Qwen3-30B-A3B-GGUF:latest" "qwen3:14b" "qwen3:8b" "qwen2.5:14b" "deepseek-r1" "deepseek-v2" "incept5/llama3.1-claude" "deepseek-coder-v2"))))
+    ;; (setq gptel-backend (gptel-make-openai "OpenWebUI"
+    ;;                       :protocol "http"
+    ;;                       :host "localhost:3000"
+    ;;                       :endpoint "/api/chat/completions"
+    ;;                       :stream t
+    ;;                       :key "sk-db1bc3d539f14d6eb84bab26fd83b2f1"
+    ;;                       :models '("sap_ai_core.gemini-2.5-pro"
+    ;;                                "sap_ai_core.anthropic--claude-4-sonnet"))))
+  ;; GPTEL-model "deepseek-v3"))
 #+end_src
-*** ellama
+*** COMMENT ellama
+Not used anymore. claude-code is now the primary choice. 
 #+begin_src emacs-lisp
 (use-package ellama
   :straight t
@@ -5051,7 +5212,16 @@ Play midi files from within dir buffers
   (define-key claude-code-command-map (kbd "r") #'my/claude-code-send-region)
   (define-key claude-code-command-map (kbd "R") #'my/claude-code-send-region-with-prompt)
   (define-key claude-code-command-map (kbd "I") #'my/claude-code-send-region-select-instance)
-  (define-key claude-code-command-map (kbd "X") #'my/claude-code-send-command-with-context-select-instance))
+  (define-key claude-code-command-map (kbd "X") #'my/claude-code-send-command-with-context-select-instance)
+
+  ;; Display Claude Code buffer on the right side by default
+  (add-to-list 'display-buffer-alist
+               '("\\*claude-code\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (slot . 0)
+                 (window-width . 0.5)
+                 (preserve-size . (t . nil)))))
 ;; optional IDE integration with Monet
 ;; add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
 ;; (monet-mode 1)
@@ -5180,7 +5350,9 @@ Play midi files from within dir buffers
   :bind (("C-c e ." . eww)
          ("C-c e o" . eww-open-in-new-buffer)
          ("C-c e i" . eww-wiki)
-         ("C-c e l" . eww-follow-link))
+         ("C-c e l" . eww-follow-link)
+         :map eww-mode-map
+         ("C-c e E" . my/eww-to-epub))
   :init
   ;; (setq browse-url-browser-function 'eww-browse-url)
   ;; (setq browse-url-browser-function 'browse-url-chrome)
@@ -5731,10 +5903,14 @@ From https://gitlab.com/marcowahl/emacsshot
 #+BEGIN_SRC emacs-lisp
 (use-package avy
   :demand t
-  :bind (("C-x j c" . avy-goto-char)
-         ("C-x j w" . avy-goto-word-1)
-         ("C-x j l" . avy-goto-line)
-         ("C-x j z" . avy-zap-to-char-dwim))
+  :bind (("C-c a c" . avy-goto-char)
+         ("C-c a w" . avy-goto-word-1)
+         ("C-c a l" . avy-goto-line)
+         ("C-c a z" . avy-zap-to-char-dwim)
+         ("C-c a k" . avy-kill-ring-save-region)
+         ("C-c a K" . avy-kill-region)
+         ("C-c a y" . avy-kill-ring-save-whole-line)
+         ("C-c a r" . avy-copy-region))
   :config
   (setq avy-all-windows nil
         avy-all-windows-alt t
@@ -6021,25 +6197,25 @@ Used for popups (eshell, scratch buffer etc.)
          (multiple-cursors-mode-disabled-hook . (lambda () (corfu-mode 1))))
   :bind
   (:map prog-mode-map
-        ("C-c m l" . mc/edit-lines)
-        ("C-c m b" . mc/edit-beginnings-of-lines)
-        ("C-c m e" . mc/edit-ends-of-lines)
-        ("C-c m a" . mc/mark-all-dwim)
-        ("C-c m s" . mc/mark-all-symbols-like-this)
-        ("C-c m h" . multiple-cursors-hydra/body)
-        ("C-c m w" . mc/mark-all-words-like-this)
-        ("C-c m r" . mc/mark-all-in-region)
-        ("C-c m R" . mc/mark-all-in-region-regexp)
-        ("C-c m d" . mc/mark-all-like-this-in-defun)
-        ("C-c m S" . mc/mark-all-symbols-like-this-in-defun)
-        ("C-c m W" . mc/mark-all-words-like-this-in-defun)
-        ("C-c m i" . mc/insert-numbers)
-        ("C-c m n" . mc/mark-next-like-this)
-        ("C-c m p" . mc/mark-previous-like-this)
-        ("C-c m N" . mc/skip-to-next-like-this)
-        ("C-c m P" . mc/skip-to-previous-like-this)
-        ("C-c m M-n" . mc/unmark-next-like-this)
-        ("C-c m M-p" . mc/unmark-previous-like-this)
+        ("C-c M l" . mc/edit-lines)
+        ("C-c M b" . mc/edit-beginnings-of-lines)
+        ("C-c M e" . mc/edit-ends-of-lines)
+        ("C-c M a" . mc/mark-all-dwim)
+        ("C-c M s" . mc/mark-all-symbols-like-this)
+        ("C-c M h" . multiple-cursors-hydra/body)
+        ("C-c M w" . mc/mark-all-words-like-this)
+        ("C-c M r" . mc/mark-all-in-region)
+        ("C-c M R" . mc/mark-all-in-region-regexp)
+        ("C-c M d" . mc/mark-all-like-this-in-defun)
+        ("C-c M S" . mc/mark-all-symbols-like-this-in-defun)
+        ("C-c M W" . mc/mark-all-words-like-this-in-defun)
+        ("C-c M i" . mc/insert-numbers)
+        ("C-c M n" . mc/mark-next-like-this)
+        ("C-c M p" . mc/mark-previous-like-this)
+        ("C-c M N" . mc/skip-to-next-like-this)
+        ("C-c M P" . mc/skip-to-previous-like-this)
+        ("C-c M M-n" . mc/unmark-next-like-this)
+        ("C-c M M-p" . mc/unmark-previous-like-this)
         ("s-<mouse-1>"   . mc/add-cursor-on-click)
         ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 #+end_src
@@ -6061,6 +6237,8 @@ Used for popups (eshell, scratch buffer etc.)
   (isearch-lazy-count t) ; Show the match count (need a non-nil `isearch-lazy-highlight')
   (search-ring-max 200) ; 16 is too little
   (regexp-search-ring-max 200)
+  (isearch-regexp-lax-whitespace t) ; spaces match anything on the line in regexp isearch
+  (search-whitespace-regexp ".*?")
   :bind (;; Swap `isearch-*' with `isearch-*-regexp' to use regexp based search by default
          ("C-s" . isearch-forward-regexp)
          ("C-r" . isearch-backward-regexp)
@@ -6349,6 +6527,7 @@ Disabled due to org-mode tangling issues with << and >> characters.
      "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" "-<" "-<<" ">->" "<-<"
      "<-|" "<=|" "|=>" "|->" "<->" "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~"
      "~@" "[||]" "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||" "|||>"
+     
      "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?" "::" ":::" ":=" "::=" ":?"
      ":?>" "//" "///" "/*" "*/" "/=" "//=" "/==" "@_" "__"))
   (global-ligature-mode t))
@@ -6670,7 +6849,20 @@ Focus and swap windows
     "h" #'windmove-left
     "l" #'windmove-right
     "d" #'delete-window)
-  (keymap-global-set "C-c w" +windmove-keys))
+  (keymap-global-set "C-c w" +windmove-keys)
+
+  ;; Window resizing keybindings
+  (keymap-global-set "C-c w [" #'shrink-window-horizontally)
+  (keymap-global-set "C-c w ]" #'enlarge-window-horizontally)
+  (keymap-global-set "C-c w -" #'shrink-window)
+  (keymap-global-set "C-c w =" #'enlarge-window)
+
+  ;; Make window resize commands repeatable
+  (dolist (cmd '(shrink-window-horizontally
+                 enlarge-window-horizontally
+                 shrink-window
+                 enlarge-window))
+    (put cmd 'repeat-map '+windmove-keys)))
 #+end_src
 *** winner-mode
 #+begin_src emacs-lisp
@@ -6689,7 +6881,27 @@ Focus and swap windows
      "*Ibuffer*"
      "*esh command on file*"))
   :config
-  (winner-mode 1))
+  (winner-mode 1)
+
+  ;; Make C-x 1 reversible - toggle between single window and previous layout
+  ;; from https://emacsredux.com/blog/2026/04/07/stealing-from-the-best-emacs-configs/
+  (defun toggle-delete-other-windows ()
+    "Delete other windows in frame if any, or restore previous window config."
+    (interactive)
+    (if (and winner-mode
+             (equal (selected-window) (next-window)))
+        (winner-undo)
+      (delete-other-windows)))
+
+  (global-set-key (kbd "C-x 1") #'toggle-delete-other-windows))
+#+end_src
+*** transpose-frame
+Toggle between horizontal and vertical window splits.
+#+begin_src emacs-lisp
+(use-package transpose-frame
+  :straight t
+  :bind (("C-c w t" . transpose-frame)
+         ("C-c w f" . flop-frame)))
 #+end_src
 ** Tabs
 *** tabspaces
@@ -7101,7 +7313,7 @@ From https://github.com/dakra/dmacs/blob/nil/init.org
     ("k" smerge-kill-current)
     ("q" nil "cancel" :color blue)))
 #+end_src
-*** COMMENT Hydra / modeline                                                                  :todo:
+*** COMMENT Hydra / modeline                                                                                      :todo:
 #+begin_src emacs-lisp
 (pretty-hydra-define hydra-modeline
   (:title "Modeline" :color amaranth :quit-key ("q" "C-g"))
