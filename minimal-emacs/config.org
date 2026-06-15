@@ -2213,11 +2213,8 @@ Keep lisp code always indented.
 #+end_src
 *** forge
 #+begin_src emacs-lisp
-;; Use latest ghub (has ghub-graphql removed, but we'll patch pr-review)
 (use-package ghub
-  :straight t
-  :config
-  (add-to-list 'ghub-github-token-scopes '(repo user)))
+  :straight t)
 
 (use-package forge
   :straight t
@@ -2541,7 +2538,6 @@ Basic configuration
         org-log-done                       nil
         org-log-state-notes-into-drawer    nil     ;; No state change notes
         org-log-into-drawer                nil     ;; Does this make sense?
-        org-directory                      "~/repos/priv/org/"
         org-default-notes-file             (expand-file-name "notes.org" org-directory))
 
 
@@ -2687,9 +2683,10 @@ Basic configuration
                             '("~/syncthing/org/2-PARA.org"
                               "~/syncthing/org/01-TDL.org"))
 
-   ;; Append proj files
+   ;; Append proj files (guard against missing org-directory on this machine)
    org-agenda-files (append org-agenda-files
-                            (directory-files org-directory t "proj_.+\\.org$"))
+                            (when (file-directory-p org-directory)
+                              (directory-files org-directory t "proj_.+\\.org$")))
 
    ;; Remove any nil entries that sneak in (e.g. from missing files/dirs)
    org-agenda-files (delq nil org-agenda-files))
@@ -5199,7 +5196,7 @@ Not used anymore. claude-code is now the primary choice.
 
 ;; install claude-code.el, using :depth 1 to reduce download size:
 (use-package claude-code
-  :straight (:type git :host github :repo "manzaltu/claude-code.el" :branch "main" :depth 1
+  :straight (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main" :depth 1
                    :files ("*.el" (:exclude "images/*")))
   :bind-keymap
   ("C-x c" . claude-code-command-map) ;; or your preferred key
