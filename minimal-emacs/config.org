@@ -868,13 +868,14 @@ I only need ~counsel-org-tag~
 (use-package ob-graphql
   :straight t
   :defer t)
-
+  
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((sql . t)
    (go . t)
    (plantuml . t)
    (emacs-lisp . t)
+   (python . t)
    (mermaid . t)
    (graphql . t)
    (shell . t)))
@@ -884,6 +885,7 @@ I only need ~counsel-org-tag~
 #+end_src
 
 #+RESULTS:
+| org-display-inline-images |
 
 * Programming
 :properties:
@@ -1237,14 +1239,14 @@ This is a [[https://github.com/pypa/pipenv][pipenv]] porcelain
 **** pyenv
 This integrates ~pyenv~ into ~python-mode~.
 #+begin_src emacs-lisp
-(use-package pyenv
-  :defer t
-  :straight t
-  :config
-  (add-hook 'python-mode-hook #'pyenv-track-virtualenv)
-  (add-to-list 'global-mode-string
-               '(pyenv-virtual-env-name (" venv:" pyenv-virtual-env-name " "))
-               'append))
+  (use-package pyenv
+    :defer t
+    :straight t
+    :config
+    ;; (add-hook 'python-mode-hook #'pyenv-track-virtualenv)
+    (add-to-list 'global-mode-string
+                 '(pyenv-virtual-env-name (" venv:" pyenv-virtual-env-name " "))
+                 'append))
 #+end_src
 **** Pippel
 List, install, upgrade packages with pip
@@ -1431,7 +1433,21 @@ Flycheck can also be enabled for Cython:
                ("cljc" . clojure-mode)))
     (add-to-list 'markdown-code-lang-modes x))
   ;; use pandoc with source code syntax highlighting to preview markdown (C-c C-c p)
-  (setq markdown-command "pandoc -s --highlight-style pygments -f markdown_github -t html5"))
+  (setq markdown-command "pandoc -s --highlight-style pygments -f markdown_github -t html5")
+  ;; Fix crash in markdown-gfm-parse-buffer-for-languages: next-single-property-change
+  ;; returns nil at end of buffer, but goto-char requires an integer or marker.
+  ;; Upstream bug: https://github.com/jrblevin/markdown-mode (unfixed as of 2.8)
+  (defun markdown-gfm-parse-buffer-for-languages (&optional buffer)
+    (with-current-buffer (or buffer (current-buffer))
+      (save-excursion
+        (goto-char (point-min))
+        (cl-loop
+         with prop = 'markdown-gfm-block-begin
+         for pos-prop = (markdown-find-next-prop prop)
+         while pos-prop
+         for lang = (markdown-code-block-lang pos-prop)
+         do (progn (when lang (markdown-gfm-add-used-language lang))
+                   (goto-char (next-single-property-change (point) prop nil (point-max)))))))))
 #+end_src
 *** Configs
 **** Toml
@@ -2337,12 +2353,21 @@ Keep lisp code always indented.
               (name (oref repo name))
               (number (oref topic number))
               (host (oref repo githost)))
-        ;; Set ghub host dynamically: enterprise needs /api/v3 suffix, github.com does not
-        (let ((pr-review-ghub-host (if (string= host "github.com")
-                                       "api.github.com"
-                                     (concat host "/api/v3")))
-              (url (format "https://%s/%s/%s/pull/%s" host owner name number)))
-          (pr-review url))
+        ;; We cannot use `pr-review' directly because it calls pr-review-open
+        ;; which calls pr-review-refresh *inside* with-current-buffer before we
+        ;; can set the buffer-local host. Instead we replicate pr-review-open's
+        ;; setup, setting pr-review-ghub-host buffer-locally before the refresh.
+        (let* ((ghub-host (if (string= host "github.com")
+                              "api.github.com"
+                            (concat host "/api/v3")))
+               (buf-name (format "*pr-review %s/%s/%s*" owner name number)))
+          (with-current-buffer (get-buffer-create buf-name)
+            (unless (eq major-mode 'pr-review-mode)
+              (pr-review-mode))
+            (setq-local pr-review--pr-path (list owner name number))
+            (setq-local pr-review-ghub-host ghub-host)
+            (pr-review-refresh)
+            (switch-to-buffer (current-buffer))))
       (user-error "Not in a forge PR buffer or PR info not available"))))
 #+end_src
 
@@ -3435,6 +3460,7 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
 (defun dorneanu/org-clock-enter-manually (begin end)
   "Enter a clock item manually."
   (interactive (list (org-read-date t t) (org-read-date t t)))
+  (require 'org-clock)
   (save-excursion
     (org-clock-find-position nil)
     (insert-before-markers-and-inherit "\n")
@@ -3545,14 +3571,27 @@ From https://mbork.pl/2023-03-20_Manually_entering_clocking_data
 
 *** Create ORG heading from clipboard link
 #+begin_src emacs-lisp
-(cl-defun dorneanu/org-insert-link-from-clipboard (&optional (url (org-web-tools--get-first-url)))
-  "Extend org-web-tools to create to take URL from clipboard or kill-ring"
+(defun dorneanu/org-insert-link-from-clipboard (&optional url)
+  "Insert org link from URL in clipboard or kill-ring, fetching the page title."
   (interactive)
   (require 'org-web-tools)
-  (if-let ((dom (plz 'get url :as (lambda ()
-                                    (libxml-parse-html-region (point-min) (point-max)))))
-           (title (cl-caddr (car (dom-by-tag dom 'title)))))
-      (insert (format "%s ◦ [[%s][%s]]" (format-time-string "%Y-%m-%d") url (org-web-tools--cleanup-title title)))))
+  (let ((url (or url
+                 (current-kill 0 t)  ; Get from kill-ring/clipboard
+                 (read-string "URL: "))))
+    ;; Ensure we have a URL
+    (unless (string-match-p "^https?://" url)
+      (user-error "Not a valid URL: %s" url))
+    (if-let ((dom (plz 'get url :as (lambda ()
+                                      (libxml-parse-html-region (point-min) (point-max)))))
+             (title (cl-caddr (car (dom-by-tag dom 'title)))))
+        (insert (format "%s ◦ [[%s][%s]]"
+                        (format-time-string "%Y-%m-%d")
+                        url
+                        (org-web-tools--cleanup-title title)))
+      (insert (format "%s ◦ [[%s][%s]]"
+                      (format-time-string "%Y-%m-%d")
+                      url
+                      url)))))  ; Fallback to URL as title
 #+end_src
 *** Focus on current heading
 #+begin_src emacs-lisp
@@ -3780,6 +3819,7 @@ position and resume whenever the same video is played again (read [[https://unix
   :bind (;; Global bindings
          ("C-c a e e" . elfeed)
          ("C-c a e u" . elfeed-update)
+         ("C-c a e m" . my/elfeed-update-by-pattern)
          ("C-c a e s" . elfeed-search)
          ("C-c a e b" . elfeed-search-browse-bookmark)
          ("C-c a e l" . elfeed-search-live-filter)
@@ -3787,7 +3827,6 @@ position and resume whenever the same video is played again (read [[https://unix
          ;; Search mode bindings
          :map elfeed-search-mode-map
          ("TAB" . elfeed-search-show-entry)
-         ("g" . elfeed-search-update--force)
          ("f j" . dorneanu/elfeed-cycle-filters-forward)
          ("f J" . dorneanu/elfeed-cycle-filters-backward)
          ("f k" . dorneanu/elfeed-increase-time-filter)
@@ -3799,20 +3838,20 @@ position and resume whenever the same video is played again (read [[https://unix
          ("b" . elfeed-search-browse-bookmark)
          ("c" . org-capture)
          ("F" . elfeed-search-fetch-visible)
-         ("t t" . elfeed-search-toggle-all)
+         ("*" . elfeed-search-toggle-all)
          ("v" . elfeed-search-view-animation)
          ("C-c C-e" . elfeed-search-export-entries)
-         ("m e" . my/elfeed-export-entries)
-         ("m E" . my/elfeed-export-clear)
-         ("m s" . my/elfeed-export-summarize)
-         ("m d" . my/elfeed-export-dired)
+         ("e e" . my/elfeed-export-entries)
+         ("e E" . my/elfeed-export-clear)
+         ("e s" . my/elfeed-export-summarize)
+         ("e d" . my/elfeed-export-dired)
          ("f d" . elfeed-search-tag-all-default)
-         ("m g r" . my/elfeed-reddit-show-comments)
-         ("m g h" . my/elfeed-hn-show-comments)
-         ("o x" . dorneanu/elfeed-search-browse-url-xwidget)
-         ("o b" . elfeed-search-browse-url)
-         ("o B" . dorneanu/elfeed-search-browse-url-chrome)
-         ("o r" . sqrtminusone/rdrview-elfeed-show)
+         ("e g r" . my/elfeed-reddit-show-comments)
+         ("e g h" . my/elfeed-hn-show-comments)
+         ("g o x" . dorneanu/elfeed-search-browse-url-xwidget)
+         ("g o b" . elfeed-search-browse-url)
+         ("g o B" . dorneanu/elfeed-search-browse-url-chrome)
+         ("g o r" . sqrtminusone/rdrview-elfeed-show)
 
          ;; Show mode bindings
          :map elfeed-show-mode-map
@@ -3918,6 +3957,176 @@ position and resume whenever the same video is played again (read [[https://unix
 
   (advice-add 'elfeed-update :before #'my/elfeed-update-start)
   (advice-add 'elfeed-update-feed :before #'my/elfeed-update-feed-notify)
+
+  ;; Sequential feed updater with delays to avoid rate limiting
+  (defvar my/elfeed-sequential-delay 1
+    "Delay in seconds between feed updates in sequential mode.")
+
+  (defvar my/elfeed-sequential-batch-size 5
+    "Number of feeds to update in each batch.")
+
+  (defvar my/elfeed-sequential-in-progress nil
+    "Non-nil when sequential update is running.")
+
+  (defvar my/elfeed-sequential--remaining-feeds nil
+    "Remaining feeds to update in sequential mode.")
+
+  (defvar my/elfeed-sequential--count 0
+    "Current count of updated feeds.")
+
+  (defvar my/elfeed-sequential--total 0
+    "Total number of feeds to update.")
+
+  (defvar my/elfeed-sequential--buffer "*elfeed-sequential-update*"
+    "Buffer name for sequential update progress.")
+
+  (defun my/elfeed-sequential--log (format-string &rest args)
+    "Log a message to the sequential update buffer."
+    (with-current-buffer (get-buffer-create my/elfeed-sequential--buffer)
+      (goto-char (point-max))
+      (insert (apply #'format format-string args) "\n")))
+
+  (defun my/elfeed-sequential--update-next ()
+    "Internal function to update the next batch of feeds in the queue."
+    (if my/elfeed-sequential--remaining-feeds
+        (progn
+          ;; Clear buffer and show current batch header
+          (with-current-buffer (get-buffer-create my/elfeed-sequential--buffer)
+            (erase-buffer)
+            (insert (format "=== Elfeed Sequential Update ===\n"))
+            (insert (format "Progress: %d/%d feeds (%d remaining)\n"
+                            my/elfeed-sequential--count
+                            my/elfeed-sequential--total
+                            (length my/elfeed-sequential--remaining-feeds)))
+            (insert (format "Batch size: %d | Delay: %ds\n\n"
+                            my/elfeed-sequential-batch-size
+                            my/elfeed-sequential-delay))
+            (insert "Current batch:\n"))
+
+          (let ((batch-count 0)
+                (batch-results '()))
+            (while (and my/elfeed-sequential--remaining-feeds
+                        (< batch-count my/elfeed-sequential-batch-size))
+              (let ((feed (pop my/elfeed-sequential--remaining-feeds)))
+                (cl-incf my/elfeed-sequential--count)
+                (cl-incf batch-count)
+                (let ((msg (format "[%d/%d] %s"
+                                   my/elfeed-sequential--count
+                                   my/elfeed-sequential--total
+                                   feed)))
+                  (message "elfeed sequential: %s" msg)
+                  (my/elfeed-sequential--log msg))
+                (condition-case err
+                    (progn
+                      (elfeed-update-feed feed)
+                      (my/elfeed-sequential--log "  ✓ Success"))
+                  (error
+                   (let ((err-msg (format "  ✗ Failed: %s" (error-message-string err))))
+                     (message "elfeed sequential: %s" err-msg)
+                     (my/elfeed-sequential--log err-msg))))))
+            (my/elfeed-sequential--log (format "\nWaiting %ds before next batch..."
+                                               my/elfeed-sequential-delay)))
+          (run-at-time my/elfeed-sequential-delay nil #'my/elfeed-sequential--update-next))
+      (setq my/elfeed-sequential-in-progress nil)
+      (with-current-buffer (get-buffer-create my/elfeed-sequential--buffer)
+        (erase-buffer)
+        (insert (format "=== Sequential Update Complete ===\n\n"))
+        (insert (format "Total feeds processed: %d\n" my/elfeed-sequential--total))
+        (insert (format "Finished: %s\n" (current-time-string))))
+      (message "Sequential update complete: %d feeds processed" my/elfeed-sequential--total)))
+
+  (defun my/elfeed-update-sequential ()
+    "Update all feeds sequentially with delays to avoid rate limiting."
+    (interactive)
+    (if my/elfeed-sequential-in-progress
+        (message "Sequential update already in progress")
+      (setq my/elfeed-sequential-in-progress t
+            my/elfeed-sequential--remaining-feeds
+            (mapcar (lambda (f) (if (listp f) (car f) f)) elfeed-feeds)
+            my/elfeed-sequential--count 0
+            my/elfeed-sequential--total (length elfeed-feeds))
+      (with-current-buffer (get-buffer-create my/elfeed-sequential--buffer)
+        (erase-buffer)
+        (insert (format "=== Elfeed Sequential Update ===\n"))
+        (insert (format "Started: %s\n" (current-time-string)))
+        (insert (format "Total feeds: %d\n" my/elfeed-sequential--total))
+        (insert (format "Batch size: %d feeds\n" my/elfeed-sequential-batch-size))
+        (insert (format "Delay between batches: %ds\n\n" my/elfeed-sequential-delay)))
+      (display-buffer my/elfeed-sequential--buffer)
+      (message "Starting sequential update of %d feeds with %ds delays..."
+               my/elfeed-sequential--total my/elfeed-sequential-delay)
+      (my/elfeed-sequential--update-next)))
+
+  (defun my/elfeed-update-sequential-stop ()
+    "Stop the current sequential update."
+    (interactive)
+    (if my/elfeed-sequential-in-progress
+        (progn
+          (setq my/elfeed-sequential-in-progress nil
+                my/elfeed-sequential--remaining-feeds nil)
+          (my/elfeed-sequential--log "\n*** Update stopped by user ***")
+          (message "Sequential update stopped"))
+      (message "No sequential update in progress")))
+
+  (defun my/elfeed-update-by-pattern (pattern)
+    "Update only feeds matching PATTERN (case-insensitive substring match).
+Shows progress in a dedicated buffer."
+    (interactive "sUpdate feeds matching pattern: ")
+    (let* ((all-feeds (mapcar (lambda (f) (if (listp f) (car f) f)) elfeed-feeds))
+           (matching-feeds (seq-filter
+                           (lambda (url)
+                             (string-match-p (regexp-quote pattern) url))
+                           all-feeds))
+           (count (length matching-feeds))
+           (buffer-name "*elfeed-pattern-update*")
+           (completed 0))
+      (if (zerop count)
+          (message "No feeds match pattern: %s" pattern)
+        ;; Create/clear log buffer
+        (with-current-buffer (get-buffer-create buffer-name)
+          (erase-buffer)
+          (insert (format "=== Elfeed Pattern Update ===\n"))
+          (insert (format "Pattern: \"%s\"\n" pattern))
+          (insert (format "Started: %s\n" (current-time-string)))
+          (insert (format "Matching feeds: %d\n\n" count)))
+        (display-buffer buffer-name)
+
+        (message "Updating %d feed%s matching '%s'..."
+                 count (if (= count 1) "" "s") pattern)
+
+        ;; Update each feed and log result
+        (dolist (feed matching-feeds)
+          (cl-incf completed)
+          (with-current-buffer buffer-name
+            (goto-char (point-max))
+            (insert (format "[%d/%d] %s\n" completed count feed)))
+
+          (condition-case err
+              (progn
+                (elfeed-update-feed feed)
+                (with-current-buffer buffer-name
+                  (goto-char (point-max))
+                  (insert "  ✓ Started\n")))
+            (error
+             (with-current-buffer buffer-name
+               (goto-char (point-max))
+               (insert (format "  ✗ Failed: %s\n" (error-message-string err)))))))
+
+        ;; Final summary
+        (with-current-buffer buffer-name
+          (goto-char (point-max))
+          (insert (format "\n=== Update Complete ===\n"))
+          (insert (format "Finished: %s\n" (current-time-string)))
+          (insert (format "Total feeds: %d\n" count)))
+
+        (message "Started update of %d matching feed%s"
+                 count (if (= count 1) "" "s")))))
+
+  ;; Keybinding for sequential update
+  (with-eval-after-load 'elfeed
+    (define-key elfeed-search-mode-map (kbd "U") #'my/elfeed-update-sequential)
+    (define-key elfeed-search-mode-map (kbd "C-c C-k") #'my/elfeed-update-sequential-stop)
+    (define-key elfeed-search-mode-map (kbd "M") #'my/elfeed-update-by-pattern))
 
   ;; Hooks
   (add-hook 'elfeed-show-mode-hook #'my/elfeed-show-buffer-setup)
@@ -4062,7 +4271,7 @@ position and resume whenever the same video is played again (read [[https://unix
                              (nft   (when nfeed (or (elfeed-meta nfeed :title) (elfeed-feed-title nfeed) ""))))
                         (when (and ft nft (not (equal ft nft)))
                           ;; Go to line i+offset, find its trailing newline, set line-spacing
-                          (elfeed-goto-line (+ elfeed-search--offset i))
+                          (elfeed-goto-line (1+ i))
                           (end-of-line)
                           (when (eq (char-after) ?\n)
                             (put-text-property (point) (1+ (point)) 'line-spacing 0.8))))))))))
@@ -4404,6 +4613,7 @@ back to curl if :source is nil. No org-web-tools/plz involved."
     (make-directory (file-name-directory epub-file) t)
     (call-process "pandoc" nil nil nil
                   "-f" "html" "-t" "epub3"
+                  "--embed-resources"
                   "--metadata" (format "title=%s" title)
                   "-o" epub-file temp-html)
     (delete-file temp-html)
@@ -6283,64 +6493,60 @@ Extended ~isearch~
 (use-package visual-regexp-steroids
   :after visual-regexp)
 #+END_SRC
-*** COMMENT rg.el
+*** rg.el
 #+begin_src emacs-lisp
-; Load transient first
-(use-package transient
-  :straight (:type git :host github :repo "magit/transient" :branch "main")
-  :demand t)
-;; (use-package transient
-;;   :straight t
-;;   :demand t
-;;   :config
-;;   ;; Make sure transient is completely initialized
-;;   (require 'transient))
+  ; Load transient first
+  ;; (use-package transient
+  ;;   :straight (:type git :host github :repo "magit/transient" :branch "main")
+  ;;   :demand t)
+  ;; 
+  ;; 
+  ;; ;; (
+  use-package transient
+  ;;   :straight t
+  ;;   :demand t
+  ;;   :config
+  ;;   ;; Make sure transient is completely initialized
+  ;;   (require 'transient))
 
-;; Minimal rg configuration that avoids the problematic macros
-(use-package rg
-  :straight t
-  :commands (rg rg-project rg-dwim)
-  ;; :bind (("C-s r" . rg))
-  :config
-  ;; Only enable the basic bindings - this should work
-  (rg-enable-default-bindings)
+  ;; Minimal rg configuration that avoids the problematic macros
+  (use-package rg
+    :straight t
+    :commands (rg rg-project rg-dwim rg-menu)
+    :bind (("M-s R" . rg-menu))
+    :config
+    (setq next-error-highlight-no-select t))
 
-  ;; Basic settings that don't use macros
-  (setq next-error-highlight-no-select t)
+  ;; Alternative: If you really need the custom searches, define them as regular functions
+  ;; instead of using the rg-define-search macro
 
-  ;; We'll add the custom searches and toggles later after ensuring everything works
-  )
+  (defun my/rg-org-roam-directory (query)
+    "Search for QUERY in org-roam directory."
+    (interactive "sSearch for: ")
+    (when (boundp 'org-roam-directory)
+      (rg query "everything" org-roam-directory)))
 
-;; Alternative: If you really need the custom searches, define them as regular functions
-;; instead of using the rg-define-search macro
+  ;; (defun my/rg-org-roam-directory-huberman (query)
+  ;;   "Search for QUERY in Huberman Lab directory."
+  ;;   (interactive "sSearch for: ")
+  ;;   (when (boundp 'org-roam-directory)
+  ;;     (let ((huberman-dir (concat org-roam-directory "/rez/huberman-lab")))
+  ;;       (if (file-directory-p huberman-dir)
+  ;;           (rg query "everything" huberman-dir)
+  ;;         (message "Huberman directory not found: %s" huberman-dir)))))
 
-(defun my/rg-org-roam-directory (query)
-  "Search for QUERY in org-roam directory."
-  (interactive "sSearch for: ")
-  (when (boundp 'org-roam-directory)
-    (rg query "everything" org-roam-directory)))
+  (defun my/rg-dotemacs (query)
+    "Search for QUERY in dotemacs directory."
+    (interactive "sSearch for: ")
+    (let ((dotemacs-directory "~/repos/priv/dotemacs"))
+      (if (file-directory-p dotemacs-directory)
+          (rg query "everything" dotemacs-directory)
+        (message "Dotemacs directory not found: %s" dotemacs-directory))))
 
-(defun my/rg-org-roam-directory-huberman (query)
-  "Search for QUERY in Huberman Lab directory."
-  (interactive "sSearch for: ")
-  (when (boundp 'org-roam-directory)
-    (let ((huberman-dir (concat org-roam-directory "/rez/huberman-lab")))
-      (if (file-directory-p huberman-dir)
-          (rg query "everything" huberman-dir)
-        (message "Huberman directory not found: %s" huberman-dir)))))
-
-(defun my/rg-dotemacs (query)
-  "Search for QUERY in dotemacs directory."
-  (interactive "sSearch for: ")
-  (let ((dotemacs-directory "~/repos/priv/dotemacs"))
-    (if (file-directory-p dotemacs-directory)
-        (rg query "everything" dotemacs-directory)
-      (message "Dotemacs directory not found: %s" dotemacs-directory))))
-
-;; Bind these functions to keys if you want quick access
-;; (global-set-key (kbd "C-c s r") #'my/rg-org-roam-directory)
-;; (global-set-key (kbd "C-c s h") #'my/rg-org-roam-directory-huberman)
-;; (global-set-key (kbd "C-c s d") #'my/rg-dotemacs)
+  ;; Bind these functions to keys if you want quick access
+  ;; (global-set-key (kbd "C-c s r") #'my/rg-org-roam-directory)
+  ;; (global-set-key (kbd "C-c s h") #'my/rg-org-roam-directory-huberman)
+  ;; (global-set-key (kbd "C-c s d") #'my/rg-dotemacs)
 #+end_src
 
 
