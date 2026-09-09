@@ -7125,10 +7125,45 @@ Toggle between horizontal and vertical window splits.
   (tabspaces-include-buffers '("*scratch*"))
   (tabspaces-initialize-project-with-todo t)
   (tabspaces-todo-file-name "project-todo.org")
-  ;; sessions
-  (tabspaces-session t)
+  ;; sessions: disabled, easysession owns session persistence
+  (tabspaces-session nil)
   (tabspaces-session-auto-restore nil)
   (tab-bar-new-tab-choice "*scratch*"))
+#+end_src
+*** easysession
+Session persistence: file buffers, window layouts, the tab-bar (tabs + their
+buffers/windows) and frames. Replaces the ~tabspaces~ session handling above,
+which is disabled to avoid two packages restoring the same tab-bar state.
+
+~easysession-setup~ is what installs the hooks (load on startup or on
+~server-after-make-frame-hook~ in daemon mode, periodic save, save on exit) --
+without it the package does nothing.
+#+begin_src emacs-lisp
+(use-package easysession
+  :straight t
+  :demand t
+  :custom
+  (easysession-save-interval (* 10 60))
+  (easysession-switch-to-save-session t)
+  (easysession-switch-to-exclude-current nil)
+  (easysession-setup-load-session t)
+  (easysession-mode-line-misc-info t)
+  :bind (("C-c S l" . easysession-switch-to)
+         ("C-c S s" . easysession-save)
+         ("C-c S L" . easysession-switch-to-and-restore-geometry)
+         ("C-c S r" . easysession-rename)
+         ("C-c S u" . easysession-unload)
+         ("C-c S d" . easysession-delete))
+  :config
+  (add-to-list 'savehist-additional-variables 'easysession--current-session-name)
+
+  ;; Extensions: persist Magit buffers and the scratch buffer.
+  (require 'easysession-magit)
+  (easysession-magit-mode 1)
+  (require 'easysession-scratch)
+  (easysession-scratch-mode 1)
+
+  (easysession-setup))
 #+end_src
 *** COMMENT centaur-tabs
 #+begin_src emacs-lisp
